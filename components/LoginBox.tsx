@@ -81,7 +81,7 @@ export default function LoginBox () {
             </div>
             <div className="text-center pt-1 mb-12 pb-1">
               <CustomButton
-                  containerStyles="inline-block px-6 py-2.5 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:shadow-lg focus:outline-none focus:ring-0 active:shadow-lg transition duration-150 ease-in-out w-full mb-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+                  containerStyles="app__btn_green_sm w-full"
                   btnType="submit"
                   title={signingIn ? 'Signing In...' : 'Login'}
                   />
