@@ -202,7 +202,7 @@ const Page: React.FC = () => {
                                 </Menu.Item>
                                 <Menu.Item>
                                   <div
-                                      onClick={() => handleViewDetails(item)}
+                                      // onClick={() => handleViewDetails(item)}
                                       className='app__dropdown_item'
                                     >
                                       <TableCellsIcon className='w-4 h-4'/>
@@ -211,7 +211,7 @@ const Page: React.FC = () => {
                                 </Menu.Item>
                                 <Menu.Item>
                                   <div
-                                      onClick={() => handleViewDetails(item)}
+                                      // onClick={() => handleViewDetails(item)}
                                       className='app__dropdown_item'
                                     >
                                       <CreditCardIcon className='w-4 h-4'/>
@@ -220,7 +220,7 @@ const Page: React.FC = () => {
                                 </Menu.Item>
                                 <Menu.Item>
                                   <div
-                                      onClick={() => handleViewDetails(item)}
+                                      // onClick={() => handleViewDetails(item)}
                                       className='app__dropdown_item'
                                     >
                                       <PencilSquareIcon className='w-4 h-4'/>
@@ -229,7 +229,7 @@ const Page: React.FC = () => {
                                 </Menu.Item>
                                 <Menu.Item>
                                   <div
-                                      onClick={() => handleViewDetails(item)}
+                                      // onClick={() => handleViewDetails(item)}
                                       className='app__dropdown_item'
                                     >
                                       <PencilSquareIcon className='w-4 h-4'/>
@@ -238,7 +238,7 @@ const Page: React.FC = () => {
                                 </Menu.Item>
                                 <Menu.Item>
                                   <div
-                                      onClick={() => handleViewDetails(item)}
+                                      // onClick={() => handleViewDetails(item)}
                                       className='app__dropdown_item'
                                     >
                                       <Cog8ToothIcon className='w-4 h-4'/>

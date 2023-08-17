@@ -63,31 +63,31 @@ const UserDropdown = ({ darkMode }: propTypes) => {
                     <div className='text-sm font-semibold text-gray-700'>Account Details</div>
                   </div>
                   <div
-                    onClick={() => setShowAccountDetailsModal(true)}
+                    // onClick={() => setShowAccountDetailsModal(true)}
                     className='app__user_menu_items'>
                     <TableCellsIcon className='w-5 h-5'/>
                     <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>Service Record</div>
                   </div>
                   <div
-                    onClick={() => setShowAccountDetailsModal(true)}
+                    // onClick={() => setShowAccountDetailsModal(true)}
                     className='app__user_menu_items'>
                       <CreditCardIcon className='w-5 h-5'/>
                       <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>Leave Card</div>
                   </div>
                   <div
-                    onClick={() => setShowAccountDetailsModal(true)}
+                    // onClick={() => setShowAccountDetailsModal(true)}
                     className='app__user_menu_items'>
                       <PencilSquareIcon className='w-5 h-5'/>
                       <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>PDS</div>
                     </div>
                   <div
-                    onClick={() => setShowAccountDetailsModal(true)}
+                    // onClick={() => setShowAccountDetailsModal(true)}
                     className='app__user_menu_items'>
                       <PencilSquareIcon className='w-5 h-5'/>
                       <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>PDF</div>
                   </div>
                   <div
-                    onClick={() => setShowAccountDetailsModal(true)}
+                    // onClick={() => setShowAccountDetailsModal(true)}
                     className='app__user_menu_items'>
                       <Cog8ToothIcon className='w-5 h-5'/>
                       <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>Login Settings</div>
