@@ -57,7 +57,7 @@ export interface SchoolTypes {
   id: string
   name: string
   type: string
-  school_class: string
+  school_class: never[] | []
   size: string
   school_id: string
   district_id: string

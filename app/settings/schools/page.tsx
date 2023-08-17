@@ -148,6 +148,9 @@ const Page: React.FC = () => {
                           Type
                       </th>
                       <th className="hidden md:table-cell app__th">
+                          Size & Class
+                      </th>
+                      <th className="hidden md:table-cell app__th">
                           District
                       </th>
                       <th className="hidden md:table-cell app__th">
@@ -206,11 +209,15 @@ const Page: React.FC = () => {
                       </td>
                       <th
                         className="app__th_firstcol">
-                        {item.name}
+                        <div>{item.name}</div>
+                        <div className='font-light'>{item.school_id}</div>
                         {/* Mobile View */}
                         <div>
-                          <div className="md:hidden app__td">
-                            <span className='font-light'>Head: {item.hrm_users?.firstname} {item.hrm_users?.middlename} {item.hrm_users?.lastname} </span>
+                          <div className="md:hidden app__td space-y-2">
+                            <div className='font-light'>Head: {item.hrm_users?.firstname} {item.hrm_users?.middlename} {item.hrm_users?.lastname} </div>
+                            <div className='font-light'>Type: {item.type} </div>
+                            <div className='font-light'>District: {item.hrm_districts?.name} </div>
+                            <div className='font-light'>Class: {item.hrm_users?.firstname} {item.hrm_users?.middlename} {item.hrm_users?.lastname} </div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -219,6 +226,11 @@ const Page: React.FC = () => {
                       <td
                         className="hidden md:table-cell app__td">
                         <div>{item.type}</div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        <div className='font-semibold'>{item.size}</div>
+                        <div>{item.school_class?.map((item: string) => item).join(', ')}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
