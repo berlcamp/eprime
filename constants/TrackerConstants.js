@@ -240,6 +240,7 @@ export const orgChart = [
                         id: 46,
                         name: "CASH UNIT",
                         role: "CU",
+                        type: 'office',
                         profiles: [
                           {
                             id: 76,
@@ -286,6 +287,7 @@ export const orgChart = [
                         id: 46,
                         name: "PROPERTY AND SUPPLY UNIT",
                         role: "PSU",
+                        type: 'office',
                         profiles: [
                           {
                             id: 76,
