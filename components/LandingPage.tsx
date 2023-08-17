@@ -5,15 +5,15 @@ export default async function LandingPage () {
     <>
       <div className="app__landingpage">
         <TopBarDark isGuest={true}/>
-        <div className='bg-gray-700 py-10 mt-10 px-6 md:flex items-start md:space-x-4 justify-evenly'>
-          <div className='bg-gray-100 p-4 rounded-lg border md:max-w-[420px]'>
+        <div className='bg-gray-700 pb-10 pt-32 px-6 md:flex items-start md:space-x-4 justify-center'>
+          <div className='bg-gray-100 p-4 rounded-lg border md:w-[420px] md:max-w-[420px]'>
             <Jobs/>
           </div>
-          <div className='bg-gray-100 p-4 rounded-lg border mt-10 md:mt-0 md:max-w-[420px]'>
+          <div className='bg-gray-100 p-4 rounded-lg border mt-10 md:mt-0 md:max-w-[420px] lg:w-[620px] lg:max-w-[620px]'>
             <Announcements/>
           </div>
         </div>
-        <div className='mt-0'>
+        <div className=''>
           <OrganizationalStructure/>
         </div>
         <div className='bg-gray-800 p-4'>
