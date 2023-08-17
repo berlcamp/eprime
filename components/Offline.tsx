@@ -17,7 +17,7 @@ export default function OfflinePage () {
             <div className="modal-body relative p-4">
               <div className='app__form_field_container'>
                 <div className='w-full'>
-                  <div className='text-gray-600 font-medium text-sm mb-1 dark:text-gray-300'>You are currently offline. Trying to reconnect ... </div>
+                  <div className='app__label_standard'>You are currently offline. Trying to reconnect ... </div>
                 </div>
               </div>
 

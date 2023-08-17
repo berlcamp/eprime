@@ -3,10 +3,10 @@
 @tailwind utilities;
 
 .app__main {
-  @apply lg:ml-64 mt-20 pb-20
+  @apply lg:ml-64 mt-20 pb-0
 }
 .app__home {
-  @apply pb-20
+  @apply pb-0
 }
 .app__title {
   @apply flex items-center space-x-2 px-4 mt-4 py-2 border-gray-200 border-b
@@ -82,9 +82,6 @@
 }
 .app__input_noborder {
   @apply w-full text-sm py-1 px-2 text-gray-600 border-gray-300 rounded-sm focus:ring-0 focus:outline-none
-}
-.app__label_standard {
-  @apply text-gray-600 font-medium text-sm mb-1
 }
 .app__search_user_results_container {
   @apply absolute top-7 left-0 z-50 w-full bg-gray-200 border
@@ -166,4 +163,7 @@
 }
 .app__form_field_container {
   @apply grid grid-cols-1 gap-4 mb-4
+}
+.app__label_standard {
+  @apply text-gray-600 font-medium text-sm mb-1
 }

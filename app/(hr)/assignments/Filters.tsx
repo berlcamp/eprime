@@ -10,30 +10,30 @@ interface FilterTypes {
   setFilterKeyword: (keyword: string) => void
   setFilterSchool: (type: string) => void
   setFilterOffice: (type: string) => void
-  setFilterSetupStatus: (type: string) => void
+  setFilterStatus: (type: string) => void
 }
 
-const accountSetupStatus = [
-  'Completed',
-  'Incomplete'
+const statuses = [
+  'Active',
+  'Expired'
 ]
 
-const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilterSetupStatus }: FilterTypes) => {
+const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilterStatus }: FilterTypes) => {
   const [selectedSchool, setSelectedSchool] = useState<SchoolTypes | []>([])
   const [selectedOffice, setSelectedOffice] = useState<Office | []>([])
-  const [selectedSetupStatus, setSelectedSetupStatus] = useState<string | []>([])
+  const [selectedStatus, setSelectedStatus] = useState<string | []>([])
   const [keyword, setKeyword] = useState<string>('')
   const [schools, setSchools] = useState<SchoolTypes[]>([])
   const [offices, setOffices] = useState<Office[]>([])
 
   const handleApply = () => {
-    if (keyword.trim() === '' && Array.isArray(selectedSchool) && Array.isArray(selectedOffice) && selectedSetupStatus === '') return
+    if (keyword.trim() === '' && Array.isArray(selectedSchool) && Array.isArray(selectedOffice) && selectedStatus === '') return
 
     // pass filter values to parent
     setFilterKeyword(keyword)
     setFilterSchool(Array.isArray(selectedSchool) ? '' : selectedSchool.id)
     setFilterOffice(Array.isArray(selectedOffice) ? '' : selectedOffice.id)
-    setFilterSetupStatus(Array.isArray(selectedSetupStatus) ? '' : selectedSetupStatus)
+    setFilterStatus(Array.isArray(selectedStatus) ? '' : selectedStatus)
   }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -45,7 +45,7 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilter
     setFilterKeyword(keyword)
     setFilterSchool(Array.isArray(selectedSchool) ? '' : selectedSchool.id)
     setFilterOffice(Array.isArray(selectedOffice) ? '' : selectedOffice.id)
-    setFilterSetupStatus(Array.isArray(selectedSetupStatus) ? '' : selectedSetupStatus)
+    setFilterStatus(Array.isArray(selectedStatus) ? '' : selectedStatus)
   }
 
   // clear all filters
@@ -56,8 +56,8 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilter
     setSelectedSchool([])
     setFilterOffice('')
     setSelectedOffice([])
-    setFilterSetupStatus('')
-    setSelectedSetupStatus([])
+    setFilterStatus('')
+    setSelectedStatus([])
   }
 
   // Featch data
@@ -206,12 +206,12 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilter
           </Listbox>
         </div>
         <div className="w-60 inline-flex">
-          <Listbox value={selectedSetupStatus} onChange={setSelectedSetupStatus}>
+          <Listbox value={selectedStatus} onChange={setSelectedStatus}>
             <div className="relative">
               <Listbox.Button className="app__listbox_btn">
                 <span><TagIcon className="w-4 h-4 mr-1"/></span>
                 <span className="block truncate text-xs">
-                Account Setup: {Array.isArray(selectedSetupStatus) ? '' : selectedSetupStatus}
+                Status: {Array.isArray(selectedStatus) ? '' : selectedStatus}
                 </span>
                 <span className="app__listbox_icon">
                   <ChevronDownIcon
@@ -227,7 +227,7 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilter
                 leaveTo="opacity-0"
               >
                 <Listbox.Options className="app__listbox_options">
-                  {accountSetupStatus.map((item, itemIdx) => (
+                  {statuses.map((item, itemIdx) => (
                     <Listbox.Option
                       key={itemIdx}
                       className={({ active }) =>

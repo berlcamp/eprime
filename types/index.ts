@@ -117,16 +117,16 @@ export interface AccountDetailsForm {
   office_id?: string
 }
 
-export interface Assignment {
+export interface AssignmentTypes {
   designation: string
   hrm_user_id: string
   id: string
   area_assigned: string
   from: string
   to: string
-  type?: string
-  add_to_service_record: boolean
-  hrm_users?: any
+  type: string
+  add_to_service_record: string
+  hrm_users: Employee
 }
 
 export interface Designation {

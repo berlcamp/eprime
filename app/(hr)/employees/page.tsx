@@ -10,6 +10,7 @@ import { superAdmins } from '@/constants/TrackerConstants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { capitalizeWords } from '@/utils/text-helper'
 
 // Types
 import type { Employee } from '@/types'
@@ -100,13 +101,6 @@ const Page: React.FC = () => {
     if (salaryGrade !== '' && salaryStep !== '') count++
 
     return count
-  }
-
-  const capitalizeWords = (inputString: string) => {
-    return inputString
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
   }
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list

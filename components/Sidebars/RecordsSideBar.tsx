@@ -25,28 +25,28 @@ const RecordsSideBar = () => {
         </li>
         <li>
             <Link
-              href="/assignments"
-              className={`app__menu_link ${currentRoute === '/designation' ? 'app_menu_link_active' : ''}`}>
+              href="/designations"
+              className={`app__menu_link ${currentRoute === '/designations' ? 'app_menu_link_active' : ''}`}>
               <span className="flex-1 ml-3 whitespace-nowrap">Designations</span>
             </Link>
         </li>
         <li>
             <Link
-              href="/assignments"
-              className={`app__menu_link ${currentRoute === '/cto' ? 'app_menu_link_active' : ''}`}>
+              href="/ctos"
+              className={`app__menu_link ${currentRoute === '/ctos' ? 'app_menu_link_active' : ''}`}>
               <span className="flex-1 ml-3 whitespace-nowrap">CTO</span>
             </Link>
         </li>
         <li>
             <Link
-              href="/assignments"
+              href="/servicecredits"
               className={`app__menu_link ${currentRoute === '/servicecredits' ? 'app_menu_link_active' : ''}`}>
               <span className="flex-1 ml-3 whitespace-nowrap">Service Credits</span>
             </Link>
         </li>
         <li>
             <Link
-              href="/assignments"
+              href="/promotions"
               className={`app__menu_link ${currentRoute === '/promotions' ? 'app_menu_link_active' : ''}`}>
               <span className="flex-1 ml-3 whitespace-nowrap">Promotions</span>
             </Link>
@@ -61,14 +61,14 @@ const RecordsSideBar = () => {
         </li>
         <li>
             <Link
-              href="/assignments"
+              href="/items"
               className={`app__menu_link ${currentRoute === '/items' ? 'app_menu_link_active' : ''}`}>
               <span className="flex-1 ml-3 whitespace-nowrap">Vacant Items</span>
             </Link>
           </li>
         <li>
             <Link
-              href="/assignments"
+              href="/plantillas"
               className={`app__menu_link ${currentRoute === '/plantillas' ? 'app_menu_link_active' : ''}`}>
               <span className="flex-1 ml-3 whitespace-nowrap">Plantillas</span>
             </Link>

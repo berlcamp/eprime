@@ -1,16 +1,20 @@
 'use client'
 
-import { fetchPositions } from '@/utils/fetchApi'
+import { fetchAssignments } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, TrashIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
-import { Sidebar, PerPage, TopBar, DeleteModal, TableRowLoading, CustomButton, ShowMore, SettingsSideBar, Title } from '@/components'
-import AddEditModal from './AddEditModal'
+import { ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar } from '@/components'
 import uuid from 'react-uuid'
+import { superAdmins } from '@/constants/TrackerConstants'
 import Filters from './Filters'
+import { useFilter } from '@/context/FilterContext'
+import { useSupabase } from '@/context/SupabaseProvider'
+import { capitalizeWords } from '@/utils/text-helper'
+import AddEditModal from './AddEditModal'
 
 // Types
-import type { PositionTypes } from '@/types'
+import type { AssignmentTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -22,21 +26,27 @@ const Page: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedId, setSelectedId] = useState<string>('')
+  const [list, setList] = useState<AssignmentTypes[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
-  const [list, setList] = useState<PositionTypes[]>([])
-  const [editData, setEditData] = useState<PositionTypes | null>(null)
+  const [filterSchool, setFilterSchool] = useState<string>('')
+  const [filterOffice, setFilterOffice] = useState<string>('')
+  const [filterStatus, setFilterStatus] = useState<string>('')
   const [perPageCount, setPerPageCount] = useState<number>(10)
+  const [editData, setEditData] = useState<AssignmentTypes | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
+  const { session } = useSupabase()
+  const { hasAccess } = useFilter()
+
   const fetchData = async () => {
     setLoading(true)
 
     try {
-      const result = await fetchPositions(filterKeyword, perPageCount, 0)
+      const result = await fetchAssignments({ filterKeyword, filterSchool, filterOffice, filterStatus }, perPageCount, 0)
 
       // update the list in redux
       dispatch(updateList(result.data))
@@ -55,7 +65,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchPositions(filterKeyword, perPageCount, list.length)
+      const result = await fetchAssignments({ filterKeyword, filterSchool, filterOffice, filterStatus }, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -75,7 +85,7 @@ const Page: React.FC = () => {
     setEditData(null)
   }
 
-  const handleEdit = (item: PositionTypes) => {
+  const handleEdit = (item: AssignmentTypes) => {
     setShowAddModal(true)
     setEditData(item)
   }
@@ -94,24 +104,28 @@ const Page: React.FC = () => {
   useEffect(() => {
     setList([])
     void fetchData()
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, perPageCount])
+  }, [filterKeyword, perPageCount, filterSchool, filterStatus, filterOffice])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
+
+  // Check access from permission settings or Super Admins
+  if (!hasAccess('employee_accounts') && !superAdmins.includes(session.user.email)) return <Unauthorized/>
 
   return (
     <>
     <Sidebar>
-      <SettingsSideBar/>
+      <RecordsSideBar/>
     </Sidebar>
     <TopBar/>
     <div className="app__main">
       <div>
           <div className='app__title'>
-            <Title title='Positions'/>
+            <Title title='Assignments'/>
             <CustomButton
               containerStyles='app__btn_green'
-              title='Add New Position'
+              title='Add New Assignment'
               btnType='button'
               handleClick={handleAdd}
             />
@@ -121,6 +135,9 @@ const Page: React.FC = () => {
           <div className='app__filters'>
             <Filters
               setFilterKeyword={setFilterKeyword}
+              setFilterSchool={setFilterSchool}
+              setFilterOffice={setFilterOffice}
+              setFilterStatus={setFilterStatus}
             />
           </div>
 
@@ -138,16 +155,22 @@ const Page: React.FC = () => {
                   <tr>
                       <th className="hidden md:table-cell app__th pl-4"></th>
                       <th className="hidden md:table-cell app__th">
-                          Position
+                          Employee Name
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Salary Grade
+                          Area Assigned
+                      </th>
+                      <th className="hidden md:table-cell app__th">
+                          Duration
+                      </th>
+                      <th className="hidden md:table-cell app__th">
+                          Designation
                       </th>
                   </tr>
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: any) => (
+                  !isDataEmpty && list.map((item: AssignmentTypes) => (
                     <tr
                       key={uuid()}
                       className="app__tr">
@@ -171,7 +194,7 @@ const Page: React.FC = () => {
                           >
                             <Menu.Items className="app__dropdown_items">
                               <div className="py-1">
-                                <Menu.Item>
+                              <Menu.Item>
                                   <div
                                       onClick={() => handleEdit(item)}
                                       className='app__dropdown_item'
@@ -196,11 +219,11 @@ const Page: React.FC = () => {
                       </td>
                       <th
                         className="app__th_firstcol">
-                        {item.name}
+                        <div>{capitalizeWords(item.hrm_users?.firstname + ' ' + item.hrm_users?.firstname + ' ' + item.hrm_users?.firstname)}</div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">
-                            <span className='font-light'>Salary Grade: {item.salary_grade}</span>
+                            <div className='font-light'>Duration: {item.from} -  {item.to}</div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -208,12 +231,20 @@ const Page: React.FC = () => {
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
-                        <span className='font-light'>{item.salary_grade}</span>
+                        <div>{item.area_assigned}</div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        <div>{item.from} -  {item.to}</div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        <div>{item.designation}</div>
                       </td>
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={3} rows={2}/> }
+                { loading && <TableRowLoading cols={5} rows={2}/> }
               </tbody>
             </table>
             {
@@ -229,25 +260,26 @@ const Page: React.FC = () => {
                 handleShowMore={handleShowMore}/>
           }
       </div>
-      {/* Add/Edit Modal */}
-      {
-        showAddModal && (
-          <AddEditModal
-            editData={editData}
-            hideModal={() => setShowAddModal(false)}/>
-        )
-      }
-
-      {/* Delete Modal */}
-      {
-        showDeleteModal && (
-          <DeleteModal
-            id={selectedId}
-            table='hrm_positions'
-            hideModal={() => setShowDeleteModal(false)}/>
-        )
-      }
     </div>
+
+    {/* Add/Edit Modal */}
+    {
+      showAddModal && (
+        <AddEditModal
+          editData={editData}
+          hideModal={() => setShowAddModal(false)}/>
+      )
+    }
+
+    {/* Delete Modal */}
+    {
+      showDeleteModal && (
+        <DeleteModal
+          id={selectedId}
+          table='hrm_positions'
+          hideModal={() => setShowDeleteModal(false)}/>
+      )
+    }
   </>
   )
 }

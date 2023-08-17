@@ -282,7 +282,7 @@ const AccountDetails = ({ hideModal, id }: ModalProps) => {
                     </div>
                     <div className='app__form_field_container'>
                       <div className='w-full'>
-                        <div className='text-gray-600 font-medium text-sm mb-1 dark:text-gray-300'>Original assignment</div>
+                        <div className='app__label_standard'>Original assignment</div>
                         <div>
                           <select
                             {...register('assignment', { required: true })}
@@ -302,7 +302,7 @@ const AccountDetails = ({ hideModal, id }: ModalProps) => {
                         <>
                           <div className='app__form_field_container'>
                             <div className='w-full'>
-                              <div className='text-gray-600 font-medium text-sm mb-1 dark:text-gray-300'>Choose district</div>
+                              <div className='app__label_standard'>Choose district</div>
                               <div>
                                 <select
                                   {...register('district_id', { required: true })}
@@ -333,7 +333,7 @@ const AccountDetails = ({ hideModal, id }: ModalProps) => {
                         <>
                           <div className='app__form_field_container'>
                             <div className='w-full'>
-                              <div className='text-gray-600 font-medium text-sm mb-1 dark:text-gray-300'>Choose School</div>
+                              <div className='app__label_standard'>Choose School</div>
                               <div>
                                 <select
                                   {...register('school_id', { required: true })}
@@ -357,7 +357,7 @@ const AccountDetails = ({ hideModal, id }: ModalProps) => {
                       assignment === 'office' &&
                         <div className='app__form_field_container'>
                           <div className='w-full'>
-                            <div className='text-gray-600 font-medium text-sm mb-1 dark:text-gray-300'>Choose office</div>
+                            <div className='app__label_standard'>Choose office</div>
                             <div>
                               <select
                                 {...register('office_id', { required: true })}

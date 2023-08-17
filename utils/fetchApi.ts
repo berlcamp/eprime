@@ -216,6 +216,61 @@ export async function fetchEmployees (filters: { filterKeyword?: string, filterS
   }
 }
 
+export async function fetchAssignments (filters: { filterKeyword?: string, filterSchool?: string, filterOffice?: string, filterStatus?: string }, perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_assignments')
+      .select('*, hrm_users:hrm_user_id(*)', { count: 'exact' })
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    // Search match
+    if (filters.filterKeyword && filters.filterKeyword !== '') {
+      query = query.or(`hrm_users.firstname.ilike.%${filters.filterKeyword}%,hrm_users.middlename.ilike.%${filters.filterKeyword}%,hrm_users.lastname.ilike.%${filters.filterKeyword}%`)
+    }
+
+    // filter school
+    if (filters.filterSchool && filters.filterSchool !== '') {
+      query = query.eq('school_id', filters.filterSchool)
+    }
+
+    // filter office
+    if (filters.filterOffice && filters.filterOffice !== '') {
+      query = query.eq('office_id', filters.filterOffice)
+    }
+
+    // filter setup status
+    if (filters.filterStatus && filters.filterStatus !== '') {
+      if (filters.filterStatus === 'Active') {
+        // filter where date (to) is blank or less than the current date
+      }
+      if (filters.filterStatus === 'Expired') {
+        // filter where date (to) is green than the current date
+      }
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch employee error', error)
+    return { data: [], count: 0 }
+  }
+}
+
 export async function fetchRegistrations (filters: { filterKeyword?: string, filterSchool?: string, filterOffice?: string }, perPageCount: number, rangeFrom: number) {
   try {
     let query = supabase
@@ -285,39 +340,4 @@ export async function searchActiveEmployees (searchTerm: string, excludedItems: 
   if (error) console.error(error)
 
   return data ?? []
-}
-
-export async function fetchAssignments (filterKeyword: string, perPageCount: number, rangeFrom: number) {
-  try {
-    let query = supabase
-      .from('hrm_assignments')
-      .select('*,hrm_users:hrm_user_id(*)', { count: 'exact' })
-      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
-
-    // Full text search
-    if (filterKeyword !== '') {
-      query = query.or(`hrm_users.firstname.ilike.%${filterKeyword}%,hrm_users.middlename.ilike.%${filterKeyword}%,hrm_users.lastname.ilike.%${filterKeyword}%`)
-    }
-
-    // Per Page from context
-    const from = rangeFrom
-    const to = from + (perPageCount - 1)
-
-    // Per Page from context
-    query = query.range(from, to)
-
-    // Order By
-    query = query.order('id', { ascending: false })
-
-    const { data, error, count } = await query
-
-    if (error) {
-      throw new Error(error.message)
-    }
-
-    return { data, count }
-  } catch (error) {
-    console.error('fetch error', error)
-    return { data: [], count: 0 }
-  }
 }

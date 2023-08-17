@@ -17,3 +17,10 @@ export function fullTextQuery (string: string): string {
 
   return searchQuery
 }
+
+export function capitalizeWords (inputString: string) {
+  return inputString
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}

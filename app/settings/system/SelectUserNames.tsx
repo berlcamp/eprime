@@ -106,7 +106,7 @@ export default function SelectUserNames ({ settingsData, multiple, type, handleM
   return (
     <div className='app__form_field_container'>
       <div className='w-full'>
-        <div className='text-gray-600 font-medium text-sm mb-1 dark:text-gray-300'>{title}:</div>
+        <div className='app__label_standard'>{title}:</div>
         <div className='bg-white p-1 border border-gray-300 rounded-sm'>
           <div className='space-x-2'>
           {

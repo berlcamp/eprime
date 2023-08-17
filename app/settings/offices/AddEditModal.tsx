@@ -213,7 +213,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                   <div className='relative'>
                     <input
                       type="text"
-                      placeholder='Search District Head'
+                      placeholder='Search Office Head'
                       value={searchHead}
                       onChange={async (e) => await handleSearchUser(e)}
                       className='app__input_noborder'/>
