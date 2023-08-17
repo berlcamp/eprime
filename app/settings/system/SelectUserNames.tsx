@@ -35,6 +35,7 @@ export default function SelectUserNames ({ settingsData, multiple, type, handleM
     let query = supabase
       .from('hrm_users')
       .select('id, firstname, lastname, middlename')
+      .eq('status', 'Active')
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Search match

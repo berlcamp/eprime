@@ -266,7 +266,7 @@ export async function searchActiveEmployees (searchTerm: string, excludedItems: 
   let query = supabase
     .from('hrm_users')
     .select()
-    .eq('status', 'active')
+    .eq('status', 'Active')
     .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
   // Search match
