@@ -1,0 +1,344 @@
+'use client'
+
+import React, { Fragment, useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useSupabase } from '@/context/SupabaseProvider'
+import uuid from 'react-uuid'
+import { fetchSchools, fetchOffices, fetchDistricts } from '@/utils/fetchApi'
+
+import type { SchoolTypes, Office, DistrictTypes } from '@/types'
+import { CustomButton, OneColLayoutLoading } from '@/components'
+
+interface ModalProps {
+  hideModal: () => void
+}
+
+interface FormValues {
+  firstname: string
+  middlename: string
+  lastname: string
+  email: string
+  password: string
+  assignment: string
+  school_id?: string
+  district_id?: string
+  office_id?: string
+}
+
+const RegisterModal = ({ hideModal }: ModalProps) => {
+  const { supabase } = useSupabase()
+  const [loading, setLoading] = useState(false)
+  const [complete, setComplete] = useState(false)
+  const [loadingSchools, setLoadingSchools] = useState(false)
+  const [assignment, setAssignment] = useState('')
+  const [selectedDistrict, setSelectedDistrict] = useState('')
+  const [selectedSchool, setSelectedSchool] = useState('')
+  const [selectedOffice, setSelectedOffice] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [schools, setSchools] = useState<SchoolTypes[] | null>(null)
+  const [districts, setDistricts] = useState<DistrictTypes[] | null>(null)
+  const [offices, setOffices] = useState<Office[] | null>(null)
+
+  const { register, formState: { errors }, reset, handleSubmit } = useForm<FormValues>({
+    mode: 'onSubmit'
+  })
+
+  const onSubmit = async (formdata: FormValues) => {
+    if (loading) return
+
+    await handleSignup(formdata)
+  }
+
+  const handleSignup = async (formdata: FormValues) => {
+    setLoading(true)
+
+    // Check if the email domain is allowed
+    const allowedDomains = ['gmail.com']
+    const emailDomain = formdata.email.split('@')[1]
+    if (!allowedDomains.includes(emailDomain)) {
+      setError('We only allow DepEd email address')
+      setLoading(false)
+      return false
+    }
+
+    try {
+      const { count, data: existingUser, error: hrmUsersError } = await supabase
+        .from('hrm_registrations')
+        .select('*', { count: 'exact' })
+        .eq('email', formdata.email)
+
+      if (hrmUsersError) throw new Error(hrmUsersError.message)
+
+      if (count > 0) {
+        if (existingUser[0].status === 'Active') {
+          throw new Error('This email already registered.')
+        } else {
+          throw new Error('This email already registered and is subject for verification from admin.')
+        }
+      } else {
+        const district = formdata.assignment === 'school' ? Number(formdata.district_id) : null
+        const school = formdata.assignment === 'school' ? Number(formdata.school_id) : null
+        const office = formdata.assignment === 'office' ? Number(formdata.office_id) : null
+
+        const newUserData = {
+          firstname: formdata.firstname,
+          middlename: formdata.middlename,
+          lastname: formdata.lastname,
+          email: formdata.email,
+          password: formdata.password,
+          assignment: formdata.assignment,
+          district_id: district,
+          school_id: school,
+          office_id: office,
+          status: 'For Approval',
+          org_id: process.env.NEXT_PUBLIC_ORG_ID
+        }
+
+        const { error: registrationError } = await supabase
+          .from('hrm_registrations')
+          .insert(newUserData)
+
+        if (registrationError) throw new Error(registrationError.message)
+
+        setComplete(true)
+      }
+
+      setLoading(false)
+      setError(null)
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
+        setLoading(false)
+      }
+      return false
+    }
+
+    return true
+  }
+
+  const handleDistrictChange = async (districtId: string) => {
+    setSelectedDistrict(districtId)
+    setLoadingSchools(true)
+
+    const result = await fetchSchools({ filterDistrictId: districtId }, 300, 0)
+
+    setSchools(result.data.length > 0 ? result.data : null)
+    setLoadingSchools(false)
+  }
+
+  useEffect(() => {
+    reset({})
+
+    setComplete(false)
+
+    const fetchDistrictsData = async () => {
+      const result = await fetchDistricts('', 300, 0)
+      setDistricts(result.data.length > 0 ? result.data : null)
+    }
+
+    const fetchOfficesData = async () => {
+      const result = await fetchOffices('', 300, 0)
+      setOffices(result.data.length > 0 ? result.data : null)
+    }
+
+    void fetchDistrictsData()
+    void fetchOfficesData()
+  }, [])
+
+  return (
+    <>
+      <div className="app__modal_wrapper">
+        <div className="app__modal_wrapper2">
+          <div className="app__modal_wrapper3">
+            <div className="app__modal_header">
+              <h5 className="app__modal_header_text">
+                Sign Up
+              </h5>
+              <button disabled={loading} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+            </div>
+
+            {
+              !complete &&
+                <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
+                  {(error && (error !== 'This email already exist.' && error !== 'This email already registered and is subject for verification from admin.')) &&
+                    <div className='app__error_message pb-4'>{error}</div>}
+                  <div className='app__form_field_container'>
+                    <div className='w-full'>
+                      <div className='app__label_standard'>First Name</div>
+                      <div>
+                        <input
+                          {...register('firstname', { required: true })}
+                          type="text"
+                          className='app__input_standard'/>
+                        {errors.firstname && <div className='app__error_message'>First Name is required</div>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className='app__form_field_container'>
+                    <div className='w-full'>
+                      <div className='app__label_standard'>Middle Name</div>
+                      <div>
+                        <input
+                          {...register('middlename')}
+                          type="text"
+                          className='app__input_standard'/>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='app__form_field_container'>
+                    <div className='w-full'>
+                      <div className='app__label_standard'>Last Name</div>
+                      <div>
+                        <input
+                          {...register('lastname', { required: true })}
+                          type="text"
+                          className='app__input_standard'/>
+                        {errors.lastname && <div className='app__error_message'>Last Name is required</div>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className='app__form_field_container'>
+                    <div className='w-full'>
+                      <div className='app__label_standard'>Email</div>
+                      <div>
+                        <input
+                          {...register('email', { required: true })}
+                          type="email"
+                          onChange={() => setError('')}
+                          className='app__input_standard'/>
+                        {errors.email && <div className='app__error_message'>Email is required</div>}
+                        {(error && (error === 'This email already exist.' || error === 'This email already registered and is subject for verification from admin.')) &&
+                          <div className='app__error_message pb-4'>{error}</div>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className='app__form_field_container'>
+                    <div className='w-full'>
+                      <div className='app__label_standard'>Password</div>
+                      <div>
+                        <input
+                          {...register('password', { required: true })}
+                          type="password"
+                          className='app__input_standard'/>
+                        {errors.password && <div className='app__error_message'>Password is required</div>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className='app__form_field_container'>
+                    <div className='w-full'>
+                      <div className='text-gray-600 font-medium text-sm mb-1 dark:text-gray-300'>Original assignment</div>
+                      <div>
+                        <select
+                          {...register('assignment', { required: true })}
+                          value={assignment}
+                          onChange={e => setAssignment(e.target.value)}
+                          className='app__select_standard'>
+                            <option value=''>Choose</option>
+                            <option value='school'>School</option>
+                            <option value='office'>Division Office</option>
+                        </select>
+                        {errors.assignment && <div className='app__error_message'>Assignment is required</div>}
+                      </div>
+                    </div>
+                  </div>
+                  {
+                    assignment === 'school' &&
+                      <>
+                        <div className='app__form_field_container'>
+                          <div className='w-full'>
+                            <div className='text-gray-600 font-medium text-sm mb-1 dark:text-gray-300'>Choose district</div>
+                            <div>
+                              <select
+                                {...register('district_id', { required: true })}
+                                onChange={async e => await handleDistrictChange(e.target.value)}
+                                value={selectedDistrict}
+                                className='app__select_standard'>
+                                  <option value=''>Choose</option>
+                                  {
+                                    districts?.map(item => (
+                                      <option key={uuid()} value={item.id}>{item.name}</option>
+                                    ))
+                                  }
+                              </select>
+                              {errors.district_id && <div className='app__error_message'>District is required</div>}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                  }
+                  {
+                    loadingSchools &&
+                      <div className=''>
+                        <OneColLayoutLoading rows={1}/>
+                      </div>
+                  }
+                  {
+                    (assignment === 'school' && !loadingSchools) &&
+                      <>
+                        <div className='app__form_field_container'>
+                          <div className='w-full'>
+                            <div className='text-gray-600 font-medium text-sm mb-1 dark:text-gray-300'>Choose School</div>
+                            <div>
+                              <select
+                                {...register('school_id', { required: true })}
+                                value={selectedSchool}
+                                onChange={e => setSelectedSchool(e.target.value)}
+                                className='app__select_standard'>
+                                  <option value=''>Choose</option>
+                                  {
+                                    schools?.map(item => (
+                                      <option key={uuid()} value={item.id}>{item.name}</option>
+                                    ))
+                                  }
+                              </select>
+                              {errors.school_id && <div className='app__error_message'>School is required</div>}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                  }
+                  {
+                    assignment === 'office' &&
+                      <div className='app__form_field_container'>
+                        <div className='w-full'>
+                          <div className='text-gray-600 font-medium text-sm mb-1 dark:text-gray-300'>Choose office?</div>
+                          <div>
+                            <select
+                              {...register('office_id', { required: true })}
+                              value={selectedOffice}
+                              onChange={e => setSelectedOffice(e.target.value)}
+                              className='app__select_standard'>
+                                <option value=''>Choose</option>
+                                {
+                                  offices?.map(item => (
+                                    <option key={uuid()} value={item.id}>{item.name}</option>
+                                  ))
+                                }
+                            </select>
+                            {errors.office_id && <div className='app__error_message'>Office is required</div>}
+                          </div>
+                        </div>
+                      </div>
+                  }
+                  <div className="app__modal_footer">
+                        <CustomButton
+                          btnType='submit'
+                          isDisabled={loading}
+                          containerStyles='app__btn_green_sm'
+                          title={loading ? 'Saving..' : 'Submit'}
+                        />
+                  </div>
+                </form>
+            }
+            {
+              complete &&
+                <div className='m-4 p-4 bg-gray-200 rounded-lg border'><span className='font-bold text-green-600'>Registration Successfull.</span> Please wait for the administrator to verify your account. Once approved, you will received an email notification.</div>
+            }
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default RegisterModal
