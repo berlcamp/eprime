@@ -5,7 +5,7 @@ import { orgChart } from '@/constants/TrackerConstants'
 import { CustomButton } from '@/components'
 
 export default function App () {
-  const [zoomLevel, setZoomLevel] = useState<number>(0.4)
+  const [zoomLevel, setZoomLevel] = useState<number>(0.3)
 
   const handleZoomIn = () => {
     if (zoomLevel >= 1) return
@@ -17,9 +17,9 @@ export default function App () {
   }
 
   return (
-    <div className="flex flex-col justify-center items-center">
-      <h1 className="text-3xl top-0">Organisation Flow chart</h1>
-      <div className="space-x-2">
+    <div className="flex flex-col justify-center items-center mt-10">
+      <h1 className="text-2xl">Organizational Flow Chart</h1>
+      <div className="space-x-2 mt-4">
         <CustomButton
           containerStyles='app__btn_green'
           title='Zoom In'

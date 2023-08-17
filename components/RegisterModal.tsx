@@ -53,13 +53,13 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
     setLoading(true)
 
     // Check if the email domain is allowed
-    const allowedDomains = ['gmail.com']
-    const emailDomain = formdata.email.split('@')[1]
-    if (!allowedDomains.includes(emailDomain)) {
-      setError('We only allow DepEd email address')
-      setLoading(false)
-      return false
-    }
+    // const allowedDomains = ['gmail.com']
+    // const emailDomain = formdata.email.split('@')[1]
+    // if (!allowedDomains.includes(emailDomain)) {
+    //   setError('We only allow DepEd email address')
+    //   setLoading(false)
+    //   return false
+    // }
 
     try {
       const { count, data: existingUser, error: hrmUsersError } = await supabase
@@ -143,6 +143,8 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
 
     void fetchDistrictsData()
     void fetchOfficesData()
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

@@ -32,11 +32,18 @@ export default async function RootLayout ({ children }: { children: React.ReactN
 
   if (error) console.error(error)
 
+  const { data: systemUsers, error: systemUsersError } = await supabase
+    .from('hrm_users')
+    .select()
+    .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+  if (systemUsersError) console.error(systemUsersError)
+
   return (
     <html lang="en">
       <body className={`relative ${session ? 'bg-white' : 'bg-gray-100'}`}>
 
-        <SupabaseProvider systemSettings={systemSettings} session={session}>
+        <SupabaseProvider systemSettings={systemSettings} session={session} systemUsers={systemUsers}>
             <SupabaseListener serverAccessToken={session?.access_token} />
               {!session && <LandingPage/> }
               {

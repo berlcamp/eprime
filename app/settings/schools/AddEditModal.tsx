@@ -1,4 +1,6 @@
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { Fragment, useState, useEffect } from 'react'
+import { Listbox, Transition } from '@headlessui/react'
+import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
 import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -14,6 +16,13 @@ import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 
+const classList = [
+  'IP School',
+  'Madrata',
+  'Senior High School Only',
+  'Integrated'
+]
+
 interface ModalProps {
   hideModal: () => void
   editData: SchoolTypes | null
@@ -25,7 +34,6 @@ interface SchoolForm {
   district_id: string
   size: string
   school_id: string
-  school_class: string
 }
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
@@ -38,6 +46,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
   const [districtId, setDistrictId] = useState(editData ? (editData.district_id ? editData.district_id : '') : '')
   const [districts, setDistricts] = useState<DistrictTypes[] | null>(null)
+  const [selectedClass, setSelectedClass] = useState<never[] | []>(editData ? (editData.school_class ? editData.school_class : []) : [])
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -64,14 +73,13 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleCreate = async (formdata: SchoolForm) => {
-    setSaving(true)
-
+    //
     const selectedDistrict = districts?.filter(d => d.id.toString() === formdata.district_id)
 
     const newData = {
       name: formdata.name,
       type: formdata.type,
-      school_class: formdata.school_class,
+      school_class: selectedClass,
       size: formdata.size,
       school_id: formdata.school_id,
       head_user_id: selectedItems[0].id,
@@ -124,7 +132,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     const newData = {
       name: formdata.name,
       type: formdata.type,
-      school_class: formdata.school_class,
+      school_class: selectedClass,
       size: formdata.size,
       school_id: formdata.school_id,
       head_user_id: selectedItems[0].id,
@@ -196,7 +204,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     reset({
       name: editData ? editData.name : '',
       type: editData ? editData.type : '',
-      school_class: editData ? editData.school_class : '',
       size: editData ? editData.size : '',
       school_id: editData ? editData.school_id : '',
       district_id: editData ? editData.district_id : ''
@@ -271,18 +278,64 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                 <div className='w-full'>
                   <div className='app__label_standard'>Class:</div>
                   <div>
-                    {/* Multiple select */}
-                    <select
-                      {...register('school_class', { required: true })}
-                      className='app__select_standard'>
-                        <option value=''>Choose Class</option>
-                        <option value='Complete'>Complete</option>
-                        <option value='IP School'>IP School</option>
-                        <option value='Madrata'>Madrata</option>
-                        <option value='Senior High School Only'>Senior High School Only</option>
-                        <option value='Integrated'>Integrated</option>
-                    </select>
-                    {errors.school_class && <div className='app__error_message'>Class is required</div>}
+                    <div className="w-full">
+                      <Listbox value={selectedClass} onChange={setSelectedClass} multiple>
+                        <div className="relative">
+                          <Listbox.Button className="app__listbox_btn">
+                            <span className="block truncate text-xs">
+                              &nbsp;{selectedClass.map((item: string) => item).join(', ')}
+                            </span>
+                            <span className="app__listbox_icon">
+                              <ChevronDownIcon
+                                className="h-5 w-5"
+                                aria-hidden="true"
+                              />
+                            </span>
+                          </Listbox.Button>
+                          <Transition
+                            as={Fragment}
+                            leave="transition ease-in duration-100"
+                            leaveFrom="opacity-100"
+                            leaveTo="opacity-0"
+                          >
+                            <Listbox.Options className="app__listbox_options">
+                              {classList.map((item, itemIdx) => (
+                                <Listbox.Option
+                                  key={itemIdx}
+                                  className={({ active }) =>
+                                    `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                                      active ? 'bg-amber-50 text-amber-900' : 'text-gray-900'
+                                    }`
+                                  }
+                                  value={item}
+                                >
+                                  {({ selected }) => (
+                                    <>
+                                      <span
+                                        className={`block truncate text-xs ${
+                                          selected ? 'font-medium' : 'font-normal'
+                                        }`}
+                                      >
+                                        {item}
+                                      </span>
+                                      {
+                                        selected
+                                          ? (
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                                              <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                                            </span>
+                                            )
+                                          : null
+                                      }
+                                    </>
+                                  )}
+                                </Listbox.Option>
+                              ))}
+                            </Listbox.Options>
+                          </Transition>
+                        </div>
+                      </Listbox>
+                    </div>
                   </div>
                 </div>
               </div>

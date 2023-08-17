@@ -57,7 +57,7 @@ export interface SchoolTypes {
   id: string
   name: string
   type: string
-  school_class: string
+  school_class: never[] | []
   size: string
   school_id: string
   district_id: string
@@ -89,18 +89,25 @@ export interface Employee {
   lastname: string
   password: string
   email: string
+  position_id: number
+  salary_grade: string
+  salary_step: string
+  assignment: string
+  district_id: string
   org_id: string
-  setup_status?: string
-  school_id?: string
-  district_id?: string
-  office_id?: string
-  assignment?: string
+  school_id: string
+  office_id: string
+  hrm_schools?: SchoolTypes
+  hrm_districts?: DistrictTypes
+  hrm_offices?: Office
+  hrm_positions?: PositionTypes
 }
 
 export interface AccountDetailsForm {
   firstname: string
   middlename: string
   lastname: string
+  email: string
   position_id?: string
   salary_grade?: string
   salary_step?: string

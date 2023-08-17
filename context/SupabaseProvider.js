@@ -5,11 +5,11 @@ import { createBrowserClient } from '../utils/supabase-browser'
 
 const Context = createContext()
 
-export default function SupabaseProvider ({ children, session, systemSettings }) {
+export default function SupabaseProvider ({ children, session, systemSettings, systemUsers }) {
   const [supabase] = useState(() => createBrowserClient())
 
   return (
-    <Context.Provider value={{ supabase, session, systemSettings }}>
+    <Context.Provider value={{ supabase, session, systemSettings, systemUsers }}>
       <>{children}</>
     </Context.Provider>
   )
