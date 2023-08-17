@@ -14,7 +14,7 @@ interface namesType {
 }
 
 export default function SelectUserNames ({ settingsData, multiple, type, handleManagerChange, title }: SelectUserNamesProps) {
-  const { supabase } = useSupabase()
+  const { supabase, systemUsers } = useSupabase()
 
   const [searchManager, setSearchManager] = useState('')
   const [searchManagersResults, setSearchManagersResults] = useState<[]>([])
@@ -84,6 +84,24 @@ export default function SelectUserNames ({ settingsData, multiple, type, handleM
     handleManagerChange(updatedItems, type)
   }
 
+  const capitalizeWords = (inputString: string) => {
+    return inputString
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+
+  const getUserNamesFromSystemUsersContext = (id: string) => {
+    //
+    const users: namesType[] = systemUsers.filter((x: namesType) => x.id.toString() === id.toString())
+
+    if (users.length > 0) {
+      return capitalizeWords(users[0].firstname.toString() + ' ' + users[0].middlename.toString() + ' ' + users[0].lastname.toString())
+    } else {
+      return ''
+    }
+  }
+
   return (
     <div className='app__form_field_container'>
       <div className='w-full'>
@@ -94,7 +112,7 @@ export default function SelectUserNames ({ settingsData, multiple, type, handleM
             selectedManagers.map((item: namesType) => (
                 <div key={uuid()} className='mb-1 inline-flex'>
                   <span className='inline-flex items-center text-sm  border border-gray-400 rounded-sm px-1 bg-gray-300'>
-                    {item.firstname} {item.middlename} {item.lastname}
+                    {getUserNamesFromSystemUsersContext(item.id)}
                     <XMarkIcon onClick={() => handleRemoveSelected(item.uuid)} className='w-4 h-4 ml-2 cursor-pointer'/>
                   </span>
                 </div>

@@ -65,6 +65,7 @@ const Notifications = ({ darkMode }: propTypes) => {
 
   useEffect(() => {
     void countUnread()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

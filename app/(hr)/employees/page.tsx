@@ -101,6 +101,14 @@ const Page: React.FC = () => {
 
     return count
   }
+
+  const capitalizeWords = (inputString: string) => {
+    return inputString
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
   // Check access from permission settings or Super Admins
@@ -128,7 +136,7 @@ const Page: React.FC = () => {
             />
           </div>
 
-          <div className='app__warning_text'><span className='app__warning_title'>Warning:</span> Employees with incomplete account setup will not be included on Automated Leave Card Adjustment System (ALCAS). Use filter &quot;Account Setup&quot; to identify incomplete setup.</div>
+          <div className='app__warning_text'><span className='app__warning_title'>Warning:</span> Accounts with incomplete setup will not be included on Automated Leave Card Adjustment System (ALCAS). Use filter &quot;Account Setup&quot; to identify incomplete setup accounts.</div>
 
           {/* Per Page */}
           <PerPage
@@ -159,7 +167,7 @@ const Page: React.FC = () => {
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: any) => (
+                  !isDataEmpty && list.map((item: Employee) => (
                     <tr
                       key={uuid()}
                       className="app__tr">
@@ -244,7 +252,8 @@ const Page: React.FC = () => {
                       </td>
                       <th
                         className="app__th_firstcol">
-                        {item.firstname} {item.middlename} {item.lastname}
+                        <div>{capitalizeWords(item.firstname + ' ' + item.middlename + ' ' + item.lastname)}</div>
+                        <div className='font-light'>{item.email}</div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">

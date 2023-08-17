@@ -143,6 +143,8 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
 
     void fetchDistrictsData()
     void fetchOfficesData()
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
