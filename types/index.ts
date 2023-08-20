@@ -118,15 +118,23 @@ export interface AccountDetailsForm {
 }
 
 export interface AssignmentTypes {
-  designation: string
+  reference_code: string
   hrm_user_id: string
   id: string
   area_assigned: string
   from: string
   to: string
   type: string
-  add_to_service_record: string
+  add_to_service_record: boolean
   hrm_users: Employee
+  district_id: string
+  school_id: string
+  position_id: string
+  office_id: string
+  hrm_schools: SchoolTypes
+  hrm_districts: DistrictTypes
+  hrm_offices: Office
+  hrm_positions: PositionTypes
 }
 
 export interface Designation {

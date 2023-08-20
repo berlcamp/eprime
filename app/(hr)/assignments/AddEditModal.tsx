@@ -2,34 +2,24 @@ import React, { Fragment, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { fetchDistricts, fetchOffices, fetchPositions, fetchSchools, searchActiveEmployees } from '@/utils/fetchApi'
+import uuid from 'react-uuid'
+import { XMarkIcon } from '@heroicons/react/20/solid'
+import { CustomButton, OneColLayoutLoading } from '@/components'
+import { capitalizeWords, generateReferenceCode } from '@/utils/text-helper'
 
 // Types
-import type { AssignmentTypes, DistrictTypes, Office, SchoolTypes, namesType } from '@/types'
+import type { AssignmentTypes, DistrictTypes, Office, PositionTypes, SchoolTypes, namesType } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { fetchDistricts, fetchOffices, fetchSchools, searchActiveEmployees } from '@/utils/fetchApi'
-import uuid from 'react-uuid'
-import { XMarkIcon } from '@heroicons/react/20/solid'
-import { OneColLayoutLoading } from '@/components'
+import { XCircleIcon } from '@heroicons/react/24/solid'
 
 interface ModalProps {
   hideModal: () => void
   editData: AssignmentTypes | null
-}
-
-interface FormValues {
-  hrm_user_id: string
-  designation: string
-  area_assigned: string
-  from: string
-  to: string
-  add_to_service_record: string
-  district_id: string
-  school_id: string
-  office_id: string
 }
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
@@ -42,56 +32,76 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
   const [errorMessage, setErrorMessage] = useState<string | ''>('')
+  const [dataValidationErrors, setDataValidationErrors] = useState<string[] | []>([])
 
   const [loadingSchools, setLoadingSchools] = useState(false)
   const [assignment, setAssignment] = useState('')
   const [selectedDistrict, setSelectedDistrict] = useState('')
   const [selectedSchool, setSelectedSchool] = useState('')
   const [selectedOffice, setSelectedOffice] = useState('')
+  const [selectedPosition, setSelectedPosition] = useState('')
 
   const [schools, setSchools] = useState<SchoolTypes[] | []>([])
-  const [districts, setDistricts] = useState<DistrictTypes[] | null>(null)
+  const [districts, setDistricts] = useState<DistrictTypes[] | []>([])
   const [offices, setOffices] = useState<Office[] | []>([])
+  const [positions, setPositions] = useState<PositionTypes[] | []>([])
 
-  const [isServiceRecordChecked, setIsServiceRecordChecked] = useState(false)
+  const [isServiceRecordChecked, setIsServiceRecordChecked] = useState(true)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { register, formState: { errors }, reset, handleSubmit } = useForm<FormValues>({
+  const { register, formState: { errors }, reset, handleSubmit } = useForm<AssignmentTypes>({
     mode: 'onSubmit'
   })
 
-  const onSubmit = async (formdata: FormValues) => {
+  const onSubmit = async (formdata: AssignmentTypes) => {
     if (saving) return
 
-    if (editData) {
-      void handleUpdate(formdata)
-    } else {
-      void handleCreate(formdata)
-    }
-  }
+    setSaving(true)
 
-  const handleCreate = async (formdata: FormValues) => {
-    if (selectedItems.length === 0) {
+    // Validate date first
+    if (new Date(formdata.from) > new Date(formdata.to)) {
+      setErrorMessage('End date must be greater than or equal to Start date.')
+      return
+    }
+
+    if (!editData && selectedItems.length === 0) {
       setErrorMessage('Employee Name is Required')
       return
     }
 
-    setSaving(true)
+    const hasErrors: boolean = await validateEmployee(formdata)
+
+    if (!hasErrors) {
+      if (editData) {
+        void handleUpdate(formdata)
+      } else {
+        void handleCreate(formdata)
+      }
+    }
+  }
+
+  const handleCreate = async (formdata: AssignmentTypes) => {
+    const district = formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
+    const school = formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
+    const office = formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
+    const position = Number(formdata.position_id)
 
     const newData = {
+      reference_code: generateReferenceCode(),
       hrm_user_id: selectedItems[0].id,
-      designation: formdata.designation,
       area_assigned: formdata.area_assigned,
-      from: formdata.from,
-      to: formdata.to,
+      from: new Date(formdata.from), // use the string data before storing the redux to avoid error
+      to: new Date(formdata.to), // use the string data before storing the redux to avoid error
+      type: formdata.type,
       add_to_service_record: isServiceRecordChecked,
-      district_id: formdata.district_id,
-      school_id: formdata.school_id,
-      office_id: formdata.office_id,
+      district_id: district,
+      school_id: school,
+      office_id: office,
+      position_id: position,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
 
@@ -110,7 +120,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       console.error(e)
     } finally {
       // Append new data in redux
-      const updatedData = { ...newData, id: newId }
+      const updatedDropdownData = getUpdatedDropdownData(formdata)
+      const updatedData = { ...newData, from: formdata.from, to: formdata.to, hrm_users: selectedItems[0], ...updatedDropdownData, id: newId }
       dispatch(updateList([updatedData, ...globallist]))
 
       // pop up the success message
@@ -129,20 +140,24 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleUpdate = async (formdata: FormValues) => {
-    setSaving(true)
-
+  const handleUpdate = async (formdata: AssignmentTypes) => {
     if (!editData) return
 
+    const district = formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
+    const school = formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
+    const office = formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
+    const position = Number(formdata.position_id)
+
     const newData = {
-      designation: formdata.designation,
       area_assigned: formdata.area_assigned,
-      from: formdata.from,
-      to: formdata.to,
-      add_to_service_record: formdata.add_to_service_record,
-      district_id: formdata.district_id,
-      school_id: formdata.school_id,
-      office_id: formdata.office_id
+      from: new Date(formdata.from), // use the string data before storing the redux to avoid error
+      to: new Date(formdata.to), // use the string data before storing the redux to avoid error
+      type: formdata.type,
+      add_to_service_record: isServiceRecordChecked,
+      district_id: district,
+      school_id: school,
+      office_id: office,
+      position_id: position
     }
 
     try {
@@ -157,7 +172,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     } finally {
       // Update data in redux
       const items = [...globallist]
-      const updatedData = { ...newData, id: editData.id }
+      const updatedDropdownData = getUpdatedDropdownData(formdata)
+      const updatedData = { ...newData, from: formdata.from, to: formdata.to, id: editData.id, ...updatedDropdownData }
       const foundIndex = items.findIndex(x => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
@@ -172,6 +188,94 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // reset all form fields
       reset()
+    }
+  }
+
+  const getUpdatedDropdownData = (formdata: AssignmentTypes) => {
+    let json = {}
+    if (formdata.area_assigned === 'school') {
+      // Districts
+      const dis = districts.filter(x => x.id.toString() === formdata.district_id)
+      if (dis.length > 0) {
+        json = { ...json, hrm_districts: { id: dis[0].id, name: dis[0].name } }
+      }
+
+      // Schools
+      const sch = schools.filter(x => x.id.toString() === formdata.school_id)
+      if (sch.length > 0) {
+        json = { ...json, hrm_schools: { id: sch[0].id, name: sch[0].name } }
+      }
+    } else {
+      // offices
+      const off = offices?.filter(x => x.id.toString() === formdata.office_id)
+      if (off.length > 0) {
+        json = { ...json, hrm_offices: { id: off[0].id, name: off[0].name } }
+      }
+    }
+
+    // positions
+    const pos = positions?.filter(x => x.id.toString() === formdata.position_id)
+    if (pos.length > 0) {
+      json = { ...json, hrm_positions: { id: pos[0].id, name: pos[0].name } }
+    }
+
+    return json
+  }
+
+  const validateEmployee = async (formdata: AssignmentTypes) => {
+    console.log('formdata', formdata)
+    let query = supabase
+      .from('hrm_assignments')
+      .select('*, hrm_users:hrm_user_id(firstname,middlename,lastname),hrm_schools:school_id(name),hrm_offices:office_id(name)')
+
+    if (editData) {
+      query = query.neq('id', editData.id)
+      query = query.eq('hrm_user_id', editData.hrm_user_id)
+    } else {
+      query = query.eq('hrm_user_id', selectedItems[0].id)
+    }
+
+    const { data, error }: { data: AssignmentTypes[], error: any } = await query
+
+    if (error) console.error(error)
+
+    if (data.length === 0) return false
+
+    const validationErrors: string[] = []
+
+    data.forEach((item) => {
+      console.log('item', item)
+      let station = ''
+      if (item.area_assigned === 'school') {
+        station = item.hrm_schools?.name
+      } else {
+        station = item.hrm_offices?.name
+      }
+
+      if (item.type === 'Re-assignment' && formdata.type === 'Re-assignment' && item.to === null) {
+        // check if the employee has an active re-assignment
+        validationErrors.push(`This employee currently have an active re-assignment stationed at ${station}. You must first fill up the "End Date" of that active record and choose "Start Date" later than the "End Date" of the active record.. Find it using Reference Code ${item.reference_code}`)
+      } else if (item.type === 'Re-assignment' && formdata.type === 'Re-assignment' && item.to !== null) {
+        // check if the employee has an active re-assignment and from date is less than assignments expiration date.
+        const fromDate = new Date(formdata.from)
+        const existingToDate = new Date(item.to)
+
+        if (fromDate < existingToDate) {
+          validationErrors.push(`This employee currently have an active re-assignment stationed at "${station}" and will end on "${existingToDate.toDateString()}. You can either adjust the End Date of that active record, or choose "Start Date" later than the End Date of the active record.". Find it using Reference Code ${item.reference_code}`)
+        }
+      } else if (item.type === 'New Employee' && formdata.type === 'New Employee' && item.position_id.toString() === formdata.position_id) { // check if new employee already exists
+        validationErrors.push(`This employee currently have an active Assignment for this position. You can find it using Reference Code ${item.reference_code}`)
+      } else if (item.type === 'New Employee' && formdata.type === 'New Employee' && (item.to === null || formdata.to <= item.to) && item.position_id.toString() !== formdata.position_id) { // check if new employee already exists
+        validationErrors.push(`This employee currently have an active Assignment. Find it using Reference Code ${item.reference_code}`)
+      }
+    })
+
+    if (validationErrors.length === 0) {
+      return false
+    } else {
+      setSaving(false)
+      setDataValidationErrors(validationErrors)
+      return true
     }
   }
 
@@ -219,17 +323,33 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
   useEffect(() => {
+    // display the default values of dynamic dropdowns
+    if (editData) {
+      setAssignment(editData.area_assigned)
+      setIsServiceRecordChecked(editData.add_to_service_record)
+      setSelectedDistrict(editData.district_id ?? '')
+      setSelectedSchool(editData.school_id ?? '')
+      setSelectedOffice(editData.office_id ?? '')
+      setSelectedPosition(editData.position_id ?? '')
+
+      // Update school list dropdown
+      if (editData.area_assigned === 'school') void handleDistrictChange(editData.district_id)
+    }
+
     reset({
-      designation: editData ? editData.designation : '',
       area_assigned: editData ? editData.area_assigned : '',
+      district_id: editData ? editData.district_id : '',
+      school_id: editData ? editData.school_id : '',
+      office_id: editData ? editData.office_id : '',
+      position_id: editData ? editData.position_id : '',
       from: editData ? editData.from : '',
       to: editData ? editData.to : '',
-      add_to_service_record: editData ? editData.add_to_service_record : ''
+      type: editData ? editData.type : ''
     })
 
     const fetchDistrictsData = async () => {
       const result = await fetchDistricts('', 300, 0)
-      setDistricts(result.data.length > 0 ? result.data : null)
+      setDistricts(result.data.length > 0 ? result.data : [])
     }
 
     const fetchOfficesData = async () => {
@@ -237,6 +357,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       setOffices(result.data.length > 0 ? result.data : [])
     }
 
+    const fetchPositionsData = async () => {
+      const result = await fetchPositions('', 300, 0)
+      setPositions(result.data.length > 0 ? result.data : [])
+    }
+
+    void fetchPositionsData()
     void fetchDistrictsData()
     void fetchOfficesData()
   }, [editData, reset])
@@ -256,50 +382,102 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
           <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
           <div className='app__form_field_container'>
               <div className='w-full'>
-                <div className='app__label_standard'>Employee Name:</div>
-                <div className='app__selected_users_container'>
-                  {
-                    selectedItems.length > 0 &&
-                      selectedItems.map(item => (
-                        <div key={uuid()} className='w-full flex mb-1'>
-                          <span className='app__selected_user'>
-                            {item.firstname} {item.middlename} {item.lastname}
-                            <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
-                          </span>
-                        </div>
-                      ))
-                  }
-                  <div className='relative'>
-                    <input
-                      type="text"
-                      placeholder='Search Employee'
-                      value={searchHead}
-                      onChange={async (e) => await handleSearchUser(e)}
-                      className='app__input_noborder'/>
 
+                {
+                  (dataValidationErrors.length > 0 || errorMessage) &&
+                    <div className='mb-6'>
+                      <div className='font-semebold text-sm font-bold'>Please check the following errors below:</div>
                       {
-                        searchResults.length > 0 &&
-                          <div className='app__search_user_results_container'>
-                            {
-                              searchResults.map((item: namesType) => (
-                                <div
-                                  key={uuid()}
-                                  onClick={() => handleSelected(item)}
-                                  className='app__search_user_results'>
+                        dataValidationErrors.map((error) => (
+                          <div key={uuid()} className='text-xs text-red-500 mt-2 flex space-x-2'><XCircleIcon className='w-5 h-5'/> <span>{error}</span></div>
+                        ))
+                      }
+                      {errorMessage && <div className='text-xs text-red-500 mt-2 flex space-x-2'><XCircleIcon className='w-5 h-5'/> <span>{errorMessage}</span></div>}
+                    </div>
+                }
+
+                <div className='app__label_standard'>Employee Name:</div>
+                {
+                  editData
+                    ? <div className='app__label_value'>{capitalizeWords(editData.hrm_users?.firstname + ' ' + editData.hrm_users?.middlename + ' ' + editData.hrm_users?.lastname)}</div>
+                    : <>
+                        <div className='app__selected_users_container'>
+                          {
+                            selectedItems.length > 0 &&
+                              selectedItems.map(item => (
+                                <div key={uuid()} className='w-full flex mb-1'>
+                                  <span className='app__selected_user'>
                                     {item.firstname} {item.middlename} {item.lastname}
+                                    <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
+                                  </span>
                                 </div>
                               ))
-                            }
+                          }
+                          <div className='relative'>
+                            <input
+                              type="text"
+                              placeholder='Search Employee'
+                              value={searchHead}
+                              onChange={async (e) => await handleSearchUser(e)}
+                              className='app__input_noborder'/>
+
+                              {
+                                searchResults.length > 0 &&
+                                  <div className='app__search_user_results_container'>
+                                    {
+                                      searchResults.map((item: namesType) => (
+                                        <div
+                                          key={uuid()}
+                                          onClick={() => handleSelected(item)}
+                                          className='app__search_user_results'>
+                                            {item.firstname} {item.middlename} {item.lastname}
+                                        </div>
+                                      ))
+                                    }
+                                  </div>
+                              }
                           </div>
-                      }
-                  </div>
-                  {errorMessage && <div className='app__error_message'>{errorMessage}</div>}
+                        </div>
+                      </>
+                }
+              </div>
+            </div>
+            <div className='app__form_field_container'>
+              <div className='w-full'>
+                <div className='app__label_standard'>Type</div>
+                <div>
+                  <select
+                    {...register('type', { required: true })}
+                    className='app__select_standard'>
+                      <option value=''>Choose</option>
+                      <option value='New Employee'>New Employee</option>
+                      <option value='Re-assignment'>Re-assignment</option>
+                  </select>
+                  {errors.type && <div className='app__error_message'>Type is required</div>}
                 </div>
               </div>
             </div>
             <div className='app__form_field_container'>
               <div className='w-full'>
-                <div className='app__label_standard'>Area of Assignment</div>
+                <div className='app__label_standard'>Position</div>
+                <div>
+                  <select
+                    {...register('position_id', { required: true })}
+                    value={selectedPosition}
+                    onChange={e => setSelectedPosition(e.target.value)}
+                    className='app__input_standard'>
+                      <option value=''>Choose Position</option>
+                      {
+                        positions.map((position: PositionTypes) => <option key={uuid()} value={position.id}>{position.name}</option>)
+                      }
+                  </select>
+                  {errors.position_id && <div className='app__error_message'>Position is required</div>}
+                </div>
+              </div>
+            </div>
+            <div className='app__form_field_container'>
+              <div className='w-full'>
+                <div className='app__label_standard'>Station</div>
                 <div>
                   <select
                     {...register('area_assigned', { required: true })}
@@ -310,7 +488,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       <option value='school'>School</option>
                       <option value='office'>Division Office</option>
                   </select>
-                  {errors.area_assigned && <div className='app__error_message'>Assignment is required</div>}
+                  {errors.area_assigned && <div className='app__error_message'>Station is required</div>}
                 </div>
               </div>
             </div>
@@ -328,7 +506,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                           className='app__select_standard'>
                             <option value=''>Choose</option>
                             {
-                              districts?.map(item => (
+                              districts.map(item => (
                                 <option key={uuid()} value={item.id}>{item.name}</option>
                               ))
                             }
@@ -407,13 +585,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
             </div>
             <div className='app__form_field_container'>
               <div className='w-full'>
-                <div className='app__label_standard'>Expiry Date</div>
+                <div className='app__label_standard'>End Date <span className='text-gray-500 font-light'>(Leave blank if &quot;Present&quot;)</span></div>
                 <div>
                   <input
-                    {...register('to', { required: true })}
+                    {...register('to')}
                     type='date'
                     className='app__select_standard'/>
-                  {errors.to && <div className='app__error_message'>Expiry Date is required</div>}
                 </div>
               </div>
             </div>
@@ -426,18 +603,18 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       checked={isServiceRecordChecked}
                       type='checkbox'
                       className=''/>
-                    <span>Add this to Employees&apos;s Service Record</span>
+                    <span>Include this to Employees&apos;s Service Record</span>
                   </label>
                 </div>
               </div>
             </div>
             <div className="app__modal_footer">
-                  <button
-                    type="submit"
-                    className="app__btn_green_sm"
-                  >
-                    {saving ? 'Saving...' : 'Save'}
-                  </button>
+                  <CustomButton
+                    btnType='submit'
+                    isDisabled={saving}
+                    title={saving ? 'Saving...' : 'Save'}
+                    containerStyles="app__btn_green"
+                  />
             </div>
           </form>
         </div>

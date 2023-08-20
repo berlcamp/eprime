@@ -9,6 +9,7 @@ import { Toaster } from 'react-hot-toast'
 import { LandingPage } from '@/components'
 
 import type { Metadata } from 'next'
+import { type Employee, type settingsDataTypes } from '@/types'
 
 export const metadata: Metadata = {
   title: 'PRIME-HRM',
@@ -25,25 +26,34 @@ export default async function RootLayout ({ children }: { children: React.ReactN
     data: { session }
   } = await supabase.auth.getSession()
 
-  const { data: systemSettings, error } = await supabase
-    .from('system_settings')
-    .select()
-    .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+  let sysUsers: Employee[] | null = []
+  let sysSettings: settingsDataTypes[] | null = []
 
-  if (error) console.error(error)
+  if (session) {
+    const { data: systemSettings, error } = await supabase
+      .from('system_settings')
+      .select()
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
-  const { data: systemUsers, error: systemUsersError } = await supabase
-    .from('hrm_users')
-    .select()
-    .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+    if (error) console.error(error)
 
-  if (systemUsersError) console.error(systemUsersError)
+    sysSettings = systemSettings
+
+    const { data: systemUsers, error: systemUsersError } = await supabase
+      .from('hrm_users')
+      .select()
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    if (systemUsersError) console.error(systemUsersError)
+
+    sysUsers = systemUsers
+  }
 
   return (
     <html lang="en">
       <body className={`relative ${session ? 'bg-white' : 'bg-gray-100'}`}>
 
-        <SupabaseProvider systemSettings={systemSettings} session={session} systemUsers={systemUsers}>
+        <SupabaseProvider systemSettings={sysSettings} session={session} systemUsers={sysUsers}>
             <SupabaseListener serverAccessToken={session?.access_token} />
               {!session && <LandingPage/> }
               {

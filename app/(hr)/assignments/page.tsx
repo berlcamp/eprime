@@ -47,7 +47,6 @@ const Page: React.FC = () => {
 
     try {
       const result = await fetchAssignments({ filterKeyword, filterSchool, filterOffice, filterStatus }, perPageCount, 0)
-
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -155,16 +154,19 @@ const Page: React.FC = () => {
                   <tr>
                       <th className="hidden md:table-cell app__th pl-4"></th>
                       <th className="hidden md:table-cell app__th">
+                          Reference Code
+                      </th>
+                      <th className="hidden md:table-cell app__th">
                           Employee Name
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Area Assigned
+                          Type
+                      </th>
+                      <th className="hidden md:table-cell app__th">
+                          Station
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Duration
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Designation
                       </th>
                   </tr>
               </thead>
@@ -219,10 +221,11 @@ const Page: React.FC = () => {
                       </td>
                       <th
                         className="app__th_firstcol">
-                        <div>{capitalizeWords(item.hrm_users?.firstname + ' ' + item.hrm_users?.firstname + ' ' + item.hrm_users?.firstname)}</div>
+                        <div>{item.reference_code}</div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">
+                            <div>{capitalizeWords(item.hrm_users?.firstname + ' ' + item.hrm_users?.middlename + ' ' + item.hrm_users?.lastname)}</div>
                             <div className='font-light'>Duration: {item.from} -  {item.to}</div>
                           </div>
                         </div>
@@ -231,20 +234,32 @@ const Page: React.FC = () => {
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div>{item.area_assigned}</div>
+                        <div className='font-semibold'>{capitalizeWords(item.hrm_users?.firstname + ' ' + item.hrm_users?.middlename + ' ' + item.hrm_users?.lastname)}</div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        <div className='font-semibold'>{item.type}</div>
+                        <div>{item.add_to_service_record ? '(Included on Service Record)' : '(Excluded on Service Record)'}</div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        <div className='font-semibold'>
+                          {
+                            item.area_assigned === 'school'
+                              ? <span>{item.hrm_schools?.name}</span>
+                              : <span>{item.hrm_offices?.name}</span>
+                          }
+                        </div>
+                        <div>{item.hrm_positions?.name}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
                         <div>{item.from} -  {item.to}</div>
                       </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div>{item.designation}</div>
-                      </td>
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={5} rows={2}/> }
+                { loading && <TableRowLoading cols={6} rows={2}/> }
               </tbody>
             </table>
             {
@@ -276,7 +291,7 @@ const Page: React.FC = () => {
       showDeleteModal && (
         <DeleteModal
           id={selectedId}
-          table='hrm_positions'
+          table='hrm_assignments'
           hideModal={() => setShowDeleteModal(false)}/>
       )
     }

@@ -1,5 +1,9 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { fullTextQuery } from '@/utils/text-helper'
+import { format } from 'date-fns'
+
+// types
+import type { AssignmentTypes, Employee } from '@/types'
 
 const supabase = createClientComponentClient()
 
@@ -7,7 +11,7 @@ export async function fetchDistricts (filterKeyword: string, perPageCount: numbe
   try {
     let query = supabase
       .from('hrm_districts')
-      .select('*,hrm_users:head_user_id(*)', { count: 'exact' })
+      .select('*,hrm_users:head_user_id(firstname,middlename,lastname)', { count: 'exact' })
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Full text search
@@ -43,7 +47,7 @@ export async function fetchOffices (filterKeyword: string, perPageCount: number,
   try {
     let query = supabase
       .from('hrm_offices')
-      .select('*,hrm_users:head_user_id(*)', { count: 'exact' })
+      .select('*,hrm_users:head_user_id(firstname,middlename,lastname)', { count: 'exact' })
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Full text search
@@ -116,7 +120,7 @@ export async function fetchSchools (filters: { filterKeyword?: string, filterTyp
   try {
     let query = supabase
       .from('hrm_schools')
-      .select('*,hrm_users:head_user_id(*),hrm_districts(*)', { count: 'exact' })
+      .select('*,hrm_users:head_user_id(firstname,middlename,lastname),hrm_districts(name)', { count: 'exact' })
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Full text search
@@ -162,12 +166,14 @@ export async function fetchEmployees (filters: { filterKeyword?: string, filterS
   try {
     let query = supabase
       .from('hrm_users')
-      .select('*, hrm_schools:school_id(*), hrm_positions:position_id(*), hrm_offices:office_id(*)', { count: 'exact' })
+      .select('*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name)', { count: 'exact' })
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Search match
     if (filters.filterKeyword && filters.filterKeyword !== '') {
-      query = query.or(`firstname.ilike.%${filters.filterKeyword}%,middlename.ilike.%${filters.filterKeyword}%,lastname.ilike.%${filters.filterKeyword}%`)
+      // query = query.or(`firstname.ilike.%${filters.filterKeyword}%,middlename.ilike.%${filters.filterKeyword}%,lastname.ilike.%${filters.filterKeyword}%`)
+      const searchQuery: string = fullTextQuery(filters.filterKeyword)
+      query = query.textSearch('fts', searchQuery)
     }
 
     // filter school
@@ -203,11 +209,13 @@ export async function fetchEmployees (filters: { filterKeyword?: string, filterS
     // Order By
     query = query.order('id', { ascending: false })
 
-    const { data, error, count } = await query
+    const { data: userData, error, count } = await query
 
     if (error) {
       throw new Error(error.message)
     }
+
+    const data: Employee[] = userData
 
     return { data, count }
   } catch (error) {
@@ -220,12 +228,25 @@ export async function fetchAssignments (filters: { filterKeyword?: string, filte
   try {
     let query = supabase
       .from('hrm_assignments')
-      .select('*, hrm_users:hrm_user_id(*)', { count: 'exact' })
+      .select('*, hrm_users:hrm_user_id(firstname,middlename,lastname),hrm_schools:school_id(name),hrm_offices:office_id(name),hrm_positions:position_id(name)', { count: 'exact' })
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Search match
     if (filters.filterKeyword && filters.filterKeyword !== '') {
-      query = query.or(`hrm_users.firstname.ilike.%${filters.filterKeyword}%,hrm_users.middlename.ilike.%${filters.filterKeyword}%,hrm_users.lastname.ilike.%${filters.filterKeyword}%`)
+      // Search on hrm_users table first
+      const users = await fetchEmployees({ filterKeyword: filters.filterKeyword }, 300, 0)
+
+      const userIds: string[] = []
+      users.data.forEach((item) => {
+        userIds.push(item.id)
+      })
+
+      let userIdsOrStatement = ''
+      if (userIds.length > 0) {
+        userIdsOrStatement = `hrm_user_id.in.(${userIds.join(',')}),` // append this to main query below
+      }
+
+      query = query.or(`${userIdsOrStatement}reference_code.eq.${filters.filterKeyword}`)
     }
 
     // filter school
@@ -240,11 +261,16 @@ export async function fetchAssignments (filters: { filterKeyword?: string, filte
 
     // filter setup status
     if (filters.filterStatus && filters.filterStatus !== '') {
+      const today = format(new Date(), 'yyyy-MM-dd')
       if (filters.filterStatus === 'Active') {
         // filter where date (to) is blank or less than the current date
+        query = query.or(`to.gte.'${today}',to.is.null`)
+        query = query.gte('from', `${today}`)
       }
       if (filters.filterStatus === 'Expired') {
-        // filter where date (to) is green than the current date
+        // filter where date (to) is green than the today's date
+        query = query.lt('to', `${today}`)
+        query = query.not('to', 'is', null)
       }
     }
 
@@ -258,11 +284,13 @@ export async function fetchAssignments (filters: { filterKeyword?: string, filte
     // Order By
     query = query.order('id', { ascending: false })
 
-    const { data, error, count } = await query
+    const { data: assignmentsData, error, count } = await query
 
     if (error) {
       throw new Error(error.message)
     }
+
+    const data: AssignmentTypes[] = assignmentsData
 
     return { data, count }
   } catch (error) {
@@ -275,7 +303,7 @@ export async function fetchRegistrations (filters: { filterKeyword?: string, fil
   try {
     let query = supabase
       .from('hrm_registrations')
-      .select('*, hrm_schools(*), hrm_offices(*)', { count: 'exact' })
+      .select('*, hrm_schools(name), hrm_offices(name)', { count: 'exact' })
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
       .eq('status', 'For Approval')
 
@@ -304,11 +332,13 @@ export async function fetchRegistrations (filters: { filterKeyword?: string, fil
     // Order By
     query = query.order('id', { ascending: false })
 
-    const { data, error, count } = await query
+    const { data: userData, error, count } = await query
 
     if (error) {
       throw new Error(error.message)
     }
+
+    const data: Employee[] = userData
 
     return { data, count }
   } catch (error) {

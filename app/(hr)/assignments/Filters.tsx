@@ -81,7 +81,7 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilter
           <div className='app__filter_container'>
             <MagnifyingGlassIcon className="w-4 h-4 mr-1"/>
             <input
-              placeholder='Search'
+              placeholder='Search Ref Code or Employee'
               value={keyword}
               onChange={e => setKeyword(e.target.value)}
               className="app__filter_input"/>

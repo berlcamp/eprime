@@ -281,7 +281,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                     <div className="w-full">
                       <Listbox value={selectedClass} onChange={setSelectedClass} multiple>
                         <div className="relative">
-                          <Listbox.Button className="app__listbox_btn">
+                          <Listbox.Button className="app__listbox_field">
                             <span className="block truncate text-xs">
                               &nbsp;{selectedClass.map((item: string) => item).join(', ')}
                             </span>

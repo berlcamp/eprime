@@ -125,6 +125,9 @@
 .app__listbox_btn {
   @apply relative flex items-center w-full rounded-lg text-gray-500 border border-gray-300 cursor-default bg-white py-2 pl-3 pr-10 text-left focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm
 }
+.app__listbox_field {
+  @apply relative flex items-center w-full text-gray-700 border border-gray-300 cursor-default bg-white py-2 pl-3 pr-10 text-left focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm
+}
 .app__listbox_icon {
   @apply pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2
 }
@@ -166,4 +169,7 @@
 }
 .app__label_standard {
   @apply text-gray-600 font-medium text-sm mb-1
+}
+.app__label_value {
+  @apply text-gray-600 font-bold text-sm mb-1
 }

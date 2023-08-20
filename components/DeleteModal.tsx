@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, Fragment } from 'react'
+import React, { useState, Fragment, useEffect, useRef } from 'react'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CustomButton } from '@/components'
@@ -20,6 +20,8 @@ const DeleteModal = ({ hideModal, id, table }: ModalProps) => {
   const { setToast } = useFilter()
   const { supabase } = useSupabase()
   const [deleting, setDeleting] = useState(false)
+
+  const wrapperRef = useRef<HTMLDivElement>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -59,9 +61,25 @@ const DeleteModal = ({ hideModal, id, table }: ModalProps) => {
     }
   }
 
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      hideModal()
+    }
+    if (event.key === 'Enter') {
+      void handleDelete()
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [wrapperRef])
+
   return (
     <>
-      <div className="app__modal_wrapper">
+      <div ref={wrapperRef} className="app__modal_wrapper">
         <div className="app__modal_wrapper2">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
