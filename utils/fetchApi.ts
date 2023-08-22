@@ -3,7 +3,7 @@ import { fullTextQuery } from '@/utils/text-helper'
 import { format } from 'date-fns'
 
 // types
-import type { AssignmentTypes, Employee } from '@/types'
+import type { AssignmentTypes, DesignationTypes, Employee } from '@/types'
 
 const supabase = createClientComponentClient()
 
@@ -294,7 +294,82 @@ export async function fetchAssignments (filters: { filterKeyword?: string, filte
 
     return { data, count }
   } catch (error) {
-    console.error('fetch employee error', error)
+    console.error('fetch assignments error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchDesignations (filters: { filterKeyword?: string, filterSchool?: string, filterOffice?: string, filterStatus?: string }, perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_designations')
+      .select('*, hrm_users:hrm_user_id(firstname,middlename,lastname),hrm_schools:school_id(name),hrm_offices:office_id(name),hrm_positions:position_id(name)', { count: 'exact' })
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    // Search match
+    if (filters.filterKeyword && filters.filterKeyword !== '') {
+      // Search on hrm_users table first
+      const users = await fetchEmployees({ filterKeyword: filters.filterKeyword }, 300, 0)
+
+      const userIds: string[] = []
+      users.data.forEach((item) => {
+        userIds.push(item.id)
+      })
+
+      let userIdsOrStatement = ''
+      if (userIds.length > 0) {
+        userIdsOrStatement = `hrm_user_id.in.(${userIds.join(',')}),` // append this to main query below
+      }
+
+      query = query.or(`${userIdsOrStatement}reference_code.eq.${filters.filterKeyword}`)
+    }
+
+    // filter school
+    if (filters.filterSchool && filters.filterSchool !== '') {
+      query = query.eq('school_id', filters.filterSchool)
+    }
+
+    // filter office
+    if (filters.filterOffice && filters.filterOffice !== '') {
+      query = query.eq('office_id', filters.filterOffice)
+    }
+
+    // filter setup status
+    if (filters.filterStatus && filters.filterStatus !== '') {
+      const today = format(new Date(), 'yyyy-MM-dd')
+      if (filters.filterStatus === 'Active') {
+        // filter where date (to) is blank or less than the current date
+        query = query.or(`to.gte.'${today}',to.is.null`)
+        query = query.gte('from', `${today}`)
+      }
+      if (filters.filterStatus === 'Expired') {
+        // filter where date (to) is green than the today's date
+        query = query.lt('to', `${today}`)
+        query = query.not('to', 'is', null)
+      }
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data: assignmentsData, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    const data: DesignationTypes[] = assignmentsData
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch designations error', error)
     return { data: [], count: 0 }
   }
 }

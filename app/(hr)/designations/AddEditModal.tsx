@@ -1,15 +1,15 @@
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchDistricts, fetchOffices, fetchPositions, fetchSchools, searchActiveEmployees } from '@/utils/fetchApi'
+import { fetchDistricts, fetchOffices, fetchSchools, searchActiveEmployees } from '@/utils/fetchApi'
 import uuid from 'react-uuid'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 import { CustomButton, OneColLayoutLoading } from '@/components'
 import { capitalizeWords, generateReferenceCode } from '@/utils/text-helper'
 
 // Types
-import type { AssignmentTypes, DistrictTypes, Office, PositionTypes, SchoolTypes, namesType } from '@/types'
+import type { DesignationTypes, DistrictTypes, Office, SchoolTypes, namesType } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -19,7 +19,7 @@ import { XCircleIcon } from '@heroicons/react/24/solid'
 
 interface ModalProps {
   hideModal: () => void
-  editData: AssignmentTypes | null
+  editData: DesignationTypes | null
 }
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
@@ -36,28 +36,28 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
   const [loadingSchools, setLoadingSchools] = useState(false)
   const [assignment, setAssignment] = useState('')
+  const [type, setType] = useState('')
   const [selectedDistrict, setSelectedDistrict] = useState('')
   const [selectedSchool, setSelectedSchool] = useState('')
   const [selectedOffice, setSelectedOffice] = useState('')
-  const [selectedPosition, setSelectedPosition] = useState('')
 
   const [schools, setSchools] = useState<SchoolTypes[] | []>([])
   const [districts, setDistricts] = useState<DistrictTypes[] | []>([])
   const [offices, setOffices] = useState<Office[] | []>([])
-  const [positions, setPositions] = useState<PositionTypes[] | []>([])
 
   const [isServiceRecordChecked, setIsServiceRecordChecked] = useState(true)
+  const [isLeaveCardChecked, setIsLeaveCardChecked] = useState(true)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { register, formState: { errors }, reset, handleSubmit } = useForm<AssignmentTypes>({
+  const { register, formState: { errors }, reset, handleSubmit } = useForm<DesignationTypes>({
     mode: 'onSubmit'
   })
 
-  const onSubmit = async (formdata: AssignmentTypes) => {
+  const onSubmit = async (formdata: DesignationTypes) => {
     if (saving) return
 
     setSaving(true)
@@ -84,11 +84,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleCreate = async (formdata: AssignmentTypes) => {
+  const handleCreate = async (formdata: DesignationTypes) => {
     const district = formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
     const school = formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
     const office = formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
-    const position = Number(formdata.position_id)
 
     const newData = {
       reference_code: generateReferenceCode(),
@@ -98,10 +97,11 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       type: formdata.type,
       add_to_service_record: isServiceRecordChecked,
+      add_to_leave_card: isLeaveCardChecked,
       district_id: district,
       school_id: school,
       office_id: office,
-      position_id: position,
+      designation: formdata.designation,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
 
@@ -109,7 +109,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     try {
       const { data, error } = await supabase
-        .from('hrm_assignments')
+        .from('hrm_designations')
         .insert(newData)
         .select()
 
@@ -140,13 +140,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleUpdate = async (formdata: AssignmentTypes) => {
+  const handleUpdate = async (formdata: DesignationTypes) => {
     if (!editData) return
 
     const district = formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
     const school = formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
     const office = formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
-    const position = Number(formdata.position_id)
 
     const newData = {
       area_assigned: formdata.area_assigned,
@@ -154,15 +153,16 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       type: formdata.type,
       add_to_service_record: isServiceRecordChecked,
+      add_to_leave_card: isLeaveCardChecked,
       district_id: district,
       school_id: school,
       office_id: office,
-      position_id: position
+      designation: formdata.designation
     }
 
     try {
       const { error } = await supabase
-        .from('hrm_assignments')
+        .from('hrm_designations')
         .update(newData)
         .eq('id', editData.id)
 
@@ -191,7 +191,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const getUpdatedDropdownData = (formdata: AssignmentTypes) => {
+  const getUpdatedDropdownData = (formdata: DesignationTypes) => {
     let json = {}
     if (formdata.area_assigned === 'school') {
       // Districts
@@ -213,19 +213,13 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       }
     }
 
-    // positions
-    const pos = positions?.filter(x => x.id.toString() === formdata.position_id)
-    if (pos.length > 0) {
-      json = { ...json, hrm_positions: { id: pos[0].id, name: pos[0].name } }
-    }
-
     return json
   }
 
-  const validateEmployee = async (formdata: AssignmentTypes) => {
+  const validateEmployee = async (formdata: DesignationTypes) => {
     console.log('formdata', formdata)
     let query = supabase
-      .from('hrm_assignments')
+      .from('hrm_designations')
       .select('*, hrm_users:hrm_user_id(firstname,middlename,lastname),hrm_schools:school_id(name),hrm_offices:office_id(name)')
 
     if (editData) {
@@ -235,7 +229,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       query = query.eq('hrm_user_id', selectedItems[0].id)
     }
 
-    const { data, error }: { data: AssignmentTypes[], error: any } = await query
+    const { data, error }: { data: DesignationTypes[], error: any } = await query
 
     if (error) console.error(error)
 
@@ -262,9 +256,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         if (fromDate < existingToDate) {
           validationErrors.push(`This employee currently have an active re-assignment (Ref Code ${item.reference_code}) stationed at "${station}" and will end on "${existingToDate.toDateString()}.`)
         }
-      } else if (item.type === 'New Employee' && formdata.type === 'New Employee' && item.position_id.toString() === formdata.position_id) { // check if new employee already exists
+      } else if (item.type === 'New Employee' && formdata.type === 'New Employee') { // check if new employee already exists
         validationErrors.push(`This employee currently have an active Assignment (Ref Code ${item.reference_code}) for this position.`)
-      } else if (item.type === 'New Employee' && formdata.type === 'New Employee' && (item.to === null || formdata.to <= item.to) && item.position_id.toString() !== formdata.position_id) { // check if new employee already exists
+      } else if (item.type === 'New Employee' && formdata.type === 'New Employee' && (item.to === null || formdata.to <= item.to)) { // check if new employee already exists
         validationErrors.push(`This employee currently have an active Assignment (Ref Code ${item.reference_code}).`)
       }
     })
@@ -306,10 +300,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     setSelectedItems(prevSelectedItems => prevSelectedItems.filter(item => item.id !== id))
   }
 
-  const handleServiceRecordCheckboxChange = () => {
-    setIsServiceRecordChecked(!isServiceRecordChecked)
-  }
-
   const handleDistrictChange = async (districtId: string) => {
     setSelectedDistrict(districtId)
     setLoadingSchools(true)
@@ -325,11 +315,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     // display the default values of dynamic dropdowns
     if (editData) {
       setAssignment(editData.area_assigned)
+      setType(editData.type)
       setIsServiceRecordChecked(editData.add_to_service_record)
+      setIsLeaveCardChecked(editData.add_to_leave_card)
       setSelectedDistrict(editData.district_id ?? '')
       setSelectedSchool(editData.school_id ?? '')
       setSelectedOffice(editData.office_id ?? '')
-      setSelectedPosition(editData.position_id ?? '')
 
       // Update school list dropdown
       if (editData.area_assigned === 'school') void handleDistrictChange(editData.district_id)
@@ -340,10 +331,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       district_id: editData ? editData.district_id : '',
       school_id: editData ? editData.school_id : '',
       office_id: editData ? editData.office_id : '',
-      position_id: editData ? editData.position_id : '',
       from: editData ? editData.from : '',
       to: editData ? editData.to : '',
-      type: editData ? editData.type : ''
+      type: editData ? editData.type : '',
+      designation: editData ? editData.designation : ''
     })
 
     const fetchDistrictsData = async () => {
@@ -356,12 +347,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       setOffices(result.data.length > 0 ? result.data : [])
     }
 
-    const fetchPositionsData = async () => {
-      const result = await fetchPositions('', 300, 0)
-      setPositions(result.data.length > 0 ? result.data : [])
-    }
-
-    void fetchPositionsData()
     void fetchDistrictsData()
     void fetchOfficesData()
   }, [editData, reset])
@@ -373,7 +358,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         <div className="app__modal_wrapper3">
           <div className="app__modal_header">
             <h5 className="app__modal_header_text">
-              Assignment Details
+              Designation Details
             </h5>
             <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
           </div>
@@ -443,54 +428,53 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
             </div>
             <div className='app__form_field_container'>
               <div className='w-full'>
+                <div className='app__label_standard'>Designation</div>
+                <div>
+                  <input
+                    {...register('designation', { required: true })}
+                    type='text'
+                    className='app__input_standard'/>
+                  {errors.designation && <div className='app__error_message'>Designation is required</div>}
+                </div>
+              </div>
+            </div>
+            <div className='app__form_field_container'>
+              <div className='w-full'>
                 <div className='app__label_standard'>Type</div>
                 <div>
                   <select
                     {...register('type', { required: true })}
+                    value={type}
+                    onChange={e => setType(e.target.value)}
                     className='app__select_standard'>
                       <option value=''>Choose</option>
-                      <option value='New Employee'>New Employee</option>
-                      <option value='Re-assignment'>Re-assignment</option>
+                      <option value='Function only'>Function only</option>
+                      <option value='Function with Station'>Function with Station</option>
                   </select>
                   {errors.type && <div className='app__error_message'>Type is required</div>}
                 </div>
               </div>
             </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>Position</div>
-                <div>
-                  <select
-                    {...register('position_id', { required: true })}
-                    value={selectedPosition}
-                    onChange={e => setSelectedPosition(e.target.value)}
-                    className='app__input_standard'>
-                      <option value=''>Choose Position</option>
-                      {
-                        positions.map((position: PositionTypes) => <option key={uuid()} value={position.id}>{position.name}</option>)
-                      }
-                  </select>
-                  {errors.position_id && <div className='app__error_message'>Position is required</div>}
+            {
+              type === 'Function with Station' &&
+                <div className='app__form_field_container'>
+                  <div className='w-full'>
+                    <div className='app__label_standard'>Station</div>
+                    <div>
+                      <select
+                        {...register('area_assigned', { required: true })}
+                        value={assignment}
+                        onChange={e => setAssignment(e.target.value)}
+                        className='app__select_standard'>
+                          <option value=''>Choose</option>
+                          <option value='school'>School</option>
+                          <option value='office'>Division Office</option>
+                      </select>
+                      {errors.area_assigned && <div className='app__error_message'>Station is required</div>}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>Station</div>
-                <div>
-                  <select
-                    {...register('area_assigned', { required: true })}
-                    value={assignment}
-                    onChange={e => setAssignment(e.target.value)}
-                    className='app__select_standard'>
-                      <option value=''>Choose</option>
-                      <option value='school'>School</option>
-                      <option value='office'>Division Office</option>
-                  </select>
-                  {errors.area_assigned && <div className='app__error_message'>Station is required</div>}
-                </div>
-              </div>
-            </div>
+            }
             {
               assignment === 'school' &&
                 <>
@@ -598,11 +582,25 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                 <div className='app__label_standard'>
                   <label className='flex items-center space-x-1'>
                     <input
-                      onChange={handleServiceRecordCheckboxChange}
+                      onChange={() => setIsServiceRecordChecked(!isServiceRecordChecked)}
                       checked={isServiceRecordChecked}
                       type='checkbox'
                       className=''/>
-                    <span>Include this to Employees&apos;s Service Record</span>
+                    <span>Include this to &apos;s Service Record</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className='app__form_field_container'>
+              <div className='w-full'>
+                <div className='app__label_standard'>
+                  <label className='flex items-center space-x-1'>
+                    <input
+                      onChange={() => setIsLeaveCardChecked(!isLeaveCardChecked)}
+                      checked={isLeaveCardChecked}
+                      type='checkbox'
+                      className=''/>
+                    <span>Include this to &apos;s Leave Credits Increments</span>
                   </label>
                 </div>
               </div>

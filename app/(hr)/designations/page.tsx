@@ -1,6 +1,6 @@
 'use client'
 
-import { fetchAssignments } from '@/utils/fetchApi'
+import { fetchDesignations } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
@@ -14,7 +14,7 @@ import { capitalizeWords } from '@/utils/text-helper'
 import AddEditModal from './AddEditModal'
 
 // Types
-import type { AssignmentTypes } from '@/types'
+import type { DesignationTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -26,13 +26,13 @@ const Page: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedId, setSelectedId] = useState<string>('')
-  const [list, setList] = useState<AssignmentTypes[]>([])
+  const [list, setList] = useState<DesignationTypes[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
   const [filterSchool, setFilterSchool] = useState<string>('')
   const [filterOffice, setFilterOffice] = useState<string>('')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [perPageCount, setPerPageCount] = useState<number>(10)
-  const [editData, setEditData] = useState<AssignmentTypes | null>(null)
+  const [editData, setEditData] = useState<DesignationTypes | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -46,7 +46,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchAssignments({ filterKeyword, filterSchool, filterOffice, filterStatus }, perPageCount, 0)
+      const result = await fetchDesignations({ filterKeyword, filterSchool, filterOffice, filterStatus }, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -64,7 +64,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchAssignments({ filterKeyword, filterSchool, filterOffice, filterStatus }, perPageCount, list.length)
+      const result = await fetchDesignations({ filterKeyword, filterSchool, filterOffice, filterStatus }, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -84,7 +84,7 @@ const Page: React.FC = () => {
     setEditData(null)
   }
 
-  const handleEdit = (item: AssignmentTypes) => {
+  const handleEdit = (item: DesignationTypes) => {
     setShowAddModal(true)
     setEditData(item)
   }
@@ -121,10 +121,10 @@ const Page: React.FC = () => {
     <div className="app__main">
       <div>
           <div className='app__title'>
-            <Title title='Assignments'/>
+            <Title title='Designations'/>
             <CustomButton
               containerStyles='app__btn_green'
-              title='Create New Assignment'
+              title='Create New Designations'
               btnType='button'
               handleClick={handleAdd}
             />
@@ -160,6 +160,9 @@ const Page: React.FC = () => {
                           Employee Name
                       </th>
                       <th className="hidden md:table-cell app__th">
+                          Designation
+                      </th>
+                      <th className="hidden md:table-cell app__th">
                           Type
                       </th>
                       <th className="hidden md:table-cell app__th">
@@ -172,7 +175,7 @@ const Page: React.FC = () => {
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: AssignmentTypes) => (
+                  !isDataEmpty && list.map((item: DesignationTypes) => (
                     <tr
                       key={uuid()}
                       className="app__tr">
@@ -226,6 +229,7 @@ const Page: React.FC = () => {
                         <div>
                           <div className="md:hidden app__td">
                             <div>{capitalizeWords(item.hrm_users?.firstname + ' ' + item.hrm_users?.middlename + ' ' + item.hrm_users?.lastname)}</div>
+                            <div className='font-light'>{capitalizeWords(item.designation)}</div>
                             <div className='font-light'>Duration: {item.from} -  {item.to}</div>
                           </div>
                         </div>
@@ -238,8 +242,13 @@ const Page: React.FC = () => {
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
+                        <div className='font-semibold'>{capitalizeWords(item.designation)}</div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
                         <div className='font-semibold'>{item.type}</div>
                         <div>{item.add_to_service_record ? '(Included on Service Record)' : '(Excluded on Service Record)'}</div>
+                        <div>{item.add_to_leave_card ? '(Included on Leave Credits Increments)' : '(Excluded on Leave Credits Increments)'}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
@@ -291,7 +300,7 @@ const Page: React.FC = () => {
       showDeleteModal && (
         <DeleteModal
           id={selectedId}
-          table='hrm_assignments'
+          table='hrm_designations'
           hideModal={() => setShowDeleteModal(false)}/>
       )
     }

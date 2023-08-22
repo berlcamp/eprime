@@ -65,6 +65,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     if (saving) return
 
+    setSaving(true)
+
     if (editData) {
       void handleUpdate(formdata)
     } else {
@@ -123,8 +125,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleUpdate = async (formdata: SchoolForm) => {
-    setSaving(true)
-
     if (!editData) return
 
     const selectedDistrict = districts?.filter(d => d.id.toString() === formdata.district_id.toString())

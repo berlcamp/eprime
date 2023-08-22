@@ -3,7 +3,6 @@ import React, { useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { OfflinePage } from '@/components'
-import { CheckIfSchoolHead } from '@/utils/database-helper'
 
 const FilterContext = React.createContext<any | ''>('')
 
@@ -41,11 +40,6 @@ export function FilterProvider ({ children }: { children: React.ReactNode }) {
     return true
   }
 
-  // Check if school head
-  const isSchoolHead = async () => {
-    return await CheckIfSchoolHead(session.user.id)
-  }
-
   useEffect(() => {
     function handleOnlineStatus () {
       setIsOnline(true)
@@ -68,7 +62,6 @@ export function FilterProvider ({ children }: { children: React.ReactNode }) {
     filters,
     setFilters,
     hasAccess,
-    isSchoolHead,
     setToast,
     perPage,
     setPerPage,

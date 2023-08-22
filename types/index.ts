@@ -137,13 +137,23 @@ export interface AssignmentTypes {
   hrm_positions: PositionTypes
 }
 
-export interface Designation {
-  designation: string
+export interface DesignationTypes {
+  reference_code: string
   hrm_user_id: string
   id: string
   area_assigned: string
   from: string
   to: string
-  type?: string
+  type: string
   add_to_service_record: boolean
+  add_to_leave_card: boolean
+  hrm_users: Employee
+  district_id: string
+  school_id: string
+  designation: string
+  office_id: string
+  hrm_schools: SchoolTypes
+  hrm_districts: DistrictTypes
+  hrm_offices: Office
+  hrm_positions: PositionTypes
 }

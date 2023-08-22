@@ -14,8 +14,13 @@ const Page: React.FC = () => {
   const [results, setResults] = useState(false)
   const [settingsId, setSettingsId] = useState(null)
   const { setToast } = useFilter()
+  const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
+    if (saving) return
+
+    setSaving(true)
+
     let query = supabase
       .from('system_settings')
 
@@ -34,6 +39,8 @@ const Page: React.FC = () => {
       // pop up the success message
       setToast('success', 'Successfully saved.')
     }
+
+    setSaving(false)
   }
 
   const handleManagerChange = (newdata: any, type: string) => {
@@ -97,7 +104,7 @@ const Page: React.FC = () => {
               <button
                 onClick={handleSave}
                 className="flex items-center bg-emerald-500 hover:bg-emerald-600 border border-emerald-600 font-medium px-2 py-1 text-sm text-white rounded-sm">
-                Save Settings
+                {saving ? 'Saving...' : 'Save Settings'}
               </button>
             </div>
 

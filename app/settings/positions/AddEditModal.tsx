@@ -38,6 +38,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const onSubmit = async (formdata: FormValues) => {
     if (saving) return
 
+    setSaving(true)
+
     if (editData) {
       void handleUpdate(formdata)
     } else {
@@ -46,8 +48,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleCreate = async (formdata: FormValues) => {
-    setSaving(true)
-
     const newData = {
       name: formdata.name,
       salary_grade: formdata.salary_grade,
@@ -89,8 +89,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleUpdate = async (formdata: FormValues) => {
-    setSaving(true)
-
     if (!editData) return
 
     const newData = {
