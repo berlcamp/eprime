@@ -61,10 +61,11 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     if (saving) return
 
     setSaving(true)
-
+    console.log(formdata)
     // Validate date first
-    if (new Date(formdata.from) > new Date(formdata.to)) {
+    if (formdata.to !== null && new Date(formdata.from) > new Date(formdata.to)) {
       setErrorMessage('End date must be greater than or equal to Start date.')
+      setSaving(false)
       return
     }
 
