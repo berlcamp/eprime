@@ -3,7 +3,7 @@
 import { fetchDesignations } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
+import { ChevronDownIcon, PencilSquareIcon, PrinterIcon, TrashIcon } from '@heroicons/react/20/solid'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar } from '@/components'
 import uuid from 'react-uuid'
 import { superAdmins } from '@/constants/TrackerConstants'
@@ -12,6 +12,8 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { capitalizeWords } from '@/utils/text-helper'
 import AddEditModal from './AddEditModal'
+import RevokeModal from './RevokeModal'
+import { printLetter } from './printLetter'
 
 // Types
 import type { DesignationTypes } from '@/types'
@@ -24,6 +26,7 @@ import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showRevokeModal, setShowRevokeModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedId, setSelectedId] = useState<string>('')
   const [list, setList] = useState<DesignationTypes[]>([])
@@ -86,6 +89,15 @@ const Page: React.FC = () => {
 
   const handleEdit = (item: DesignationTypes) => {
     setShowAddModal(true)
+    setEditData(item)
+  }
+
+  const handlePrint = (item: DesignationTypes) => {
+    void printLetter(item)
+  }
+
+  const handleRevoke = (item: DesignationTypes) => {
+    setShowRevokeModal(true)
     setEditData(item)
   }
 
@@ -199,24 +211,47 @@ const Page: React.FC = () => {
                           >
                             <Menu.Items className="app__dropdown_items">
                               <div className="py-1">
-                              <Menu.Item>
-                                  <div
-                                      onClick={() => handleEdit(item)}
-                                      className='app__dropdown_item'
-                                    >
-                                      <PencilSquareIcon className='w-4 h-4'/>
-                                      <span>Edit</span>
-                                    </div>
-                                </Menu.Item>
                                 <Menu.Item>
                                   <div
-                                      onClick={ () => handleDelete(item.id) }
+                                      onClick={() => handlePrint(item)}
                                       className='app__dropdown_item'
                                     >
-                                      <TrashIcon className='w-4 h-4'/>
-                                      <span>Delete</span>
+                                      <PrinterIcon className='w-4 h-4'/>
+                                      <span>Print</span>
                                     </div>
                                 </Menu.Item>
+                                {
+                                  item.status !== 'Revoked' &&
+                                    <>
+                                    <Menu.Item>
+                                      <div
+                                          onClick={() => handleEdit(item)}
+                                          className='app__dropdown_item'
+                                        >
+                                          <PencilSquareIcon className='w-4 h-4'/>
+                                          <span>Edit</span>
+                                        </div>
+                                    </Menu.Item>
+                                    <Menu.Item>
+                                      <div
+                                          onClick={() => handleRevoke(item)}
+                                          className='app__dropdown_item'
+                                        >
+                                          <PencilSquareIcon className='w-4 h-4'/>
+                                          <span>Revoke</span>
+                                        </div>
+                                    </Menu.Item>
+                                    <Menu.Item>
+                                      <div
+                                          onClick={ () => handleDelete(item.id) }
+                                          className='app__dropdown_item'
+                                        >
+                                          <TrashIcon className='w-4 h-4'/>
+                                          <span>Delete</span>
+                                        </div>
+                                    </Menu.Item>
+                                    </>
+                                }
                               </div>
                             </Menu.Items>
                           </Transition>
@@ -225,6 +260,7 @@ const Page: React.FC = () => {
                       <th
                         className="app__th_firstcol">
                         <div>{item.reference_code}</div>
+                        <div className={`${item.status === 'Revoked' ? 'text-red-500' : 'text-green-500'}`}>{item.status}</div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">
@@ -254,12 +290,14 @@ const Page: React.FC = () => {
                         className="hidden md:table-cell app__td">
                         <div className='font-semibold'>
                           {
-                            item.area_assigned === 'school'
-                              ? <span>{item.hrm_schools?.name}</span>
-                              : <span>{item.hrm_offices?.name}</span>
+                            item.type === 'Function with Station' &&
+                            (
+                              item.area_assigned === 'school'
+                                ? <span>{item.hrm_schools?.name}</span>
+                                : <span>{item.hrm_offices?.name}</span>
+                            )
                           }
                         </div>
-                        <div>{item.hrm_positions?.name}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
@@ -292,6 +330,15 @@ const Page: React.FC = () => {
         <AddEditModal
           editData={editData}
           hideModal={() => setShowAddModal(false)}/>
+      )
+    }
+
+    {/* Revoke Modal */}
+    {
+      showRevokeModal && (
+        <RevokeModal
+          editData={editData}
+          hideModal={() => setShowRevokeModal(false)}/>
       )
     }
 

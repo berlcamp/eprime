@@ -1,19 +1,10 @@
-import { createServerClient } from '@/utils/supabase-server'
 import { Announcements, Jobs, OrganizationalStructure, TopBarDark } from '@/components'
 
 export default async function Page () {
-  const supabase = createServerClient()
-
-  const {
-    data: { session }
-  } = await supabase.auth.getSession()
-
-  const isActive = session?.user.user_metadata.status === 'active' // returns true or false
-
   return (
     <>
       <div className="app__home">
-        <TopBarDark isGuest={false} isActive={isActive}/>
+        <TopBarDark isGuest={false}/>
         <div className='bg-gray-700 pb-10 pt-32 px-6 md:flex items-start md:space-x-4 justify-center'>
           <div className='bg-gray-100 p-4 rounded-lg border md:w-[420px] md:max-w-[420px]'>
             <Jobs/>

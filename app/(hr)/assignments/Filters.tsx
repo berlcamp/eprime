@@ -15,7 +15,7 @@ interface FilterTypes {
 
 const statuses = [
   'Active',
-  'Expired'
+  'Revoked'
 ]
 
 const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilterStatus }: FilterTypes) => {

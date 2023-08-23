@@ -61,13 +61,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     if (saving) return
 
     setSaving(true)
-    console.log(formdata)
-    // Validate date first
-    if (formdata.to !== null && new Date(formdata.from) > new Date(formdata.to)) {
-      setErrorMessage('End date must be greater than or equal to Start date.')
-      setSaving(false)
-      return
-    }
 
     if (!editData && selectedItems.length === 0) {
       setErrorMessage('Employee Name is Required')
@@ -96,13 +89,13 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       hrm_user_id: selectedItems[0].id,
       area_assigned: formdata.area_assigned,
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
-      to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       type: formdata.type,
       add_to_service_record: isServiceRecordChecked,
       district_id: district,
       school_id: school,
       office_id: office,
       position_id: position,
+      status: 'Active',
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
 
@@ -122,7 +115,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     } finally {
       // Append new data in redux
       const updatedDropdownData = getUpdatedDropdownData(formdata)
-      const updatedData = { ...newData, from: formdata.from, to: formdata.to, hrm_users: selectedItems[0], ...updatedDropdownData, id: newId }
+      const updatedData = { ...newData, from: formdata.from, hrm_users: selectedItems[0], ...updatedDropdownData, id: newId }
       dispatch(updateList([updatedData, ...globallist]))
 
       // pop up the success message
@@ -152,7 +145,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     const newData = {
       area_assigned: formdata.area_assigned,
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
-      to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       type: formdata.type,
       add_to_service_record: isServiceRecordChecked,
       district_id: district,
@@ -174,7 +166,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       // Update data in redux
       const items = [...globallist]
       const updatedDropdownData = getUpdatedDropdownData(formdata)
-      const updatedData = { ...newData, from: formdata.from, to: formdata.to, id: editData.id, ...updatedDropdownData }
+      const updatedData = { ...newData, from: formdata.from, id: editData.id, ...updatedDropdownData }
       const foundIndex = items.findIndex(x => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
@@ -580,17 +572,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                     type='date'
                     className='app__select_standard'/>
                   {errors.from && <div className='app__error_message'>Start Date is required</div>}
-                </div>
-              </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>End Date <span className='text-gray-500 font-light'>(Leave blank if &quot;Present&quot;)</span></div>
-                <div>
-                  <input
-                    {...register('to')}
-                    type='date'
-                    className='app__select_standard'/>
                 </div>
               </div>
             </div>

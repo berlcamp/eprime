@@ -125,6 +125,7 @@ export interface AssignmentTypes {
   from: string
   to: string
   type: string
+  status: string
   add_to_service_record: boolean
   hrm_users: Employee
   district_id: string
@@ -145,6 +146,7 @@ export interface DesignationTypes {
   from: string
   to: string
   type: string
+  status: string
   add_to_service_record: boolean
   add_to_leave_card: boolean
   hrm_users: Employee
@@ -155,5 +157,4 @@ export interface DesignationTypes {
   hrm_schools: SchoolTypes
   hrm_districts: DistrictTypes
   hrm_offices: Office
-  hrm_positions: PositionTypes
 }
