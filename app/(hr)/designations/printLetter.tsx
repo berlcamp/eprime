@@ -1,17 +1,17 @@
 import type { DesignationTypes } from '@/types'
 import { jsPDF } from 'jspdf'
 import { format } from 'date-fns'
-import { capitalizeWords } from '@/utils/text-helper'
 
 // import 'jspdf-autotable'
 
-export async function printLetter (item: DesignationTypes) {
+export async function printLetter (item: DesignationTypes, letterDate: string, letterSubject: string, letterContent: string) {
   // Default export is a4 paper, portrait, using millimeters for units 210mm x 297mm
   // eslint-disable-next-line new-cap
   const doc = new jsPDF()
 
   // Header Logo
   const logo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/deped_logo.png`
+  const bayuganLogo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/bayugan_logo.png`
   const rpText = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/rp_text.png`
   const depedText = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/deped_text.png`
 
@@ -28,22 +28,13 @@ export async function printLetter (item: DesignationTypes) {
   // line
   doc.line(15, 55, 195, 55)
 
-  let y = 65
+  let y = 62
 
   // Begin Document Title
   doc.setFontSize(14)
-  const text = 'Office of the Schools Division Superintendent'
-  const maxWidth = 80
-  const lines = doc.splitTextToSize(text, maxWidth)
-  for (let i = 0; i < lines.length; i++) {
-    doc.text(lines[i], 15, y)
-    y += 5
-  }
+  doc.text('Office of the Schools Division Superintendent', 15, y)
 
-  y += 5
-  doc.text('MEMORANDUM', 15, y)
-
-  y += 10
+  y += 15
   doc.setFont('times', 'normal')
   doc.text('To', 15, y)
   doc.setFont('times', 'bold')
@@ -52,17 +43,19 @@ export async function printLetter (item: DesignationTypes) {
   doc.setFont('times', 'normal')
   doc.text('From', 15, y)
   doc.setFont('times', 'bold')
-  doc.text(': MA. TERESA M. REAL', 40, y)
+  doc.text(': ' + `${process.env.NEXT_PUBLIC_SDS ?? ''}`, 40, y)
+  y += 5
+  doc.setFont('times', 'normal')
+  doc.text('School Division Superintendent', 42, y)
   y += 10
   doc.setFont('times', 'normal')
   doc.text('Date', 15, y)
-  doc.setFont('times', 'bold')
-  doc.text(': ' + format(new Date(), 'MMMM d, yyyy'), 40, y)
+  doc.text(': ' + format(new Date(letterDate), 'MMMM d, yyyy'), 40, y)
   y += 10
   doc.setFont('times', 'normal')
   doc.text('Subject', 15, y)
   doc.setFont('times', 'bold')
-  doc.text(': ASSIGNMENT ORDER', 40, y)
+  doc.text(': ' + letterSubject, 40, y)
   y += 10
   // End Document Title
 
@@ -73,45 +66,23 @@ export async function printLetter (item: DesignationTypes) {
 
   // letter body
   doc.setFont('times', 'normal')
-  let station = ''
-  if (item.area_assigned === 'school') {
-    station = item.hrm_schools?.name
-  } else {
-    station = item.hrm_offices?.name
-  }
-  const sentence1 = 'You are hereby designated as asdfasdfasdf at ' + capitalizeWords(station) + ' effective ' + format(new Date(item.from), 'MMMM d, yyyy') + '. This order is subject to the exigency of service.'
-  const maxWidth1 = 160
-  const lines1 = doc.splitTextToSize(sentence1, maxWidth1)
-  for (let i = 0; i < lines1.length; i++) {
-    if (i === 0) {
-      doc.text(lines1[i], 35, y)
-    } else {
-      doc.text(lines1[i], 15, y)
+  const content = letterContent
+  const paragraphs = content.split('\n')
+
+  for (const paragraph of paragraphs) {
+    const maxWidth = 160
+    const line = doc.splitTextToSize(paragraph, maxWidth)
+
+    for (let i = 0; i < line.length; i++) {
+      if (i === 0) {
+        doc.text(line[i], 35, y)
+      } else {
+        doc.text(line[i], 15, y)
+      }
+      y += 7
     }
-    y += 10
-  }
-  const sentence2 = 'As such you are to perform duties and responsibilities concomitant to your position.'
-  const lines2 = doc.splitTextToSize(sentence2, maxWidth1)
-  for (let i = 0; i < lines2.length; i++) {
-    if (i === 0) {
-      doc.text(lines2[i], 35, y)
-    } else {
-      doc.text(lines2[i], 15, y)
-    }
-    y += 10
   }
 
-  const sentence3 = 'You are further advised to report immediately to the School Head for specific instructions.'
-  const lines3 = doc.splitTextToSize(sentence3, maxWidth1)
-  for (let i = 0; i < lines3.length; i++) {
-    if (i === 0) {
-      doc.text(lines3[i], 35, y)
-    } else {
-      doc.text(lines3[i], 15, y)
-    }
-    y += 10
-  }
-  doc.text('Please be guided accordingly.', 35, y)
   y += 20
   // End letter body
 
@@ -128,8 +99,17 @@ export async function printLetter (item: DesignationTypes) {
   // End signature
 
   // Start footer
-  doc.text('CC: School Head', 15, 280)
-  doc.text('File Copy', 20, 285)
+  // line
+  y = 265
+  doc.line(15, y, 195, y)
+  y += 5
+  doc.setFontSize(10)
+  doc.addImage(bayuganLogo, 'PNG', 15, 266, 20, 20)
+  doc.text('Lanzones Street, Poblacion, Bayugan City', 37, y)
+  y += 5
+  doc.text('deped.bayugan@gmail.com', 37, y)
+  y += 5
+  doc.text('Telephone Number: (085) 303-0664', 37, y)
   // End footer
 
   doc.save('Assignment.pdf')

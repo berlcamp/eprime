@@ -13,7 +13,7 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import { capitalizeWords } from '@/utils/text-helper'
 import AddEditModal from './AddEditModal'
 import RevokeModal from './RevokeModal'
-import { printLetter } from './printLetter'
+import PrintModal from './PrintModal'
 
 // Types
 import type { DesignationTypes } from '@/types'
@@ -28,6 +28,9 @@ const Page: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showRevokeModal, setShowRevokeModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showPrintModal, setShowPrintModal] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<DesignationTypes | null>(null)
+
   const [selectedId, setSelectedId] = useState<string>('')
   const [list, setList] = useState<DesignationTypes[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
@@ -93,7 +96,8 @@ const Page: React.FC = () => {
   }
 
   const handlePrint = (item: DesignationTypes) => {
-    void printLetter(item)
+    setSelectedItem(item)
+    setShowPrintModal(true)
   }
 
   const handleRevoke = (item: DesignationTypes) => {
@@ -217,7 +221,7 @@ const Page: React.FC = () => {
                                       className='app__dropdown_item'
                                     >
                                       <PrinterIcon className='w-4 h-4'/>
-                                      <span>Print</span>
+                                      <span>Download Letter</span>
                                     </div>
                                 </Menu.Item>
                                 {
@@ -339,6 +343,15 @@ const Page: React.FC = () => {
         <RevokeModal
           editData={editData}
           hideModal={() => setShowRevokeModal(false)}/>
+      )
+    }
+
+    {/* Print Modal */}
+    {
+      (showPrintModal && selectedItem) && (
+        <PrintModal
+          item={selectedItem}
+          hideModal={() => setShowPrintModal(false)}/>
       )
     }
 

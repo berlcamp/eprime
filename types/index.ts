@@ -1,4 +1,4 @@
-import { type MouseEventHandler } from 'react'
+import type { ReactNode, MouseEventHandler } from 'react'
 
 export interface SelectUserNamesProps {
   settingsData: any[]
@@ -35,7 +35,7 @@ export interface CustomButtonTypes {
   containerStyles?: string
   textStyles?: string
   title: string
-  rightIcon?: string
+  rightIcon?: ReactNode
   handleClick?: MouseEventHandler<HTMLButtonElement>
 }
 
