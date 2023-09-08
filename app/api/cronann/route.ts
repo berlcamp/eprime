@@ -23,6 +23,7 @@ export async function GET () {
       .lte('expiration', today)
 
     if (error) throw new Error('ctos error' + error.message)
+
     return NextResponse.json('ctos updated')
   } catch (error) {
     console.log(error)
