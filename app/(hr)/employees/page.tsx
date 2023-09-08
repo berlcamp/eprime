@@ -13,7 +13,7 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import { capitalizeWords } from '@/utils/text-helper'
 
 // Types
-import type { Employee } from '@/types'
+import type { AssignmentTypes, DesignationTypes, Employee } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -47,6 +47,8 @@ const Page: React.FC = () => {
 
       // update the list in redux
       dispatch(updateList(result.data))
+
+      console.log('result.data', result.data)
 
       // Updating showing text in redux
       dispatch(updateResultCounter({ showing: result.data.length, results: result.count ? result.count : 0 }))
@@ -152,7 +154,7 @@ const Page: React.FC = () => {
                           Account Setup
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Assignment
+                          Assignment/Designation
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Position
@@ -350,10 +352,40 @@ const Page: React.FC = () => {
                           <div className='font-semibold'>Original Assignment:</div>
                           <div>{item.hrm_schools?.name} {item.hrm_offices?.name}</div>
                         </div>
-                        <div>
-                          <div className='font-semibold text-green-700'>Current Assignment:</div>
-                          <div>{item.hrm_schools?.name} {item.hrm_offices?.name}</div>
-                        </div>
+                        {
+                          item.hrm_assignments.length > 0 && (
+                            item.hrm_assignments.map((assignment: AssignmentTypes) => (
+                              (assignment.status === 'Active' && assignment.type === 'Re-assignment') &&
+                                <div key={uuid()}>
+                                  <div className='font-semibold text-green-700'>Current Assignment:</div>
+                                  {
+                                    assignment.area_assigned === 'office'
+                                      ? <span>{assignment.hrm_offices?.name}</span>
+                                      : <span>{assignment.hrm_schools?.name}</span>
+                                  }
+                                </div>
+                            ))
+                          )
+                        }
+                        {
+                          item.hrm_designations.length > 0 && (
+                            item.hrm_designations.map((designation: DesignationTypes) => (
+                              designation.status === 'Active' &&
+                                <div key={uuid()}>
+                                  <div className='font-semibold text-green-700'>Current Designation:</div>
+                                  {
+                                    designation.type === 'Function only'
+                                      ? <span>{designation.designation}</span>
+                                      : (
+                                          designation.area_assigned === 'office'
+                                            ? <span>{designation.designation} - {designation.hrm_offices?.name}</span>
+                                            : <span>{designation.designation} - {designation.hrm_schools?.name}</span>
+                                        )
+                                  }
+                                </div>
+                            ))
+                          )
+                        }
                       </td>
                       <td
                         className="hidden md:table-cell app__td">

@@ -378,30 +378,33 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                           </div>
                         ))
                     }
-                    <div className='relative'>
-                      <input
-                        type="text"
-                        placeholder='Search School Head'
-                        value={searchHead}
-                        onChange={async (e) => await handleSearchUser(e)}
-                        className='app__input_noborder'/>
+                    {
+                      selectedItems.length === 0 &&
+                        <div className='relative'>
+                          <input
+                            type="text"
+                            placeholder='Search employee..'
+                            value={searchHead}
+                            onChange={async (e) => await handleSearchUser(e)}
+                            className='app__input_noborder'/>
 
-                        {
-                          searchResults.length > 0 &&
-                            <div className='app__search_user_results_container'>
-                              {
-                                searchResults.map((item: namesType) => (
-                                  <div
-                                    key={uuid()}
-                                    onClick={() => handleSelected(item)}
-                                    className='app__search_user_results'>
-                                      {item.firstname} {item.middlename} {item.lastname}
-                                  </div>
-                                ))
-                              }
-                            </div>
-                        }
-                    </div>
+                            {
+                              searchResults.length > 0 &&
+                                <div className='app__search_user_results_container'>
+                                  {
+                                    searchResults.map((item: namesType) => (
+                                      <div
+                                        key={uuid()}
+                                        onClick={() => handleSelected(item)}
+                                        className='app__search_user_results'>
+                                          {item.firstname} {item.middlename} {item.lastname}
+                                      </div>
+                                    ))
+                                  }
+                                </div>
+                            }
+                        </div>
+                    }
                   </div>
                   {errorMessage && <div className='app__error_message'>{errorMessage}</div>}
                 </div>

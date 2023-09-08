@@ -1,5 +1,5 @@
 'use client'
-import { BookOpenIcon, BriefcaseIcon, ChartBarSquareIcon, CreditCardIcon, DocumentDuplicateIcon, HomeIcon, PencilSquareIcon, TableCellsIcon, TrophyIcon, UsersIcon } from '@heroicons/react/20/solid'
+import { ChartBarSquareIcon, CreditCardIcon, DocumentDuplicateIcon, HomeIcon, PencilSquareIcon, TableCellsIcon, UsersIcon } from '@heroicons/react/20/solid'
 import Link from 'next/link'
 
 const MainMenu: React.FC = () => {
@@ -12,39 +12,31 @@ const MainMenu: React.FC = () => {
             <div className='text-gray-700 text-lg font-semibold'>Shortcuts</div>
             <Link href='/' className='app__menu_item'>
               <PencilSquareIcon className='w-6 h-6'/>
-              <div className='app__menu_item_label'>Create Leave Request</div>
+              <div className='app__menu_item_label'>Create Purchase Request</div>
             </Link>
             <Link href='/' className='app__menu_item'>
               <CreditCardIcon className='w-6 h-6'/>
-              <div className='app__menu_item_label'>My Leave Card</div>
+              <div className='app__menu_item_label'>Create New Payroll</div>
             </Link>
             <Link href='/' className='app__menu_item'>
               <TableCellsIcon className='w-6 h-6'/>
-              <div className='app__menu_item_label'>My Service Records</div>
+              <div className='app__menu_item_label'>Create New Canvass</div>
             </Link>
             <Link href='/' className='app__menu_item'>
               <ChartBarSquareIcon className='w-6 h-6'/>
-              <div className='app__menu_item_label'>PMS</div>
-            </Link>
-            <Link href='/myctos' className='app__menu_item'>
-              <BriefcaseIcon className='w-6 h-6'/>
-              <div className='app__menu_item_label'>My CTO&apos;s</div>
-            </Link>
-            <Link href='/' className='app__menu_item'>
-              <BriefcaseIcon className='w-6 h-6'/>
-              <div className='app__menu_item_label'>Service Credits</div>
+              <div className='app__menu_item_label'>Reports</div>
             </Link>
           </div>
           <div className='px-2 py-4 lg:w-96 border text-gray-600 rounded-lg bg-white shadow-md flex flex-col space-y-2'>
-            <div className='text-gray-700 text-lg font-semibold'>Human Resource</div>
+            <div className='text-gray-700 text-lg font-semibold'>RDM</div>
             <Link href='/'>
               <div className='app__menu_item'>
                 <div className='pt-1'>
                   <HomeIcon className='w-8 h-8'/>
                 </div>
                 <div>
-                  <div className='app__menu_item_label'>Home</div>
-                  <div className='app__menu_item_label_description'>Go to home page.</div>
+                  <div className='app__menu_item_label'>Dashboard</div>
+                  <div className='app__menu_item_label_description'>Go to dashboard page.</div>
                 </div>
               </div>
             </Link>
@@ -54,7 +46,7 @@ const MainMenu: React.FC = () => {
                   <UsersIcon className='w-8 h-8'/>
                 </div>
                 <div>
-                  <div className='app__menu_item_label'>Manage Employees</div>
+                  <div className='app__menu_item_label'>Human Resource Information System</div>
                   <div className='app__menu_item_label_description'>Employee details, records, and account settings.</div>
                 </div>
               </div>
@@ -65,8 +57,8 @@ const MainMenu: React.FC = () => {
                   <DocumentDuplicateIcon className='w-8 h-8'/>
                 </div>
                 <div>
-                  <div className='app__menu_item_label'>Requests</div>
-                  <div className='app__menu_item_label_description'>Leave requests, travel authorities, pass slips.</div>
+                  <div className='app__menu_item_label'>Payroll System</div>
+                  <div className='app__menu_item_label_description'>Attendance, DTR, Payslips.</div>
                 </div>
               </div>
             </Link>
@@ -76,56 +68,30 @@ const MainMenu: React.FC = () => {
                   <UsersIcon className='w-8 h-8'/>
                 </div>
                 <div>
-                  <div className='app__menu_item_label'>Records</div>
-                  <div className='app__menu_item_label_description'>Assignments, designations, CTO, service credits, promotions, items.</div>
+                  <div className='app__menu_item_label'>Supply and Material Management</div>
+                  <div className='app__menu_item_label_description'>Canvass, Inventory Management</div>
                 </div>
               </div>
             </Link>
-            <div className='pt-4'>
-              <hr/>
-            </div>
-            <div className='text-gray-700 text-lg font-semibold'>PRIME</div>
-            <Link href='/'>
+            <Link href='/assignments'>
               <div className='app__menu_item'>
                 <div className='pt-1'>
                   <UsersIcon className='w-8 h-8'/>
                 </div>
                 <div>
-                  <div className='app__menu_item_label'>R/S/P</div>
-                  <div className='app__menu_item_label_description'>Recruitment, selection, and placement.</div>
+                  <div className='app__menu_item_label'>Purchase Orders</div>
+                  <div className='app__menu_item_label_description'>Purchase Orders Mgmt.</div>
                 </div>
               </div>
             </Link>
-            <Link href='/'>
+            <Link href='/assignments'>
               <div className='app__menu_item'>
                 <div className='pt-1'>
-                  <ChartBarSquareIcon className='w-8 h-8'/>
+                  <UsersIcon className='w-8 h-8'/>
                 </div>
                 <div>
-                  <div className='app__menu_item_label'>Performance Mgmt System</div>
-                  <div className='app__menu_item_label_description'>Ipcrf/opcrf, development plans.</div>
-                </div>
-              </div>
-            </Link>
-            <Link href='/'>
-              <div className='app__menu_item'>
-                <div className='pt-1'>
-                  <BookOpenIcon className='w-8 h-8'/>
-                </div>
-                <div>
-                  <div className='app__menu_item_label'>Learning & Devt</div>
-                  <div className='app__menu_item_label_description'>Development plans and trainings. </div>
-                </div>
-              </div>
-            </Link>
-            <Link href='/'>
-              <div className='app__menu_item'>
-                <div className='pt-1'>
-                  <TrophyIcon className='w-8 h-8'/>
-                </div>
-                <div>
-                  <div className='app__menu_item_label'>Rewards & Recognation</div>
-                  <div className='app__menu_item_label_description'>Pasidungog, loyalty, tribute to retirees, gawad agad.</div>
+                  <div className='app__menu_item_label'>Projects</div>
+                  <div className='app__menu_item_label_description'>Projects and Location Management.</div>
                 </div>
               </div>
             </Link>
@@ -140,7 +106,7 @@ const MainMenu: React.FC = () => {
                 </div>
                 <div>
                   <div className='app__menu_item_label'>System Settings</div>
-                  <div className='app__menu_item_label_description'>System Access, Schools, Districts, Positions. </div>
+                  <div className='app__menu_item_label_description'>System Access and Permissions. </div>
                 </div>
               </div>
             </Link>

@@ -1,8 +1,9 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { fullTextQuery } from '@/utils/text-helper'
+import { format } from 'date-fns'
 
 // types
-import type { AssignmentTypes, DesignationTypes, Employee } from '@/types'
+import type { AssignmentTypes, DesignationTypes, excludedItemsTypes, Employee, CtoTypes } from '@/types'
 
 const supabase = createClientComponentClient()
 
@@ -165,7 +166,7 @@ export async function fetchEmployees (filters: { filterKeyword?: string, filterS
   try {
     let query = supabase
       .from('hrm_users')
-      .select('*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name)', { count: 'exact' })
+      .select('*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))', { count: 'exact' })
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Search match
@@ -412,7 +413,7 @@ export async function fetchRegistrations (filters: { filterKeyword?: string, fil
   }
 }
 
-export async function searchActiveEmployees (searchTerm: string, excludedItems: any[]) {
+export async function searchActiveEmployees (searchTerm: string, excludedItems: excludedItemsTypes[]) {
   let query = supabase
     .from('hrm_users')
     .select()
@@ -435,4 +436,86 @@ export async function searchActiveEmployees (searchTerm: string, excludedItems: 
   if (error) console.error(error)
 
   return data ?? []
+}
+
+export async function fetchCtos (filters: { filterKeyword?: string, filterStatus?: string }, perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_ctos')
+      .select('*, hrm_cto_users(*)', { count: 'exact' })
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    // Search match
+    if (filters.filterKeyword && filters.filterKeyword !== '') {
+      query = query.eq('reference_code', filters.filterKeyword)
+    }
+
+    // filter stats
+    if (filters.filterStatus && filters.filterStatus !== '') {
+      const today = format(new Date(), 'yyyy-MM-dd')
+      if (filters.filterStatus === 'Active') {
+        query = query.gt('expiration', today)
+      } else {
+        query = query.lte('expiration', today)
+      }
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data: ctoData, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    const data: CtoTypes[] = ctoData
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch ctos error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchMyCtos (filters: { filterKeyword?: string, userId: string }, perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_cto_users')
+      .select('*, hrm_ctos:cto_id(*)', { count: 'exact' })
+      .eq('hrm_user_id', filters.userId)
+
+    // Search match
+    if (filters.filterKeyword && filters.filterKeyword !== '') {
+      query = query.eq('reference_code', filters.filterKeyword)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch ctos error', error)
+    return { data: [], count: 0 }
+  }
 }

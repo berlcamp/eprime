@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import React, { useState, Fragment, useEffect, useRef } from 'react'
@@ -14,9 +15,10 @@ interface ModalProps {
   hideModal: () => void
   id: string
   table: string
+  updateRedux?: boolean
 }
 
-const DeleteModal = ({ hideModal, id, table }: ModalProps) => {
+const DeleteModal = ({ hideModal, id, table, updateRedux = true }: ModalProps) => {
   const { setToast } = useFilter()
   const { supabase } = useSupabase()
   const [deleting, setDeleting] = useState(false)
@@ -97,12 +99,14 @@ const DeleteModal = ({ hideModal, id, table }: ModalProps) => {
                 <CustomButton
                   handleClick={handleDelete}
                   btnType='button'
+                  isDisabled={deleting}
                   title={deleting ? 'Deleting...' : 'Delete'}
                   containerStyles="app__btn_green_sm"
                 />
                 <CustomButton
                   handleClick={hideModal}
                   btnType='button'
+                  isDisabled={deleting}
                   title='Cancel'
                   containerStyles="app__btn_gray_sm"
                 />

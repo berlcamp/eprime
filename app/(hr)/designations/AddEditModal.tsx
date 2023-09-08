@@ -93,7 +93,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     const newData = {
       reference_code: generateReferenceCode(),
       hrm_user_id: selectedItems[0].id,
-      area_assigned: formdata.area_assigned,
+      area_assigned: formdata.area_assigned || null,
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
       type: formdata.type,
       add_to_service_record: isServiceRecordChecked,
@@ -147,16 +147,18 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     let district = formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
     let school = formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
     let office = formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
+    let areaAssigned: string | null = formdata.area_assigned
 
     // set these to null to prevent error
     if (formdata.type === 'Function only') {
       district = null
       school = null
       office = null
+      areaAssigned = null
     }
 
     const newData = {
-      area_assigned: formdata.area_assigned,
+      area_assigned: areaAssigned,
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
       type: formdata.type,
       add_to_service_record: isServiceRecordChecked,
@@ -224,7 +226,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const validateEmployee = async (formdata: DesignationTypes) => {
-    console.log('formdata', formdata)
     let query = supabase
       .from('hrm_designations')
       .select('*, hrm_users:hrm_user_id(firstname,middlename,lastname),hrm_schools:school_id(name),hrm_offices:office_id(name)')
@@ -246,27 +247,16 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     data.forEach((item) => {
       let station = ''
-      if (item.area_assigned === 'school') {
-        station = item.hrm_schools?.name
-      } else {
-        station = item.hrm_offices?.name
+      if (item.area_assigned !== null) {
+        if (item.area_assigned === 'school') {
+          station = item.hrm_schools?.name
+        } else {
+          station = item.hrm_offices?.name
+        }
       }
 
-      if (item.type === 'Re-assignment' && formdata.type === 'Re-assignment' && item.to === null) {
-        // check if the employee has an active re-assignment
-        validationErrors.push(`This employee currently have an active re-assignment (Ref Code ${item.reference_code}) stationed at ${station}. You must first fill up the "End Date" of that active record.`)
-      } else if (item.type === 'Re-assignment' && formdata.type === 'Re-assignment' && item.to !== null) {
-        // check if the employee has an active re-assignment and from date is less than assignments expiration date.
-        const fromDate = new Date(formdata.from)
-        const existingToDate = new Date(item.to)
-
-        if (fromDate < existingToDate) {
-          validationErrors.push(`This employee currently have an active re-assignment (Ref Code ${item.reference_code}) stationed at "${station}" and will end on "${existingToDate.toDateString()}.`)
-        }
-      } else if (item.type === 'New Employee' && formdata.type === 'New Employee') { // check if new employee already exists
-        validationErrors.push(`This employee currently have an active Assignment (Ref Code ${item.reference_code}) for this position.`)
-      } else if (item.type === 'New Employee' && formdata.type === 'New Employee' && (item.to === null || formdata.to <= item.to)) { // check if new employee already exists
-        validationErrors.push(`This employee currently have an active Assignment (Ref Code ${item.reference_code}).`)
+      if (item.status === 'Active') {
+        validationErrors.push(`This employee currently have an active designation (Ref Code: ${item.reference_code}) as ${item.designation} ${station}. You cannot create new designation until the active designation is revoked.`)
       }
     })
 
@@ -321,7 +311,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   useEffect(() => {
     // display the default values of dynamic dropdowns
     if (editData) {
-      setAssignment(editData.area_assigned)
+      setAssignment(editData.area_assigned || '')
       setType(editData.type)
       setIsServiceRecordChecked(editData.add_to_service_record)
       setIsLeaveCardChecked(editData.add_to_leave_card)
@@ -403,30 +393,33 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                                 </div>
                               ))
                           }
-                          <div className='relative'>
-                            <input
-                              type="text"
-                              placeholder='Search Employee'
-                              value={searchHead}
-                              onChange={async (e) => await handleSearchUser(e)}
-                              className='app__input_noborder'/>
+                          {
+                            selectedItems.length === 0 &&
+                              <div className='relative'>
+                                <input
+                                  type="text"
+                                  placeholder='Search employee..'
+                                  value={searchHead}
+                                  onChange={async (e) => await handleSearchUser(e)}
+                                  className='app__input_noborder'/>
 
-                              {
-                                searchResults.length > 0 &&
-                                  <div className='app__search_user_results_container'>
-                                    {
-                                      searchResults.map((item: namesType) => (
-                                        <div
-                                          key={uuid()}
-                                          onClick={() => handleSelected(item)}
-                                          className='app__search_user_results'>
-                                            {item.firstname} {item.middlename} {item.lastname}
-                                        </div>
-                                      ))
-                                    }
-                                  </div>
-                              }
-                          </div>
+                                  {
+                                    searchResults.length > 0 &&
+                                      <div className='app__search_user_results_container'>
+                                        {
+                                          searchResults.map((item: namesType) => (
+                                            <div
+                                              key={uuid()}
+                                              onClick={() => handleSelected(item)}
+                                              className='app__search_user_results'>
+                                                {item.firstname} {item.middlename} {item.lastname}
+                                            </div>
+                                          ))
+                                        }
+                                      </div>
+                                  }
+                              </div>
+                          }
                         </div>
                       </>
                 }
@@ -581,7 +574,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       checked={isServiceRecordChecked}
                       type='checkbox'
                       className=''/>
-                    <span>Include this to &apos;s Service Record</span>
+                    <span>Include this to Employee&apos;s Service Record</span>
                   </label>
                 </div>
               </div>
@@ -595,7 +588,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       checked={isLeaveCardChecked}
                       type='checkbox'
                       className=''/>
-                    <span>Include this to &apos;s Leave Credits Increments</span>
+                    <span>Include this to Employee&apos;s Leave Credits Increments</span>
                   </label>
                 </div>
               </div>

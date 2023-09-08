@@ -1,22 +1,20 @@
 'use client'
 
-import { fetchAssignments } from '@/utils/fetchApi'
+import { fetchCtos } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, PencilSquareIcon, PrinterIcon, TrashIcon } from '@heroicons/react/20/solid'
+import { ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar } from '@/components'
 import uuid from 'react-uuid'
 import { superAdmins } from '@/constants/TrackerConstants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { capitalizeWords } from '@/utils/text-helper'
 import AddEditModal from './AddEditModal'
-import RevokeModal from './RevokeModal'
-import PrintModal from './PrintModal'
+import EmployeesModal from './EmployeesModal'
 
 // Types
-import type { AssignmentTypes } from '@/types'
+import type { CtoTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -26,19 +24,15 @@ import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showRevokeModal, setShowRevokeModal] = useState(false)
+  const [showEmployeesModal, setShowEmployeesModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showPrintModal, setShowPrintModal] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<AssignmentTypes | null>(null)
 
   const [selectedId, setSelectedId] = useState<string>('')
-  const [list, setList] = useState<AssignmentTypes[]>([])
+  const [list, setList] = useState<CtoTypes[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
-  const [filterSchool, setFilterSchool] = useState<string>('')
-  const [filterOffice, setFilterOffice] = useState<string>('')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [perPageCount, setPerPageCount] = useState<number>(10)
-  const [editData, setEditData] = useState<AssignmentTypes | null>(null)
+  const [editData, setEditData] = useState<CtoTypes | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -52,7 +46,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchAssignments({ filterKeyword, filterSchool, filterOffice, filterStatus }, perPageCount, 0)
+      const result = await fetchCtos({ filterKeyword, filterStatus }, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -70,7 +64,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchAssignments({ filterKeyword, filterSchool, filterOffice, filterStatus }, perPageCount, list.length)
+      const result = await fetchCtos({ filterKeyword, filterStatus }, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -90,18 +84,13 @@ const Page: React.FC = () => {
     setEditData(null)
   }
 
-  const handlePrint = (item: AssignmentTypes) => {
-    setSelectedItem(item)
-    setShowPrintModal(true)
-  }
-
-  const handleEdit = (item: AssignmentTypes) => {
+  const handleEdit = (item: CtoTypes) => {
     setShowAddModal(true)
     setEditData(item)
   }
 
-  const handleRevoke = (item: AssignmentTypes) => {
-    setShowRevokeModal(true)
+  const handleManageEmployees = (item: CtoTypes) => {
+    setShowEmployeesModal(true)
     setEditData(item)
   }
 
@@ -121,7 +110,7 @@ const Page: React.FC = () => {
     void fetchData()
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, perPageCount, filterSchool, filterStatus, filterOffice])
+  }, [filterKeyword, perPageCount, filterStatus])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -137,10 +126,10 @@ const Page: React.FC = () => {
     <div className="app__main">
       <div>
           <div className='app__title'>
-            <Title title='Assignments'/>
+            <Title title='Compensatory Time Off'/>
             <CustomButton
               containerStyles='app__btn_green'
-              title='Create New Assignment'
+              title='Create New CTO'
               btnType='button'
               handleClick={handleAdd}
             />
@@ -150,11 +139,11 @@ const Page: React.FC = () => {
           <div className='app__filters'>
             <Filters
               setFilterKeyword={setFilterKeyword}
-              setFilterSchool={setFilterSchool}
-              setFilterOffice={setFilterOffice}
               setFilterStatus={setFilterStatus}
             />
           </div>
+
+          <div className='app__warning_text'><span className='app__warning_title'>Note:</span> CTO with employee/s cannot be deleted.</div>
 
           {/* Per Page */}
           <PerPage
@@ -173,22 +162,28 @@ const Page: React.FC = () => {
                           Reference Code
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Employee Name
+                          COC
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Type
+                          Particulars
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Station
+                          Total Employees
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Duration
+                      </th>
+                      <th className="hidden md:table-cell app__th">
+                          Expiration
+                      </th>
+                      <th className="hidden md:table-cell app__th">
+                          Status
                       </th>
                   </tr>
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: AssignmentTypes) => (
+                  !isDataEmpty && list.map((item: CtoTypes) => (
                     <tr
                       key={uuid()}
                       className="app__tr">
@@ -212,15 +207,6 @@ const Page: React.FC = () => {
                           >
                             <Menu.Items className="app__dropdown_items">
                               <div className="py-1">
-                                <Menu.Item>
-                                  <div
-                                      onClick={() => handlePrint(item)}
-                                      className='app__dropdown_item'
-                                    >
-                                      <PrinterIcon className='w-4 h-4'/>
-                                      <span>Print Memo</span>
-                                    </div>
-                                </Menu.Item>
                                 {
                                   item.status !== 'Revoked' &&
                                     <>
@@ -235,21 +221,25 @@ const Page: React.FC = () => {
                                     </Menu.Item>
                                     <Menu.Item>
                                       <div
-                                          onClick={() => handleRevoke(item)}
+                                          onClick={() => handleManageEmployees(item)}
                                           className='app__dropdown_item'
                                         >
                                           <PencilSquareIcon className='w-4 h-4'/>
-                                          <span>Revoke</span>
+                                          <span>Manage Employees</span>
                                         </div>
                                     </Menu.Item>
                                     <Menu.Item>
-                                      <div
-                                          onClick={ () => handleDelete(item.id) }
-                                          className='app__dropdown_item'
-                                        >
-                                          <TrashIcon className='w-4 h-4'/>
-                                          <span>Delete</span>
-                                        </div>
+                                      {
+                                        item.hrm_cto_users.length === 0
+                                          ? <div
+                                                onClick={ () => handleDelete(item.id) }
+                                                className='app__dropdown_item'
+                                              >
+                                                <TrashIcon className='w-4 h-4'/>
+                                                <span>Delete</span>
+                                              </div>
+                                          : <div className='app__dropdown_item_disabled'><TrashIcon className='w-4 h-4'/><span>Delete</span></div>
+                                      }
                                     </Menu.Item>
                                     </>
                                 }
@@ -261,12 +251,17 @@ const Page: React.FC = () => {
                       <th
                         className="app__th_firstcol">
                         <div>{item.reference_code}</div>
-                        <div className={`${item.status === 'Revoked' ? 'text-red-500' : 'text-green-500'}`}>{item.status}</div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">
-                            <div>{capitalizeWords(item.hrm_users?.firstname + ' ' + item.hrm_users?.middlename + ' ' + item.hrm_users?.lastname)}</div>
-                            <div className='font-light'>Duration: {item.from} -  {item.to}</div>
+                            <div className='font-light'>Particulars: {item.particulars}</div>
+                            <div className='font-light'>Status:
+                              {
+                                item.status === 'Expired'
+                                  ? <span className='font-medium text-red-500'>Expired</span>
+                                  : <span className='font-medium text-green-500'>Active</span>
+                              }
+                            </div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -274,32 +269,38 @@ const Page: React.FC = () => {
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{capitalizeWords(item.hrm_users?.firstname + ' ' + item.hrm_users?.middlename + ' ' + item.hrm_users?.lastname)}</div>
+                        <div className='font-semibold'>{item.coc}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{item.type}</div>
-                        <div>{item.add_to_service_record ? '(Included on Service Record)' : '(Excluded on Service Record)'}</div>
+                        <div className='font-semibold'>{item.particulars}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
                         <div className='font-semibold'>
-                          {
-                            item.area_assigned === 'school'
-                              ? <span>{item.hrm_schools?.name}</span>
-                              : <span>{item.hrm_offices?.name}</span>
-                          }
+                          {item.hrm_cto_users.length}
                         </div>
-                        <div>{item.hrm_positions?.name}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
                         <div>{item.from} -  {item.to}</div>
                       </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        <div>{item.expiration}</div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        {
+                          item.status === 'Expired'
+                            ? <span className='app__status_container_red'>Expired</span>
+                            : <span className='app__status_container_green'>Active</span>
+                        }
+                      </td>
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={6} rows={2}/> }
+                { loading && <TableRowLoading cols={7} rows={2}/> }
               </tbody>
             </table>
             {
@@ -326,30 +327,20 @@ const Page: React.FC = () => {
       )
     }
 
-    {/* Revoke Modal */}
+    {/* Employees Modal */}
     {
-      showRevokeModal && (
-        <RevokeModal
-          editData={editData}
-          hideModal={() => setShowRevokeModal(false)}/>
+      showEmployeesModal && (
+        <EmployeesModal
+          ctoData={editData}
+          hideModal={() => setShowEmployeesModal(false)}/>
       )
     }
-
-    {/* Print Modal */}
-    {
-      (showPrintModal && selectedItem) && (
-        <PrintModal
-          item={selectedItem}
-          hideModal={() => setShowPrintModal(false)}/>
-      )
-    }
-
     {/* Delete Modal */}
     {
       showDeleteModal && (
         <DeleteModal
           id={selectedId}
-          table='hrm_assignments'
+          table='hrm_ctos'
           hideModal={() => setShowDeleteModal(false)}/>
       )
     }

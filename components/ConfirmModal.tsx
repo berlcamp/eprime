@@ -1,4 +1,7 @@
-import React from 'react'
+/* eslint-disable react-hooks/exhaustive-deps */
+'use client'
+
+import React, { useEffect, useRef } from 'react'
 
 interface ModalProps {
   onCancel: () => void
@@ -9,13 +12,31 @@ interface ModalProps {
 }
 
 export default function ConfirmModal ({ onConfirm, header, btnText, message, onCancel }: ModalProps) {
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      onCancel()
+    }
+    if (event.key === 'Enter') {
+      onConfirm()
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [wrapperRef])
+
   return (
 
-      <div className="z-50 fixed top-0 left-0 w-full h-full outline-none overflow-x-hidden overflow-y-auto bg-gray-900 bg-opacity-50">
-        <div className="sm:h-[calc(100%-3rem)] max-w-lg my-6 mx-auto relative w-auto pointer-events-none">
-          <div className="max-h-full overflow-hidden border-none shadow-lg relative flex flex-col w-full pointer-events-auto bg-gray-50 bg-clip-padding rounded-sm outline-none text-current">
-            <div className="flex flex-shrink-0 items-center justify-between p-4 border-b border-gray-200 rounded-t-md">
-              <h5 className="text-md font-bold leading-normal text-gray-800" id="exampleModalScrollableLabel">
+      <div ref={wrapperRef} className="app__modal_wrapper">
+        <div className="app__modal_wrapper2">
+          <div className="app__modal_wrapper3">
+            <div className="app__modal_header">
+              <h5 className="app__modal_header_text">
                 {header}
               </h5>
             </div>
@@ -26,7 +47,7 @@ export default function ConfirmModal ({ onConfirm, header, btnText, message, onC
                 </div>
               </div>
 
-              <div className="flex space-x-2 flex-shrink-0 flex-wrap items-center justify-end pt-4 border-t border-gray-200 rounded-b-md">
+              <div className="app__modal_footer">
                     <button
                       onClick={onConfirm}
                       type="button"

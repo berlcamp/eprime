@@ -221,7 +221,7 @@ const Page: React.FC = () => {
                                       className='app__dropdown_item'
                                     >
                                       <PrinterIcon className='w-4 h-4'/>
-                                      <span>Download Letter</span>
+                                      <span>Print Memo</span>
                                     </div>
                                 </Menu.Item>
                                 {

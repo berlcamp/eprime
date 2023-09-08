@@ -244,21 +244,11 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         station = item.hrm_offices?.name
       }
 
-      if (item.type === 'Re-assignment' && formdata.type === 'Re-assignment' && item.to === null) {
+      if (item.type === 'Re-assignment' && formdata.type === 'Re-assignment' && item.status === 'Active') {
         // check if the employee has an active re-assignment
-        validationErrors.push(`This employee currently have an active re-assignment (Ref Code ${item.reference_code}) stationed at ${station}. You must first fill up the "End Date" of that active record.`)
-      } else if (item.type === 'Re-assignment' && formdata.type === 'Re-assignment' && item.to !== null) {
-        // check if the employee has an active re-assignment and from date is less than assignments expiration date.
-        const fromDate = new Date(formdata.from)
-        const existingToDate = new Date(item.to)
-
-        if (fromDate < existingToDate) {
-          validationErrors.push(`This employee currently have an active re-assignment (Ref Code ${item.reference_code}) stationed at "${station}" and will end on "${existingToDate.toDateString()}.`)
-        }
-      } else if (item.type === 'New Employee' && formdata.type === 'New Employee' && item.position_id.toString() === formdata.position_id) { // check if new employee already exists
-        validationErrors.push(`This employee currently have an active Assignment (Ref Code ${item.reference_code}) for this position.`)
-      } else if (item.type === 'New Employee' && formdata.type === 'New Employee' && (item.to === null || formdata.to <= item.to) && item.position_id.toString() !== formdata.position_id) { // check if new employee already exists
-        validationErrors.push(`This employee currently have an active Assignment (Ref Code ${item.reference_code}).`)
+        validationErrors.push(`This employee currently have an active re-assignment (Ref Code: ${item.reference_code}) stationed at ${station}. You must first fill up the "End Date" of that active record.`)
+      } else if (item.type === 'New Employee' && formdata.type === 'New Employee' && item.status === 'Active') { // check if new employee already exists
+        validationErrors.push(`This employee currently have an active Assignment (Ref Code: ${item.reference_code}).`)
       }
     })
 
@@ -405,30 +395,33 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                                 </div>
                               ))
                           }
-                          <div className='relative'>
-                            <input
-                              type="text"
-                              placeholder='Search Employee'
-                              value={searchHead}
-                              onChange={async (e) => await handleSearchUser(e)}
-                              className='app__input_noborder'/>
+                          {
+                            selectedItems.length === 0 &&
+                              <div className='relative'>
+                                <input
+                                  type="text"
+                                  placeholder='Search employee..'
+                                  value={searchHead}
+                                  onChange={async (e) => await handleSearchUser(e)}
+                                  className='app__input_noborder'/>
 
-                              {
-                                searchResults.length > 0 &&
-                                  <div className='app__search_user_results_container'>
-                                    {
-                                      searchResults.map((item: namesType) => (
-                                        <div
-                                          key={uuid()}
-                                          onClick={() => handleSelected(item)}
-                                          className='app__search_user_results'>
-                                            {item.firstname} {item.middlename} {item.lastname}
-                                        </div>
-                                      ))
-                                    }
-                                  </div>
-                              }
-                          </div>
+                                  {
+                                    searchResults.length > 0 &&
+                                      <div className='app__search_user_results_container'>
+                                        {
+                                          searchResults.map((item: namesType) => (
+                                            <div
+                                              key={uuid()}
+                                              onClick={() => handleSelected(item)}
+                                              className='app__search_user_results'>
+                                                {item.firstname} {item.middlename} {item.lastname}
+                                            </div>
+                                          ))
+                                        }
+                                      </div>
+                                  }
+                              </div>
+                          }
                         </div>
                       </>
                 }

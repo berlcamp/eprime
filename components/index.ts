@@ -6,6 +6,7 @@ import Title from './Title'
 import TopBar from './TopBar'
 import CustomButton from './CustomButton'
 import DeleteModal from './DeleteModal'
+import ConfirmModal from './ConfirmModal'
 import PerPage from './PerPage'
 import LandingPage from './LandingPage'
 import Jobs from './Jobs'
@@ -42,6 +43,7 @@ export {
   ShowMore,
   TopBarDark,
   RegisterModal,
+  ConfirmModal,
   Jobs,
   Announcements,
   MainMenu,

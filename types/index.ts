@@ -100,6 +100,8 @@ export interface Employee {
   hrm_schools?: SchoolTypes
   hrm_districts?: DistrictTypes
   hrm_offices?: Office
+  hrm_assignments: AssignmentTypes[]
+  hrm_designations: DesignationTypes[]
   hrm_positions?: PositionTypes
 }
 
@@ -157,4 +159,34 @@ export interface DesignationTypes {
   hrm_schools: SchoolTypes
   hrm_districts: DistrictTypes
   hrm_offices: Office
+}
+
+export interface CtoUserTypes {
+  id: string
+  hrm_user_id: string
+  hrm_ctos?: CtoTypes
+  hrm_users?: namesType
+  cto_id: string
+  is_approved: boolean
+}
+
+export interface CtoTypes {
+  reference_code: string
+  id: string
+  from: string
+  to: string
+  status: string
+  date_issued: string
+  expiration: string
+  hours: string
+  days: string
+  total_hours: string
+  particulars: string
+  coc: string
+  is_holiday: boolean
+  hrm_cto_users: CtoUserTypes[]
+}
+
+export interface excludedItemsTypes {
+  id: string
 }
