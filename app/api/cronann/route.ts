@@ -21,7 +21,9 @@ export async function GET () {
       .update({ status: 'Expired' })
       .is('status', null)
       .lte('expiration', today)
+
     if (error) throw new Error('ctos error' + error.message)
+
     return NextResponse.json('ctos updated')
   } catch (error) {
     console.log(error)
