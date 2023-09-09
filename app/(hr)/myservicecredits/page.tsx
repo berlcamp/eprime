@@ -1,6 +1,6 @@
 'use client'
 
-import { fetchMyCtos } from '@/utils/fetchApi'
+import { fetchMyServiceCredits } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, RecordsSideBar, CustomButton } from '@/components'
 import uuid from 'react-uuid'
@@ -11,7 +11,7 @@ import { useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
 
 // Types
-import type { CtoUserTypes } from '@/types'
+import type { ServiceCreditUserTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -21,8 +21,8 @@ import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
 
-  const [list, setList] = useState<CtoUserTypes[]>([])
-  const [editData, setEditData] = useState<CtoUserTypes | null>(null)
+  const [list, setList] = useState<ServiceCreditUserTypes[]>([])
+  const [editData, setEditData] = useState<ServiceCreditUserTypes | null>(null)
 
   const [showUploadModal, setShowUploadModal] = useState(false)
 
@@ -44,7 +44,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchMyCtos({ filterKeyword, userId: session.user.id }, perPageCount, 0)
+      const result = await fetchMyServiceCredits({ filterKeyword, userId: session.user.id }, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -62,7 +62,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchMyCtos({ filterKeyword, userId: session.user.id }, perPageCount, list.length)
+      const result = await fetchMyServiceCredits({ filterKeyword, userId: session.user.id }, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -77,7 +77,7 @@ const Page: React.FC = () => {
     }
   }
 
-  const handleEdit = (item: CtoUserTypes) => {
+  const handleEdit = (item: ServiceCreditUserTypes) => {
     setShowUploadModal(true)
     setEditData(item)
   }
@@ -97,11 +97,11 @@ const Page: React.FC = () => {
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
-  // count coc balance based on approved and active cto
-  const cocBalance = !isDataEmpty
-    ? list.reduce((accumulator, cto) => {
-      if (cto.is_approved && cto.hrm_ctos?.status !== 'Expired') {
-        return cto.coc + accumulator
+  // count coc balance based on approved and active sc
+  const scBalance = !isDataEmpty
+    ? list.reduce((accumulator, sc) => {
+      if (sc.is_approved && sc.hrm_service_credits?.status !== 'Expired') {
+        return sc.service_credits + accumulator
       }
       return accumulator
     }, 0)
@@ -116,7 +116,7 @@ const Page: React.FC = () => {
     <div className="app__main">
       <div>
           <div className='app__title'>
-            <Title title='My CTOs'/>
+            <Title title='My Service Credits'/>
           </div>
 
           {/* Filters */}
@@ -127,8 +127,8 @@ const Page: React.FC = () => {
             />
           </div>
 
-          <div className='flex justify-end px-4'><span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700'>Available COC Balance: {cocBalance}</span></div>
-          <div className='app__warning_text'><span className='app__warning_title'>Note:</span> You need to provide supporting documents as basis for CTO approval.</div>
+          <div className='flex justify-end px-4'><span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700'>Available Service Credit Balance: {scBalance}</span></div>
+          <div className='app__warning_text'><span className='app__warning_title'>Note:</span> You need to provide supporting documents as basis for approval.</div>
 
           {/* Per Page */}
           <PerPage
@@ -149,16 +149,13 @@ const Page: React.FC = () => {
                           Status
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          COC Balance
+                          Service Credit Balance
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Particulars
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Duration
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Expiration
+                          Work Duration
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Supporting Documents
@@ -167,17 +164,17 @@ const Page: React.FC = () => {
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: CtoUserTypes) => (
+                  !isDataEmpty && list.map((item: ServiceCreditUserTypes) => (
                     <tr
                       key={uuid()}
                       className="app__tr">
                       <th
                         className="font-medium pl-4">
-                        <div>{item.hrm_ctos?.reference_code}</div>
+                        <div>{item.hrm_service_credits?.reference_code}</div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">
-                            <div className='font-light'>Particulars: {item.hrm_ctos?.particulars}</div>
+                            <div className='font-light'>Particulars: {item.hrm_service_credits?.particulars}</div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -185,38 +182,28 @@ const Page: React.FC = () => {
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
-                          {
-                            item.hrm_ctos?.status === 'Expired'
-                              ? <span className='app__status_container_red'>Expired</span>
-                              : <>
-                                  {
-                                    item.is_approved
-                                      ? <span className='app__status_container_green'>Active</span>
-                                      : <span className='app__status_container_orange'>Pending Approval</span>
-                                  }
-                                </>
-                          }
+                        {
+                          item.is_approved
+                            ? <span className='app__status_container_green'>Approved</span>
+                            : <span className='app__status_container_orange'>Pending Approval</span>
+                        }
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{item.coc}</div>
+                        <div className='font-semibold'>{item.service_credits}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className=''>{item.hrm_ctos?.particulars}</div>
+                        <div className=''>{item.hrm_service_credits?.particulars}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div>{item.hrm_ctos ? format(new Date(item.hrm_ctos.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.hrm_ctos.to), 'MMM d, yyyy') : ''}</div>
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div>{format(new Date(item.expiration), 'MMM d, yyyy')}</div>
+                        <div>{item.hrm_service_credits ? format(new Date(item.hrm_service_credits.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.hrm_service_credits.to), 'MMM d, yyyy') : ''}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
                           {
-                            item.hrm_ctos?.status !== 'Expired' &&
+                            item.hrm_service_credits?.status !== 'Expired' &&
                               <CustomButton
                                 btnType='button'
                                 title='Supporting Documents'

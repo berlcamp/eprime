@@ -75,6 +75,7 @@ export interface PositionTypes {
 export interface NotificationTypes {
   id: string
   message: string
+  created_at: string
   url: string
   type: string
   user_id: string
@@ -168,6 +169,8 @@ export interface CtoUserTypes {
   hrm_users?: namesType
   cto_id: string
   is_approved: boolean
+  expiration: string
+  coc: number
 }
 
 export interface CtoTypes {
@@ -189,4 +192,29 @@ export interface CtoTypes {
 
 export interface excludedItemsTypes {
   id: string
+}
+
+export interface ServiceCreditUserTypes {
+  id: string
+  hrm_user_id: string
+  hrm_service_credits?: ServiceCreditTypes
+  hrm_users?: namesType
+  service_credit_id: string
+  is_approved: boolean
+  service_credits: number
+}
+
+export interface ServiceCreditTypes {
+  reference_code: string
+  id: string
+  from: string
+  to: string
+  status: string
+  date_issued: string
+  hours: string
+  days: string
+  total_hours: string
+  particulars: string
+  service_credits: string
+  hrm_service_credit_users: ServiceCreditUserTypes[]
 }

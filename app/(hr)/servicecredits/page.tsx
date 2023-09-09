@@ -1,6 +1,6 @@
 'use client'
 
-import { fetchCtos } from '@/utils/fetchApi'
+import { fetchServiceCredits } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
@@ -15,7 +15,7 @@ import EmployeesModal from './EmployeesModal'
 import { format } from 'date-fns'
 
 // Types
-import type { CtoTypes } from '@/types'
+import type { ServiceCreditTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -29,11 +29,10 @@ const Page: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const [selectedId, setSelectedId] = useState<string>('')
-  const [list, setList] = useState<CtoTypes[]>([])
+  const [list, setList] = useState<ServiceCreditTypes[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
-  const [filterStatus, setFilterStatus] = useState<string>('')
   const [perPageCount, setPerPageCount] = useState<number>(10)
-  const [editData, setEditData] = useState<CtoTypes | null>(null)
+  const [editData, setEditData] = useState<ServiceCreditTypes | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -47,7 +46,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchCtos({ filterKeyword, filterStatus }, perPageCount, 0)
+      const result = await fetchServiceCredits({ filterKeyword }, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -65,7 +64,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchCtos({ filterKeyword, filterStatus }, perPageCount, list.length)
+      const result = await fetchServiceCredits({ filterKeyword }, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -85,12 +84,12 @@ const Page: React.FC = () => {
     setEditData(null)
   }
 
-  const handleEdit = (item: CtoTypes) => {
+  const handleEdit = (item: ServiceCreditTypes) => {
     setShowAddModal(true)
     setEditData(item)
   }
 
-  const handleManageEmployees = (item: CtoTypes) => {
+  const handleManageEmployees = (item: ServiceCreditTypes) => {
     setShowEmployeesModal(true)
     setEditData(item)
   }
@@ -111,7 +110,7 @@ const Page: React.FC = () => {
     void fetchData()
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, perPageCount, filterStatus])
+  }, [filterKeyword, perPageCount])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -127,10 +126,10 @@ const Page: React.FC = () => {
     <div className="app__main">
       <div>
           <div className='app__title'>
-            <Title title='Compensatory Time Off'/>
+            <Title title='Service Credits'/>
             <CustomButton
               containerStyles='app__btn_green'
-              title='Create New CTO'
+              title='Create New Service Credit'
               btnType='button'
               handleClick={handleAdd}
             />
@@ -140,11 +139,10 @@ const Page: React.FC = () => {
           <div className='app__filters'>
             <Filters
               setFilterKeyword={setFilterKeyword}
-              setFilterStatus={setFilterStatus}
             />
           </div>
 
-          <div className='app__warning_text'><span className='app__warning_title'>Note:</span> CTO with employee/s cannot be deleted.</div>
+          <div className='app__warning_text'><span className='app__warning_title'>Note:</span> Service Credit with employee/s cannot be deleted.</div>
 
           {/* Per Page */}
           <PerPage
@@ -163,10 +161,7 @@ const Page: React.FC = () => {
                           Reference Code
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Status
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          COC
+                          Service Credits
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Particulars
@@ -177,14 +172,11 @@ const Page: React.FC = () => {
                       <th className="hidden md:table-cell app__th">
                           Duration
                       </th>
-                      <th className="hidden md:table-cell app__th">
-                          Expiration
-                      </th>
                   </tr>
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: CtoTypes) => (
+                  !isDataEmpty && list.map((item: ServiceCreditTypes) => (
                     <tr
                       key={uuid()}
                       className="app__tr">
@@ -231,7 +223,7 @@ const Page: React.FC = () => {
                                     </Menu.Item>
                                     <Menu.Item>
                                       {
-                                        item.hrm_cto_users.length === 0
+                                        item.hrm_service_credit_users.length === 0
                                           ? <div
                                                 onClick={ () => handleDelete(item.id) }
                                                 className='app__dropdown_item'
@@ -256,13 +248,6 @@ const Page: React.FC = () => {
                         <div>
                           <div className="md:hidden app__td">
                             <div className='font-light'>Particulars: {item.particulars}</div>
-                            <div className='font-light'>Status:
-                              {
-                                item.status === 'Expired'
-                                  ? <span className='font-medium text-red-500'>Expired</span>
-                                  : <span className='font-medium text-green-500'>Active</span>
-                              }
-                            </div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -270,33 +255,21 @@ const Page: React.FC = () => {
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
-                        {
-                          item.status === 'Expired'
-                            ? <span className='app__status_container_red'>Expired</span>
-                            : <span className='app__status_container_green'>Active</span>
-                        }
+                        <div className='font-semibold'>{item.service_credits}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{item.coc}</div>
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{item.particulars}</div>
+                        <div className=''>{item.particulars}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
                         <div className='font-semibold'>
-                          {item.hrm_cto_users.length}
+                          {item.hrm_service_credit_users.length}
                         </div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
                         <div>{format(new Date(item.from), 'MMM d, yyyy')} -  {format(new Date(item.to), 'MMM d, yyyy')}</div>
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div>{format(new Date(item.expiration), 'MMM d, yyyy')}</div>
                       </td>
                     </tr>
                   ))
@@ -332,7 +305,7 @@ const Page: React.FC = () => {
     {
       showEmployeesModal && (
         <EmployeesModal
-          ctoData={editData}
+          scData={editData}
           hideModal={() => setShowEmployeesModal(false)}/>
       )
     }
@@ -341,7 +314,7 @@ const Page: React.FC = () => {
       showDeleteModal && (
         <DeleteModal
           id={selectedId}
-          table='hrm_ctos'
+          table='hrm_service_credits'
           hideModal={() => setShowDeleteModal(false)}/>
       )
     }

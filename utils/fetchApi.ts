@@ -519,3 +519,75 @@ export async function fetchMyCtos (filters: { filterKeyword?: string, userId: st
     return { data: [], count: 0 }
   }
 }
+
+export async function fetchServiceCredits (filters: { filterKeyword?: string }, perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_service_credits')
+      .select('*, hrm_service_credit_users(*)', { count: 'exact' })
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    // Search match
+    if (filters.filterKeyword && filters.filterKeyword !== '') {
+      query = query.eq('reference_code', filters.filterKeyword)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data: ctoData, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    const data: CtoTypes[] = ctoData
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch sc error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchMyServiceCredits (filters: { filterKeyword?: string, userId: string }, perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_service_credit_users')
+      .select('*, hrm_service_credits:service_credit_id(*)', { count: 'exact' })
+      .eq('hrm_user_id', filters.userId)
+
+    // Search match
+    if (filters.filterKeyword && filters.filterKeyword !== '') {
+      query = query.eq('reference_code', filters.filterKeyword)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch sc users error', error)
+    return { data: [], count: 0 }
+  }
+}

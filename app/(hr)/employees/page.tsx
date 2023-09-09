@@ -48,8 +48,6 @@ const Page: React.FC = () => {
       // update the list in redux
       dispatch(updateList(result.data))
 
-      console.log('result.data', result.data)
-
       // Updating showing text in redux
       dispatch(updateResultCounter({ showing: result.data.length, results: result.count ? result.count : 0 }))
     } catch (e) {

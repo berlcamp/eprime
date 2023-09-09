@@ -30,9 +30,9 @@ const MainMenu: React.FC = () => {
               <BriefcaseIcon className='w-6 h-6'/>
               <div className='app__menu_item_label'>My CTO&apos;s</div>
             </Link>
-            <Link href='/' className='app__menu_item'>
+            <Link href='/myservicecredits' className='app__menu_item'>
               <BriefcaseIcon className='w-6 h-6'/>
-              <div className='app__menu_item_label'>Service Credits</div>
+              <div className='app__menu_item_label'>My Service Credits</div>
             </Link>
           </div>
           <div className='px-2 py-4 lg:w-96 border text-gray-600 rounded-lg bg-white shadow-md flex flex-col space-y-2'>

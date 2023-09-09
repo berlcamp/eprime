@@ -6,9 +6,10 @@ import { Menu, Transition } from '@headlessui/react'
 import { useRouter } from 'next/navigation'
 import uuid from 'react-uuid'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { formatDistance } from 'date-fns'
 
+// types
 import type { NotificationTypes } from '@/types'
-// import Link from 'next/link'
 
 interface propTypes {
   darkMode?: boolean
@@ -118,7 +119,7 @@ const Notifications = ({ darkMode }: propTypes) => {
                           !notification.is_read && <span className='text-red-700 font-medium text-xs'>[New!]</span>
                         }
                       </div>
-                      <div className='text-blue-700'>1 hour ago</div>
+                      <div className='text-blue-700'>{formatDistance(new Date(), new Date(notification.created_at))} ago</div>
                     </div>
                   </Menu.Item>
                 ))

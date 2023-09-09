@@ -4,10 +4,9 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CustomButton } from '@/components'
 import { generateReferenceCode } from '@/utils/text-helper'
-import { format } from 'date-fns'
 
 // Types
-import type { CtoTypes } from '@/types'
+import type { ServiceCreditTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -16,7 +15,7 @@ import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 
 interface ModalProps {
   hideModal: () => void
-  editData: CtoTypes | null
+  editData: ServiceCreditTypes | null
 }
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
@@ -25,19 +24,18 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const [saving, setSaving] = useState(false)
 
   const [totalHours, setTotalHours] = useState('')
-  const [cocEquivalent, setCocEquivalent] = useState('')
-  const [isHolidayChecked, setIsHolidayChecked] = useState(false)
+  const [serviceCreditEquivalent, setServiceCreditEquivalent] = useState('')
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { register, formState: { errors }, reset, handleSubmit } = useForm<CtoTypes>({
+  const { register, formState: { errors }, reset, handleSubmit } = useForm<ServiceCreditTypes>({
     mode: 'onSubmit'
   })
 
-  const onSubmit = async (formdata: CtoTypes) => {
+  const onSubmit = async (formdata: ServiceCreditTypes) => {
     if (saving) return
 
     setSaving(true)
@@ -49,22 +47,17 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleCreate = async (formdata: CtoTypes) => {
-    const coc = isHolidayChecked ? Number(formdata.total_hours) * 0.1875 : Number(formdata.total_hours) * 0.125
-
-    const expireDate = new Date(formdata.date_issued)
-    expireDate.setFullYear(expireDate.getFullYear() + 1)
+  const handleCreate = async (formdata: ServiceCreditTypes) => {
+    const serviceCredits = Number(formdata.total_hours) * 0.125
 
     const newData = {
       reference_code: generateReferenceCode(),
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
       to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       date_issued: new Date(formdata.date_issued),
-      expiration: expireDate,
       total_hours: formdata.total_hours,
       particulars: formdata.particulars,
-      is_holiday: isHolidayChecked,
-      coc,
+      service_credits: serviceCredits,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
 
@@ -72,7 +65,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     try {
       const { data, error } = await supabase
-        .from('hrm_ctos')
+        .from('hrm_service_credits')
         .insert(newData)
         .select()
 
@@ -83,7 +76,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       console.error(e)
     } finally {
       // Append new data in redux
-      const updatedData = { ...newData, from: formdata.from, to: formdata.to, date_issued: formdata.date_issued, expiration: format(expireDate, 'yyyy-MM-dd'), hrm_cto_users: [], id: newId }
+      const updatedData = { ...newData, from: formdata.from, to: formdata.to, date_issued: formdata.date_issued, hrm_service_credit_users: [], id: newId }
       dispatch(updateList([updatedData, ...globallist]))
 
       // pop up the success message
@@ -102,42 +95,36 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleUpdate = async (formdata: CtoTypes) => {
+  const handleUpdate = async (formdata: ServiceCreditTypes) => {
     if (!editData) return
 
-    const coc = isHolidayChecked ? Number(formdata.total_hours) * 0.1875 : Number(formdata.total_hours) * 0.125
-
-    const expireDate = new Date(formdata.date_issued)
-    expireDate.setFullYear(expireDate.getFullYear() + 1)
+    const serviceCredits = Number(formdata.total_hours) * 0.125
 
     const newData = {
       reference_code: generateReferenceCode(),
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
       to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       date_issued: new Date(formdata.date_issued),
-      expiration: expireDate,
       total_hours: formdata.total_hours,
       particulars: formdata.particulars,
-      is_holiday: isHolidayChecked,
-      coc
+      service_credits: serviceCredits
     }
 
     try {
       const { error } = await supabase
-        .from('hrm_ctos')
+        .from('hrm_service_credits')
         .update(newData)
         .eq('id', editData.id)
 
       if (error) throw new Error(error.message)
 
-      // update coc and expiration of user ctos
+      // update service_credits of service credit users
       const { error2 } = await supabase
-        .from('hrm_cto_users')
+        .from('hrm_service_credit_users')
         .update({
-          coc,
-          expiration: expireDate
+          service_credits: serviceCredits
         })
-        .eq('cto_id', editData.id)
+        .eq('service_credit_id', editData.id)
 
       if (error2) throw new Error(error2.message)
     } catch (e) {
@@ -145,7 +132,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     } finally {
       // Update data in redux
       const items = [...globallist]
-      const updatedData = { ...newData, from: formdata.from, to: formdata.to, date_issued: formdata.date_issued, expiration: format(expireDate, 'yyyy-MM-dd'), id: editData.id }
+      const updatedData = { ...newData, from: formdata.from, to: formdata.to, date_issued: formdata.date_issued, id: editData.id }
       const foundIndex = items.findIndex(x => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
@@ -164,41 +151,29 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleHoursChange = (hours: string) => {
-    const perHour = isHolidayChecked ? 0.1875 : 0.125
-    const coc = Number(hours) * perHour
-    setCocEquivalent(`(Equivalent COC: ${coc})`)
+    const perHour = 0.125
+    const sc = Number(hours) * perHour
+    setServiceCreditEquivalent(`(Equivalent Service Credit: ${sc})`)
     setTotalHours(hours)
-  }
-
-  const handleHolidyCheckboxChange = () => {
-    const perHour = !isHolidayChecked ? 0.1875 : 0.125
-    const coc = Number(totalHours) * perHour
-    setCocEquivalent(`(Equivalent COC: ${coc})`)
-
-    setIsHolidayChecked(!isHolidayChecked)
   }
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
   useEffect(() => {
     if (editData) {
       setTotalHours(editData.total_hours)
-      setIsHolidayChecked(editData.is_holiday)
 
-      const perHour = editData.is_holiday ? 0.1875 : 0.125
+      const perHour = 0.125
       const coc = Number(editData.total_hours) * perHour
-      setCocEquivalent(`(Equivalent COC: ${coc})`)
+      setServiceCreditEquivalent(`(Equivalent Service Credit: ${coc})`)
     }
 
     reset({
       from: editData ? editData.from : '',
       to: editData ? editData.to : '',
       date_issued: editData ? editData.date_issued : '',
-      expiration: editData ? editData.expiration : '',
       hours: editData ? editData.hours : '',
-      days: editData ? editData.days : '',
       total_hours: editData ? editData.total_hours : '',
-      particulars: editData ? editData.particulars : '',
-      coc: editData ? editData.coc : ''
+      particulars: editData ? editData.particulars : ''
     })
   }, [editData, reset])
 
@@ -209,7 +184,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         <div className="app__modal_wrapper3">
           <div className="app__modal_header">
             <h5 className="app__modal_header_text">
-              CTO Details
+              Service Credit Details
             </h5>
             <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
           </div>
@@ -253,21 +228,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
             </div>
             <div className='app__form_field_container'>
               <div className='w-full'>
-                <div className='app__label_standard'>
-                  <label className='flex items-center space-x-1'>
-                    <input
-                      onChange={handleHolidyCheckboxChange}
-                      checked={isHolidayChecked}
-                      type='checkbox'
-                      className=''/>
-                    <span>This work done on holiday/weeked</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>Total Hours of work rendered <span className='text-green-600'>{cocEquivalent}</span></div>
+                <div className='app__label_standard'>Total Hours of work rendered <span className='text-green-600'>{serviceCreditEquivalent}</span></div>
                 <div>
                   <input
                     {...register('total_hours', { required: true })}

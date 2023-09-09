@@ -14,21 +14,21 @@ import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 
 // Types
-import type { CtoTypes, CtoUserTypes, excludedItemsTypes, namesType } from '@/types'
+import type { ServiceCreditTypes, ServiceCreditUserTypes, excludedItemsTypes, namesType } from '@/types'
 
 interface ModalProps {
   hideModal: () => void
-  ctoData: CtoTypes | null
+  scData: ServiceCreditTypes | null
 }
 
-const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
+const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
   const { setToast } = useFilter()
   const { supabase } = useSupabase()
 
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
   const [selectedId, setSelectedId] = useState<string>('')
-  const [selectedRow, setSelectedRow] = useState<CtoUserTypes | null>(null)
+  const [selectedRow, setSelectedRow] = useState<ServiceCreditUserTypes | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showAttachmentsModal, setShowAttachmentsModal] = useState(false)
   const [showApproveModal, setShowApproveModal] = useState(false)
@@ -38,14 +38,14 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
 
-  const [list, setList] = useState<CtoUserTypes[]>([])
+  const [list, setList] = useState<ServiceCreditUserTypes[]>([])
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const dispatch = useDispatch()
 
   const handleAddEmployee = async () => {
-    if (!ctoData) return
+    if (!scData) return
 
     if (selectedItems.length === 0) {
       setErrorMessage('Employee name is required')
@@ -57,20 +57,19 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       return
     }
 
-    const refCode = ctoData.reference_code
+    const refCode = scData.reference_code
 
     const newData = {
-      cto_id: ctoData.id,
+      service_credit_id: scData.id,
       hrm_user_id: selectedItems[0].id,
       reference_code: refCode,
       is_approved: false,
-      coc: Number(ctoData.coc),
-      expiration: ctoData.expiration
+      service_credits: Number(scData.service_credits)
     }
 
     try {
       const { error, data } = await supabase
-        .from('hrm_cto_users')
+        .from('hrm_service_credit_users')
         .insert(newData)
         .select()
 
@@ -83,10 +82,10 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       // add to list
       setList([updatedData, ...list])
 
-      // Update hrm_cto_users data in redux
-      const items = globallist.map((item: CtoTypes) => {
-        if (item.id === ctoData?.id) {
-          return { ...item, hrm_cto_users: [updatedData, ...list] }
+      // Update data in redux
+      const items = globallist.map((item: ServiceCreditTypes) => {
+        if (item.id === scData?.id) {
+          return { ...item, hrm_service_credit_users: [updatedData, ...list] }
         } else {
           return item
         }
@@ -97,12 +96,12 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       const { error2 } = await supabase
         .from('hrm_notifications')
         .insert({
-          message: 'You are added to a <b>CTO</b>, please upload supporting documents.',
-          url: `/myctos/${refCode}`,
-          type: 'cto',
+          message: 'You are added to a <b>Service Credit</b>, please upload supporting documents.',
+          url: `/myservicecredits/${refCode}`,
+          type: 'service_credit',
           user_id: selectedItems[0].id,
           reference_id: data[0].id,
-          reference_table: 'hrm_cto_users'
+          reference_table: 'hrm_service_credit_users'
         })
 
       if (error2) {
@@ -118,7 +117,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
     }
   }
 
-  const handleApprove = (item: CtoUserTypes) => {
+  const handleApprove = (item: ServiceCreditUserTypes) => {
     setSelectedRow(item)
     setShowApproveModal(true)
   }
@@ -134,13 +133,13 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
   }
 
   const handleApproveConfirmed = async () => {
-    if (!ctoData) return
+    if (!scData) return
 
     try {
-      const refCode = ctoData.reference_code
+      const refCode = scData.reference_code
 
       const { error } = await supabase
-        .from('hrm_cto_users')
+        .from('hrm_service_credit_users')
         .update({ is_approved: true })
         .eq('id', selectedRow?.id)
 
@@ -150,12 +149,12 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       const { error2 } = await supabase
         .from('hrm_notifications')
         .insert({
-          message: 'Your <b>CTO</b> has been approved.',
-          url: `/myctos/${refCode}`,
-          type: 'cto',
+          message: 'Your <b>Service Credit</b> has been approved.',
+          url: `/myservicecredits/${refCode}`,
+          type: 'service_credits',
           user_id: selectedRow?.hrm_user_id,
           reference_id: selectedRow?.id,
-          reference_table: 'hrm_cto_users'
+          reference_table: 'hrm_service_credit_users'
         })
 
       if (error2) throw new Error(error2.message)
@@ -181,7 +180,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
   const handleDeleteConfirmed = async () => {
     try {
       const { error } = await supabase
-        .from('hrm_cto_users')
+        .from('hrm_service_credit_users')
         .delete()
         .eq('id', selectedId)
 
@@ -191,7 +190,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       const { error2 } = await supabase
         .from('hrm_notifications')
         .delete()
-        .eq('reference_table', 'hrm_cto_users')
+        .eq('reference_table', 'hrm_service_credit_users')
         .eq('reference_id', selectedId)
 
       if (error2) throw new Error(error2.message)
@@ -200,10 +199,10 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       const updatedData = list.filter(item => item.id !== selectedId)
       setList(updatedData)
 
-      // Update hrm_cto_users data in redux
-      const items = globallist.map((item: CtoTypes) => {
-        if (item.id === ctoData?.id) {
-          return { ...item, hrm_cto_users: updatedData }
+      // Update hrm_service_credit_users data in redux
+      const items = globallist.map((item: ServiceCreditTypes) => {
+        if (item.id === scData?.id) {
+          return { ...item, hrm_service_credit_users: updatedData }
         } else {
           return item
         }
@@ -211,10 +210,10 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       dispatch(updateList(items))
 
       // delete the files on supabase storage
-      const { data: files, error: error3 } = await supabase.storage.from('hrm').list(`ctos/${selectedId}`)
+      const { data: files, error: error3 } = await supabase.storage.from('hrm').list(`servicecredits/${selectedId}`)
       if (error3) throw new Error(error3.message)
       if (files.length > 0) {
-        const filesToRemove = files.map((x: { name: string }) => `ctos/${selectedId}/${x.name}`)
+        const filesToRemove = files.map((x: { name: string }) => `servicecredits/${selectedId}/${x.name}`)
         const { error: error4 } = await supabase.storage.from('hrm').remove(filesToRemove)
         if (error4) throw new Error(error4.message)
       }
@@ -239,7 +238,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
     }
 
     const excludedItems: excludedItemsTypes[] = []
-    list.forEach((item: CtoUserTypes) => {
+    list.forEach((item: ServiceCreditUserTypes) => {
       excludedItems.push({ id: item.hrm_user_id })
     })
     excludedItems.push(...selectedItems)
@@ -269,9 +268,9 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
 
     try {
       const { data, error } = await supabase
-        .from('hrm_cto_users')
+        .from('hrm_service_credit_users')
         .select('*, hrm_users:hrm_user_id(lastname,firstname,middlename)')
-        .eq('cto_id', ctoData?.id)
+        .eq('service_credit_id', scData?.id)
         .order('id', { ascending: false })
 
       if (error) {
@@ -280,7 +279,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
 
       setList(data)
     } catch (error) {
-      console.error('fetch cto users', error)
+      console.error('fetch sc users', error)
     }
     setLoading(false)
   }
@@ -289,7 +288,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
     void fetchData()
   }, [])
 
-  if (!ctoData) {
+  if (!scData) {
     return
   }
 
@@ -302,73 +301,69 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
         <div className="app__modal_wrapper3">
           <div className="app__modal_header">
             <h5 className="app__modal_header_text">
-              Manage CTO Employees
+              Manage Service Credit Employees
             </h5>
             <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
           </div>
-
-          {
-            ctoData.status !== 'Expired' &&
-              <div className="app__modal_header">
+          <div className="app__modal_header">
+            <div className='w-full'>
+              <div className='app__form_field_container'>
                 <div className='w-full'>
-                  <div className='app__form_field_container'>
-                    <div className='w-full'>
-                      <div className='app__label_standard'>Add Employee:</div>
-                      <div className='app__selected_users_container'>
-                        {
-                          selectedItems.length > 0 &&
-                            selectedItems.map(item => (
-                              <div key={uuid()} className='w-full flex mb-1'>
-                                <span className='app__selected_user'>
-                                  {item.firstname} {item.middlename} {item.lastname}
-                                  <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
-                                </span>
-                              </div>
-                            ))
-                        }
-                        {
-                          selectedItems.length === 0 &&
-                            <div className='relative'>
-                              <input
-                                type="text"
-                                placeholder='Search employee..'
-                                value={searchHead}
-                                onChange={async (e) => await handleSearchUser(e)}
-                                className='app__input_noborder'/>
+                  <div className='app__label_standard'>Add Employee:</div>
+                  <div className='app__selected_users_container'>
+                    {
+                      selectedItems.length > 0 &&
+                        selectedItems.map(item => (
+                          <div key={uuid()} className='w-full flex mb-1'>
+                            <span className='app__selected_user'>
+                              {item.firstname} {item.middlename} {item.lastname}
+                              <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
+                            </span>
+                          </div>
+                        ))
+                    }
+                    {
+                      selectedItems.length === 0 &&
+                        <div className='relative'>
+                          <input
+                            type="text"
+                            placeholder='Search employee..'
+                            value={searchHead}
+                            onChange={async (e) => await handleSearchUser(e)}
+                            className='app__input_noborder'/>
 
-                                {
-                                  searchResults.length > 0 &&
-                                    <div className='app__search_user_results_container'>
-                                      {
-                                        searchResults.map((item: namesType) => (
-                                          <div
-                                            key={uuid()}
-                                            onClick={() => handleSelected(item)}
-                                            className='app__search_user_results'>
-                                              {item.firstname} {item.middlename} {item.lastname}
-                                          </div>
-                                        ))
-                                      }
-                                    </div>
-                                }
-                            </div>
-                        }
-                      </div>
-                      {errorMessage && <div className='app__error_message'>{errorMessage}</div>}
-                    </div>
+                            {
+                              searchResults.length > 0 &&
+                                <div className='app__search_user_results_container'>
+                                  {
+                                    searchResults.map((item: namesType) => (
+                                      <div
+                                        key={uuid()}
+                                        onClick={() => handleSelected(item)}
+                                        className='app__search_user_results'>
+                                          {item.firstname} {item.middlename} {item.lastname}
+                                      </div>
+                                    ))
+                                  }
+                                </div>
+                            }
+                        </div>
+                    }
                   </div>
-                  <div className="app__modal_footer_left">
-                        <CustomButton
-                          btnType='button'
-                          handleClick={handleAddEmployee}
-                          isDisabled={saving}
-                          title={saving ? 'Saving...' : 'Add'}
-                          containerStyles="app__btn_green"
-                        />
-                  </div>
+                  {errorMessage && <div className='app__error_message'>{errorMessage}</div>}
                 </div>
               </div>
-          }
+              <div className="app__modal_footer_left">
+                    <CustomButton
+                      btnType='button'
+                      handleClick={handleAddEmployee}
+                      isDisabled={saving}
+                      title={saving ? 'Saving...' : 'Add'}
+                      containerStyles="app__btn_green"
+                    />
+              </div>
+            </div>
+          </div>
           <div className="app__modal_body">
             {/* Main Content */}
             <div className='pb-5'>
@@ -403,7 +398,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                 </thead>
                 <tbody>
                   {
-                    !isDataEmpty && list.map((item: CtoUserTypes) => (
+                    !isDataEmpty && list.map((item: ServiceCreditUserTypes) => (
                       <tr
                         key={uuid()}
                         className="app__tr">
@@ -507,7 +502,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
         <ConfirmModal
           header='Confirm Delete'
           btnText='Confirm'
-          message="This action cannot be undone. Are you sure you want to remove this employee from this CTO?"
+          message="This action cannot be undone. Are you sure you want to remove this employee?"
           onConfirm={handleDeleteConfirmed}
           onCancel={() => setShowDeleteModal(false)}
         />

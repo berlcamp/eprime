@@ -1,21 +1,20 @@
 'use client'
 
-import { fetchMyCtos } from '@/utils/fetchApi'
+import { fetchMyServiceCredits } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
 import { Sidebar, TopBar, TableRowLoading, Title, RecordsSideBar, CustomButton } from '@/components'
 import uuid from 'react-uuid'
 import UploadModal from '../UploadModal'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { format } from 'date-fns'
 
 // Types
-import type { CtoUserTypes } from '@/types'
+import type { ServiceCreditUserTypes } from '@/types'
 
 export default function Page ({ params }: { params: { ref: string } }) {
   const [loading, setLoading] = useState(false)
 
-  const [list, setList] = useState<CtoUserTypes[]>([])
-  const [editData, setEditData] = useState<CtoUserTypes | null>(null)
+  const [list, setList] = useState<ServiceCreditUserTypes[]>([])
+  const [editData, setEditData] = useState<ServiceCreditUserTypes | null>(null)
 
   const [showUploadModal, setShowUploadModal] = useState(false)
 
@@ -27,7 +26,7 @@ export default function Page ({ params }: { params: { ref: string } }) {
     setLoading(true)
 
     try {
-      const result = await fetchMyCtos({ filterKeyword: refCode, userId: session.user.id }, 1000, 0)
+      const result = await fetchMyServiceCredits({ filterKeyword: refCode, userId: session.user.id }, 1000, 0)
 
       setList(result.data)
     } catch (e) {
@@ -37,7 +36,7 @@ export default function Page ({ params }: { params: { ref: string } }) {
     }
   }
 
-  const handleEdit = (item: CtoUserTypes) => {
+  const handleEdit = (item: ServiceCreditUserTypes) => {
     setShowUploadModal(true)
     setEditData(item)
   }
@@ -63,7 +62,7 @@ export default function Page ({ params }: { params: { ref: string } }) {
             <Title title=''/>
           </div>
 
-          <div className='app__warning_text'><span className='app__warning_title'>Note:</span> You need to provide supporting documents as basis for CTO approval.</div>
+          <div className='app__warning_text'><span className='app__warning_title'>Note:</span> You need to provide supporting documents as basis for approval.</div>
 
           {/* Main Content */}
           <div>
@@ -77,7 +76,7 @@ export default function Page ({ params }: { params: { ref: string } }) {
                           Status
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          COC
+                          Service Credit
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Particulars
@@ -86,26 +85,23 @@ export default function Page ({ params }: { params: { ref: string } }) {
                           Duration
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Expiration
-                      </th>
-                      <th className="hidden md:table-cell app__th">
                           Supporting Documents
                       </th>
                   </tr>
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: CtoUserTypes) => (
+                  !isDataEmpty && list.map((item: ServiceCreditUserTypes) => (
                     <tr
                       key={uuid()}
                       className="app__tr">
                       <th
                         className="font-medium pl-4">
-                        <div>{item.hrm_ctos?.reference_code}</div>
+                        <div>{item.hrm_service_credits?.reference_code}</div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">
-                            <div className='font-light'>Particulars: {item.hrm_ctos?.particulars}</div>
+                            <div className='font-light'>Particulars: {item.hrm_service_credits?.particulars}</div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -113,38 +109,28 @@ export default function Page ({ params }: { params: { ref: string } }) {
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
-                          {
-                            item.hrm_ctos?.status === 'Expired'
-                              ? <span className='app__status_container_red'>Expired</span>
-                              : <>
-                                  {
-                                    item.is_approved
-                                      ? <span className='app__status_container_green'>Active</span>
-                                      : <span className='app__status_container_orange'>Pending Approval</span>
-                                  }
-                                </>
-                          }
+                        {
+                          item.is_approved
+                            ? <span className='app__status_container_green'>Approved</span>
+                            : <span className='app__status_container_orange'>Pending Approval</span>
+                        }
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{item.hrm_ctos?.coc}</div>
+                        <div className='font-semibold'>{item.hrm_service_credits?.service_credits}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className=''>{item.hrm_ctos?.particulars}</div>
+                        <div className=''>{item.hrm_service_credits?.particulars}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div>{item.hrm_ctos?.from} -  {item.hrm_ctos?.to}</div>
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div>{format(new Date(item.expiration), 'MMM d, yyyy')}</div>
+                        <div>{item.hrm_service_credits?.from} -  {item.hrm_service_credits?.to}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
                           {
-                            item.hrm_ctos?.status !== 'Expired' &&
+                            item.hrm_service_credits?.status !== 'Expired' &&
                               <CustomButton
                                 btnType='button'
                                 title='Supporting Documents'
