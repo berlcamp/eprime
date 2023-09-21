@@ -98,6 +98,7 @@ export interface Employee {
   org_id: string
   school_id: string
   office_id: string
+  avatar_url: string
   hrm_schools?: SchoolTypes
   hrm_districts?: DistrictTypes
   hrm_offices?: Office
@@ -166,11 +167,12 @@ export interface CtoUserTypes {
   id: string
   hrm_user_id: string
   hrm_ctos?: CtoTypes
-  hrm_users?: namesType
+  hrm_users: Employee
   cto_id: string
   is_approved: boolean
   expiration: string
   coc: number
+  used_coc?: number
 }
 
 export interface CtoTypes {
@@ -187,7 +189,7 @@ export interface CtoTypes {
   particulars: string
   coc: string
   is_holiday: boolean
-  hrm_cto_users: CtoUserTypes[]
+  hrm_cto_users?: CtoUserTypes[]
 }
 
 export interface excludedItemsTypes {
@@ -198,10 +200,11 @@ export interface ServiceCreditUserTypes {
   id: string
   hrm_user_id: string
   hrm_service_credits?: ServiceCreditTypes
-  hrm_users?: namesType
+  hrm_users: Employee
   service_credit_id: string
   is_approved: boolean
   service_credits: number
+  used_service_credits?: number
 }
 
 export interface ServiceCreditTypes {
@@ -217,4 +220,33 @@ export interface ServiceCreditTypes {
   particulars: string
   service_credits: string
   hrm_service_credit_users: ServiceCreditUserTypes[]
+}
+
+export interface LeaveTypes {
+  id: string
+  reference_code: string
+  requester_id: string
+  requester: Employee
+  recommending_id: string
+  recommending: namesType
+  hr_id: string
+  hr: namesType
+  approver_id: string
+  approver: namesType
+  location: string
+  abroad: string
+  hospitalization: string
+  illness: string
+  study_purpose: string
+  other_purpose: string
+  from: string
+  to: string
+  days: string
+  type: string
+  recommending_status: string
+  hr_status: string
+  approver_status: string
+  recommending_disapproval_reason: string
+  hr_disapproval_reason: string
+  approver_disapproval_reason: string
 }

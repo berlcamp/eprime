@@ -2,7 +2,7 @@
 
 import { fetchMyCtos } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
-import { Sidebar, TopBar, TableRowLoading, Title, RecordsSideBar, CustomButton } from '@/components'
+import { Sidebar, TopBar, TableRowLoading, Title, CustomButton, RecordsSideBar } from '@/components'
 import uuid from 'react-uuid'
 import UploadModal from '../UploadModal'
 import { useSupabase } from '@/context/SupabaseProvider'

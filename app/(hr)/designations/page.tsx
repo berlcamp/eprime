@@ -4,7 +4,7 @@ import { fetchDesignations } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon, PencilSquareIcon, PrinterIcon, TrashIcon } from '@heroicons/react/20/solid'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar } from '@/components'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar, UserBlock } from '@/components'
 import uuid from 'react-uuid'
 import { superAdmins } from '@/constants/TrackerConstants'
 import Filters from './Filters'
@@ -14,6 +14,7 @@ import { capitalizeWords } from '@/utils/text-helper'
 import AddEditModal from './AddEditModal'
 import RevokeModal from './RevokeModal'
 import PrintModal from './PrintModal'
+import { format } from 'date-fns'
 
 // Types
 import type { DesignationTypes } from '@/types'
@@ -187,6 +188,9 @@ const Page: React.FC = () => {
                       <th className="hidden md:table-cell app__th">
                           Duration
                       </th>
+                      <th className="hidden md:table-cell app__th">
+                          Status
+                      </th>
                   </tr>
               </thead>
               <tbody>
@@ -263,14 +267,31 @@ const Page: React.FC = () => {
                       </td>
                       <th
                         className="app__th_firstcol">
-                        <div>{item.reference_code}</div>
-                        <div className={`${item.status === 'Revoked' ? 'text-red-500' : 'text-green-500'}`}>{item.status}</div>
+                        <div className='hidden md:inline-block font-medium'>{item.reference_code}</div>
                         {/* Mobile View */}
                         <div>
-                          <div className="md:hidden app__td">
-                            <div>{capitalizeWords(item.hrm_users?.firstname + ' ' + item.hrm_users?.middlename + ' ' + item.hrm_users?.lastname)}</div>
-                            <div className='font-light'>{capitalizeWords(item.designation)}</div>
-                            <div className='font-light'>Duration: {item.from} -  {item.to}</div>
+                          <div className="md:hidden app__td_mobile">
+                            <div><UserBlock user={item.hrm_users}/></div>
+                            <div><span className='app_td_mobile_label'>Reference Code:</span> {item.reference_code}</div>
+                            <div><span className='app_td_mobile_label'>Type:</span> {item.type}</div>
+                            <div><span className='app_td_mobile_label'>Station: </span>
+                              {
+                                item.type === 'Function with Station' &&
+                                (
+                                  item.area_assigned === 'school'
+                                    ? <span>{item.hrm_schools?.name}</span>
+                                    : <span>{item.hrm_offices?.name}</span>
+                                )
+                              }
+                            </div>
+                            <div><span className='app_td_mobile_label'>Duration: </span>{format(new Date(item.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.to), 'MMM d, yyyy')}</div>
+                            <div><span className='app_td_mobile_label'>Status: </span>
+                              {
+                                item.status === 'Revoked'
+                                  ? <span className='app__status_container_red'>Revoked</span>
+                                  : <span className='app__status_container_green'>Active</span>
+                              }
+                            </div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -278,7 +299,7 @@ const Page: React.FC = () => {
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{capitalizeWords(item.hrm_users?.firstname + ' ' + item.hrm_users?.middlename + ' ' + item.hrm_users?.lastname)}</div>
+                        <UserBlock user={item.hrm_users}/>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
@@ -305,7 +326,15 @@ const Page: React.FC = () => {
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div>{item.from} -  {item.to}</div>
+                        <div>{format(new Date(item.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.to), 'MMM d, yyyy')}</div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        {
+                          item.status === 'Revoked'
+                            ? <span className='app__status_container_red'>Revoked</span>
+                            : <span className='app__status_container_green'>Active</span>
+                        }
                       </td>
                     </tr>
                   ))

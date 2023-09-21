@@ -1,8 +1,8 @@
 'use client'
-import { BookOpenIcon, BriefcaseIcon, ChartBarSquareIcon, CreditCardIcon, DocumentDuplicateIcon, HomeIcon, PencilSquareIcon, TableCellsIcon, TrophyIcon, UsersIcon } from '@heroicons/react/20/solid'
+import { BookOpenIcon, BriefcaseIcon, ChartBarSquareIcon, CreditCardIcon, DocumentDuplicateIcon, HomeIcon, TableCellsIcon, TrophyIcon, UsersIcon } from '@heroicons/react/20/solid'
 import Link from 'next/link'
 
-const MainMenu: React.FC = () => {
+const MainMenu = () => {
   return (
     <div className="py-1 relative">
       <div className='px-6 mt-2 text-gray-700 text-xl font-semibold'>Menu</div>
@@ -11,8 +11,8 @@ const MainMenu: React.FC = () => {
           <div className='px-2 py-4 border text-gray-600 rounded-lg bg-white shadow-md flex flex-col lg:mx-2 space-y-1'>
             <div className='text-gray-700 text-lg font-semibold'>Shortcuts</div>
             <Link href='/' className='app__menu_item'>
-              <PencilSquareIcon className='w-6 h-6'/>
-              <div className='app__menu_item_label'>Create Leave Request</div>
+              <TableCellsIcon className='w-6 h-6'/>
+              <div className='app__menu_item_label'>My Leave Requests</div>
             </Link>
             <Link href='/' className='app__menu_item'>
               <CreditCardIcon className='w-6 h-6'/>
@@ -59,7 +59,7 @@ const MainMenu: React.FC = () => {
                 </div>
               </div>
             </Link>
-            <Link href='/'>
+            <Link href='/myleaverequests'>
               <div className='app__menu_item'>
                 <div className='pt-1'>
                   <DocumentDuplicateIcon className='w-8 h-8'/>

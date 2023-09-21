@@ -4,13 +4,12 @@ import { fetchEmployees } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { CheckCircleIcon, ChevronDownIcon, Cog8ToothIcon, CreditCardIcon, PencilSquareIcon, TableCellsIcon, UserIcon, XMarkIcon } from '@heroicons/react/20/solid'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, EmployeesSideBar, Title, Unauthorized, AccountDetails } from '@/components'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, EmployeesSideBar, Title, Unauthorized, AccountDetails, UserBlock } from '@/components'
 import uuid from 'react-uuid'
 import { superAdmins } from '@/constants/TrackerConstants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { capitalizeWords } from '@/utils/text-helper'
 
 // Types
 import type { AssignmentTypes, DesignationTypes, Employee } from '@/types'
@@ -246,8 +245,8 @@ const Page: React.FC = () => {
                       </td>
                       <th
                         className="app__th_firstcol">
-                        <div>{capitalizeWords(item.firstname + ' ' + item.middlename + ' ' + item.lastname)}</div>
-                        <div className='font-light'>{item.email}</div>
+                          <UserBlock user={item}/>
+                          <div className='ml-8 font-light'>{item.email}</div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">
@@ -421,6 +420,7 @@ const Page: React.FC = () => {
       showAccountDetailsModal && (
         <AccountDetails
           id={selectedId}
+          shouldUpdateRedux={true}
           hideModal={() => setShowAccountDetailsModal(false)}/>
       )
     }

@@ -25,6 +25,10 @@ export function capitalizeWords (inputString: string) {
     .join(' ')
 }
 
+export function getAvatar (userId: string) {
+  //
+}
+
 export function generateReferenceCode () {
   let result = ''
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'

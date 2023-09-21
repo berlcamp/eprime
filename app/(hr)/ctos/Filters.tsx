@@ -50,7 +50,7 @@ const Filters = ({ setFilterKeyword, setFilterStatus }: FilterTypes) => {
           <div className='app__filter_container'>
             <MagnifyingGlassIcon className="w-4 h-4 mr-1"/>
             <input
-              placeholder='Search Referece Code'
+              placeholder='Search Reference Code'
               value={keyword}
               onChange={e => setKeyword(e.target.value)}
               className="app__filter_input"/>

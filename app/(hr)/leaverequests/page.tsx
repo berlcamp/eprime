@@ -1,39 +1,34 @@
 'use client'
 
-import { fetchCtos } from '@/utils/fetchApi'
+import { fetchMyLeaveRequests } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar } from '@/components'
+import { ArchiveBoxXMarkIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, RequestsSideBar, UserBlock } from '@/components'
 import uuid from 'react-uuid'
 import { superAdmins } from '@/constants/TrackerConstants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import AddEditModal from './AddEditModal'
-import EmployeesModal from './EmployeesModal'
+import { capitalizeWords } from '@/utils/text-helper'
 import { format } from 'date-fns'
 
 // Types
-import type { CtoTypes } from '@/types'
+import type { LeaveTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import Link from 'next/link'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [showEmployeesModal, setShowEmployeesModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  const [selectedId, setSelectedId] = useState<string>('')
-  const [list, setList] = useState<CtoTypes[]>([])
+  const [list, setList] = useState<LeaveTypes[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [perPageCount, setPerPageCount] = useState<number>(10)
-  const [editData, setEditData] = useState<CtoTypes | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -47,7 +42,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchCtos({ filterKeyword, filterStatus }, perPageCount, 0)
+      const result = await fetchMyLeaveRequests({ filterKeyword, filterStatus }, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -65,7 +60,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchCtos({ filterKeyword, filterStatus }, perPageCount, list.length)
+      const result = await fetchMyLeaveRequests({ filterKeyword, filterStatus }, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -80,24 +75,8 @@ const Page: React.FC = () => {
     }
   }
 
-  const handleAdd = () => {
-    setShowAddModal(true)
-    setEditData(null)
-  }
-
-  const handleEdit = (item: CtoTypes) => {
-    setShowAddModal(true)
-    setEditData(item)
-  }
-
-  const handleManageEmployees = (item: CtoTypes) => {
-    setShowEmployeesModal(true)
-    setEditData(item)
-  }
-
-  const handleDelete = (id: string) => {
-    setSelectedId(id)
-    setShowDeleteModal(true)
+  const handleCancel = (id: string) => {
+    //
   }
 
   // Update list whenever list in redux updates
@@ -121,19 +100,13 @@ const Page: React.FC = () => {
   return (
     <>
     <Sidebar>
-      <RecordsSideBar/>
+      <RequestsSideBar/>
     </Sidebar>
     <TopBar/>
     <div className="app__main">
       <div>
           <div className='app__title'>
-            <Title title='Compensatory Time Off'/>
-            <CustomButton
-              containerStyles='app__btn_green'
-              title='Create New CTO'
-              btnType='button'
-              handleClick={handleAdd}
-            />
+            <Title title='Leave Requests'/>
           </div>
 
           {/* Filters */}
@@ -143,8 +116,6 @@ const Page: React.FC = () => {
               setFilterStatus={setFilterStatus}
             />
           </div>
-
-          <div className='app__warning_text'><span className='app__warning_title'>Note:</span> CTO with employee/s cannot be deleted.</div>
 
           {/* Per Page */}
           <PerPage
@@ -163,28 +134,24 @@ const Page: React.FC = () => {
                           Reference Code
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          COC
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Particulars
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Total Employees
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Duration
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Expiration
+                          Requester
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Status
+                      </th>
+                      <th className="hidden md:table-cell app__th">
+                          Type
+                      </th>
+                      <th className="hidden md:table-cell app__th">
+                          Duration
                       </th>
                   </tr>
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: CtoTypes) => (
+                  !isDataEmpty && list.map((item: LeaveTypes) => (
                     <tr
                       key={uuid()}
                       className="app__tr">
@@ -208,39 +175,15 @@ const Page: React.FC = () => {
                           >
                             <Menu.Items className="app__dropdown_items">
                               <div className="py-1">
-                                {
-                                  item.status !== 'Revoked' &&
-                                    <>
-                                    <Menu.Item>
-                                      <div
-                                          onClick={() => handleEdit(item)}
-                                          className='app__dropdown_item'
-                                        >
-                                          <PencilSquareIcon className='w-4 h-4'/>
-                                          <span>Edit</span>
-                                        </div>
-                                    </Menu.Item>
-                                    <Menu.Item>
-                                      <div
-                                          onClick={() => handleManageEmployees(item)}
-                                          className='app__dropdown_item'
-                                        >
-                                          <PencilSquareIcon className='w-4 h-4'/>
-                                          <span>Manage Employees</span>
-                                        </div>
-                                    </Menu.Item>
-                                    <Menu.Item>
-                                      {
-                                        item.hrm_cto_users?.length === 0
-                                          ? <div onClick={ () => handleDelete(item.id) } className='app__dropdown_item'>
-                                                <TrashIcon className='w-4 h-4'/>
-                                                <span>Delete</span>
-                                              </div>
-                                          : <div className='app__dropdown_item_disabled'><TrashIcon className='w-4 h-4'/><span>Delete</span></div>
-                                      }
-                                    </Menu.Item>
-                                    </>
-                                }
+                                <Menu.Item>
+                                  <div
+                                      onClick={() => handleCancel(item.id)}
+                                      className='app__dropdown_item'
+                                    >
+                                      <ArchiveBoxXMarkIcon className='w-4 h-4'/>
+                                      <span>Cancel This Request</span>
+                                    </div>
+                                </Menu.Item>
                               </div>
                             </Menu.Items>
                           </Transition>
@@ -252,14 +195,8 @@ const Page: React.FC = () => {
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">
-                            <div className='font-light'>Particulars: {item.particulars}</div>
-                            <div className='font-light'>Status:
-                              {
-                                item.status === 'Expired'
-                                  ? <span className='font-medium text-red-500'>Expired</span>
-                                  : <span className='font-medium text-green-500'>Active</span>
-                              }
-                            </div>
+                            <div>{capitalizeWords(item.requester?.firstname + ' ' + item.requester?.middlename + ' ' + item.requester?.lastname)}</div>
+                            <div className='font-light'>Duration: {item.from} -  {item.to}</div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -267,38 +204,54 @@ const Page: React.FC = () => {
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{item.coc}</div>
+                          <Link href={`/leaverequests/${item.reference_code}`}>
+                            <CustomButton
+                              containerStyles='app__btn_green'
+                              title='Leave Details'
+                              btnType='button'/>
+                          </Link>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{item.particulars}</div>
+                        <UserBlock user={item.requester}/>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>
-                          {item.hrm_cto_users?.length}
-                        </div>
+                          {/* HR Status */}
+                          <div>
+                            <div className='mb-1 font-medium'>HRMO:</div>
+                            {item.hr_status === 'Pending' && <span className='app__status_container_orange'>Pending</span>}
+                            {item.hr_status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
+                            {item.hr_status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
+                          </div>
+                          {/* Recommending Status */}
+                          <div>
+                          <div className='mb-1 mt-2 font-medium'>Recommendation:</div>
+                            {item.recommending_status === 'Pending' && <span className='app__status_container_orange'>Pending</span>}
+                            {item.recommending_status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
+                            {item.recommending_status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
+                          </div>
+                          {/* SDS Status */}
+                          <div>
+                            <div className='mb-1 mt-2 font-medium'>Final Approval:</div>
+                            {item.approver_status === 'Pending' && <span className='app__status_container_orange'>Pending</span>}
+                            {item.approver_status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
+                            {item.approver_status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
+                          </div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
+                        <div className='font-semibold'>{item.type}</div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        <div className='font-semibold'>{item.days} days</div>
                         <div>{format(new Date(item.from), 'MMM d, yyyy')} -  {format(new Date(item.to), 'MMM d, yyyy')}</div>
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div>{format(new Date(item.expiration), 'MMM d, yyyy')}</div>
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        {
-                          item.status === 'Expired'
-                            ? <span className='app__status_container_red'>Expired</span>
-                            : <span className='app__status_container_green'>Active</span>
-                        }
                       </td>
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={8} rows={2}/> }
+                { loading && <TableRowLoading cols={7} rows={2}/> }
               </tbody>
             </table>
             {
@@ -315,33 +268,6 @@ const Page: React.FC = () => {
           }
       </div>
     </div>
-
-    {/* Add/Edit Modal */}
-    {
-      showAddModal && (
-        <AddEditModal
-          editData={editData}
-          hideModal={() => setShowAddModal(false)}/>
-      )
-    }
-
-    {/* Employees Modal */}
-    {
-      showEmployeesModal && (
-        <EmployeesModal
-          ctoData={editData}
-          hideModal={() => setShowEmployeesModal(false)}/>
-      )
-    }
-    {/* Delete Modal */}
-    {
-      showDeleteModal && (
-        <DeleteModal
-          id={selectedId}
-          table='hrm_ctos'
-          hideModal={() => setShowDeleteModal(false)}/>
-      )
-    }
   </>
   )
 }

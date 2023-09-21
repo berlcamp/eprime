@@ -1,44 +1,36 @@
 'use client'
 
-import { fetchAssignments } from '@/utils/fetchApi'
+import { fetchMyLeaveRequests } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, PencilSquareIcon, PrinterIcon, TrashIcon } from '@heroicons/react/20/solid'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar, UserBlock } from '@/components'
+import { ArchiveBoxXMarkIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, RequestsSideBar, UserBlock } from '@/components'
 import uuid from 'react-uuid'
 import { superAdmins } from '@/constants/TrackerConstants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { capitalizeWords } from '@/utils/text-helper'
 import AddEditModal from './AddEditModal'
-import RevokeModal from './RevokeModal'
-import PrintModal from './PrintModal'
 import { format } from 'date-fns'
 
 // Types
-import type { AssignmentTypes } from '@/types'
+import type { LeaveTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import Link from 'next/link'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showRevokeModal, setShowRevokeModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showPrintModal, setShowPrintModal] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<AssignmentTypes | null>(null)
 
-  const [selectedId, setSelectedId] = useState<string>('')
-  const [list, setList] = useState<AssignmentTypes[]>([])
+  const [list, setList] = useState<LeaveTypes[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
-  const [filterSchool, setFilterSchool] = useState<string>('')
-  const [filterOffice, setFilterOffice] = useState<string>('')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [perPageCount, setPerPageCount] = useState<number>(10)
-  const [editData, setEditData] = useState<AssignmentTypes | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -52,7 +44,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchAssignments({ filterKeyword, filterSchool, filterOffice, filterStatus }, perPageCount, 0)
+      const result = await fetchMyLeaveRequests({ filterKeyword, filterStatus }, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -70,7 +62,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchAssignments({ filterKeyword, filterSchool, filterOffice, filterStatus }, perPageCount, list.length)
+      const result = await fetchMyLeaveRequests({ filterKeyword, filterStatus }, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -87,27 +79,10 @@ const Page: React.FC = () => {
 
   const handleAdd = () => {
     setShowAddModal(true)
-    setEditData(null)
   }
 
-  const handlePrint = (item: AssignmentTypes) => {
-    setSelectedItem(item)
-    setShowPrintModal(true)
-  }
-
-  const handleEdit = (item: AssignmentTypes) => {
-    setShowAddModal(true)
-    setEditData(item)
-  }
-
-  const handleRevoke = (item: AssignmentTypes) => {
-    setShowRevokeModal(true)
-    setEditData(item)
-  }
-
-  const handleDelete = (id: string) => {
-    setSelectedId(id)
-    setShowDeleteModal(true)
+  const handleCancel = (id: string) => {
+    //
   }
 
   // Update list whenever list in redux updates
@@ -121,7 +96,7 @@ const Page: React.FC = () => {
     void fetchData()
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, perPageCount, filterSchool, filterStatus, filterOffice])
+  }, [filterKeyword, perPageCount, filterStatus])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -131,16 +106,16 @@ const Page: React.FC = () => {
   return (
     <>
     <Sidebar>
-      <RecordsSideBar/>
+      <RequestsSideBar/>
     </Sidebar>
     <TopBar/>
     <div className="app__main">
       <div>
           <div className='app__title'>
-            <Title title='Assignments'/>
+            <Title title='Leave Requests'/>
             <CustomButton
               containerStyles='app__btn_green'
-              title='Create New Assignment'
+              title='Create New Leave Requests'
               btnType='button'
               handleClick={handleAdd}
             />
@@ -150,8 +125,6 @@ const Page: React.FC = () => {
           <div className='app__filters'>
             <Filters
               setFilterKeyword={setFilterKeyword}
-              setFilterSchool={setFilterSchool}
-              setFilterOffice={setFilterOffice}
               setFilterStatus={setFilterStatus}
             />
           </div>
@@ -173,25 +146,24 @@ const Page: React.FC = () => {
                           Reference Code
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Employee Name
+                      </th>
+                      <th className="hidden md:table-cell app__th">
+                          Requester
+                      </th>
+                      <th className="hidden md:table-cell app__th">
+                          Status
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Type
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Station
-                      </th>
-                      <th className="hidden md:table-cell app__th">
                           Duration
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Status
                       </th>
                   </tr>
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: AssignmentTypes) => (
+                  !isDataEmpty && list.map((item: LeaveTypes) => (
                     <tr
                       key={uuid()}
                       className="app__tr">
@@ -217,45 +189,13 @@ const Page: React.FC = () => {
                               <div className="py-1">
                                 <Menu.Item>
                                   <div
-                                      onClick={() => handlePrint(item)}
+                                      onClick={() => handleCancel(item.id)}
                                       className='app__dropdown_item'
                                     >
-                                      <PrinterIcon className='w-4 h-4'/>
-                                      <span>Print Memo</span>
+                                      <ArchiveBoxXMarkIcon className='w-4 h-4'/>
+                                      <span>Cancel This Request</span>
                                     </div>
                                 </Menu.Item>
-                                {
-                                  item.status !== 'Revoked' &&
-                                    <>
-                                    <Menu.Item>
-                                      <div
-                                          onClick={() => handleEdit(item)}
-                                          className='app__dropdown_item'
-                                        >
-                                          <PencilSquareIcon className='w-4 h-4'/>
-                                          <span>Edit</span>
-                                        </div>
-                                    </Menu.Item>
-                                    <Menu.Item>
-                                      <div
-                                          onClick={() => handleRevoke(item)}
-                                          className='app__dropdown_item'
-                                        >
-                                          <PencilSquareIcon className='w-4 h-4'/>
-                                          <span>Revoke</span>
-                                        </div>
-                                    </Menu.Item>
-                                    <Menu.Item>
-                                      <div
-                                          onClick={ () => handleDelete(item.id) }
-                                          className='app__dropdown_item'
-                                        >
-                                          <TrashIcon className='w-4 h-4'/>
-                                          <span>Delete</span>
-                                        </div>
-                                    </Menu.Item>
-                                    </>
-                                }
                               </div>
                             </Menu.Items>
                           </Transition>
@@ -263,68 +203,67 @@ const Page: React.FC = () => {
                       </td>
                       <th
                         className="app__th_firstcol">
-                        <div className='hidden md:inline-block font-medium'>{item.reference_code}</div>
+                        <div>{item.reference_code}</div>
                         {/* Mobile View */}
                         <div>
-                          <div className="md:hidden app__td_mobile">
-                            <div><UserBlock user={item.hrm_users}/></div>
-                            <div><span className='app_td_mobile_label'>Reference Code:</span> {item.reference_code}</div>
-                            <div><span className='app_td_mobile_label'>Type:</span> {item.type}</div>
-                            <div><span className='app_td_mobile_label'>Station: </span>
-                              {
-                                item.area_assigned === 'school'
-                                  ? <span>{item.hrm_schools?.name}</span>
-                                  : <span>{item.hrm_offices?.name}</span>
-                              }
-                            </div>
-                            <div><span className='app_td_mobile_label'>Duration: </span>{format(new Date(item.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.to), 'MMM d, yyyy')}</div>
-                            <div><span className='app_td_mobile_label'>Status: </span>
-                              {
-                                item.status === 'Revoked'
-                                  ? <span className='app__status_container_red'>Revoked</span>
-                                  : <span className='app__status_container_green'>Active</span>
-                              }
-                            </div>
+                          <div className="md:hidden app__td">
+                            <div>{capitalizeWords(item.requester?.firstname + ' ' + item.requester?.middlename + ' ' + item.requester?.lastname)}</div>
+                            <div className='font-light'>Duration: {item.from} -  {item.to}</div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
+
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
-                        <UserBlock user={item.hrm_users}/>
+                          <Link href={`/leaverequests/${item.reference_code}`}>
+                            <CustomButton
+                              containerStyles='app__btn_green'
+                              title='Leave Details'
+                              btnType='button'/>
+                          </Link>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        <UserBlock user={item.requester}/>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                          {/* HR Status */}
+                          <div>
+                            <div className='mb-1 font-medium'>HRMO:</div>
+                            {item.hr_status === 'Pending' && <span className='app__status_container_orange'>Pending</span>}
+                            {item.hr_status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
+                            {item.hr_status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
+                          </div>
+                          {/* Recommending Status */}
+                          <div>
+                          <div className='mb-1 mt-2 font-medium'>Recommendation:</div>
+                            {item.recommending_status === 'Pending' && <span className='app__status_container_orange'>Pending</span>}
+                            {item.recommending_status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
+                            {item.recommending_status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
+                          </div>
+                          {/* SDS Status */}
+                          <div>
+                            <div className='mb-1 mt-2 font-medium'>Final Approval:</div>
+                            {item.approver_status === 'Pending' && <span className='app__status_container_orange'>Pending</span>}
+                            {item.approver_status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
+                            {item.approver_status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
+                          </div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
                         <div className='font-semibold'>{item.type}</div>
-                        <div>{item.add_to_service_record ? '(Included on Service Record)' : '(Excluded on Service Record)'}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>
-                          {
-                            item.area_assigned === 'school'
-                              ? <span>{item.hrm_schools?.name}</span>
-                              : <span>{item.hrm_offices?.name}</span>
-                          }
-                        </div>
-                        <div>{item.hrm_positions?.name}</div>
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div>{format(new Date(item.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.to), 'MMM d, yyyy')}</div>
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        {
-                          item.status === 'Revoked'
-                            ? <span className='app__status_container_red'>Revoked</span>
-                            : <span className='app__status_container_green'>Active</span>
-                        }
+                        <div className='font-semibold'>{item.days} days</div>
+                        <div>{format(new Date(item.from), 'MMM d, yyyy')} -  {format(new Date(item.to), 'MMM d, yyyy')}</div>
                       </td>
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={6} rows={2}/> }
+                { loading && <TableRowLoading cols={7} rows={2}/> }
               </tbody>
             </table>
             {
@@ -346,36 +285,7 @@ const Page: React.FC = () => {
     {
       showAddModal && (
         <AddEditModal
-          editData={editData}
           hideModal={() => setShowAddModal(false)}/>
-      )
-    }
-
-    {/* Revoke Modal */}
-    {
-      showRevokeModal && (
-        <RevokeModal
-          editData={editData}
-          hideModal={() => setShowRevokeModal(false)}/>
-      )
-    }
-
-    {/* Print Modal */}
-    {
-      (showPrintModal && selectedItem) && (
-        <PrintModal
-          item={selectedItem}
-          hideModal={() => setShowPrintModal(false)}/>
-      )
-    }
-
-    {/* Delete Modal */}
-    {
-      showDeleteModal && (
-        <DeleteModal
-          id={selectedId}
-          table='hrm_assignments'
-          hideModal={() => setShowDeleteModal(false)}/>
       )
     }
   </>

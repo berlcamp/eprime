@@ -36,13 +36,19 @@
   @apply bg-gray-50 text-xs border-b hover:bg-amber-50
 }
 .app__th {
-  @apply py-2 px-2 text-gray-900
+  @apply py-2 px-2 text-gray-900 align-top
 }
 .app__th_firstcol {
-  @apply py-2 px-2 text-gray-800 font-medium
+  @apply py-2 px-2 text-gray-800 font-medium align-top
 }
 .app__td {
-  @apply py-2 px-2
+  @apply py-2 px-2 align-top font-normal
+}
+.app__td_mobile {
+  @apply py-2 space-y-2 flex-col font-normal
+}
+.app_td_mobile_label {
+  @apply font-medium
 }
 .app__menu_container {
   @apply relative inline-block text-left mr-2

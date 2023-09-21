@@ -7,6 +7,10 @@ import { useRouter } from 'next/navigation'
 import Avatar from 'react-avatar'
 import { AccountDetails } from '@/components'
 import { Cog8ToothIcon, CreditCardIcon, PencilSquareIcon, TableCellsIcon, UserIcon } from '@heroicons/react/20/solid'
+import Image from 'next/image'
+
+// types
+import type { Employee } from '@/types'
 
 interface propTypes {
   darkMode?: boolean
@@ -15,7 +19,7 @@ interface propTypes {
 const UserDropdown = ({ darkMode }: propTypes) => {
   const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false)
 
-  const { supabase, session } = useSupabase()
+  const { supabase, session, systemUsers } = useSupabase()
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -28,12 +32,20 @@ const UserDropdown = ({ darkMode }: propTypes) => {
     router.push('/')
   }
 
+  const user: Employee = systemUsers.find((u: { id: string }) => u.id === session.user.id)
+
   return (
     <div className='pt-1'>
       <Menu as="div" className="relative inline-block text-left mr-2">
         <div>
           <Menu.Button className="relative focus:ring-0 focus:outline-none ">
-            <Avatar round={true} size="33" name={session.user.email.split('@')[0]} />
+            {
+              (user.avatar_url && user.avatar_url !== '')
+                ? <div className='w-8 h-8 relative rounded-full flex items-center justify-center bg-black overflow-hidden'>
+                    <Image src={user.avatar_url} width={40} height={40} alt='user'/>
+                  </div>
+                : <Avatar round={true} size="30" name={user.firstname}/>
+            }
           </Menu.Button>
         </div>
 
@@ -113,6 +125,7 @@ const UserDropdown = ({ darkMode }: propTypes) => {
         showAccountDetailsModal && (
           <AccountDetails
             id={session.user.id}
+            shouldUpdateRedux={false}
             hideModal={() => setShowAccountDetailsModal(false)}/>
         )
       }

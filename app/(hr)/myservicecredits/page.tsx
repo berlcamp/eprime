@@ -2,7 +2,7 @@
 
 import { fetchMyServiceCredits } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, RecordsSideBar, CustomButton } from '@/components'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, CustomButton, RecordsSideBar } from '@/components'
 import uuid from 'react-uuid'
 import Filters from './Filters'
 import UploadModal from './UploadModal'
@@ -152,6 +152,9 @@ const Page: React.FC = () => {
                           Service Credit Balance
                       </th>
                       <th className="hidden md:table-cell app__th">
+                          Used Service Credit
+                      </th>
+                      <th className="hidden md:table-cell app__th">
                           Particulars
                       </th>
                       <th className="hidden md:table-cell app__th">
@@ -169,12 +172,29 @@ const Page: React.FC = () => {
                       key={uuid()}
                       className="app__tr">
                       <th
-                        className="font-medium pl-4">
-                        <div>{item.hrm_service_credits?.reference_code}</div>
+                        className="pl-4">
+                        <div className='hidden md:inline-block font-medium'>{item.hrm_service_credits?.reference_code}</div>
                         {/* Mobile View */}
                         <div>
-                          <div className="md:hidden app__td">
-                            <div className='font-light'>Particulars: {item.hrm_service_credits?.particulars}</div>
+                          <div className="md:hidden app__td_mobile">
+                            <div><span className='app_td_mobile_label'>Reference Code:</span> {item.hrm_service_credits?.reference_code}</div>
+                            <div><span className='app_td_mobile_label'>Particulars:</span> {item.hrm_service_credits?.particulars}</div>
+                            <div><span className='app_td_mobile_label'>Service Credit Balance:</span> {item.service_credits}</div>
+                            <div><span className='app_td_mobile_label'>Used Service Credit:</span> {item.used_service_credits}</div>
+                            <div><span className='app_td_mobile_label'>Duration: </span>{item.hrm_service_credits ? format(new Date(item.hrm_service_credits.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.hrm_service_credits.to), 'MMM d, yyyy') : ''}</div>
+                            <div><span className='app_td_mobile_label'>Status: </span>
+                              {
+                                item.hrm_service_credits?.status === 'Expired'
+                                  ? <span className='app__status_container_red'>Expired</span>
+                                  : <>
+                                      {
+                                        item.is_approved
+                                          ? <span className='app__status_container_green'>Active</span>
+                                          : <span className='app__status_container_orange'>Pending Approval</span>
+                                      }
+                                    </>
+                              }
+                            </div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -191,6 +211,10 @@ const Page: React.FC = () => {
                       <td
                         className="hidden md:table-cell app__td">
                         <div className='font-semibold'>{item.service_credits}</div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        <div className='font-semibold'>{item.used_service_credits}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
@@ -215,7 +239,7 @@ const Page: React.FC = () => {
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={7} rows={2}/> }
+                { loading && <TableRowLoading cols={6} rows={2}/> }
               </tbody>
             </table>
             {

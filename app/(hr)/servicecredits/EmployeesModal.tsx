@@ -3,7 +3,7 @@ import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { CustomButton, ConfirmModal, TableRowLoading } from '@/components'
+import { CustomButton, ConfirmModal, TableRowLoading, UserBlock } from '@/components'
 import uuid from 'react-uuid'
 import { ArrowPathIcon, ChevronDownIcon, TrashIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import { searchActiveEmployees } from '@/utils/fetchApi'
@@ -14,7 +14,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 
 // Types
-import type { ServiceCreditTypes, ServiceCreditUserTypes, excludedItemsTypes, namesType } from '@/types'
+import type { ServiceCreditTypes, ServiceCreditUserTypes, excludedItemsTypes, Employee } from '@/types'
 
 interface ModalProps {
   hideModal: () => void
@@ -36,7 +36,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
 
   const [searchHead, setSearchHead] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
-  const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
+  const [selectedItems, setSelectedItems] = useState<Employee[] | []>([])
 
   const [list, setList] = useState<ServiceCreditUserTypes[]>([])
 
@@ -248,7 +248,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
     setSearchResults(results)
   }
 
-  const handleSelected = (item: namesType, multiple = false) => {
+  const handleSelected = (item: Employee, multiple = false) => {
     if (multiple) {
       setSelectedItems([...selectedItems, item])
     } else {
@@ -336,7 +336,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
                               searchResults.length > 0 &&
                                 <div className='app__search_user_results_container'>
                                   {
-                                    searchResults.map((item: namesType) => (
+                                    searchResults.map((item: Employee) => (
                                       <div
                                         key={uuid()}
                                         onClick={() => handleSelected(item)}
@@ -440,11 +440,28 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
                         </td>
                         <th
                           className="app__th_firstcol">
-                          <div>{item.hrm_users?.firstname} {item.hrm_users?.middlename} {item.hrm_users?.lastname}</div>
+                          <div className='hidden md:inline-block font-medium'>
+                            <UserBlock user={item.hrm_users}/>
+                          </div>
                           {/* Mobile View */}
                           <div>
-                            <div className="md:hidden app__td">
-                              <div className='font-light'>{item.hrm_users?.firstname} {item.hrm_users?.middlename} {item.hrm_users?.lastname}</div>
+                            <div className="md:hidden app__td_mobile">
+                              <UserBlock user={item.hrm_users}/>
+                              <div>
+                                {
+                                  item.is_approved
+                                    ? <span className='app__status_container_green'>Approved</span>
+                                    : <span className='app__status_container_orange'>Pending Approval</span>
+                                }
+                              </div>
+                              <div>
+                                <CustomButton
+                                  btnType='button'
+                                  title='View Attachments'
+                                  handleClick={() => handleViewAttachments(item.id)}
+                                  containerStyles="app__btn_normal"
+                                />
+                              </div>
                             </div>
                           </div>
                           {/* End - Mobile View */}

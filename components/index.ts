@@ -14,11 +14,13 @@ import Announcements from './Announcements'
 import ShowMore from './ShowMore'
 import MainMenu from './MainMenu'
 import TopBarDark from './TopBarDark'
+import UserBlock from './UserBlock'
 import OrganizationalStructure from './OrganizationalStructure'
 import AccountDetails from './AccountDetails'
 import RegisterModal from './RegisterModal'
 import SettingsSideBar from './Sidebars/SettingsSideBar'
 import RecordsSideBar from './Sidebars/RecordsSideBar'
+import RequestsSideBar from './Sidebars/RequestsSideBar'
 import EmployeesSideBar from './Sidebars/EmployeesSideBar'
 import OneColLayoutLoading from './Loading/OneColLayoutLoading'
 import ThreeColTableLoading from './Loading/ThreeColTableLoading'
@@ -31,8 +33,10 @@ export {
   Unauthorized,
   Title,
   TopBar,
+  UserBlock,
   SettingsSideBar,
   RecordsSideBar,
+  RequestsSideBar,
   EmployeesSideBar,
   CustomButton,
   OneColLayoutLoading,

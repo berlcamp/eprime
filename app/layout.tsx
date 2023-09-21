@@ -9,7 +9,7 @@ import { Toaster } from 'react-hot-toast'
 import { LandingPage } from '@/components'
 
 import type { Metadata } from 'next'
-// import { type Employee, type settingsDataTypes } from '@/types'
+import type { Employee, settingsDataTypes } from '@/types'
 
 export const metadata: Metadata = {
   title: 'PRIME-HRM',
@@ -26,8 +26,8 @@ export default async function RootLayout ({ children }: { children: React.ReactN
     data: { session }
   } = await supabase.auth.getSession()
 
-  let sysUsers
-  let sysSettings
+  let sysUsers: Employee[] | null = []
+  let sysSettings: settingsDataTypes[] | null = []
 
   if (session) {
     const { data: systemSettings, error } = await supabase

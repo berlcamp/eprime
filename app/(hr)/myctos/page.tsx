@@ -2,7 +2,7 @@
 
 import { fetchMyCtos } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, RecordsSideBar, CustomButton } from '@/components'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, CustomButton, RecordsSideBar } from '@/components'
 import uuid from 'react-uuid'
 import Filters from './Filters'
 import UploadModal from './UploadModal'
@@ -146,10 +146,10 @@ const Page: React.FC = () => {
                           Reference Code
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Status
+                          COC Balance
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          COC Balance
+                          Used COC
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Particulars
@@ -163,6 +163,9 @@ const Page: React.FC = () => {
                       <th className="hidden md:table-cell app__th">
                           Supporting Documents
                       </th>
+                      <th className="hidden md:table-cell app__th">
+                          Status
+                      </th>
                   </tr>
               </thead>
               <tbody>
@@ -172,12 +175,31 @@ const Page: React.FC = () => {
                       key={uuid()}
                       className="app__tr">
                       <th
-                        className="font-medium pl-4">
-                        <div>{item.hrm_ctos?.reference_code}</div>
+                        className="pl-4">
+                        <div className='hidden md:inline-block font-medium'>{item.hrm_ctos?.reference_code}</div>
                         {/* Mobile View */}
                         <div>
-                          <div className="md:hidden app__td">
-                            <div className='font-light'>Particulars: {item.hrm_ctos?.particulars}</div>
+                          <div className="md:hidden app__td_mobile">
+                            <div><span className='app_td_mobile_label'>Reference Code:</span> {item.hrm_ctos?.reference_code}</div>
+                            <div><span className='app_td_mobile_label'>Particulars:</span> {item.hrm_ctos?.particulars}</div>
+                            <div><span className='app_td_mobile_label'>COC Balance:</span> {item.coc}</div>
+                            <div><span className='app_td_mobile_label'>Used COC:</span> {item.used_coc}</div>
+                            <div><span className='app_td_mobile_label'>COC Balance:</span> {item.coc}</div>
+                            <div><span className='app_td_mobile_label'>Duration: </span>{item.hrm_ctos ? format(new Date(item.hrm_ctos.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.hrm_ctos.to), 'MMM d, yyyy') : ''}</div>
+                            <div><span className='app_td_mobile_label'>Expiration: </span>{format(new Date(item.expiration), 'MMM d, yyyy')}</div>
+                            <div><span className='app_td_mobile_label'>Status: </span>
+                              {
+                                item.hrm_ctos?.status === 'Expired'
+                                  ? <span className='app__status_container_red'>Expired</span>
+                                  : <>
+                                      {
+                                        item.is_approved
+                                          ? <span className='app__status_container_green'>Active</span>
+                                          : <span className='app__status_container_orange'>Pending Approval</span>
+                                      }
+                                    </>
+                              }
+                            </div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -185,21 +207,11 @@ const Page: React.FC = () => {
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
-                          {
-                            item.hrm_ctos?.status === 'Expired'
-                              ? <span className='app__status_container_red'>Expired</span>
-                              : <>
-                                  {
-                                    item.is_approved
-                                      ? <span className='app__status_container_green'>Active</span>
-                                      : <span className='app__status_container_orange'>Pending Approval</span>
-                                  }
-                                </>
-                          }
+                        <div className='font-semibold'>{item.coc}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{item.coc}</div>
+                        <div className='font-semibold'>{item.used_coc}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
@@ -223,6 +235,20 @@ const Page: React.FC = () => {
                                 handleClick={() => handleEdit(item)}
                                 containerStyles="app__btn_green"
                               />
+                          }
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                          {
+                            item.hrm_ctos?.status === 'Expired'
+                              ? <span className='app__status_container_red'>Expired</span>
+                              : <>
+                                  {
+                                    item.is_approved
+                                      ? <span className='app__status_container_green'>Active</span>
+                                      : <span className='app__status_container_orange'>Pending Approval</span>
+                                  }
+                                </>
                           }
                       </td>
                     </tr>

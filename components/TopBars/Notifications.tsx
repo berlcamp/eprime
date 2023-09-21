@@ -1,12 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { Fragment, useRef, useEffect, useState } from 'react'
 import { BellAlertIcon } from '@heroicons/react/24/solid'
 import { Menu, Transition } from '@headlessui/react'
 import { useRouter } from 'next/navigation'
 import uuid from 'react-uuid'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { formatDistance } from 'date-fns'
+import { ExclamationCircleIcon } from '@heroicons/react/20/solid'
 
 // types
 import type { NotificationTypes } from '@/types'
@@ -16,6 +17,12 @@ interface propTypes {
 }
 
 const Notifications = ({ darkMode }: propTypes) => {
+  const [isUnreadChecked, setIsUnreadChecked] = useState(false)
+
+  const [total, setTotal] = useState(0)
+
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+
   const router = useRouter()
   const { supabase, session } = useSupabase()
 
@@ -29,9 +36,9 @@ const Notifications = ({ darkMode }: propTypes) => {
       .from('hrm_notifications')
       .select()
       .eq('user_id', userId)
-      .order('is_read', 'desc')
-      .order('id', 'desc')
-      .limit(20)
+      // .order('is_read', { ascending: true })
+      .order('id', { ascending: false })
+      .limit(15)
 
     if (error) console.error(error)
 
@@ -39,14 +46,53 @@ const Notifications = ({ darkMode }: propTypes) => {
     setList(data)
   }
 
+  const handleShowMore = async () => {
+    if (!list) return
+
+    // return if no more notifications to load
+    if (list.length === total) {
+      console.log(list.length, total)
+      return
+    }
+
+    let query = supabase
+      .from('hrm_notifications')
+      .select()
+      .eq('user_id', userId)
+
+    // Per Page from context
+    const from = list.length
+    const to = from + 14
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error } = await query
+
+    if (error) console.error(error)
+
+    setList([...list, ...data])
+  }
+
+  const handleScroll = () => {
+    const scrollContainer = scrollContainerRef.current
+
+    if (scrollContainer && (scrollContainer.scrollTop + scrollContainer.clientHeight === scrollContainer.scrollHeight)) {
+      void handleShowMore()
+    }
+  }
+
   const countUnread = async () => {
-    const { count } = await supabase
+    const { count: unreadCount } = await supabase
       .from('hrm_notifications')
       .select('*', { count: 'exact' })
       .eq('is_read', false)
       .eq('user_id', userId)
 
-    setCount(count)
+    setCount(unreadCount)
   }
 
   // Mark as read
@@ -65,7 +111,30 @@ const Notifications = ({ darkMode }: propTypes) => {
   }
 
   useEffect(() => {
+    const countTotal = async () => {
+      const { count: notiTotal } = await supabase
+        .from('hrm_notifications')
+        .select('id', { count: 'exact' })
+        .eq('user_id', userId)
+
+      setTotal(notiTotal)
+    }
+    void countTotal()
     void fetchData()
+  }, [])
+
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current
+
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll)
+    }
+
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll)
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -105,23 +174,34 @@ const Notifications = ({ darkMode }: propTypes) => {
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <Menu.Items className="absolute right-0 z-30 mt-2 w-80 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-            <div className="py-1">
+          <Menu.Items className="absolute right-0 z-30 mt-2 w-80 origin-top-right bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+            <div onScroll={handleScroll} ref={scrollContainerRef} className="overflow-y-auto h-[calc(100vh-170px)] pt-8">
+              <div className='bg-gray-200 w-full px-4 py-2 fixed top-0 left-0'>
+                <label className='flex items-center space-x-1'>
+                  <input
+                    onChange={() => setIsUnreadChecked(!isUnreadChecked)}
+                    checked={isUnreadChecked}
+                    type='checkbox'
+                    className=''/>
+                  <span className='text-xs'>Only display <b>Unread</b> items</span>
+                </label>
+              </div>
               {
                 list?.map((notification: NotificationTypes) => (
-                  <Menu.Item key={uuid()}>
-                    <div
-                      onClick={async () => await handleClick(notification)}
-                      className='hover:bg-gray-100 text-gray-700 hover:text-gray-900 mx-2 p-2 text-xs'>
-                      <div className='flex items-start justify-between space-x-2 text-gray-800'>
-                        <span dangerouslySetInnerHTML={{ __html: notification.message }}/>
-                        {
-                          !notification.is_read && <span className='text-red-700 font-medium text-xs'>[New!]</span>
-                        }
+                  (!notification.is_read || !isUnreadChecked) &&
+                    <Menu.Item key={uuid()}>
+                      <div
+                        onClick={async () => await handleClick(notification)}
+                        className={`${notification.is_read ? 'text-gray-500' : 'text-gray-800 font-medium'} hover:bg-gray-100 mx-2 p-2 text-xs`}>
+                        <div className='flex items-start justify-start space-x-2'>
+                          <span className='flex-1' dangerouslySetInnerHTML={{ __html: notification.message }}/>
+                          {
+                            !notification.is_read && <ExclamationCircleIcon className={`${notification.is_read ? 'text-blue-300' : 'text-blue-500'} w-4 h-4`}/>
+                          }
+                        </div>
+                        <div className='text-blue-700'>{formatDistance(new Date(), new Date(notification.created_at))} ago</div>
                       </div>
-                      <div className='text-blue-700'>{formatDistance(new Date(), new Date(notification.created_at))} ago</div>
-                    </div>
-                  </Menu.Item>
+                    </Menu.Item>
                 ))
               }
               {
