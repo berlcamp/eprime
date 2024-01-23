@@ -62,40 +62,40 @@ export default function Page ({ params }: { params: { ref: string } }) {
                   <div className='flex flex-col space-y-2 lg:space-y-0 lg:space-x-2  lg:flex-row justify-between'>
                     <div className='w-full px-2 border-l-2 space-y-2'>
                       <div className='flex space-x-2 text-xs'>
-                        <div className='font-medium'>Referece Code:</div>
-                        <div className=''>{ leaveData.reference_code }</div>
+                        <div className=''>Referece Code:</div>
+                        <div className='font-medium'>{ leaveData.reference_code }</div>
                       </div>
                       <div className='flex space-x-2 text-xs'>
-                        <div className='font-medium'>Requester:</div>
+                        <div className=''>Requester:</div>
                         <div className=''>
                           <UserBlock user={leaveData.requester}/>
                         </div>
                       </div>
                       <div className='flex space-x-2 text-xs'>
-                        <div className='font-medium'>Referece Code:</div>
-                        <div className=''>{ leaveData.reference_code }</div>
+                        <div className=''>Referece Code:</div>
+                        <div className='font-medium'>{ leaveData.reference_code }</div>
                       </div>
                       <div className='flex space-x-2 text-xs'>
-                        <div className='font-medium'>Referece Code:</div>
-                        <div className=''>{ leaveData.reference_code }</div>
+                        <div className=''>Referece Code:</div>
+                        <div className='font-medium'>{ leaveData.reference_code }</div>
                       </div>
                     </div>
                     <div className='w-full px-2 border-l-2 space-y-2'>
                       <div className='flex space-x-2 text-xs'>
-                        <div className='font-medium'>Referece Code:</div>
-                        <div className=''>{ leaveData.reference_code }</div>
+                        <div className=''>Referece Code:</div>
+                        <div className='font-medium'>{ leaveData.reference_code }</div>
                       </div>
                       <div className='flex space-x-2 text-xs'>
-                        <div className='font-medium'>Referece Code:</div>
-                        <div className=''>{ leaveData.reference_code }</div>
+                        <div className=''>Referece Code:</div>
+                        <div className='font-medium'>{ leaveData.reference_code }</div>
                       </div>
                       <div className='flex space-x-2 text-xs'>
-                        <div className='font-medium'>Referece Code:</div>
-                        <div className=''>{ leaveData.reference_code }</div>
+                        <div className=''>Referece Code:</div>
+                        <div className='font-medium'>{ leaveData.reference_code }</div>
                       </div>
                       <div className='flex space-x-2 text-xs'>
-                        <div className='font-medium'>Referece Code:</div>
-                        <div className=''>{ leaveData.reference_code }</div>
+                        <div className=''>Referece Code:</div>
+                        <div className='font-medium'>{ leaveData.reference_code }</div>
                       </div>
                     </div>
                   </div>

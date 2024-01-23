@@ -1,30 +1,19 @@
-import React from 'react'
-import uuid from 'react-uuid'
-
-const items = [
-  {
-    id: 1,
-    title: 'Teacher I - Elementary',
-    school: 'Alegeria Elementary School'
-  },
-  {
-    id: 2,
-    title: 'Teacher II - Elementary',
-    school: 'A. Romero Elementary School'
-  }
-]
 export default function Announcements () {
   return (
     <div className=''>
       <h4 className="text-xl font-semibold mb-6">Announcements:</h4>
-      {
-        items.map((item, index) => (
-          <div key={uuid()} className='mb-8'>
-            <div className='font-bold'>Taiwan presidential frontrunner says no plans to change islands formal name</div>
-            <div className='text-sm'>TAIPEI (Reuters) - The leading candidate to be Taiwans new president, Vice President William Lai, said in an interview on Tuesday that he has no plans to change the islands formal name, but reiterated that Taiwan is not subordinate to China.</div>
-          </div>
-        ))
-      }
+      <div className='mb-8'>
+        <div className='font-bold'>HRM System Now Ready for Use – Employee Registrations Open</div>
+        <div className='text-sm'>Human Resource Management System is now ready for use, and employee registrations are officially open. The new HRM system has introduced automation for records and request processing, streamlining and simplifying these tasks for increased efficiency. Register today using your deped email address.</div>
+      </div>
+      <div className='mb-8'>
+        <div className='font-bold'>Prime-HRM System now on Alpha Testing!</div>
+        <div className='text-sm'>As we prepare for the official release, we are actively engaged in conducting multiple rounds of alpha testing to fine-tune the system and enhance the overall user experience.</div>
+      </div>
+      <div className='mb-8'>
+        <div className='font-bold'>Vacant Items and Online Application</div>
+        <div className='text-sm'>Vacant Items will soon be posted here, providing an opportunity for applicants to conveniently apply online.</div>
+      </div>
     </div>
   )
 }

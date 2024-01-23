@@ -10,6 +10,8 @@ import type { PositionTypes } from '@/types'
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { logError } from '@/utils/fetchApi'
+import { CustomButton } from '@/components'
 
 interface ModalProps {
   hideModal: () => void
@@ -62,12 +64,14 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .insert(newData)
         .select()
 
-      if (error) throw new Error(error.message)
+      if (error) {
+        void logError('Create positions', 'hrm_positions', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
 
-      newId = data[0].id // newly created ID use this on 'finally' block
-    } catch (e) {
-      console.error(e)
-    } finally {
+      newId = data[0].id
+
       // Append new data in redux
       const updatedData = { ...newData, id: newId }
       dispatch(updateList([updatedData, ...globallist]))
@@ -85,6 +89,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // reset all form fields
       reset()
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -102,10 +108,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .update(newData)
         .eq('id', editData.id)
 
-      if (error) throw new Error(error.message)
-    } catch (e) {
-      console.error(e)
-    } finally {
+      if (error) {
+        void logError('Update positions', 'hrm_positions', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
       // Update data in redux
       const items = [...globallist]
       const updatedData = { ...newData, id: editData.id }
@@ -123,6 +131,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // reset all form fields
       reset()
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -148,7 +158,13 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
             <h5 className="app__modal_header_text">
               Position Details
             </h5>
-            <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+            <CustomButton
+              containerStyles='app__btn_gray'
+              title='Close'
+              isDisabled={saving}
+              btnType='button'
+              handleClick={hideModal}
+            />
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">

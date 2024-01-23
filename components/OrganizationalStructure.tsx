@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import ProfileCard from './ProfileCard'
-import { orgChart } from '@/constants/TrackerConstants'
+import { orgChart } from '@/constants'
 import { CustomButton } from '@/components'
 
 export default function App () {

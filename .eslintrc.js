@@ -27,6 +27,8 @@ module.exports = {
     'react/prop-types': 0,
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/strict-boolean-expressions': 'off',
+    '@typescript-eslint/promise-function-async': 'off',
+    'react-hooks/exhaustive-deps': 'off',
     '@typescript-eslint/no-confusing-void-expression': 'off',
     "@typescript-eslint/no-misused-promises": [2, {
       "checksVoidReturn": {

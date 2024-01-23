@@ -90,7 +90,13 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
             <h5 className="app__modal_header_text">
               Revoke Designation
             </h5>
-            <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+            <CustomButton
+                containerStyles='app__btn_gray'
+                title='Close'
+                isDisabled={saving}
+                btnType='button'
+                handleClick={hideModal}
+              />
           </div>
 
           <div className="app__modal_body">

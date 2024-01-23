@@ -5,10 +5,10 @@ import Avatar from 'react-avatar'
 import { capitalizeWords } from '@/utils/text-helper'
 
 // types
-import type { Employee } from '@/types'
+import type { namesType } from '@/types'
 
 interface PropTypes {
-  user: Employee
+  user: namesType
 }
 
 const UserBlock = ({ user }: PropTypes) => {
@@ -16,10 +16,10 @@ const UserBlock = ({ user }: PropTypes) => {
     <div className='flex items-center space-x-1'>
       {
         (user.avatar_url && user.avatar_url !== '')
-          ? <div className='w-7 h-7 relative rounded-full flex items-center justify-center bg-black overflow-hidden'>
-              <Image src={user.avatar_url} width={40} height={40} alt='user'/>
+          ? <div className='relative rounded-lg flex items-center justify-center bg-black overflow-hidden'>
+              <Image src={user.avatar_url} width={20} height={20} alt='user'/>
             </div>
-          : <Avatar round={true} size="30" name={user.firstname}/>
+          : <Avatar round={true} size="20" name={user.firstname}/>
       }
       <div className='font-medium'>{capitalizeWords(user.firstname)} {capitalizeWords(user.middlename)} {capitalizeWords(user.lastname)}</div>
     </div>

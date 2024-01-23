@@ -4,11 +4,12 @@ import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import OneColLayoutLoading from './Loading/OneColLayoutLoading'
-import { superAdmins } from '@/constants/TrackerConstants'
+import { superAdmins } from '@/constants'
 import { fetchDistricts, fetchOffices, fetchPositions, fetchSchools } from '@/utils/fetchApi'
 import uuid from 'react-uuid'
 import Avatar from 'react-avatar'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -47,6 +48,8 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const dispatch = useDispatch()
+
+  const router = useRouter()
 
   // Check access from employee_accounts settings or Super Admins
   const isAdmin = hasAccess('employee_accounts') || superAdmins.includes(session.user.email)
@@ -192,6 +195,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
       } catch (error) {
         console.error('Error uploading file:', error)
       } finally {
+        router.refresh()
         setUploading(false)
       }
     }

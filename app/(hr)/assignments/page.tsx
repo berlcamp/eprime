@@ -6,7 +6,7 @@ import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon, PencilSquareIcon, PrinterIcon, TrashIcon } from '@heroicons/react/20/solid'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar, UserBlock } from '@/components'
 import uuid from 'react-uuid'
-import { superAdmins } from '@/constants/TrackerConstants'
+import { superAdmins } from '@/constants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -182,7 +182,7 @@ const Page: React.FC = () => {
                           Station
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Duration
+                          Start/End Date
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Status
@@ -277,7 +277,11 @@ const Page: React.FC = () => {
                                   : <span>{item.hrm_offices?.name}</span>
                               }
                             </div>
-                            <div><span className='app_td_mobile_label'>Duration: </span>{format(new Date(item.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.to), 'MMM d, yyyy')}</div>
+                            <div><span className='app_td_mobile_label'>From: </span>{format(new Date(item.from), 'MMM d, yyyy')}</div>
+                            {
+                              item.to &&
+                                <div><span className='app_td_mobile_label'>To: </span>{format(new Date(item.to), 'MMM d, yyyy')}</div>
+                            }
                             <div><span className='app_td_mobile_label'>Status: </span>
                               {
                                 item.status === 'Revoked'
@@ -311,7 +315,11 @@ const Page: React.FC = () => {
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div>{format(new Date(item.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.to), 'MMM d, yyyy')}</div>
+                        <div>{format(new Date(item.from), 'MMM d, yyyy')}</div>
+                        {
+                          item.to &&
+                            <div>{format(new Date(item.to), 'MMM d, yyyy')}</div>
+                        }
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
@@ -324,7 +332,7 @@ const Page: React.FC = () => {
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={6} rows={2}/> }
+                { loading && <TableRowLoading cols={7} rows={2}/> }
               </tbody>
             </table>
             {

@@ -1,7 +1,7 @@
 'use client'
 
 import { Unauthorized } from '@/components'
-import { superAdmins } from '@/constants/TrackerConstants'
+import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 

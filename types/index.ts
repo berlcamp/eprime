@@ -8,6 +8,12 @@ export interface SelectUserNamesProps {
   title: string
 }
 
+export interface UserAccessTypes {
+  user_id: string
+  type: string
+  hrm_user: namesType
+}
+
 export interface searchUser {
   firstname: string
   middlename: string
@@ -20,13 +26,8 @@ export interface namesType {
   firstname: string
   middlename: string
   lastname: string
-  uuid?: string
+  avatar_url: string
   id: string
-}
-
-export interface settingsDataTypes {
-  access_type: string
-  data: namesType
 }
 
 export interface CustomButtonTypes {
@@ -80,6 +81,7 @@ export interface NotificationTypes {
   type: string
   user_id: string
   reference_id?: string
+  reference_table: string
   is_read: boolean
 }
 
@@ -90,6 +92,7 @@ export interface Employee {
   lastname: string
   password: string
   email: string
+  status?: string
   position_id: number
   salary_grade: string
   salary_step: string
@@ -249,4 +252,145 @@ export interface LeaveTypes {
   recommending_disapproval_reason: string
   hr_disapproval_reason: string
   approver_disapproval_reason: string
+}
+
+export interface ServiceRecordTypes {
+  id: string
+  user_id: string
+  org_id: string
+  from: string
+  to: string
+  designation: string
+  status: string
+  salary: string
+  station: string
+  branch: string
+  separation_date: string
+  separation_cause: string
+  remarks: string
+  created_by: string
+  hrm_user: Employee
+}
+
+export interface FlowListTypes {
+  id: string
+  tracker_id: string
+  created_at: string
+  user_id: string
+  receiver_id: string
+  status: string
+  hrm_user: Employee
+  receiver: Employee
+  hrm_tracker_logs: TrackerLogsTypes[]
+}
+
+export interface DocTypes {
+  id: string
+  type: string
+  shortcut: string
+  isChecked?: boolean
+}
+
+export interface AttachmentTypes {
+  id: string
+  name: string
+}
+
+interface LogMessageTypes {
+  field: string
+  old_value: string
+  new_value: string
+}
+
+export interface TrackerLogsTypes {
+  tracker_flow_id: string
+  created_at: string
+  user_id: string
+  message: string
+  hrm_user: Employee
+}
+
+export interface LogTypes {
+  id: string
+  created_at: string
+  document_tracker_id: string
+  sender_id: string
+  message: LogMessageTypes[]
+  is_private: boolean
+  parent_document_tracker_id: string
+  reply_type: string
+  hrm_users: Employee
+}
+
+export interface StickiesTypes {
+  id: string
+  document_tracker_id: string
+  user_id: string
+  note: string
+  color: string
+  tracker: DocumentTypes
+}
+
+export interface FollowersTypes {
+  tracker_id: string
+  user_id: string
+}
+
+export interface DocumentTypes {
+  id: string
+  type: string
+  reference_code: string
+  current_status: string
+  receiver_id: string
+  date_created: string
+  leave_type: string
+  leave_from: string
+  leave_to: string
+  leave_days: string
+  leave_location: string
+  leave_abroad: string
+  leave_hospitalization: string
+  leave_illness: string
+  leave_study_purpose: string
+  leave_other_purpose: string
+  particulars: string
+  date_received: string
+  created_at: string
+  created_by: string
+  hrm_remarks: RemarksTypes[]
+  creator: Employee
+  receiver: Employee
+  hrm_tracker_followers: FollowersTypes[]
+  hrm_request_tracker_stickies: StickiesTypes[]
+}
+
+export interface RemarksTypes {
+  id: string
+  created_at: string
+  document_tracker_id: string
+  sender_id: string
+  message: string
+  is_private: boolean
+  reply_type: string
+  files: string[] | null
+  hrm_users: Employee
+  hrm_remarks_comments: CommentsTypes[]
+}
+
+export interface CommentsTypes {
+  id: string
+  created_at: string
+  remarks_id: string
+  sender_id: string
+  message: string
+  hrm_users: Employee
+  hrm_remarks: RemarksTypes
+}
+
+export interface CommentDataTypes {
+  id: string
+  created_at: string
+  sender_id: string
+  message: string
+  hrm_users: Employee
 }

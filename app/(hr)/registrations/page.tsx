@@ -3,8 +3,7 @@
 import { fetchRegistrations } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, EmployeesSideBar, Title, Unauthorized, CustomButton, DeleteModal } from '@/components'
-import uuid from 'react-uuid'
-import { superAdmins } from '@/constants/TrackerConstants'
+import { superAdmins } from '@/constants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -171,9 +170,9 @@ const Page: React.FC = () => {
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: any) => (
+                  !isDataEmpty && list.map((item, index) => (
                     <tr
-                      key={uuid()}
+                      key={index}
                       className="app__tr">
                       <td
                         className="w-6 pl-4 app__td">

@@ -4,7 +4,7 @@ import React, { Fragment, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSupabase } from '@/context/SupabaseProvider'
 import uuid from 'react-uuid'
-import { fetchSchools, fetchOffices, fetchDistricts } from '@/utils/fetchApi'
+import { fetchSchools, fetchOffices, fetchDistricts, logError } from '@/utils/fetchApi'
 
 import type { SchoolTypes, Office, DistrictTypes } from '@/types'
 import { CustomButton, OneColLayoutLoading } from '@/components'
@@ -71,8 +71,10 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
 
       if (count > 0) {
         if (existingUser[0].status === 'Active') {
+          setError('This email already registered')
           throw new Error('This email already registered.')
         } else {
+          setError('This email already registered and is subject for verification from admin')
           throw new Error('This email already registered and is subject for verification from admin.')
         }
       } else {
@@ -98,7 +100,11 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
           .from('hrm_registrations')
           .insert(newUserData)
 
-        if (registrationError) throw new Error(registrationError.message)
+        if (registrationError) {
+          void logError('Registration', 'hrm_registrations', JSON.stringify(newUserData), registrationError.message)
+          setError('Registration failed this time, please reload the page and try again.')
+          throw new Error(registrationError.message)
+        }
 
         setComplete(true)
       }
@@ -106,14 +112,8 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
       setLoading(false)
       setError(null)
     } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message)
-        setLoading(false)
-      }
-      return false
+      setLoading(false)
     }
-
-    return true
   }
 
   const handleDistrictChange = async (districtId: string) => {

@@ -3,16 +3,16 @@ import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { XMarkIcon } from '@heroicons/react/24/solid'
-import uuid from 'react-uuid'
-import { searchActiveEmployees } from '@/utils/fetchApi'
 
 // Types
-import type { DistrictTypes, namesType } from '@/types'
+import type { DistrictTypes, Employee, namesType } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { logError } from '@/utils/fetchApi'
+import { CustomButton, UserBlock } from '@/components'
 
 interface ModalProps {
   hideModal: () => void
@@ -25,7 +25,7 @@ interface FormValues {
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const { setToast } = useFilter()
-  const { supabase } = useSupabase()
+  const { supabase, systemUsers }: { systemUsers: Employee[], supabase: any } = useSupabase()
   const [saving, setSaving] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | ''>('')
 
@@ -84,7 +84,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .insert(newData)
         .select()
 
-      if (error) throw new Error(error.message)
+      if (error) {
+        void logError('Add district', 'hrm_districts', JSON.stringify(newData), error.message)
+        throw new Error(error.message)
+      }
 
       newId = data[0].id // newly created ID use this on 'finally' block
     } catch (e) {
@@ -124,7 +127,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .update(newData)
         .eq('id', editData.id)
 
-      if (error) throw new Error(error.message)
+      if (error) {
+        void logError('Update district', 'hrm_districts', JSON.stringify(newData), error.message)
+        throw new Error(error.message)
+      }
     } catch (e) {
       console.error(e)
     } finally {
@@ -158,7 +164,15 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       return
     }
 
-    const results = await searchActiveEmployees(searchTerm, selectedItems)
+    // Search user
+    const searchWords = (e.target.value).split(' ')
+    const results = systemUsers.filter(user => {
+      // exclude already selected users
+      if (selectedItems.some(obj => obj.id.toString() === user.id.toString())) return false
+
+      const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
+      return searchWords.every(word => fullName.includes(word))
+    })
 
     setSearchResults(results)
   }
@@ -186,7 +200,13 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
               <h5 className="app__modal_header_text">
                 District Details
               </h5>
-              <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+              <CustomButton
+                containerStyles='app__btn_gray'
+                title='Close'
+                isDisabled={saving}
+                btnType='button'
+                handleClick={hideModal}
+              />
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
@@ -208,8 +228,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                   <div className='app__selected_users_container'>
                     {
                       selectedItems.length > 0 &&
-                        selectedItems.map(item => (
-                          <div key={uuid()} className='w-full flex mb-1'>
+                        selectedItems.map((item, index) => (
+                          <div key={index} className='w-full flex mb-1'>
                             <span className='app__selected_user'>
                               {item.firstname} {item.middlename} {item.lastname}
                               <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
@@ -231,12 +251,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                               searchResults.length > 0 &&
                                 <div className='app__search_user_results_container'>
                                   {
-                                    searchResults.map((item: namesType) => (
+                                    searchResults.map((item: namesType, index) => (
                                       <div
-                                        key={uuid()}
+                                        key={index}
                                         onClick={() => handleSelected(item)}
                                         className='app__search_user_results'>
-                                          {item.firstname} {item.middlename} {item.lastname}
+                                          <UserBlock user={item}/>
                                       </div>
                                     ))
                                   }

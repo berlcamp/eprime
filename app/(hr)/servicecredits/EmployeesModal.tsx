@@ -6,7 +6,6 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import { CustomButton, ConfirmModal, TableRowLoading, UserBlock } from '@/components'
 import uuid from 'react-uuid'
 import { ArrowPathIcon, ChevronDownIcon, TrashIcon, XMarkIcon } from '@heroicons/react/20/solid'
-import { searchActiveEmployees } from '@/utils/fetchApi'
 import AttachmentsModal from './AttachmentsModal'
 
 // Redux imports
@@ -23,7 +22,7 @@ interface ModalProps {
 
 const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
   const { setToast } = useFilter()
-  const { supabase } = useSupabase()
+  const { supabase, systemUsers }: { systemUsers: Employee[], supabase: any } = useSupabase()
 
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -243,7 +242,15 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
     })
     excludedItems.push(...selectedItems)
 
-    const results = await searchActiveEmployees(searchTerm, excludedItems)
+    // Search user
+    const searchWords = (e.target.value).split(' ')
+    const results = systemUsers.filter(user => {
+      // exclude already selected users
+      if (excludedItems.some(obj => obj.id.toString() === user.id.toString())) return false
+
+      const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
+      return searchWords.every(word => fullName.includes(word))
+    })
 
     setSearchResults(results)
   }
@@ -303,9 +310,15 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
             <h5 className="app__modal_header_text">
               Manage Service Credit Employees
             </h5>
-            <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+            <CustomButton
+                containerStyles='app__btn_gray'
+                title='Close'
+                isDisabled={saving}
+                btnType='button'
+                handleClick={hideModal}
+              />
           </div>
-          <div className="app__modal_header">
+          <div className="mx-4 my-4">
             <div className='w-full'>
               <div className='app__form_field_container'>
                 <div className='w-full'>
@@ -341,7 +354,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
                                         key={uuid()}
                                         onClick={() => handleSelected(item)}
                                         className='app__search_user_results'>
-                                          {item.firstname} {item.middlename} {item.lastname}
+                                          <UserBlock user={item}/>
                                       </div>
                                     ))
                                   }

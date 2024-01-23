@@ -3,7 +3,7 @@ const nextConfig = {
   images: {
     domains: [
       'randomuser.me',
-      'jwpaamhdlufycuopiguy.supabase.co'
+      'nuhirhfevxoonendpfsm.supabase.co'
     ]
   }
 }

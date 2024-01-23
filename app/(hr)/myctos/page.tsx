@@ -3,11 +3,8 @@
 import { fetchMyCtos } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, CustomButton, RecordsSideBar } from '@/components'
-import uuid from 'react-uuid'
-import Filters from './Filters'
 import UploadModal from './UploadModal'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
 
 // Types
@@ -35,16 +32,11 @@ const Page: React.FC = () => {
 
   const { session } = useSupabase()
 
-  const searchParams = useSearchParams()
-  const refCode = searchParams.get('ref')
-
-  const [filterKeyword, setFilterKeyword] = useState(refCode ?? '')
-
   const fetchData = async () => {
     setLoading(true)
 
     try {
-      const result = await fetchMyCtos({ filterKeyword, userId: session.user.id }, perPageCount, 0)
+      const result = await fetchMyCtos({ userId: session.user.id }, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -62,7 +54,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchMyCtos({ filterKeyword, userId: session.user.id }, perPageCount, list.length)
+      const result = await fetchMyCtos({ userId: session.user.id }, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -93,7 +85,7 @@ const Page: React.FC = () => {
     void fetchData()
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, perPageCount, refCode])
+  }, [perPageCount])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -119,15 +111,7 @@ const Page: React.FC = () => {
             <Title title='My CTOs'/>
           </div>
 
-          {/* Filters */}
-          <div className='app__filters'>
-            <Filters
-              filterKeyword={filterKeyword}
-              setFilterKeyword={setFilterKeyword}
-            />
-          </div>
-
-          <div className='flex justify-end px-4'><span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700'>Available COC Balance: {cocBalance}</span></div>
+          <div className='flex justify-end mt-2 px-4'><span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm'>Available COC Balance: {cocBalance}</span></div>
           <div className='app__warning_text'><span className='app__warning_title'>Note:</span> You need to provide supporting documents as basis for CTO approval.</div>
 
           {/* Per Page */}
@@ -170,9 +154,9 @@ const Page: React.FC = () => {
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: CtoUserTypes) => (
+                  !isDataEmpty && list.map((item: CtoUserTypes, index) => (
                     <tr
-                      key={uuid()}
+                      key={index}
                       className="app__tr">
                       <th
                         className="pl-4">

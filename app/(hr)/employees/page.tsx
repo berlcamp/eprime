@@ -6,10 +6,8 @@ import { Menu, Transition } from '@headlessui/react'
 import { CheckCircleIcon, ChevronDownIcon, Cog8ToothIcon, CreditCardIcon, PencilSquareIcon, TableCellsIcon, UserIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, EmployeesSideBar, Title, Unauthorized, AccountDetails, UserBlock } from '@/components'
 import uuid from 'react-uuid'
-import { superAdmins } from '@/constants/TrackerConstants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
-import { useSupabase } from '@/context/SupabaseProvider'
 
 // Types
 import type { AssignmentTypes, DesignationTypes, Employee } from '@/types'
@@ -18,6 +16,7 @@ import type { AssignmentTypes, DesignationTypes, Employee } from '@/types'
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { superAdmins } from '@/constants'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -35,8 +34,7 @@ const Page: React.FC = () => {
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { session } = useSupabase()
-  const { hasAccess } = useFilter()
+  const { hasAccess, session } = useFilter()
 
   const fetchData = async () => {
     setLoading(true)
@@ -332,7 +330,7 @@ const Page: React.FC = () => {
                                     </div>
                                     <div className='flex items-center space-x-1'>
                                       {
-                                        item.salary_grade !== '' && item.salary_step !== ''
+                                        (item.salary_grade && item.salary_step)
                                           ? <CheckCircleIcon className='w-4 h-4 text-green-500'/>
                                           : <XMarkIcon className='w-4 h-4 text-red-500'/>
                                       }
@@ -388,7 +386,7 @@ const Page: React.FC = () => {
                         className="hidden md:table-cell app__td">
                         <div>{item.hrm_positions?.name}</div>
                         {
-                          item.salary_grade !== '' &&
+                          (item.salary_grade && item.salary_step) &&
                             <div>
                               <span>Salary Grade:</span> <span className='font-semibold'>{item.salary_grade} </span>
                               <span>Step:</span> <span className='font-semibold'>{item.salary_step}</span>

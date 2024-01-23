@@ -5,8 +5,7 @@ import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar } from '@/components'
-import uuid from 'react-uuid'
-import { superAdmins } from '@/constants/TrackerConstants'
+import { superAdmins } from '@/constants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -184,9 +183,9 @@ const Page: React.FC = () => {
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: CtoTypes) => (
+                  !isDataEmpty && list.map((item: CtoTypes, index) => (
                     <tr
-                      key={uuid()}
+                      key={index}
                       className="app__tr">
                       <td
                         className="w-6 pl-4 app__td">

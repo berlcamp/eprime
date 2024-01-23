@@ -6,15 +6,16 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { XMarkIcon } from '@heroicons/react/24/solid'
 import uuid from 'react-uuid'
-import { fetchDistricts, searchActiveEmployees } from '@/utils/fetchApi'
+import { fetchDistricts, logError } from '@/utils/fetchApi'
 
 // Types
-import type { DistrictTypes, SchoolTypes, namesType, searchUser } from '@/types'
+import type { DistrictTypes, Employee, SchoolTypes, namesType } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { UserBlock } from '@/components'
 
 const classList = [
   'IP School',
@@ -38,11 +39,11 @@ interface SchoolForm {
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const { setToast } = useFilter()
-  const { supabase } = useSupabase()
+  const { supabase, systemUsers }: { systemUsers: Employee[], supabase: any } = useSupabase()
   const [saving, setSaving] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | ''>('')
   const [searchHead, setSearchHead] = useState('')
-  const [searchResults, setSearchResults] = useState<searchUser[] | []>([])
+  const [searchResults, setSearchResults] = useState<any[] | []>([])
   const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
   const [districtId, setDistrictId] = useState(editData ? (editData.district_id ? editData.district_id : '') : '')
   const [districts, setDistricts] = useState<DistrictTypes[] | null>(null)
@@ -97,12 +98,14 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .insert(newData)
         .select()
 
-      if (error) throw new Error(error.message)
+      if (error) {
+        void logError('Add school', 'hrm_schools', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
 
       newId = data[0].id // newly created ID use this on 'finally' block
-    } catch (e) {
-      console.error(e)
-    } finally {
+
       // Append new data in redux
       const updatedData = { ...newData, id: newId, hrm_users: selectedItems[0], hrm_districts: { name: selectedDistrict ? selectedDistrict[0].name : '' } }
 
@@ -121,6 +124,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // reset all form fields
       reset()
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -146,10 +151,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .update(newData)
         .eq('id', editData.id)
 
-      if (error) throw new Error(error.message)
-    } catch (e) {
-      console.error(e)
-    } finally {
+      if (error) {
+        void logError('Update school', 'hrm_schools', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
       // Update data in redux
       const items = [...globallist]
       const updatedData = { ...newData, hrm_users: selectedItems[0], id: editData.id, hrm_districts: { name: selectedDistrict ? selectedDistrict[0].name : '' } }
@@ -167,6 +174,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // reset all form fields
       reset()
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -180,7 +189,15 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       return
     }
 
-    const results = await searchActiveEmployees(searchTerm, selectedItems)
+    // Search user
+    const searchWords = (e.target.value).split(' ')
+    const results = systemUsers.filter(user => {
+      // exclude already selected users
+      if (selectedItems.some(obj => obj.id.toString() === user.id.toString())) return false
+
+      const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
+      return searchWords.every(word => fullName.includes(word))
+    })
 
     setSearchResults(results)
   }
@@ -392,12 +409,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                               searchResults.length > 0 &&
                                 <div className='app__search_user_results_container'>
                                   {
-                                    searchResults.map((item: namesType) => (
+                                    searchResults.map((item: namesType, index) => (
                                       <div
-                                        key={uuid()}
+                                        key={index}
                                         onClick={() => handleSelected(item)}
                                         className='app__search_user_results'>
-                                          {item.firstname} {item.middlename} {item.lastname}
+                                          <UserBlock user={item}/>
                                       </div>
                                     ))
                                   }

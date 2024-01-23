@@ -2,14 +2,14 @@ import React, { Fragment, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchDistricts, fetchOffices, fetchPositions, fetchSchools, searchActiveEmployees } from '@/utils/fetchApi'
+import { fetchDistricts, fetchOffices, fetchPositions, fetchSchools } from '@/utils/fetchApi'
 import uuid from 'react-uuid'
 import { XMarkIcon } from '@heroicons/react/20/solid'
-import { CustomButton, OneColLayoutLoading } from '@/components'
+import { CustomButton, OneColLayoutLoading, UserBlock } from '@/components'
 import { capitalizeWords, generateReferenceCode } from '@/utils/text-helper'
 
 // Types
-import type { AssignmentTypes, DistrictTypes, Office, PositionTypes, SchoolTypes, namesType } from '@/types'
+import type { AssignmentTypes, DistrictTypes, Employee, Office, PositionTypes, SchoolTypes, namesType } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -24,7 +24,7 @@ interface ModalProps {
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const { setToast } = useFilter()
-  const { supabase } = useSupabase()
+  const { supabase, systemUsers }: { systemUsers: Employee[], supabase: any } = useSupabase()
   const [saving, setSaving] = useState(false)
 
   // Search employee
@@ -270,7 +270,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       return
     }
 
-    const results = await searchActiveEmployees(searchTerm, selectedItems)
+    // Search user
+    const searchWords = (e.target.value).split(' ')
+    const results = systemUsers.filter(user => {
+      const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
+      return searchWords.every(word => fullName.includes(word))
+    })
 
     setSearchResults(results)
   }
@@ -358,7 +363,13 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
             <h5 className="app__modal_header_text">
               Assignment Details
             </h5>
-            <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+            <CustomButton
+                containerStyles='app__btn_gray'
+                title='Close'
+                isDisabled={saving}
+                btnType='button'
+                handleClick={hideModal}
+              />
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
@@ -414,7 +425,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                                               key={uuid()}
                                               onClick={() => handleSelected(item)}
                                               className='app__search_user_results'>
-                                                {item.firstname} {item.middlename} {item.lastname}
+                                                <UserBlock user={item}/>
                                             </div>
                                           ))
                                         }

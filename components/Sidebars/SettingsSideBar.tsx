@@ -2,9 +2,12 @@ import { Cog6ToothIcon } from '@heroicons/react/24/solid'
 import Link from 'next/link'
 import React from 'react'
 import { usePathname } from 'next/navigation'
+import { useSupabase } from '@/context/SupabaseProvider'
 
 const SettingsSideBar = () => {
   const currentRoute = usePathname()
+
+  const { session } = useSupabase()
 
   return (
     <>
@@ -58,6 +61,14 @@ const SettingsSideBar = () => {
               <span className="flex-1 ml-3 whitespace-nowrap">System Access</span>
             </Link>
         </li>
+        {
+          session.user.email === 'berlcamp@gmail.com' &&
+            <li>
+              <Link href="/settings/errorlogs" className={`app__menu_link ${currentRoute === '/settings/errorlogs' ? 'app_menu_link_active' : ''}`}>
+                <span className="flex-1 ml-3 whitespace-nowrap">Error Logs</span>
+              </Link>
+            </li>
+        }
       </ul>
     </>
   )

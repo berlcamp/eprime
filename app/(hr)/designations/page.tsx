@@ -6,7 +6,7 @@ import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon, PencilSquareIcon, PrinterIcon, TrashIcon } from '@heroicons/react/20/solid'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar, UserBlock } from '@/components'
 import uuid from 'react-uuid'
-import { superAdmins } from '@/constants/TrackerConstants'
+import { superAdmins } from '@/constants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -339,7 +339,7 @@ const Page: React.FC = () => {
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={6} rows={2}/> }
+                { loading && <TableRowLoading cols={8} rows={2}/> }
               </tbody>
             </table>
             {

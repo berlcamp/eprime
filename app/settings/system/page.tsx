@@ -3,67 +3,33 @@ import TopBar from '@/components/TopBar'
 import { Sidebar, SettingsSideBar, Title } from '@/components'
 import { useSupabase } from '@/context/SupabaseProvider'
 import React, { useEffect, useState } from 'react'
-import SelectUserNames from './SelectUserNames'
-import { useFilter } from '@/context/FilterContext'
 
-import type { settingsDataTypes } from '@/types'
+import type { UserAccessTypes } from '@/types'
+import { logError } from '@/utils/fetchApi'
+import ChooseUsers from './ChooseUsers'
 
 const Page: React.FC = () => {
+  const [users, setUsers] = useState<UserAccessTypes[] | []>([])
+  const [loadedSettings, setLoadedSettings] = useState(false)
   const { supabase } = useSupabase()
-  const [settingsData, setSettingsData] = useState<settingsDataTypes[] | []>([])
-  const [results, setResults] = useState(false)
-  const [settingsId, setSettingsId] = useState(null)
-  const { setToast } = useFilter()
-  const [saving, setSaving] = useState(false)
-
-  const handleSave = async () => {
-    if (saving) return
-
-    setSaving(true)
-
-    let query = supabase
-      .from('system_settings')
-
-    if (settingsId) {
-      query = query.upsert({ id: settingsId, type: 'system_access', data: settingsData })
-    } else {
-      query = query.insert({ type: 'system_access', org_id: process.env.NEXT_PUBLIC_ORG_ID, data: settingsData })
-    }
-    query = query.select()
-
-    const { error } = await query
-
-    if (error) {
-      console.error(error)
-    } else {
-      // pop up the success message
-      setToast('success', 'Successfully saved.')
-    }
-
-    setSaving(false)
-  }
-
-  const handleManagerChange = (newdata: any, type: string) => {
-    const tempSettings = Array.isArray(settingsData) ? settingsData.filter((item: settingsDataTypes) => item.access_type !== type) : []
-    const updatedSettings: settingsDataTypes[] = [...tempSettings, { access_type: type, data: newdata }]
-    setSettingsData(updatedSettings)
-  }
 
   const fetchData = async () => {
-    const { data: res, error } = await supabase
-      .from('system_settings')
-      .select()
-      .eq('type', 'system_access')
-      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
-      .limit(1)
-      .single()
+    try {
+      const { data, error } = await supabase
+        .from('hrm_system_access')
+        .select('*, hrm_user:user_id(id,firstname,lastname,middlename)')
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
-    if (error) console.error(error)
+      if (error) {
+        void logError('system access', 'system_access', '', error.message)
+        throw new Error(error.message)
+      }
 
-    if (res) {
-      setResults(true)
-      setSettingsData(res.data)
-      setSettingsId(res.id)
+      setUsers(data)
+
+      setLoadedSettings(true)
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -84,28 +50,22 @@ const Page: React.FC = () => {
               <Title title='System Permissions'/>
             </div>
 
-            <div className='app__content'>
+            <div className='app__content pb-20'>
               {
-                results && (
+                loadedSettings &&
                   <>
-                  <SelectUserNames handleManagerChange={handleManagerChange} multiple={true} type='settings' settingsData={Array.isArray(settingsData) ? settingsData.filter((item: settingsDataTypes) => item.access_type === 'settings') : []} title='Who can manage System Settings'/>
-                  <SelectUserNames handleManagerChange={handleManagerChange} multiple={true} type='employee_accounts' settingsData={Array.isArray(settingsData) ? settingsData.filter((item: settingsDataTypes) => item.access_type === 'employee_accounts') : []} title='Who can manage Employee Accounts'/>
-                  <SelectUserNames handleManagerChange={handleManagerChange} multiple={true} type='records' settingsData={Array.isArray(settingsData) ? settingsData.filter((item: settingsDataTypes) => item.access_type === 'records') : []} title='Who can manage Records (Assignments, Designations, CTOs, Service Credits)'/>
-                  <SelectUserNames handleManagerChange={handleManagerChange} multiple={true} type='rsp' settingsData={Array.isArray(settingsData) ? settingsData.filter((item: settingsDataTypes) => item.access_type === 'rsp') : []} title='Who can manage R/S/P Settings'/>
-                  <SelectUserNames handleManagerChange={handleManagerChange} multiple={true} type='pms' settingsData={Array.isArray(settingsData) ? settingsData.filter((item: settingsDataTypes) => item.access_type === 'pms') : []} title='Who can manage PMS Settings'/>
-                  <SelectUserNames handleManagerChange={handleManagerChange} multiple={true} type='lad' settingsData={Array.isArray(settingsData) ? settingsData.filter((item: settingsDataTypes) => item.access_type === 'lad') : []} title='Who can manage L & D Settings'/>
-                  <SelectUserNames handleManagerChange={handleManagerChange} multiple={false} type='sds' settingsData={Array.isArray(settingsData) ? settingsData.filter((item: settingsDataTypes) => item.access_type === 'sds') : []} title='Current SDS'/>
-                  <SelectUserNames handleManagerChange={handleManagerChange} multiple={false} type='asds' settingsData={Array.isArray(settingsData) ? settingsData.filter((item: settingsDataTypes) => item.access_type === 'asds') : []} title='Current ASDS'/>
-                  <SelectUserNames handleManagerChange={handleManagerChange} multiple={false} type='cid' settingsData={Array.isArray(settingsData) ? settingsData.filter((item: settingsDataTypes) => item.access_type === 'cid') : []} title='Current CID Chief'/>
-                  <SelectUserNames handleManagerChange={handleManagerChange} multiple={false} type='sgod' settingsData={Array.isArray(settingsData) ? settingsData.filter((item: settingsDataTypes) => item.access_type === 'sgod') : []} title='Current SGOD Chief'/>
+                  <ChooseUsers multiple={true} type='settings' users={users} title='Who can manage System Settings'/>
+                  <ChooseUsers multiple={true} type='employee_accounts' users={users} title='Who can manage Employee Accounts'/>
+                  <ChooseUsers multiple={true} type='records' users={users} title='Who can manage Records (Assignments, Designations, CTOs, Service Credits)'/>
+                  <ChooseUsers multiple={true} type='rsp' users={users} title='Who can manage R/S/P Settings'/>
+                  <ChooseUsers multiple={true} type='pms' users={users} title='Who can manage PMS Settings'/>
+                  <ChooseUsers multiple={true} type='lad' users={users} title='Who can manage L & D Settings'/>
+                  <ChooseUsers multiple={false} type='sds' users={users} title='Current SDS'/>
+                  <ChooseUsers multiple={false} type='asds' users={users} title='Current ASDS'/>
+                  <ChooseUsers multiple={false} type='cid' users={users} title='Current CID Chief'/>
+                  <ChooseUsers multiple={false} type='sgod' users={users} title='Current SGOD Chief'/>
                   </>
-                )
               }
-              <button
-                onClick={handleSave}
-                className="flex items-center bg-emerald-500 hover:bg-emerald-600 border border-emerald-600 font-medium px-2 py-1 text-sm text-white rounded-sm">
-                {saving ? 'Saving...' : 'Save Settings'}
-              </button>
             </div>
 
         </div>

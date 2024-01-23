@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchDistricts, fetchOffices, fetchSchools, searchActiveEmployees } from '@/utils/fetchApi'
+import { fetchDistricts, fetchOffices, fetchSchools, logError } from '@/utils/fetchApi'
 import uuid from 'react-uuid'
 import { XMarkIcon } from '@heroicons/react/20/solid'
-import { CustomButton, OneColLayoutLoading } from '@/components'
+import { CustomButton, OneColLayoutLoading, UserBlock } from '@/components'
 import { capitalizeWords, generateReferenceCode } from '@/utils/text-helper'
 
 // Types
-import type { DesignationTypes, DistrictTypes, Office, SchoolTypes, namesType } from '@/types'
+import type { DesignationTypes, DistrictTypes, Employee, Office, SchoolTypes, namesType } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -24,7 +24,7 @@ interface ModalProps {
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const { setToast } = useFilter()
-  const { supabase } = useSupabase()
+  const { supabase, systemUsers }: { systemUsers: Employee[], supabase: any } = useSupabase()
   const [saving, setSaving] = useState(false)
 
   // Search employee
@@ -114,12 +114,14 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .insert(newData)
         .select()
 
-      if (error) throw new Error(error.message)
+      if (error) {
+        void logError('Create designation', 'hrm_designations', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
 
       newId = data[0].id // newly created ID use this on 'finally' block
-    } catch (e) {
-      console.error(e)
-    } finally {
+
       // Append new data in redux
       const updatedDropdownData = getUpdatedDropdownData(formdata)
       const updatedData = { ...newData, from: formdata.from, hrm_users: selectedItems[0], ...updatedDropdownData, id: newId }
@@ -138,6 +140,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // reset all form fields
       reset()
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -175,10 +179,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .update(newData)
         .eq('id', editData.id)
 
-      if (error) throw new Error(error.message)
-    } catch (e) {
-      console.error(e)
-    } finally {
+      if (error) {
+        void logError('Update designation', 'hrm_designations', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
       // Update data in redux
       const items = [...globallist]
       const updatedDropdownData = getUpdatedDropdownData(formdata)
@@ -197,6 +203,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // reset all form fields
       reset()
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -278,7 +286,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       return
     }
 
-    const results = await searchActiveEmployees(searchTerm, selectedItems)
+    // Search user
+    const searchWords = (e.target.value).split(' ')
+    const results = systemUsers.filter(user => {
+      const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
+      return searchWords.every(word => fullName.includes(word))
+    })
 
     setSearchResults(results)
   }
@@ -356,7 +369,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
             <h5 className="app__modal_header_text">
               Designation Details
             </h5>
-            <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+            <CustomButton
+                containerStyles='app__btn_gray'
+                title='Close'
+                btnType='button'
+                handleClick={hideModal}
+              />
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
@@ -412,7 +430,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                                               key={uuid()}
                                               onClick={() => handleSelected(item)}
                                               className='app__search_user_results'>
-                                                {item.firstname} {item.middlename} {item.lastname}
+                                                <UserBlock user={item}/>
                                             </div>
                                           ))
                                         }

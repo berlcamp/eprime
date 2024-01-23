@@ -2,7 +2,7 @@
 
 import { fetchMyCtos } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
-import { Sidebar, TopBar, TableRowLoading, Title, CustomButton, RecordsSideBar } from '@/components'
+import { Sidebar, TopBar, TableRowLoading, CustomButton, RecordsSideBar } from '@/components'
 import uuid from 'react-uuid'
 import UploadModal from '../UploadModal'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -10,6 +10,8 @@ import { format } from 'date-fns'
 
 // Types
 import type { CtoUserTypes } from '@/types'
+import Link from 'next/link'
+import { ArrowLeftIcon } from '@heroicons/react/20/solid'
 
 export default function Page ({ params }: { params: { ref: string } }) {
   const [loading, setLoading] = useState(false)
@@ -60,7 +62,10 @@ export default function Page ({ params }: { params: { ref: string } }) {
     <div className="app__main">
       <div>
           <div className='app__title'>
-            <Title title=''/>
+            <Link href="/myctos" className='flex items-center app__btn_gray'>
+              <ArrowLeftIcon className='w-5 h-5'/>
+              Return to My CTO&apos;s
+            </Link>
           </div>
 
           <div className='app__warning_text'><span className='app__warning_title'>Note:</span> You need to provide supporting documents as basis for CTO approval.</div>

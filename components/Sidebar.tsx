@@ -6,7 +6,7 @@ function Sidebar ({ children }: { children: React.ReactNode }) {
   const [viewSidebar, setViewSidebar] = useState(true)
 
   return (
-    <>
+    <div>
       <button
         onClick={ () => setViewSidebar(!viewSidebar) }
         type="button"
@@ -41,7 +41,7 @@ function Sidebar ({ children }: { children: React.ReactNode }) {
             }
         </div>
       </aside>
-    </>
+    </div>
   )
 }
 

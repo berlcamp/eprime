@@ -20,11 +20,13 @@ import AccountDetails from './AccountDetails'
 import RegisterModal from './RegisterModal'
 import SettingsSideBar from './Sidebars/SettingsSideBar'
 import RecordsSideBar from './Sidebars/RecordsSideBar'
+import TrackerSideBar from './Sidebars/TrackerSideBar'
 import RequestsSideBar from './Sidebars/RequestsSideBar'
 import EmployeesSideBar from './Sidebars/EmployeesSideBar'
 import OneColLayoutLoading from './Loading/OneColLayoutLoading'
 import ThreeColTableLoading from './Loading/ThreeColTableLoading'
 import TableRowLoading from './Loading/TableRowLoading'
+import StatusFlow from './Tracker/StatusFlow'
 
 export {
   LoginBox,
@@ -35,6 +37,7 @@ export {
   TopBar,
   UserBlock,
   SettingsSideBar,
+  TrackerSideBar,
   RecordsSideBar,
   RequestsSideBar,
   EmployeesSideBar,
@@ -53,5 +56,6 @@ export {
   MainMenu,
   LandingPage,
   OrganizationalStructure,
-  AccountDetails
+  AccountDetails,
+  StatusFlow
 }

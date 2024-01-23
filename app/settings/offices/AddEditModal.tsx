@@ -4,7 +4,7 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { XMarkIcon } from '@heroicons/react/24/solid'
 import uuid from 'react-uuid'
-import { searchActiveEmployees } from '@/utils/fetchApi'
+import { logError, searchActiveEmployees } from '@/utils/fetchApi'
 
 // Types
 import type { Office, namesType } from '@/types'
@@ -13,6 +13,7 @@ import type { Office, namesType } from '@/types'
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { CustomButton, UserBlock } from '@/components'
 
 interface ModalProps {
   hideModal: () => void
@@ -67,12 +68,14 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .insert(newData)
         .select()
 
-      if (error) throw new Error(error.message)
+      if (error) {
+        void logError('Create office', 'hrm_offices', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
 
-      newId = data[0].id // newly created ID use this on 'finally' block
-    } catch (e) {
-      console.error(e)
-    } finally {
+      newId = data[0].id
+
       // Append new data in redux
       const updatedData = { ...newData, id: newId, hrm_users: selectedItems[0] }
       dispatch(updateList([updatedData, ...globallist]))
@@ -90,6 +93,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // reset all form fields
       reset()
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -107,10 +112,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .update(newData)
         .eq('id', editData.id)
 
-      if (error) throw new Error(error.message)
-    } catch (e) {
-      console.error(e)
-    } finally {
+      if (error) {
+        void logError('Update office', 'hrm_offices', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
       // Update data in redux
       const items = [...globallist]
       const updatedData = { ...newData, hrm_users: selectedItems[0], id: editData.id }
@@ -128,6 +135,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // reset all form fields
       reset()
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -177,7 +186,13 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
             <h5 className="app__modal_header_text">
               Office Details
             </h5>
-            <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+            <CustomButton
+              containerStyles='app__btn_gray'
+              title='Close'
+              isDisabled={saving}
+              btnType='button'
+              handleClick={hideModal}
+            />
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
@@ -227,7 +242,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                                       key={uuid()}
                                       onClick={() => handleSelected(item)}
                                       className='app__search_user_results'>
-                                        {item.firstname} {item.middlename} {item.lastname}
+                                        <UserBlock user={item}/>
                                     </div>
                                   ))
                                 }

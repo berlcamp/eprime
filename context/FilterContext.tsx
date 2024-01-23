@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { OfflinePage } from '@/components'
+import type { UserAccessTypes } from '@/types'
 
 const FilterContext = React.createContext<any | ''>('')
 
@@ -11,7 +12,7 @@ export function useFilter () {
 }
 
 export function FilterProvider ({ children }: { children: React.ReactNode }) {
-  const { systemSettings, session } = useSupabase()
+  const { systemAccess, session } = useSupabase()
   const [isOnline, setIsOnline] = useState(true)
   const [filters, setFilters] = useState({})
   const [perPage, setPerPage] = useState(10)
@@ -27,17 +28,16 @@ export function FilterProvider ({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const hasAccess = (page: string) => {
-    const systemAccess = systemSettings.filter((item: { type: string }) => item.type === 'system_access')
-    const access = systemAccess[0].data.filter((item: { access_type: string }) => item.access_type === page)
+  const hasAccess = (type: string) => {
+    const find = systemAccess.find((item: UserAccessTypes) => {
+      return item.type === type && item.hrm_user.id.toString() === session.user.id
+    })
 
-    if (access.length === 0) return false
-
-    const accessList = access[0].data
-    if (!accessList.some((el: { id: string }) => el.id === session?.user.id)) {
+    if (find) {
+      return true
+    } else {
       return false
     }
-    return true
   }
 
   useEffect(() => {
@@ -64,6 +64,7 @@ export function FilterProvider ({ children }: { children: React.ReactNode }) {
     hasAccess,
     setToast,
     perPage,
+    session,
     setPerPage,
     isDarkMode,
     setIsDarkMode,

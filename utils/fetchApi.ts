@@ -1,11 +1,12 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 import { fullTextQuery } from '@/utils/text-helper'
 import { format } from 'date-fns'
 
 // types
-import type { AssignmentTypes, DesignationTypes, excludedItemsTypes, Employee, CtoTypes } from '@/types'
+import type { AssignmentTypes, DesignationTypes, excludedItemsTypes, Employee, CtoTypes, FlowListTypes, FollowersTypes } from '@/types'
 
-const supabase = createClientComponentClient()
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 export async function fetchDistricts (filterKeyword: string, perPageCount: number, rangeFrom: number) {
   try {
@@ -189,13 +190,12 @@ export async function fetchEmployees (filters: { filterKeyword?: string, filterS
     // filter setup status
     if (filters.filterSetupStatus && filters.filterSetupStatus !== '') {
       if (filters.filterSetupStatus === 'Completed') {
-        query = query.neq('assignment', '')
         query = query.not('position_id', 'is', null)
         query = query.neq('salary_grade', '')
         query = query.neq('salary_step', '')
       }
       if (filters.filterSetupStatus === 'Incomplete') {
-        query = query.or('position_id.is.null,salary_grade.eq.\'\',salary_step.eq.\'\'')
+        query = query.or('salary_grade.eq.\'\',salary_step.eq.\'\',position_id.is.null')
       }
     }
 
@@ -520,6 +520,35 @@ export async function fetchMyCtos (filters: { filterKeyword?: string, userId: st
   }
 }
 
+export async function fetchServiceRecords (userId: string, perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_service_records')
+      .select('*,hrm_user:created_by(id,firstname,middlename,lastname)', { count: 'exact' })
+      .eq('user_id', userId)
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    return { data: [], count: 0 }
+  }
+}
+
 export async function fetchServiceCredits (filters: { filterKeyword?: string }, perPageCount: number, rangeFrom: number) {
   try {
     let query = supabase
@@ -597,6 +626,7 @@ export async function fetchMyLeaveRequests (filters: { filterKeyword?: string, f
     let query = supabase
       .from('hrm_leave_requests')
       .select('*, requester:requester_id(*), recommending:recommending_id(id,firstname,middlename,lastname), hr:hr_id(id,firstname,middlename,lastname), approver:approver_id(id,firstname,middlename,lastname)', { count: 'exact' })
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Search match
     if (filters.filterKeyword && filters.filterKeyword !== '') {
@@ -622,6 +652,130 @@ export async function fetchMyLeaveRequests (filters: { filterKeyword?: string, f
     return { data, count }
   } catch (error) {
     console.error('fetch error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function logError (transaction: string, table: string, data: string, error: string) {
+  await supabase
+    .from('error_logs')
+    .insert({
+      system: 'hrm',
+      transaction,
+      table,
+      data,
+      error
+    })
+}
+
+export async function fetchErrorLogs (perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('error_logs')
+      .select('*', { count: 'exact' })
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export interface DocumentFilterTypes {
+  filterKeyword?: string
+  filterStatus?: string
+  filterType?: string
+  filterRequester?: string
+}
+
+export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: string | null, user: Employee, perPageCount: number, rangeFrom: number) {
+  try {
+    // Get Department ID within Tracker Flow
+    const { data: trackerFlow } = await supabase
+      .from('hrm_tracker_flow')
+      .select()
+
+    const trackerIds: string[] = []
+    trackerFlow?.forEach((item: FlowListTypes) => {
+      trackerIds.push(item.tracker_id)
+    })
+
+    let query = supabase
+      .from('hrm_request_trackers')
+      .select('*, hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,avatar_url),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)', { count: 'exact' })
+      .in('id', trackerIds)
+
+    // Full text search
+    if (typeof filters.filterKeyword !== 'undefined' && filters.filterKeyword.trim() !== '') {
+      // query = query.or(`agency.ilike.%${filters.filterKeyword}%,particulars.ilike.%${filters.filterKeyword}%,name.ilike.%${filters.filterKeyword}%,routing_slip_no.ilike.%${filters.filterKeyword}%,amount.ilike.%${filters.filterKeyword}%`)
+      query = query.eq('reference_code', filters.filterKeyword.trim())
+      // fulltext search from trackersearch posgres function
+      // query = query.textSearch('trackersearch', fullTextQuery(filters.filterKeyword))
+    }
+
+    // Filter type
+    if (typeof filters.filterType !== 'undefined' && filters.filterType !== '') {
+      query = query.eq('type', filters.filterType)
+    }
+
+    // Filter Requester
+    if (typeof filters.filterRequester !== 'undefined' && filters.filterRequester !== '') {
+      query = query.eq('created_by', filters.filterRequester)
+    }
+
+    if (filterUrl === 'following') {
+      const docIds: string[] = []
+      const { data }: { data: FollowersTypes[] | null } = await supabase
+        .from('hrm_tracker_followers')
+        .select()
+        .eq('user_id', user.id)
+
+      if (data) {
+        data.forEach(d => {
+          docIds.push(d.tracker_id)
+        })
+
+        query = query.in('id', docIds)
+      }
+    }
+
+    // Perform count before paginations
+    // const { count } = await query
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, count, error } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch error xx', error)
     return { data: [], count: 0 }
   }
 }

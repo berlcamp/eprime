@@ -62,7 +62,12 @@ export default function AttachmentsModal ({ id, hideModal }: ModalProps) {
             <h5 className="app__modal_header_text">
               Supporting Documents
             </h5>
-            <button onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+            <CustomButton
+                containerStyles='app__btn_gray'
+                title='Close'
+                btnType='button'
+                handleClick={hideModal}
+              />
           </div>
 
           <div className="app__modal_body">
@@ -95,14 +100,6 @@ export default function AttachmentsModal ({ id, hideModal }: ModalProps) {
                     }
                   </div>
                 </div>
-              </div>
-              <div className="app__modal_footer">
-                  <CustomButton
-                    btnType='button'
-                    handleClick={hideModal}
-                    title='Close'
-                    containerStyles="app__btn_gray"
-                  />
               </div>
             </div>
           </div>

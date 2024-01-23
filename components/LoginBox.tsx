@@ -42,7 +42,7 @@ export default function LoginBox () {
         setError('Credentials provided is incorrect.')
         setSigningIn(false)
       } else {
-        router.push('/')
+        router.refresh()
       }
     } else {
       setError('This is account is currently inactive.')
@@ -65,7 +65,6 @@ export default function LoginBox () {
                 onChange={event => setEmail(event.target.value)}
                 type="email"
                 className="form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
-                id="exampleFormControlInput1"
                 placeholder="Email"
                 />
             </div>
@@ -75,7 +74,6 @@ export default function LoginBox () {
                 onChange={event => setPassword(event.target.value)}
                 type="password"
                 className="form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
-                id="exampleFormControlInput1"
                 placeholder="Password"
                 />
             </div>

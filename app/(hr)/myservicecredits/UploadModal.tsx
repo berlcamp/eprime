@@ -2,16 +2,16 @@
 'use client'
 import React, { useState, useCallback, useEffect } from 'react'
 import { useFilter } from '@/context/FilterContext'
-import { useDropzone } from 'react-dropzone'
+import { type FileWithPath, useDropzone } from 'react-dropzone'
 import uuid from 'react-uuid'
-import { ArrowDownTrayIcon, XCircleIcon } from '@heroicons/react/24/solid'
+import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
 import ConfirmModal from '@/components/ConfirmModal'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CustomButton } from '@/components'
-import Image from 'next/image'
 
 // types
 import type { ServiceCreditUserTypes } from '@/types'
+import { XMarkIcon } from '@heroicons/react/20/solid'
 
 interface ModalProps {
   hideModal: () => void
@@ -22,21 +22,31 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
   const { setToast } = useFilter()
   const { supabase } = useSupabase()
 
-  const [selectedImages, setSelectedImages] = useState([])
+  const [selectedImages, setSelectedImages] = useState<any>([])
   const [selectedFile, setSelectedFile] = useState('')
   const [saving, setSaving] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [attachments, setAttachments] = useState([])
 
-  const onDrop = useCallback((acceptedFiles: any) => {
-    setSelectedImages(acceptedFiles.map((file: any) => (
+  const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
+    setSelectedImages(acceptedFiles.map(file => (
       Object.assign(file, {
-        preview: URL.createObjectURL(file)
+        filename: file.name
       })
     )))
   }, [])
 
-  const { getRootProps, getInputProps } = useDropzone({ onDrop })
+  const maxSize = 5242880 // 5 MB in bytes
+  const { getRootProps, getInputProps, fileRejections } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.png', '.jpg'],
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.docx'],
+      'application/vnd.ms-excel': ['.xlsx']
+    },
+    maxSize
+  })
 
   const handleUpload = async () => {
     if (!editData) return
@@ -70,17 +80,17 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
     )
   }
 
-  const deleteFile = (file: { path: string }) => {
-    const files = selectedImages.filter((f: { path: string }) => f.path !== file.path)
+  const deleteFile = (file: FileWithPath) => {
+    const files = selectedImages.filter((f: FileWithPath) => f.path !== file.path)
     setSelectedImages(files)
   }
 
-  const selectedFiles = selectedImages?.map((file: { path: string, preview: string }) => (
-    <div key={uuid()} className="inline-flex relative align-top mx-6">
-      <XCircleIcon
+  const selectedFiles = selectedImages?.map((file: any, index: number) => (
+    <div key={index} className="flex space-x-1 py-px items-center justify-start relative align-top">
+      <XMarkIcon
         onClick={() => deleteFile(file)}
-        className='cursor-pointer w-5 h-5 text-gray-500 absolute top-0 -right-5'/>
-      <Image src={file.preview} width={28} height={28} alt=""/>
+        className='cursor-pointer w-5 h-5 text-red-400'/>
+      <span className='text-xs'>{file.filename}</span>
     </div>
   ))
 
@@ -153,6 +163,13 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
   }
 
   useEffect(() => {
+    if (fileRejections.length > 0) {
+      setSelectedImages([])
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileRejections])
+
+  useEffect(() => {
     if (editData) void fetchAttachments()
   }, [])
 
@@ -165,7 +182,13 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
             <h5 className="app__modal_header_text">
               Supporting Documents
             </h5>
-            <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+            <CustomButton
+              btnType='button'
+              isDisabled={saving}
+              handleClick={hideModal}
+              title={saving ? 'Saving...' : 'Close'}
+              containerStyles="app__btn_gray"
+            />
           </div>
 
           <div className="app__modal_body">
@@ -217,9 +240,21 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
                             <input {...getInputProps()} />
                             <p className='text-sm text-gray-500'>Drag and drop some files here, or click to select files</p>
                           </div>
-                          <div className='py-4'>
-                            {selectedFiles}
-                          </div>
+                          {
+                            (fileRejections.length === 0 && selectedImages.length > 0) &&
+                              <div className='py-4'>
+                                <div className='text-xs font-medium mb-2'>Files to upload:</div>
+                                {selectedFiles}
+                              </div>
+                          }
+                          {
+                            fileRejections.length > 0 &&
+                              <div className='py-4'>
+                                  <p className='text-red-500 text-xs'>
+                                    File rejected. Please make sure its an image, PDF, DOC, or Excel file and less than 5MB.
+                                  </p>
+                              </div>
+                          }
                         </div>
                       </div>
                     </div>
@@ -235,7 +270,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
                           btnType='button'
                           isDisabled={saving}
                           handleClick={hideModal}
-                          title='Close'
+                          title={saving ? 'Saving...' : 'Cancel'}
                           containerStyles="app__btn_gray"
                         />
                     </div>

@@ -9,7 +9,8 @@ import { Toaster } from 'react-hot-toast'
 import { LandingPage } from '@/components'
 
 import type { Metadata } from 'next'
-import type { Employee, settingsDataTypes } from '@/types'
+import type { Employee, UserAccessTypes } from '@/types'
+import { logError } from '@/utils/fetchApi'
 
 export const metadata: Metadata = {
   title: 'PRIME-HRM',
@@ -27,33 +28,44 @@ export default async function RootLayout ({ children }: { children: React.ReactN
   } = await supabase.auth.getSession()
 
   let sysUsers: Employee[] | null = []
-  let sysSettings: settingsDataTypes[] | null = []
+  let sysAccess: UserAccessTypes[] | null = []
 
   if (session) {
-    const { data: systemSettings, error } = await supabase
-      .from('system_settings')
-      .select()
-      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+    try {
+      const { data: systemAccess, error } = await supabase
+        .from('hrm_system_access')
+        .select('*, hrm_user:user_id(id,firstname,lastname,middlename)')
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
-    if (error) console.error(error)
+      if (error) {
+        void logError('root layout system access', 'hrm_system_access', '', error.message)
+        throw new Error(error.message)
+      }
 
-    sysSettings = systemSettings
+      sysAccess = systemAccess
 
-    const { data: systemUsers, error: systemUsersError } = await supabase
-      .from('hrm_users')
-      .select()
-      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+      const { data: systemUsers, error: systemUsersError } = await supabase
+        .from('hrm_users')
+        .select()
+        .eq('status', 'Active')
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
-    if (systemUsersError) console.error(systemUsersError)
+      if (systemUsersError) {
+        void logError('root layout hrm users', 'hrm_users', '', systemUsersError.message)
+        throw new Error(systemUsersError.message)
+      }
 
-    sysUsers = systemUsers
+      sysUsers = systemUsers
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   return (
     <html lang="en">
       <body className={`relative ${session ? 'bg-white' : 'bg-gray-100'}`}>
 
-        <SupabaseProvider systemSettings={sysSettings} session={session} systemUsers={sysUsers}>
+        <SupabaseProvider systemAccess={sysAccess} session={session} systemUsers={sysUsers}>
             <SupabaseListener serverAccessToken={session?.access_token} />
               {!session && <LandingPage/> }
               {

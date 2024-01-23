@@ -14,7 +14,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { XCircleIcon } from '@heroicons/react/24/solid'
-import { leaveTypes } from '@/constants/TrackerConstants'
+import { leaveTypes } from '@/constants'
 
 interface ModalProps {
   hideModal: () => void
@@ -133,7 +133,13 @@ const AddEditModal = ({ hideModal }: ModalProps) => {
             <h5 className="app__modal_header_text">
               Leave Details
             </h5>
-            <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+            <CustomButton
+                containerStyles='app__btn_gray'
+                title='Close'
+                isDisabled={saving}
+                btnType='button'
+                handleClick={hideModal}
+              />
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">

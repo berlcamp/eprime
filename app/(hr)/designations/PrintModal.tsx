@@ -67,7 +67,12 @@ const PrintModal = ({ item, hideModal }: ModalProps) => {
             <h5 className="app__modal_header_text">
               Letter
             </h5>
-            <button onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+            <CustomButton
+                containerStyles='app__btn_gray'
+                title='Close'
+                btnType='button'
+                handleClick={hideModal}
+              />
           </div>
 
           <div className="app__modal_body">
