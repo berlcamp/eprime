@@ -15,7 +15,7 @@ const DownloadExcelButton = ({ documents }: { documents: DocumentTypes[] | [] })
     // Add data to the worksheet
     worksheet.columns = [
       { header: '#', key: 'no', width: 20 },
-      { header: 'Routing No', key: 'routing_no', width: 20 },
+      { header: 'Reference Code', key: 'reference_code', width: 20 },
       { header: 'Type', key: 'type', width: 20 },
       { header: 'Particulars', key: 'particulars', width: 20 }
       // Add more columns based on your data structure
@@ -28,7 +28,7 @@ const DownloadExcelButton = ({ documents }: { documents: DocumentTypes[] | [] })
     results?.forEach((item: DocumentTypes, index) => {
       data.push({
         no: index + 1,
-        routing_no: item.routing_slip_no,
+        reference_code: item.reference_code,
         type: item.type,
         particulars: item.particulars
       })

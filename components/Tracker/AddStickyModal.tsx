@@ -75,8 +75,8 @@ export default function AddStickyModal ({ item, hideAddStickButton, hideModal }:
             <div className="modal-body relative p-4">
               <div className='grid grid-cols-1 gap-4 mb-4'>
                 <div className='w-full'>
-                  <span>Routing No: </span>
-                  <span className='font-bold text-emerald-700'>{item.routing_slip_no}</span>
+                  <span>Reference Code: </span>
+                  <span className='font-bold text-emerald-700'>{item.reference_code}</span>
                 </div>
               </div>
               <div className='grid grid-cols-1 gap-4 mb-4'>
