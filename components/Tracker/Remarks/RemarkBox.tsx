@@ -71,7 +71,7 @@ export default function RemarkBox ({ document }: ModalProps) {
       })
 
       const newData = {
-        document_tracker_id: document.id,
+        tracker_id: document.id,
         sender_id: session.user.id,
         message: remarks,
         is_private: replyType === 'Private Note',

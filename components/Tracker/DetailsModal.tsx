@@ -447,60 +447,9 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       <div ref={wrapperRef} className="app__modal_wrapper">
         <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
-            <div className="app__modal_header_tracker">
-              {
-                ((documentData.current_status === 'Request Created' && documentData.created_by === session.user.id) || (documentData.current_status === 'Forwarded' && documentData.receiver_id === session.user.id)) &&
-                  <div className="flex flex-1 space-x-2 items-center justify-center">
-                    <span className='font-bold text-sm'>Forward&nbsp;To</span>
-                    <div className='app__selected_users_container'>
-                      {
-                        selectedItems.length > 0 &&
-                          selectedItems.map((item, index) => (
-                            <div key={index} className='flex'>
-                              <span className='app__selected_user'>
-                                {item.firstname} {item.middlename} {item.lastname}
-                                <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
-                              </span>
-                            </div>
-                          ))
-                      }
-                      {
-                        selectedItems.length === 0 &&
-                          <div className='relative'>
-                            <input
-                              type="text"
-                              placeholder='Search employee..'
-                              value={searchHead}
-                              onChange={async (e) => await handleSearchUser(e)}
-                              className='app__input_noborder'/>
-
-                              {
-                                searchResults.length > 0 &&
-                                  <div className='app__search_user_results_container'>
-                                    {
-                                      searchResults.map((user: namesType, index) => (
-                                        <div
-                                          key={index}
-                                          onClick={() => handleSelected(user)}
-                                          className='app__search_user_results'>
-                                            <UserBlock user={user}/>
-                                        </div>
-                                      ))
-                                    }
-                                  </div>
-                              }
-                          </div>
-                      }
-                    </div>
-                    <CustomButton
-                      containerStyles='app__btn_green'
-                      title={saving ? 'Saving...' : 'Submit'}
-                      btnType='button'
-                      handleClick={handleForward}
-                    />
-                  </div>
-              }
-              <div className='mb-6 sm:mb-0 flex space-x-4 items-center'>
+            <div className="app__modal_header">
+              <h5 className="app__modal_header_text flex-1">Request Details</h5>
+              <div className='flex space-x-4 items-center justify-end'>
                 {
                   !hideStickyButton &&
                     <>
@@ -527,7 +476,73 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                 />
               </div>
             </div>
+            <div className="flex space-x-2 items-center justify-between border-b p-4 bg-orange-50">
+              {/* Approval and Forwarding */}
+              <div className='w-full'>
+                {
+                  ((documentData.current_status === 'Request Created' && documentData.created_by === session.user.id) || (documentData.current_status === 'Forwarded' && documentData.receiver_id === session.user.id)) &&
+                    <div className="flex flex-col space-y-1 items-start justify-center">
+                      <div className='font-medium text-sm'>Approve and Forward to next approving authority:</div>
+                      <div className="flex space-x-2 items-center justify-center">
+                        <div className='app__selected_users_container'>
+                          {
+                            selectedItems.length > 0 &&
+                              selectedItems.map((item, index) => (
+                                <div key={index} className='flex md:w-96'>
+                                  <span className='app__selected_user'>
+                                    {item.firstname} {item.middlename} {item.lastname}
+                                    <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
+                                  </span>
+                                </div>
+                              ))
+                          }
+                          {
+                            selectedItems.length === 0 &&
+                              <div className='relative md:w-96'>
+                                <input
+                                  type="text"
+                                  placeholder='Forward to..'
+                                  value={searchHead}
+                                  onChange={async (e) => await handleSearchUser(e)}
+                                  className='app__input_noborder'/>
 
+                                  {
+                                    searchResults.length > 0 &&
+                                      <div className='app__search_user_results_container'>
+                                        {
+                                          searchResults.map((user: namesType, index) => (
+                                            <div
+                                              key={index}
+                                              onClick={() => handleSelected(user)}
+                                              className='app__search_user_results'>
+                                                <UserBlock user={user}/>
+                                            </div>
+                                          ))
+                                        }
+                                      </div>
+                                  }
+                              </div>
+                          }
+                        </div>
+                        <CustomButton
+                          containerStyles='app__btn_green'
+                          title={saving ? 'Saving...' : 'Approve and Forward'}
+                          btnType='button'
+                          handleClick={handleForward}
+                        />
+                        <span className='italic font-light'>or</span>
+                        <CustomButton
+                          containerStyles='app__btn_red'
+                          title={saving ? 'Saving...' : 'Disapprove'}
+                          btnType='button'
+                          handleClick={handleForward}
+                        />
+                      </div>
+                      <div className='text-xs text-gray-600'>By clicking 'Approve,' you are authorizing and granting permission to the requester to proceed with the leave as specified in the request.</div>
+                    </div>
+                }
+              </div>
+            </div>
             <div className="modal-body relative overflow-x-scroll">
               {/* Document Details */}
               <div className='py-2'>

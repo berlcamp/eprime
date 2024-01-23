@@ -24,7 +24,7 @@ export default function Remarks ({ document }: ModalProps) {
     // Fetch Document Replies
     const { data: remarksData } = await supabase
       .from('hrm_remarks')
-      .select('*,hrm_users:sender_id(firstname,middlename,lastname),hrm_remarks_comments(*, hrm_users:sender_id(firstname,middlename,lastname,avatar_url))')
+      .select('*,hrm_users:sender_id(firstname,middlename,lastname,avatar_url),hrm_remarks_comments(*, hrm_users:sender_id(firstname,middlename,lastname,avatar_url))')
       .eq('tracker_id', document.id)
       .order('id', { ascending: false })
 

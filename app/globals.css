@@ -134,9 +134,6 @@
 .app__modal_header {
   @apply flex space-x-2 items-center justify-between p-4 border-b border-gray-200 rounded-t-md bg-gray-200
 }
-.app__modal_header_tracker {
-  @apply flex space-x-4 flex-col-reverse sm:flex-row sm:space-y-0 items-end sm:items-center justify-between p-4 border-b border-gray-200 rounded-t-md bg-gray-200
-}
 .app__modal_header_text {
   @apply text-sm font-bold leading-normal text-gray-600 dark:text-gray-300
 }
