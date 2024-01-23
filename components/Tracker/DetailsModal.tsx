@@ -538,7 +538,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                           handleClick={handleForward}
                         />
                       </div>
-                      <div className='text-xs text-gray-600'>By clicking 'Approve,' you are authorizing and granting permission to the requester to proceed with the leave as specified in the request.</div>
+                      <div className='text-xs text-gray-600'>By clicking &apos;Approve&apos;, you are authorizing and granting permission to the requester to proceed with the leave as specified in the request.</div>
                     </div>
                 }
               </div>

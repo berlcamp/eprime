@@ -18,11 +18,6 @@ interface ModalProps {
   editData: PositionTypes | null
 }
 
-interface FormValues {
-  name: string
-  salary_grade: string
-}
-
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const { setToast } = useFilter()
   const { supabase } = useSupabase()
@@ -33,11 +28,11 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { register, formState: { errors }, reset, handleSubmit } = useForm<FormValues>({
+  const { register, formState: { errors }, reset, handleSubmit } = useForm<PositionTypes>({
     mode: 'onSubmit'
   })
 
-  const onSubmit = async (formdata: FormValues) => {
+  const onSubmit = async (formdata: PositionTypes) => {
     if (saving) return
 
     setSaving(true)
@@ -49,9 +44,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleCreate = async (formdata: FormValues) => {
+  const handleCreate = async (formdata: PositionTypes) => {
     const newData = {
       name: formdata.name,
+      type: formdata.type,
       salary_grade: formdata.salary_grade,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
@@ -94,11 +90,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleUpdate = async (formdata: FormValues) => {
+  const handleUpdate = async (formdata: PositionTypes) => {
     if (!editData) return
 
     const newData = {
       name: formdata.name,
+      type: formdata.type,
       salary_grade: formdata.salary_grade
     }
 
@@ -140,6 +137,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   useEffect(() => {
     reset({
       name: editData ? editData.name : '',
+      type: editData ? editData.type : '',
       salary_grade: editData ? editData.salary_grade : ''
     })
   }, [editData, reset])
@@ -177,6 +175,21 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                     type="text"
                     className='app__input_standard'/>
                   {errors.name && <div className='app__error_message'>Position Name is required</div>}
+                </div>
+              </div>
+            </div>
+            <div className='app__form_field_container'>
+              <div className='w-full'>
+                <div className='app__label_standard'>Type:</div>
+                <div>
+                  <select
+                    {...register('type', { required: true })}
+                    className='app__input_standard'>
+                      <option value=''>Choose Type</option>
+                      <option value='Teaching'>Teaching</option>
+                      <option value='Non-teaching'>Non-teaching</option>
+                  </select>
+                  {errors.type && <div className='app__error_message'>Type is required</div>}
                 </div>
               </div>
             </div>

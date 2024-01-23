@@ -69,6 +69,7 @@ export interface SchoolTypes {
 export interface PositionTypes {
   id: string
   name: string
+  type: string
   salary_grade: string
   org_id: string
 }

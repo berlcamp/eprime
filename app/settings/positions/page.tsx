@@ -141,6 +141,9 @@ const Page: React.FC = () => {
                           Position
                       </th>
                       <th className="hidden md:table-cell app__th">
+                          Type
+                      </th>
+                      <th className="hidden md:table-cell app__th">
                           Salary Grade
                       </th>
                   </tr>
@@ -202,10 +205,17 @@ const Page: React.FC = () => {
                           <div className="md:hidden app__td">
                             <span className='font-light'>Salary Grade: {item.salary_grade}</span>
                           </div>
+                          <div className="md:hidden app__td">
+                            <span className='font-light'>Type: {item.type}</span>
+                          </div>
                         </div>
                         {/* End - Mobile View */}
 
                       </th>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        <span className='font-light'>{item.type}</span>
+                      </td>
                       <td
                         className="hidden md:table-cell app__td">
                         <span className='font-light'>{item.salary_grade}</span>
