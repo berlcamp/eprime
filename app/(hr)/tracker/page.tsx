@@ -1,10 +1,9 @@
 'use client'
 
 import { fetchDocuments } from '@/utils/fetchApi'
-import React, { Fragment, useEffect, useState } from 'react'
-import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, TrashIcon, StarIcon } from '@heroicons/react/20/solid'
-import { Sidebar, PerPage, TopBar, DeleteModal, TableRowLoading, CustomButton, ShowMore, TrackerSideBar, Title, UserBlock } from '@/components'
+import React, { useEffect, useState } from 'react'
+import { StarIcon } from '@heroicons/react/20/solid'
+import { Sidebar, PerPage, TopBar, TableRowLoading, CustomButton, ShowMore, TrackerSideBar, Title, UserBlock } from '@/components'
 import AddDocumentModal from './AddDocumentModal'
 import DetailsModal from '@/components/Tracker/DetailsModal'
 import Filters from './Filters'
@@ -23,10 +22,8 @@ import { useSearchParams } from 'next/navigation'
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showStickiesModal, setShowStickiesModal] = useState(false)
-  const [selectedId, setSelectedId] = useState('')
   const [selectedItem, setSelectedItem] = useState<DocumentTypes | null>(null)
   const [filterKeyword, setFilterKeyword] = useState('')
   const [filterType, setFilterType] = useState('')
@@ -89,11 +86,6 @@ const Page: React.FC = () => {
 
   const handleAdd = () => {
     setShowAddModal(true)
-  }
-
-  const handleDelete = (id: string) => {
-    setSelectedId(id)
-    setShowDeleteModal(true)
   }
 
   const handleShowDetailsModal = (item: DocumentTypes) => {
@@ -188,40 +180,6 @@ const Page: React.FC = () => {
                   !isDataEmpty && list.map((item: DocumentTypes, index: number) => (
                     <tr key={index} className='app__tr'>
                       <td className='w-6 pl-4 app__td'>
-                        <Menu as="div" className="app__menu_container font-normal text-gray-600">
-                          <div>
-                            <Menu.Button className="app__dropdown_btn">
-                              <ChevronDownIcon className="h-5 w-5" aria-hidden="true" />
-                            </Menu.Button>
-                          </div>
-
-                          <Transition
-                            as={Fragment}
-                            enter="transition ease-out duration-100"
-                            enterFrom="transform opacity-0 scale-95"
-                            enterTo="transform opacity-100 scale-100"
-                            leave="transition ease-in duration-75"
-                            leaveFrom="transform opacity-100 scale-100"
-                            leaveTo="transform opacity-0 scale-95"
-                          >
-                            <Menu.Items className="absolute left-0 z-50 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                              <div className="py-1">
-                                {
-                                  (session.user.id.toString() === item.created_by.toString() && item.current_status === 'Request Created') &&
-                                    <Menu.Item>
-                                      <div
-                                          onClick={ () => handleDelete(item.id) }
-                                          className='flex items-center space-x-2 cursor-pointer hover:bg-gray-100 text-gray-700 hover:text-gray-900 px-4 py-2 text-xs'
-                                        >
-                                          <TrashIcon className='w-4 h-4'/>
-                                          <span>Cancel This Request</span>
-                                      </div>
-                                    </Menu.Item>
-                                }
-                              </div>
-                            </Menu.Items>
-                          </Transition>
-                        </Menu>
                       </td>
                       <td className='pl-4 app__td'>
                         <div>
@@ -288,16 +246,6 @@ const Page: React.FC = () => {
               <DetailsModal
                 documentData={selectedItem}
                 hideModal={() => setShowDetailsModal(false)}/>
-            )
-          }
-
-          {/* Confirm Delete Modal */}
-          {
-            showDeleteModal && (
-              <DeleteModal
-                table='hrm_request_trackers'
-                id={selectedId}
-                hideModal={() => setShowDeleteModal(false)}/>
             )
           }
           {/* Stickies Modal */}
