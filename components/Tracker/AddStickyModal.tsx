@@ -4,6 +4,7 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CheckCircleIcon } from '@heroicons/react/20/solid'
 import type { DocumentTypes } from '@/types'
+import UserBlock from '../UserBlock'
 
 interface ModalProps {
   hideModal: () => void
@@ -87,8 +88,8 @@ export default function AddStickyModal ({ item, hideAddStickButton, hideModal }:
               </div>
               <div className='grid grid-cols-1 gap-4 mb-4'>
                 <div className='w-full'>
-                  <span>Particulars: </span>
-                  <span className='font-medium text-xs'>{item.particulars}</span>
+                  <span>Requester: </span>
+                  <span className='font-medium text-xs'><UserBlock user={item.creator}/></span>
                 </div>
               </div>
               <div className='grid grid-cols-1 gap-4 mb-4'>

@@ -135,7 +135,7 @@ const LeaveForm = () => {
       void handleNotifyReceiver(data[0].id, user.id, refCode)
 
       // Append new data in redux
-      const updatedData = { id: data[0].id, creator: currentUser, receiver: user, created_at: data[0].created_at, document_tracker_stickies: [], ...newData }
+      const updatedData = { id: data[0].id, creator: currentUser, approver: currentUser, receiver: user, created_at: data[0].created_at, document_tracker_stickies: [], ...newData }
       dispatch(updateList([updatedData, ...globallist]))
 
       // Updating showing text in redux

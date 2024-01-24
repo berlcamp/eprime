@@ -616,9 +616,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                     </div>
                 }
                 {
-                  ((documentData.current_status === 'Request Created' && documentData.created_by === session.user.id) ||
-                    (['Forwarded', 'Approval Recommended'].includes(documentData.current_status) && documentData.receiver_id === session.user.id)
-                  ) &&
+                  documentData.receiver_id === session.user.id &&
                     <div className="">
                       <div className='font-medium text-sm text-gray-700'>Forward this request to:</div>
                       <div className="flex w-full space-x-2">
@@ -655,7 +653,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                         <tr>
                           <td className='px-2 py-2 font-light text-right'>Current Status:</td>
                           <td>
-                            {documentData.current_status === 'Request Created' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium text-sm'>{documentData.current_status}</span>}
+                            {documentData.current_status === 'Request Created' && <span className='text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium text-sm'>{documentData.current_status}</span>}
                             {documentData.current_status === 'Approval Recommended' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium text-sm'>{documentData.current_status}</span>}
                             {documentData.current_status === 'Approved' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium text-sm'>{documentData.current_status}</span>}
                             {documentData.current_status === 'Disapproved' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium text-sm'>{documentData.current_status}</span>}

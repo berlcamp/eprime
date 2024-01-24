@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { XMarkIcon } from '@heroicons/react/24/solid'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
-import { ConfirmModal, CustomButton } from '@/components'
+import { ConfirmModal, CustomButton, UserBlock } from '@/components'
 import type { StickiesTypes } from '@/types'
 import { useFilter } from '@/context/FilterContext'
 
@@ -74,7 +74,7 @@ export default function StickiesModal ({ hideModal }: ModalProps) {
   const fetchData = async () => {
     const { data } = await supabase
       .from('hrm_request_tracker_stickies')
-      .select('*, tracker:tracker_id(*)')
+      .select('*, tracker:tracker_id(id, reference_code, type, creator:created_by(firstname,middlename,lastname,avatar_url))')
       .eq('user_id', session.user.id)
       .order('id', { ascending: true })
 
@@ -151,8 +151,8 @@ export default function StickiesModal ({ hideModal }: ModalProps) {
                       </div>
                       <div className='grid grid-cols-1 gap-2 mb-4'>
                         <div className='w-full'>
-                          <span>Particulars: </span>
-                          <span className='font-bold'>{item.tracker.particulars}</span>
+                          <span>Requester: </span>
+                          <span className='font-bold'><UserBlock user={item.tracker.creator}/></span>
                         </div>
                       </div>
                       <div className='grid grid-cols-1 gap-1 mb-4'>
