@@ -704,7 +704,7 @@ export interface DocumentFilterTypes {
   filterRequester?: string
 }
 
-export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: string | null, user: Employee, perPageCount: number, rangeFrom: number) {
+export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: string | null, user: Employee | null, perPageCount: number, rangeFrom: number) {
   try {
     // Get Department ID within Tracker Flow
     const { data: trackerFlow } = await supabase
@@ -739,12 +739,12 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
       query = query.eq('created_by', filters.filterRequester)
     }
 
-    if (filterUrl === 'following') {
+    if (filterUrl && filterUrl === 'following') {
       const docIds: string[] = []
       const { data }: { data: FollowersTypes[] | null } = await supabase
         .from('hrm_tracker_followers')
         .select()
-        .eq('user_id', user.id)
+        .eq('user_id', user?.id)
 
       if (data) {
         data.forEach(d => {
@@ -753,6 +753,11 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
 
         query = query.in('id', docIds)
       }
+    }
+
+    if (filterUrl && filterUrl === 'forwarded') {
+      query = query.eq('receiver_id', user?.id)
+      query = query.eq('current_status', 'Forwarded')
     }
 
     // Perform count before paginations

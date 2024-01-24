@@ -4,18 +4,17 @@ import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
 import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { XMarkIcon } from '@heroicons/react/24/solid'
 import uuid from 'react-uuid'
 import { fetchDistricts, logError } from '@/utils/fetchApi'
 
 // Types
-import type { DistrictTypes, Employee, SchoolTypes, namesType } from '@/types'
+import type { DistrictTypes, SchoolTypes, namesType } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { UserBlock } from '@/components'
+import { SearchUserInput } from '@/components'
 
 const classList = [
   'IP School',
@@ -39,12 +38,13 @@ interface SchoolForm {
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const { setToast } = useFilter()
-  const { supabase, systemUsers }: { systemUsers: Employee[], supabase: any } = useSupabase()
+  const { supabase } = useSupabase()
   const [saving, setSaving] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | ''>('')
-  const [searchHead, setSearchHead] = useState('')
-  const [searchResults, setSearchResults] = useState<any[] | []>([])
-  const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
+
+  // search user
+  const [user, setUser] = useState<namesType | null>(editData ? (editData.hrm_users ? editData.hrm_users : null) : null)
+
   const [districtId, setDistrictId] = useState(editData ? (editData.district_id ? editData.district_id : '') : '')
   const [districts, setDistricts] = useState<DistrictTypes[] | null>(null)
   const [selectedClass, setSelectedClass] = useState<never[] | []>(editData ? (editData.school_class ? editData.school_class : []) : [])
@@ -59,7 +59,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   })
 
   const onSubmit = async (formdata: SchoolForm) => {
-    if (selectedItems.length === 0) {
+    if (!user) {
       setErrorMessage('School Head is Required')
       return
     }
@@ -76,7 +76,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleCreate = async (formdata: SchoolForm) => {
-    //
+    if (!user) return
+
     const selectedDistrict = districts?.filter(d => d.id.toString() === formdata.district_id)
 
     const newData = {
@@ -85,7 +86,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       school_class: selectedClass,
       size: formdata.size,
       school_id: formdata.school_id,
-      head_user_id: selectedItems[0].id,
+      head_user_id: user.id,
       district_id: formdata.district_id,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
@@ -107,7 +108,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       newId = data[0].id // newly created ID use this on 'finally' block
 
       // Append new data in redux
-      const updatedData = { ...newData, id: newId, hrm_users: selectedItems[0], hrm_districts: { name: selectedDistrict ? selectedDistrict[0].name : '' } }
+      const updatedData = { ...newData, id: newId, hrm_users: user, hrm_districts: { name: selectedDistrict ? selectedDistrict[0].name : '' } }
 
       dispatch(updateList([updatedData, ...globallist]))
 
@@ -132,6 +133,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const handleUpdate = async (formdata: SchoolForm) => {
     if (!editData) return
 
+    if (!user) return
+
     const selectedDistrict = districts?.filter(d => d.id.toString() === formdata.district_id.toString())
 
     const newData = {
@@ -140,7 +143,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       school_class: selectedClass,
       size: formdata.size,
       school_id: formdata.school_id,
-      head_user_id: selectedItems[0].id,
+      head_user_id: user.id,
       district_id: formdata.district_id,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
@@ -159,7 +162,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // Update data in redux
       const items = [...globallist]
-      const updatedData = { ...newData, hrm_users: selectedItems[0], id: editData.id, hrm_districts: { name: selectedDistrict ? selectedDistrict[0].name : '' } }
+      const updatedData = { ...newData, hrm_users: user, id: editData.id, hrm_districts: { name: selectedDistrict ? selectedDistrict[0].name : '' } }
       const foundIndex = items.findIndex(x => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
@@ -179,41 +182,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleSearchUser = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = e.target.value
-    setSearchHead(searchTerm)
-    setErrorMessage('')
-
-    if (searchTerm.trim().length < 3) {
-      setSearchResults([])
-      return
-    }
-
-    // Search user
-    const searchWords = (e.target.value).split(' ')
-    const results = systemUsers.filter(user => {
-      // exclude already selected users
-      if (selectedItems.some(obj => obj.id.toString() === user.id.toString())) return false
-
-      const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
-      return searchWords.every(word => fullName.includes(word))
-    })
-
-    setSearchResults(results)
-  }
-
-  const handleSelected = (item: namesType, multiple = false) => {
-    if (multiple) {
-      setSelectedItems([...selectedItems, item])
+  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+    if (selectedUsers.length > 0) {
+      setUser(selectedUsers[0])
     } else {
-      setSelectedItems([item])
+      setUser(null)
     }
-
-    setSearchResults([])
-    setSearchHead('')
-  }
-  const handleRemoveSelected = (id: string) => {
-    setSelectedItems(prevSelectedItems => prevSelectedItems.filter(item => item.id !== id))
   }
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
@@ -228,9 +202,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     // Reset dynamic dropdowns
     setDistrictId(editData ? (editData.district_id ? editData.district_id : '') : '')
-
-    // set default values to school head
-    setSelectedItems(editData ? (editData.hrm_users ? [editData.hrm_users] : []) : [])
   }, [editData, reset])
 
   useEffect(() => {
@@ -383,46 +354,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
               <div className='app__form_field_container'>
                 <div className='w-full'>
                   <div className='app__label_standard'>School Head:</div>
-                  <div className='app__selected_users_container'>
-                    {
-                      selectedItems.length > 0 &&
-                        selectedItems.map(item => (
-                          <div key={uuid()} className='w-full flex mb-1'>
-                            <span className='app__selected_user'>
-                              {item.firstname} {item.middlename} {item.lastname}
-                              <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
-                            </span>
-                          </div>
-                        ))
-                    }
-                    {
-                      selectedItems.length === 0 &&
-                        <div className='relative'>
-                          <input
-                            type="text"
-                            placeholder='Search employee..'
-                            value={searchHead}
-                            onChange={async (e) => await handleSearchUser(e)}
-                            className='app__input_noborder'/>
-
-                            {
-                              searchResults.length > 0 &&
-                                <div className='app__search_user_results_container'>
-                                  {
-                                    searchResults.map((item: namesType, index) => (
-                                      <div
-                                        key={index}
-                                        onClick={() => handleSelected(item)}
-                                        className='app__search_user_results'>
-                                          <UserBlock user={item}/>
-                                      </div>
-                                    ))
-                                  }
-                                </div>
-                            }
-                        </div>
-                    }
-                  </div>
+                  <SearchUserInput
+                    isMultiple={false}
+                    selectedUsers={editData ? (editData.hrm_users ? [editData.hrm_users] : []) : []}
+                    handleSelectedUsers={handleSelectedUsers}/>
                   {errorMessage && <div className='app__error_message'>{errorMessage}</div>}
                 </div>
               </div>

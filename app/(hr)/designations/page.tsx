@@ -284,7 +284,10 @@ const Page: React.FC = () => {
                                 )
                               }
                             </div>
-                            <div><span className='app_td_mobile_label'>Duration: </span>{format(new Date(item.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.to), 'MMM d, yyyy')}</div>
+                            <div><span className='app_td_mobile_label'>From: </span> {format(new Date(item.from), 'MMM d, yyyy')}</div>
+                            {
+                              item.to && <div><span className='app_td_mobile_label'>To: </span> {format(new Date(item.to), 'MMM d, yyyy')}</div>
+                            }
                             <div><span className='app_td_mobile_label'>Status: </span>
                               {
                                 item.status === 'Revoked'
@@ -326,7 +329,10 @@ const Page: React.FC = () => {
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div>{format(new Date(item.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.to), 'MMM d, yyyy')}</div>
+                        <div>From: {format(new Date(item.from), 'MMM d, yyyy')}</div>
+                        {
+                          item.to && <div>To: {format(new Date(item.to), 'MMM d, yyyy')}</div>
+                        }
                       </td>
                       <td
                         className="hidden md:table-cell app__td">

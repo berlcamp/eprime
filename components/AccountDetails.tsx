@@ -5,7 +5,7 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import OneColLayoutLoading from './Loading/OneColLayoutLoading'
 import { superAdmins } from '@/constants'
-import { fetchDistricts, fetchOffices, fetchPositions, fetchSchools } from '@/utils/fetchApi'
+import { fetchDistricts, fetchOffices, fetchPositions, fetchSchools, logError } from '@/utils/fetchApi'
 import uuid from 'react-uuid'
 import Avatar from 'react-avatar'
 import Image from 'next/image'
@@ -104,10 +104,12 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         .update(newData)
         .eq('id', id)
 
-      if (error) throw new Error(error.message)
-    } catch (e) {
-      console.error(e)
-    } finally {
+      if (error) {
+        void logError('Update account details', 'hrm_assignments', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
       // Update data in redux
       if (shouldUpdateRedux) {
         console.log('redux updated')
@@ -126,6 +128,8 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
 
       // hide the modal
       hideModal()
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -353,10 +357,9 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                         <div className='app__label_standard'>Middle Name:</div>
                         <div>
                           <input
-                            {...register('middlename', { required: true })}
+                            {...register('middlename')}
                             type="text"
                             className='app__input_standard'/>
-                          {errors.middlename && <div className='app__error_message'>Middle Name is required</div>}
                         </div>
                       </div>
                     </div>
@@ -478,7 +481,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                           <div className='app__form_field_container'>
                             <div className='w-full'>
-                              <div className='app__label_standard'>Position:</div>
+                              <div className='app__label_standard'>Current Position:</div>
                               <div>
                                 <select
                                   {...register('position_id')}
@@ -495,7 +498,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                           <div className='app__form_field_container'>
                             <div className='w-full'>
-                              <div className='app__label_standard'>Salary Grade:</div>
+                              <div className='app__label_standard'>Current Salary Grade:</div>
                               <div>
                                 <select
                                   {...register('salary_grade')}
@@ -508,7 +511,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                           <div className='app__form_field_container'>
                             <div className='w-full'>
-                              <div className='app__label_standard'>Salary Grade (Step):</div>
+                              <div className='app__label_standard'>Current Salary Grade (Step):</div>
                               <div>
                                 <select
                                   {...register('salary_step')}

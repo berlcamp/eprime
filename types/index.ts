@@ -44,14 +44,14 @@ export interface DistrictTypes {
   id: string
   name: string
   head_user_id: string
-  hrm_users?: any
+  hrm_users?: namesType
 }
 
 export interface Office {
   id: string
   name: string
   head_user_id: string
-  hrm_users?: any
+  hrm_users?: namesType
 }
 
 export interface SchoolTypes {
@@ -63,7 +63,7 @@ export interface SchoolTypes {
   school_id: string
   district_id: string
   head_user_id: string
-  hrm_users?: any
+  hrm_users?: namesType
 }
 
 export interface PositionTypes {
@@ -171,7 +171,7 @@ export interface CtoUserTypes {
   id: string
   hrm_user_id: string
   hrm_ctos?: CtoTypes
-  hrm_users: Employee
+  hrm_users: namesType
   cto_id: string
   is_approved: boolean
   expiration: string

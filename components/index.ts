@@ -27,6 +27,7 @@ import OneColLayoutLoading from './Loading/OneColLayoutLoading'
 import ThreeColTableLoading from './Loading/ThreeColTableLoading'
 import TableRowLoading from './Loading/TableRowLoading'
 import StatusFlow from './Tracker/StatusFlow'
+import SearchUserInput from './SearchUserInput'
 
 export {
   LoginBox,
@@ -57,5 +58,6 @@ export {
   LandingPage,
   OrganizationalStructure,
   AccountDetails,
-  StatusFlow
+  StatusFlow,
+  SearchUserInput
 }

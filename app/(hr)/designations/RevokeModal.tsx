@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { CustomButton } from '@/components'
-import { capitalizeWords } from '@/utils/text-helper'
+import { CustomButton, UserBlock } from '@/components'
 
 // Types
 import type { DesignationTypes } from '@/types'
@@ -103,7 +102,9 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
             <div className='app__form_field_container'>
               <div className='w-full'>
                 <div className='app__label_standard'>Employee Name:</div>
-                <div className='app__label_value'>{capitalizeWords(editData.hrm_users?.firstname + ' ' + editData.hrm_users?.middlename + ' ' + editData.hrm_users?.lastname)}</div>
+                <div className='app__label_value'>
+                  <UserBlock user={editData.hrm_users}/>
+                </div>
               </div>
             </div>
             <div className='app__form_field_container'>

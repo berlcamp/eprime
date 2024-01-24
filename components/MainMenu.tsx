@@ -14,9 +14,9 @@ const MainMenu = () => {
         <div className='lg:flex lg:space-x-2 lg:space-y-0 space-y-2 justify-center lg:flex-row-reverse'>
           <div className='px-2 py-4 border text-gray-600 rounded-lg bg-white shadow-md flex flex-col lg:mx-2 space-y-1'>
             <div className='text-gray-700 text-lg font-semibold'>Shortcuts</div>
-            <Link href='/' className='app__menu_item'>
+            <Link href='/tracker' className='app__menu_item'>
               <CalendarDaysIcon className='w-6 h-6'/>
-              <div className='app__menu_item_label'>My Leave Requests</div>
+              <div className='app__menu_item_label'>My Requests</div>
             </Link>
             <Link href='/' className='app__menu_item'>
               <TableCellsIcon className='w-6 h-6'/>

@@ -8,7 +8,6 @@ import { useSelector } from 'react-redux'
 
 const TrackerSideBar = () => {
   const [forwardedCount, setForwardedCount] = useState(0)
-  const [followingCount, setFollowingCount] = useState(0)
 
   const searchParams = useSearchParams()
 
@@ -27,13 +26,6 @@ const TrackerSideBar = () => {
       .eq('current_status', 'Forwarded')
 
     setForwardedCount(forwarded)
-
-    const { count: following }: { count: number } = await supabase
-      .from('hrm_tracker_followers')
-      .select('*', { count: 'exact' })
-      .eq('user_id', session.user.id)
-
-    setFollowingCount(following)
   }
   useEffect(() => {
     void counter()
@@ -58,12 +50,12 @@ const TrackerSideBar = () => {
         <li>
           <Link
             href="/tracker?filter=forwarded"
-            className={`app__menu_link ${filter === 'received' ? 'app_menu_link_active' : ''}`}>
+            className={`app__menu_link ${filter === 'forwarded' ? 'app_menu_link_active' : ''}`}>
             <span className="flex-1 ml-3 whitespace-nowrap">Forwarded To Me</span>
             {
               forwardedCount > 0 &&
-                <span className='inline-flex items-center justify-center rounded-full bg-gray-300 w-5 h-5'>
-                  <span className='rounded-full px-1 text-gray-900 text-xs'>{forwardedCount}</span>
+                <span className='inline-flex items-center justify-center rounded-full bg-red-500 w-5 h-5'>
+                  <span className='rounded-full px-1 text-white text-xs'>{forwardedCount}</span>
                 </span>
             }
           </Link>
@@ -73,12 +65,6 @@ const TrackerSideBar = () => {
             href="/tracker?filter=following"
             className={`app__menu_link ${filter === 'following' ? 'app_menu_link_active' : ''}`}>
             <span className="flex-1 ml-3 whitespace-nowrap">Followed</span>
-            {
-              followingCount > 0 &&
-                <span className='inline-flex items-center justify-center rounded-full bg-gray-300 w-5 h-5'>
-                  <span className='rounded-full px-1 text-gray-900 text-xs'>{followingCount}</span>
-                </span>
-            }
           </Link>
         </li>
       </ul>

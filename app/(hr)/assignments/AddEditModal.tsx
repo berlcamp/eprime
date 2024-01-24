@@ -2,14 +2,12 @@ import React, { Fragment, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchDistricts, fetchOffices, fetchPositions, fetchSchools } from '@/utils/fetchApi'
-import uuid from 'react-uuid'
-import { XMarkIcon } from '@heroicons/react/20/solid'
-import { CustomButton, OneColLayoutLoading, UserBlock } from '@/components'
-import { capitalizeWords, generateReferenceCode } from '@/utils/text-helper'
+import { fetchDistricts, fetchOffices, fetchPositions, fetchSchools, logError } from '@/utils/fetchApi'
+import { CustomButton, OneColLayoutLoading, SearchUserInput, UserBlock } from '@/components'
+import { generateReferenceCode } from '@/utils/text-helper'
 
 // Types
-import type { AssignmentTypes, DistrictTypes, Employee, Office, PositionTypes, SchoolTypes, namesType } from '@/types'
+import type { AssignmentTypes, DistrictTypes, Office, PositionTypes, SchoolTypes, namesType } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -24,13 +22,11 @@ interface ModalProps {
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const { setToast } = useFilter()
-  const { supabase, systemUsers }: { systemUsers: Employee[], supabase: any } = useSupabase()
+  const { supabase }: { supabase: any } = useSupabase()
   const [saving, setSaving] = useState(false)
 
-  // Search employee
-  const [searchHead, setSearchHead] = useState('')
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
+  const [user, setUser] = useState<namesType | null>(null)
+
   const [errorMessage, setErrorMessage] = useState<string | ''>('')
   const [dataValidationErrors, setDataValidationErrors] = useState<string[] | []>([])
 
@@ -62,7 +58,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     setSaving(true)
 
-    if (!editData && selectedItems.length === 0) {
+    if (!editData && !user) {
       setErrorMessage('Employee Name is Required')
       return
     }
@@ -79,6 +75,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleCreate = async (formdata: AssignmentTypes) => {
+    if (!user) return
+
     const district = formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
     const school = formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
     const office = formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
@@ -86,7 +84,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     const newData = {
       reference_code: generateReferenceCode(),
-      hrm_user_id: selectedItems[0].id,
+      hrm_user_id: user.id,
       area_assigned: formdata.area_assigned,
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
       type: formdata.type,
@@ -107,7 +105,11 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .insert(newData)
         .select()
 
-      if (error) throw new Error(error.message)
+      if (error) {
+        void logError('Create New Assignment', 'hrm_assignments', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
 
       newId = data[0].id // newly created ID use this on 'finally' block
     } catch (e) {
@@ -115,7 +117,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     } finally {
       // Append new data in redux
       const updatedDropdownData = getUpdatedDropdownData(formdata)
-      const updatedData = { ...newData, from: formdata.from, hrm_users: selectedItems[0], ...updatedDropdownData, id: newId }
+      const updatedData = { ...newData, from: formdata.from, hrm_users: user, ...updatedDropdownData, id: newId }
       dispatch(updateList([updatedData, ...globallist]))
 
       // pop up the success message
@@ -159,7 +161,11 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .update(newData)
         .eq('id', editData.id)
 
-      if (error) throw new Error(error.message)
+      if (error) {
+        void logError('Update Assignment', 'hrm_assignments', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
     } catch (e) {
       console.error(e)
     } finally {
@@ -216,7 +222,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const validateEmployee = async (formdata: AssignmentTypes) => {
-    console.log('formdata', formdata)
     let query = supabase
       .from('hrm_assignments')
       .select('*, hrm_users:hrm_user_id(firstname,middlename,lastname),hrm_schools:school_id(name),hrm_offices:office_id(name)')
@@ -225,7 +230,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       query = query.neq('id', editData.id)
       query = query.eq('hrm_user_id', editData.hrm_user_id)
     } else {
-      query = query.eq('hrm_user_id', selectedItems[0].id)
+      query = query.eq('hrm_user_id', user?.id)
     }
 
     const { data, error }: { data: AssignmentTypes[], error: any } = await query
@@ -261,37 +266,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleSearchUser = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = e.target.value
-    setSearchHead(searchTerm)
-
-    if (searchTerm.trim().length < 3) {
-      setSearchResults([])
-      return
-    }
-
-    // Search user
-    const searchWords = (e.target.value).split(' ')
-    const results = systemUsers.filter(user => {
-      const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
-      return searchWords.every(word => fullName.includes(word))
-    })
-
-    setSearchResults(results)
-  }
-
-  const handleSelected = (item: namesType, multiple = false) => {
-    if (multiple) {
-      setSelectedItems([...selectedItems, item])
+  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+    if (selectedUsers.length > 0) {
+      setUser(selectedUsers[0])
     } else {
-      setSelectedItems([item])
+      setUser(null)
     }
-
-    setSearchResults([])
-    setSearchHead('')
-  }
-  const handleRemoveSelected = (id: string) => {
-    setSelectedItems(prevSelectedItems => prevSelectedItems.filter(item => item.id !== id))
   }
 
   const handleServiceRecordCheckboxChange = () => {
@@ -381,8 +361,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                     <div className='mb-6'>
                       <div className='font-semebold text-sm font-bold'>Please check the following errors below:</div>
                       {
-                        dataValidationErrors.map((error) => (
-                          <div key={uuid()} className='text-xs text-red-500 mt-2 flex space-x-2'><XCircleIcon className='w-5 h-5'/> <span>{error}</span></div>
+                        dataValidationErrors.map((error, index) => (
+                          <div key={index} className='text-xs text-red-500 mt-2 flex space-x-2'><XCircleIcon className='w-5 h-5'/> <span>{error}</span></div>
                         ))
                       }
                       {errorMessage && <div className='text-xs text-red-500 mt-2 flex space-x-2'><XCircleIcon className='w-5 h-5'/> <span>{errorMessage}</span></div>}
@@ -392,49 +372,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                 <div className='app__label_standard'>Employee Name:</div>
                 {
                   editData
-                    ? <div className='app__label_value'>{capitalizeWords(editData.hrm_users?.firstname + ' ' + editData.hrm_users?.middlename + ' ' + editData.hrm_users?.lastname)}</div>
-                    : <>
-                        <div className='app__selected_users_container'>
-                          {
-                            selectedItems.length > 0 &&
-                              selectedItems.map(item => (
-                                <div key={uuid()} className='w-full flex mb-1'>
-                                  <span className='app__selected_user'>
-                                    {item.firstname} {item.middlename} {item.lastname}
-                                    <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
-                                  </span>
-                                </div>
-                              ))
-                          }
-                          {
-                            selectedItems.length === 0 &&
-                              <div className='relative'>
-                                <input
-                                  type="text"
-                                  placeholder='Search employee..'
-                                  value={searchHead}
-                                  onChange={async (e) => await handleSearchUser(e)}
-                                  className='app__input_noborder'/>
-
-                                  {
-                                    searchResults.length > 0 &&
-                                      <div className='app__search_user_results_container'>
-                                        {
-                                          searchResults.map((item: namesType) => (
-                                            <div
-                                              key={uuid()}
-                                              onClick={() => handleSelected(item)}
-                                              className='app__search_user_results'>
-                                                <UserBlock user={item}/>
-                                            </div>
-                                          ))
-                                        }
-                                      </div>
-                                  }
-                              </div>
-                          }
-                        </div>
-                      </>
+                    ? <div className='app__label_value'><UserBlock user={editData.hrm_users}/></div>
+                    : <SearchUserInput
+                        isMultiple={false}
+                        handleSelectedUsers={handleSelectedUsers}/>
                 }
               </div>
             </div>
@@ -464,7 +405,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                     className='app__input_standard'>
                       <option value=''>Choose Position</option>
                       {
-                        positions.map((position: PositionTypes) => <option key={uuid()} value={position.id}>{position.name}</option>)
+                        positions.map((position: PositionTypes, index) => <option key={index} value={position.id}>{position.name}</option>)
                       }
                   </select>
                   {errors.position_id && <div className='app__error_message'>Position is required</div>}
@@ -502,8 +443,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                           className='app__select_standard'>
                             <option value=''>Choose</option>
                             {
-                              districts.map(item => (
-                                <option key={uuid()} value={item.id}>{item.name}</option>
+                              districts.map((item, index) => (
+                                <option key={index} value={item.id}>{item.name}</option>
                               ))
                             }
                         </select>
@@ -533,8 +474,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                           className='app__select_standard'>
                             <option value=''>Choose</option>
                             {
-                              schools.map(item => (
-                                <option key={uuid()} value={item.id}>{item.name}</option>
+                              schools.map((item, index) => (
+                                <option key={index} value={item.id}>{item.name}</option>
                               ))
                             }
                         </select>
@@ -557,8 +498,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                         className='app__select_standard'>
                           <option value=''>Choose</option>
                           {
-                            offices.map(item => (
-                              <option key={uuid()} value={item.id}>{item.name}</option>
+                            offices.map((item, index) => (
+                              <option key={index} value={item.id}>{item.name}</option>
                             ))
                           }
                       </select>

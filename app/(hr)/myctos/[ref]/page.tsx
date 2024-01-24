@@ -64,7 +64,7 @@ export default function Page ({ params }: { params: { ref: string } }) {
           <div className='app__title'>
             <Link href="/myctos" className='flex items-center app__btn_gray'>
               <ArrowLeftIcon className='w-5 h-5'/>
-              Return to My CTO&apos;s
+              My CTO&apos;s
             </Link>
           </div>
 

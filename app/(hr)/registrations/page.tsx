@@ -1,6 +1,6 @@
 'use client'
 
-import { fetchRegistrations } from '@/utils/fetchApi'
+import { fetchRegistrations, logError } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, EmployeesSideBar, Title, Unauthorized, CustomButton, DeleteModal } from '@/components'
 import { superAdmins } from '@/constants'
@@ -91,6 +91,7 @@ const Page: React.FC = () => {
       setToast('success', 'An email has been sent to newly approved user.')
       setApproving(false)
     }).catch(function (error) {
+      void logError('Approving registration', 'hrm_registrations', JSON.stringify(item), JSON.stringify(error))
       console.error(error)
     })
   }

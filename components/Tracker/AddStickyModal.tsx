@@ -26,7 +26,7 @@ export default function AddStickyModal ({ item, hideAddStickButton, hideModal }:
     const { error } = await supabase
       .from('hrm_request_tracker_stickies')
       .insert({
-        document_tracker_id: item.id,
+        tracker_id: item.id,
         color,
         note,
         user_id: session.user.id

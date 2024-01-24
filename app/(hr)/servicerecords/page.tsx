@@ -2,11 +2,10 @@
 
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, PencilSquareIcon, TrashIcon, XMarkIcon } from '@heroicons/react/20/solid'
-import { Sidebar, TopBar, Title, RecordsSideBar, Unauthorized, PerPage, ShowMore, DeleteModal, CustomButton, TableRowLoading, UserBlock } from '@/components'
+import { ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
+import { Sidebar, TopBar, Title, RecordsSideBar, Unauthorized, PerPage, ShowMore, DeleteModal, CustomButton, TableRowLoading, SearchUserInput } from '@/components'
 import { superAdmins } from '@/constants'
-import { useSupabase } from '@/context/SupabaseProvider'
-import type { Employee, ServiceRecordTypes, namesType } from '@/types'
+import type { ServiceRecordTypes, namesType } from '@/types'
 import { useFilter } from '@/context/FilterContext'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchServiceRecords } from '@/utils/fetchApi'
@@ -15,11 +14,6 @@ import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import AddEditModal from './AddEditModal'
 
 export default function Page () {
-  // Search user
-  const [searchHead, setSearchHead] = useState('')
-  const [searchResults, setSearchResults] = useState<namesType[] | []>([])
-  const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
-
   const [loading, setLoading] = useState(false)
   const [perPageCount, setPerPageCount] = useState<number>(10)
 
@@ -30,80 +24,42 @@ export default function Page () {
 
   const [list, setList] = useState<ServiceRecordTypes[]>([])
 
-  const [userId, setUserId] = useState('')
+  const [user, setUser] = useState<namesType | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { systemUsers }: { systemUsers: Employee[] } = useSupabase()
   const { hasAccess, session }: { hasAccess: any, session: any } = useFilter()
-
-  const handleSearchUser = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = e.target.value
-    setSearchHead(searchTerm)
-
-    if (searchTerm.trim().length < 3) {
-      setSearchResults([])
-      return
-    }
-
-    // Search user
-    const searchWords = (e.target.value).split(' ')
-    const results = systemUsers.filter(user => {
-      // exclude already selected users
-      if (selectedItems.some(obj => obj.id.toString() === user.id.toString())) return false
-
-      const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
-      return searchWords.every(word => fullName.includes(word))
-    })
-
-    setSearchResults(results)
-  }
-
-  const handleSelected = (item: namesType, multiple = false) => {
-    if (multiple) {
-      setSelectedItems([...selectedItems, item])
-    } else {
-      setSelectedItems([item])
-      setUserId(item.id)
-    }
-
-    setSearchResults([])
-    setSearchHead('')
-  }
-  const handleRemoveSelected = (id: string) => {
-    setSelectedItems(prevSelectedItems => prevSelectedItems.filter(item => item.id !== id))
-    setList([])
-    setUserId('')
-  }
 
   const fetchData = async () => {
     setLoading(true)
 
-    if (userId === '') return
+    if (!user) return
 
     try {
-      const result = await fetchServiceRecords(userId, perPageCount, 0)
+      const result = await fetchServiceRecords(user.id, perPageCount, 0)
 
       // update the list in redux
       dispatch(updateList(result.data))
 
       // Updating showing text in redux
       dispatch(updateResultCounter({ showing: result.data.length, results: result.count ? result.count : 0 }))
+
+      setLoading(false)
     } catch (e) {
       console.error(e)
-    } finally {
-      setLoading(false)
     }
   }
 
   const handleShowMore = async () => {
     setLoading(true)
 
+    if (!user) return
+
     try {
-      const result = await fetchServiceRecords(userId, perPageCount, list.length)
+      const result = await fetchServiceRecords(user.id, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -115,6 +71,14 @@ export default function Page () {
       console.error(e)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+    if (selectedUsers.length > 0) {
+      setUser(selectedUsers[0])
+    } else {
+      setUser(null)
     }
   }
 
@@ -150,7 +114,7 @@ export default function Page () {
   useEffect(() => {
     void fetchData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId])
+  }, [user])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -170,69 +134,34 @@ export default function Page () {
             <Title title='Service Records'/>
           </div>
 
-          {/* Search Employee */}
-          <div className='app__selected_users_container mx-4 my-4'>
-            {
-              selectedItems.length > 0 &&
-                selectedItems.map((item, index) => (
-                  <div key={index} className='w-full flex mb-1'>
-                    <span className='app__selected_user'>
-                      {item.firstname} {item.middlename} {item.lastname}
-                      <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
-                    </span>
-                  </div>
-                ))
-            }
-            {
-              selectedItems.length === 0 &&
-                <div className='relative'>
-                  <input
-                    type="text"
-                    placeholder='Search employee..'
-                    value={searchHead}
-                    onChange={async (e) => await handleSearchUser(e)}
-                    className='app__input_noborder'/>
-
-                    {
-                      searchResults.length > 0 &&
-                        <div className='app__search_user_results_container'>
-                          {
-                            searchResults.map((item: namesType, index) => (
-                              <div
-                                key={index}
-                                onClick={() => handleSelected(item)}
-                                className='app__search_user_results'>
-                                  <UserBlock user={item}/>
-                              </div>
-                            ))
-                          }
-                        </div>
-                    }
-                </div>
-            }
-          </div>
+          {/* Search User Input */}
+          <SearchUserInput
+            classNames='mx-4 my-4'
+            isMultiple={false}
+            handleSelectedUsers={handleSelectedUsers}
+          />
           {
-            (userId !== '' && !isDataEmpty && selectedItems.length > 0 && !loading) &&
+            (user && !isDataEmpty && !loading) &&
               <div className='flex justify-end mx-4 mb-4'>
                 <CustomButton
                   containerStyles='app__btn_green'
-                  title={`Add New Service Record for ${selectedItems[0].firstname} ${selectedItems[0].middlename} ${selectedItems[0].lastname}`}
+                  title={`Add New Service Record for ${user.firstname} ${user.middlename} ${user.lastname}`}
                   btnType='button'
                   handleClick={handleAdd}
                 />
               </div>
           }
           {
-            userId === '' &&
+            !user &&
               <div className='text-gray-600 text-center mt-10'>Search employee above to view service record.</div>
           }
           {
-            (userId !== '' && isDataEmpty && selectedItems.length > 0 && !loading) &&
+            (user && isDataEmpty && !loading) &&
               <div className='text-gray-600 text-center mt-10'>
                 <div>No service record found for this employee.</div>
                 <CustomButton
                   containerStyles='app__btn_green mt-4'
-                  title={`Add New Service Record for ${selectedItems[0].firstname} ${selectedItems[0].middlename} ${selectedItems[0].lastname}`}
+                  title={`Add New Service Record for ${user.firstname} ${user.middlename} ${user.lastname}`}
                   btnType='button'
                   handleClick={handleAdd}
                 />
@@ -379,10 +308,10 @@ export default function Page () {
     </div>
     {/* Add/Edit Modal */}
     {
-      showAddModal && (
+      (showAddModal && user) && (
         <AddEditModal
           editData={editData}
-          userId={userId}
+          userId={user.id}
           hideModal={() => setShowAddModal(false)}/>
       )
     }

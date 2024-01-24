@@ -4,7 +4,7 @@ import { fetchDocuments } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon, TrashIcon, StarIcon } from '@heroicons/react/20/solid'
-import { Sidebar, PerPage, TopBar, DeleteModal, TableRowLoading, CustomButton, ShowMore, TrackerSideBar, Title, Unauthorized, UserBlock } from '@/components'
+import { Sidebar, PerPage, TopBar, DeleteModal, TableRowLoading, CustomButton, ShowMore, TrackerSideBar, Title, UserBlock } from '@/components'
 import AddDocumentModal from './AddDocumentModal'
 import DetailsModal from '@/components/Tracker/DetailsModal'
 import Filters from './Filters'
@@ -16,9 +16,8 @@ import type { Employee, DocumentTypes } from '@/types'
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
-import { statusList, superAdmins } from '@/constants'
+import { statusList } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { useFilter } from '@/context/FilterContext'
 import StickiesModal from './StickiesModal'
 import { useSearchParams } from 'next/navigation'
 
@@ -42,7 +41,6 @@ const Page: React.FC = () => {
   const searchParams = useSearchParams()
 
   const { session, systemUsers } = useSupabase()
-  const { hasAccess } = useFilter()
 
   const user: Employee = systemUsers.find((user: Employee) => user.id === session.user.id)
 
@@ -126,14 +124,9 @@ const Page: React.FC = () => {
     setList([])
     void fetchData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, filterType, filterStatus, filterRequester])
+  }, [filterKeyword, filterType, filterStatus, filterRequester, searchParams])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
-  const email: string = session.user.email
-
-  // Check access from permission settings or Super Admins
-  if (!hasAccess('document_tracker') && !superAdmins.includes(email)) return <Unauthorized/>
-
   return (
     <>
     <Sidebar>

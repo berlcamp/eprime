@@ -114,7 +114,7 @@
   @apply bg-white p-1 border border-gray-300 rounded-sm
 }
 .app__selected_user {
-  @apply inline-flex items-center text-sm  border border-gray-400 rounded-sm px-1 bg-gray-300
+  @apply inline-flex mr-2 items-center text-sm  border border-gray-400 rounded-sm px-1 bg-gray-300
 }
 .app__error_message {
   @apply mt-1 text-xs text-red-600 font-bold

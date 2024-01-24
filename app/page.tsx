@@ -14,7 +14,7 @@ export default async function Page () {
             <Announcements/>
           </div>
         </div>
-        <div>
+        <div className='border-b'>
           <TrackerBox/>
         </div>
         <div className=''>

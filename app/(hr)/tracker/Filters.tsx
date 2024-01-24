@@ -54,6 +54,7 @@ const Filters = ({ setFilterKeyword, setFilterType, setFilterStatus, setFilterRe
     setFilterKeyword('')
     setFilterType('')
     setFilterStatus('')
+    setFilterRequester('')
 
     setType('')
     setKeyword('')
@@ -91,6 +92,7 @@ const Filters = ({ setFilterKeyword, setFilterType, setFilterStatus, setFilterRe
   }
   const handleRemoveSelected = (id: string) => {
     setSelectedItems(prevSelectedItems => prevSelectedItems.filter(item => item.id !== id))
+    setFilterRequester('')
   }
   // End - Search employees
 
