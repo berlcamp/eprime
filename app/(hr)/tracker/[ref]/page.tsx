@@ -10,7 +10,6 @@ import { format } from 'date-fns'
 // Types
 import type { DocumentTypes } from '@/types'
 
-import { statusList } from '@/constants'
 import StickiesModal from '../StickiesModal'
 import Link from 'next/link'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -42,15 +41,6 @@ export default function Page ({ params }: { params: { ref: string } }) {
   const handleShowDetailsModal = (item: DocumentTypes) => {
     setShowDetailsModal(true)
     setSelectedItem(item)
-  }
-
-  const getStatusColor = (status: string): string => {
-    const statusArr = statusList.filter(item => item.status === status)
-    if (statusArr.length > 0) {
-      return statusArr[0].color
-    } else {
-      return '#000000'
-    }
   }
 
   // Featch data
