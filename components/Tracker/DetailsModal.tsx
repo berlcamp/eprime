@@ -10,7 +10,7 @@ import { PaperClipIcon } from '@heroicons/react/24/solid'
 import { type FileWithPath, useDropzone } from 'react-dropzone'
 
 import type { DocumentTypes, AttachmentTypes, FollowersTypes, Employee, namesType } from '@/types'
-import { ConfirmModal, CustomButton, StatusFlow, UserBlock } from '@/components'
+import { ConfirmModal, CustomButton, SearchUserInput, StatusFlow, UserBlock } from '@/components'
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { recount } from '@/GlobalRedux/Features/recountSlice'
@@ -73,7 +73,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
   const [documentData, setDocumentData] = useState<DocumentTypes>(originalData)
   const [attachments, setAttachments] = useState<AttachmentTypes[] | []>([])
   const [loadingReplies, setLoadingReplies] = useState(false)
-  const [showConfirmForwardModal, setShowConfirmForwardModal] = useState(false)
+
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [updateStatusFlow, setUpdateStatusFlow] = useState(false)
@@ -82,11 +82,12 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
   const [hideStickyButton, setHideStickyButton] = useState(false)
   const [hideFollowButton, setHideFollowButton] = useState(false)
 
-  // Search employee
-  const [searchHead, setSearchHead] = useState('')
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
-  const [selectedReceiverId, setSelectedReceiverId] = useState('')
+  const [showConfirmForwardModal, setShowConfirmForwardModal] = useState(false)
+  const [showConfirmApproveModal, setShowConfirmApproveModal] = useState(false)
+  const [showConfirmDisapproveModal, setShowConfirmDisapproveModal] = useState(false)
+
+  // Forward to this user
+  const [selectedUser, setSelectedUser] = useState<namesType | null>(null)
 
   const [selectedImages, setSelectedImages] = useState<any>([])
   const { systemUsers, session, supabase } = useSupabase()
@@ -169,7 +170,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
 
       uniqueIds.forEach((userId) => {
         notificationData.push({
-          message: `The document ${document.reference_code} has been ${actionType} to asdfasdfasdf.`,
+          message: `The request ${document.reference_code} has been ${actionType}.`,
           url: `/tracker/${document.reference_code}`,
           type: actionType,
           user_id: userId,
@@ -194,18 +195,28 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
   }
 
   const handleForward = () => {
-    if (selectedReceiverId === '') return
+    if (!selectedUser) return
     setShowConfirmForwardModal(true)
   }
 
+  const handleApprove = () => {
+    setShowConfirmApproveModal(true)
+  }
+
+  const handleDisapprove = () => {
+    setShowConfirmDisapproveModal(true)
+  }
+
   const handleConfirmedForward = async () => {
+    if (!selectedUser) return
+
     if (saving) return
 
     setSaving(true)
 
     const newData = {
       current_status: 'Forwarded',
-      receiver_id: selectedReceiverId
+      receiver_id: selectedUser.id
     }
     try {
       const { error } = await supabase
@@ -224,7 +235,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
         .insert({
           tracker_id: documentData.id,
           user_id: user.id,
-          receiver_id: selectedReceiverId,
+          receiver_id: selectedUser.id,
           status: 'Forwarded'
         })
 
@@ -250,6 +261,128 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
 
       // hide the modal
       setShowConfirmForwardModal(false)
+
+      // Recount sidebar counter
+      dispatch(recount())
+
+      setUpdateStatusFlow(!updateStatusFlow)
+      setSaving(false)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleConfirmedApprove = async () => {
+    if (saving) return
+
+    setSaving(true)
+
+    const newData = {
+      current_status: 'Partially Approved'
+    }
+    try {
+      const { error } = await supabase
+        .from('hrm_request_trackers')
+        .update(newData)
+        .eq('id', documentData.id)
+
+      if (error) {
+        void logError('Partially Approved', 'hrm_request_trackers', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
+      const { error: error2 } = await supabase
+        .from('hrm_tracker_flow')
+        .insert({
+          tracker_id: documentData.id,
+          user_id: session.user.id,
+          status: 'Partially Approved'
+        })
+
+      if (error2) {
+        void logError('Partially Approved Flow', 'hrm_tracker_flow', '', error2.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error2.message)
+      }
+
+      // Notify followers and Departments
+      void handleNotify(documentData, 'Partially Approved')
+
+      // Update data in redux
+      const items: DocumentTypes[] = [...globallist]
+      const updatedData = { ...newData, id: documentData.id }
+      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      items[foundIndex] = { ...items[foundIndex], ...updatedData }
+      dispatch(updateList(items))
+      setDocumentData(items[foundIndex]) // update ui with new data
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      // hide the modal
+      setShowConfirmApproveModal(false)
+
+      // Recount sidebar counter
+      dispatch(recount())
+
+      setUpdateStatusFlow(!updateStatusFlow)
+      setSaving(false)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleConfirmedDisapprove = async () => {
+    if (saving) return
+
+    setSaving(true)
+
+    const newData = {
+      current_status: 'Disapproved'
+    }
+    try {
+      const { error } = await supabase
+        .from('hrm_request_trackers')
+        .update(newData)
+        .eq('id', documentData.id)
+
+      if (error) {
+        void logError('Disapproved', 'hrm_request_trackers', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
+      const { error: error2 } = await supabase
+        .from('hrm_tracker_flow')
+        .insert({
+          tracker_id: documentData.id,
+          user_id: session.user.id,
+          status: 'Disapproved'
+        })
+
+      if (error2) {
+        void logError('Disapproved', 'hrm_tracker_flow', '', error2.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error2.message)
+      }
+
+      // Notify followers and Departments
+      void handleNotify(documentData, 'Disapproved')
+
+      // Update data in redux
+      const items: DocumentTypes[] = [...globallist]
+      const updatedData = { ...newData, id: documentData.id }
+      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      items[foundIndex] = { ...items[foundIndex], ...updatedData }
+      dispatch(updateList(items))
+      setDocumentData(items[foundIndex]) // update ui with new data
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      // hide the modal
+      setShowConfirmDisapproveModal(false)
 
       // Recount sidebar counter
       dispatch(recount())
@@ -355,39 +488,13 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     }
   }
 
-  // Search employees
-  const handleSearchUser = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = e.target.value
-    setSearchHead(searchTerm)
-
-    if (searchTerm.trim().length < 3) {
-      setSearchResults([])
-      return
+  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+    if (selectedUsers.length > 0) {
+      setSelectedUser(selectedUsers[0])
+    } else {
+      setSelectedUser(null)
     }
-
-    // Search user
-    const searchWords = (e.target.value).split(' ')
-    const results = systemUsers.filter((user: any) => {
-      if (documentData.receiver_id === user.id.toString()) return false
-
-      const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
-      return searchWords.every(word => fullName.includes(word))
-    })
-
-    setSearchResults(results)
   }
-
-  const handleSelected = (item: namesType, multiple = false) => {
-    setSelectedReceiverId(item.id)
-    setSelectedItems([item])
-
-    setSearchResults([])
-    setSearchHead('')
-  }
-  const handleRemoveSelected = (id: string) => {
-    setSelectedItems(prevSelectedItems => prevSelectedItems.filter(item => item.id !== id))
-  }
-  // End - Search employees
 
   useEffect(() => {
     if (fileRejections.length > 0) {
@@ -480,63 +587,39 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
               {/* Approval and Forwarding */}
               <div className='w-full'>
                 {
-                  ((documentData.current_status === 'Request Created' && documentData.created_by === session.user.id) || (documentData.current_status === 'Forwarded' && documentData.receiver_id === session.user.id)) &&
-                    <div className="flex flex-col space-y-1 items-start justify-center">
-                      <div className='font-medium text-sm'>Approve and Forward to next approving authority:</div>
-                      <div className="flex space-x-2 items-center justify-center">
-                        <div className='app__selected_users_container'>
-                          {
-                            selectedItems.length > 0 &&
-                              selectedItems.map((item, index) => (
-                                <div key={index} className='flex md:w-96'>
-                                  <span className='app__selected_user'>
-                                    {item.firstname} {item.middlename} {item.lastname}
-                                    <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
-                                  </span>
-                                </div>
-                              ))
-                          }
-                          {
-                            selectedItems.length === 0 &&
-                              <div className='relative md:w-96'>
-                                <input
-                                  type="text"
-                                  placeholder='Forward to..'
-                                  value={searchHead}
-                                  onChange={async (e) => await handleSearchUser(e)}
-                                  className='app__input_noborder'/>
-
-                                  {
-                                    searchResults.length > 0 &&
-                                      <div className='app__search_user_results_container'>
-                                        {
-                                          searchResults.map((user: namesType, index) => (
-                                            <div
-                                              key={index}
-                                              onClick={() => handleSelected(user)}
-                                              className='app__search_user_results'>
-                                                <UserBlock user={user}/>
-                                            </div>
-                                          ))
-                                        }
-                                      </div>
-                                  }
-                              </div>
-                          }
-                        </div>
-                      </div>
-                      <div className='text-xs text-gray-600'>By clicking &apos;Approve&apos;, you are authorizing and granting permission to the requester to proceed with the leave as specified in the request.</div>
-                      <div>
+                  (documentData.current_status === 'Forwarded' && documentData.receiver_id === session.user.id) &&
+                    <div className='mb-6'>
+                      <div className='space-x-2'>
                         <CustomButton
                           containerStyles='app__btn_green'
-                          title={saving ? 'Saving...' : 'Approve and Forward'}
+                          title={saving ? 'Saving...' : 'Approve'}
                           btnType='button'
-                          handleClick={handleForward}
+                          handleClick={handleApprove}
                         />
-                        <span className='italic font-light'>or</span>
                         <CustomButton
                           containerStyles='app__btn_red'
                           title={saving ? 'Saving...' : 'Disapprove'}
+                          btnType='button'
+                          handleClick={handleDisapprove}
+                        />
+                      </div>
+                      <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Approve&apos;, you are authorizing and granting permission to the requester to proceed with the specified request.</div>
+                    </div>
+                }
+                {
+                  ((documentData.current_status === 'Request Created' && documentData.created_by === session.user.id) ||
+                    (['Forwarded', 'Partially Approved'].includes(documentData.current_status) && documentData.receiver_id === session.user.id)
+                  ) &&
+                    <div className="">
+                      <div className='font-medium text-sm text-gray-700'>Forward this request to:</div>
+                      <div className="flex w-full space-x-2">
+                        <SearchUserInput
+                          isMultiple={false}
+                          classNames='w-1/2'
+                          handleSelectedUsers={handleSelectedUsers}/>
+                        <CustomButton
+                          containerStyles='app__btn_green'
+                          title={saving ? 'Saving...' : 'Forward'}
                           btnType='button'
                           handleClick={handleForward}
                         />
@@ -567,20 +650,76 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                           </td>
                         </tr>
                         <tr>
-                          <td className='px-2 py-2 font-light text-right'>Type:</td>
+                          <td className='px-2 py-2 font-light text-right'>Request Type:</td>
                           <td className='text-sm font-medium'>{documentData.type}</td>
                         </tr>
+                        {/* Leave Requests Fields */}
                         {
-                          (documentData.leave_from && documentData.leave_from.trim() !== '') &&
-                            <tr>
-                              <td className='px-2 py-2 font-light text-right'>From:</td>
-                              <td className='text-sm font-medium'>{documentData.leave_from}</td>
-                            </tr>
+                          documentData.type === 'Leave' &&
+                            <>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Leave Type:</td>
+                                <td className='text-sm font-medium'>{documentData.leave_type}</td>
+                              </tr>
+                              {
+                                (documentData.leave_days && documentData.leave_to && documentData.leave_days.trim() !== '' && documentData.leave_to.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Number of working days applied for:</td>
+                                    <td className='text-sm font-medium'>{documentData.leave_days}</td>
+                                  </tr>
+                              }
+                              {
+                                (documentData.leave_from && documentData.leave_to && documentData.leave_from.trim() !== '' && documentData.leave_to.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Inclusive Dates:</td>
+                                    <td className='text-sm font-medium'>{format(new Date(documentData.leave_from), 'MMMM dd, yyyy')} to {format(new Date(documentData.leave_to), 'MMMM dd, yyyy')}</td>
+                                  </tr>
+                              }
+                              {
+                                (documentData.leave_location && documentData.leave_location.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Location:</td>
+                                    <td className='text-sm font-medium'>{documentData.leave_location} {documentData.leave_specify_location}</td>
+                                  </tr>
+                              }
+                              {
+                                (documentData.leave_hospitalization && documentData.leave_hospitalization.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Hospitalization:</td>
+                                    <td className='text-sm font-medium'>{documentData.leave_hospitalization} - {documentData.leave_illness}</td>
+                                  </tr>
+                              }
+                              {
+                                (documentData.leave_women_illness && documentData.leave_women_illness.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Illness:</td>
+                                    <td className='text-sm font-medium'>{documentData.leave_women_illness}</td>
+                                  </tr>
+                              }
+                              {
+                                (documentData.leave_study_purpose && documentData.leave_study_purpose.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Study Purpose:</td>
+                                    <td className='text-sm font-medium'>{documentData.leave_study_purpose}</td>
+                                  </tr>
+                              }
+                              {
+                                (documentData.leave_other_purpose && documentData.leave_other_purpose.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Other Purpose:</td>
+                                    <td className='text-sm font-medium'>{documentData.leave_other_purpose}</td>
+                                  </tr>
+                              }
+                              {
+                                (documentData.leave_commutation && documentData.leave_commutation.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Commutation:</td>
+                                    <td className='text-sm font-medium'>{documentData.leave_commutation}</td>
+                                  </tr>
+                              }
+                            </>
                         }
-                        <tr>
-                          <td className='px-2 py-2 font-light text-right align-top'>Particulars:</td>
-                          <td className='text-sm font-medium'>{documentData.particulars}</td>
-                        </tr>
+                        {/* End - Leave Requests Fields */}
                       </tbody>
                     </table>
                   </div>
@@ -675,14 +814,39 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
             </div>
           </div>
         </div>
+        {/* Forward Confirmation Modal */}
         {
           showConfirmForwardModal && (
             <ConfirmModal
               header='Forward Confirmation'
               btnText='Confirm'
-              message="Are you sure you want to forward this document?"
+              message="Are you sure you want to forward this request?"
               onConfirm={handleConfirmedForward}
               onCancel={() => setShowConfirmForwardModal(false)}
+            />
+          )
+        }
+        {/* Approve Confirmation Modal */}
+        {
+          showConfirmApproveModal && (
+            <ConfirmModal
+              header='Approval Confirmation'
+              btnText='Confirm'
+              message="Are you sure you want to approve this request?"
+              onConfirm={handleConfirmedApprove}
+              onCancel={() => setShowConfirmApproveModal(false)}
+            />
+          )
+        }
+        {/* Disapprove Confirmation Modal */}
+        {
+          showConfirmDisapproveModal && (
+            <ConfirmModal
+              header='Disapproval Confirmation'
+              btnText='Confirm'
+              message="Are you sure you want to disapprove this request?"
+              onConfirm={handleConfirmedDisapprove}
+              onCancel={() => setShowConfirmDisapproveModal(false)}
             />
           )
         }

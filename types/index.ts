@@ -227,32 +227,19 @@ export interface ServiceCreditTypes {
 }
 
 export interface LeaveTypes {
-  id: string
-  reference_code: string
-  requester_id: string
-  requester: Employee
-  recommending_id: string
-  recommending: namesType
-  hr_id: string
-  hr: namesType
-  approver_id: string
-  approver: namesType
+  type: string
   location: string
-  abroad: string
+  specify_location: string
   hospitalization: string
   illness: string
+  women_illness: string
   study_purpose: string
   other_purpose: string
+  days: string
   from: string
   to: string
-  days: string
-  type: string
-  recommending_status: string
-  hr_status: string
-  approver_status: string
-  recommending_disapproval_reason: string
-  hr_disapproval_reason: string
-  approver_disapproval_reason: string
+  commutation: string
+  confirmed: string
 }
 
 export interface ServiceRecordTypes {
@@ -345,15 +332,17 @@ export interface DocumentTypes {
   receiver_id: string
   date_created: string
   leave_type: string
-  leave_from: string
-  leave_to: string
-  leave_days: string
   leave_location: string
-  leave_abroad: string
+  leave_specify_location: string
   leave_hospitalization: string
   leave_illness: string
+  leave_women_illness: string
   leave_study_purpose: string
   leave_other_purpose: string
+  leave_days: string
+  leave_from: string
+  leave_to: string
+  leave_commutation: string
   particulars: string
   date_received: string
   created_at: string

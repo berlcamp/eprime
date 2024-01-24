@@ -39,7 +39,7 @@ function StatusFlow ({ documentId, updateStatusFlow }: { documentId: string, upd
               <div className={`${flowList.length > 1 && (index + 1) < flowList.length ? 'text-gray-500' : 'text-gray-700 text-sm'} flex-1 ml-8 pb-4`}>
                 <div className='font-bold'>{item.status}</div>
                 {
-                  item.status === 'Request Created' &&
+                  (item.status === 'Request Created' || item.status === 'Partially Approved' || item.status === 'Disapproved' || item.status === 'Approved') &&
                     <div className='text-xs'>by {item.hrm_user.firstname} {item.hrm_user.middlename} {item.hrm_user.lastname}</div>
                 }
                 {

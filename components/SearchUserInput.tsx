@@ -71,10 +71,10 @@ export default function SearchUserInput ({ classNames, isMultiple, handleSelecte
             </span>
           ))
       }
-      <div className={`${!isMultiple && selectedItems.length > 0 ? 'hidden' : ''} relative inline-flex`}>
+      <div className={`${!isMultiple && selectedItems.length > 0 ? 'hidden' : ''} relative inline-flex w-full`}>
         <input
           type="text"
-          placeholder='Search employee..'
+          placeholder='Search Name..'
           value={searchHead}
           onChange={async (e) => await handleSearchUser(e)}
           className='app__input_noborder'/>

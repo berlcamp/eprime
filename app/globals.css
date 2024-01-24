@@ -68,6 +68,9 @@
 .app__btn_red {
   @apply bg-red-500 hover:bg-red-600 active:bg-red-500 border border-red-600 font-bold px-2 py-1 text-xs text-white rounded-sm
 }
+.app__btn_red_large {
+  @apply bg-red-500 hover:bg-red-600 active:bg-red-500 border border-red-600 text-sm font-bold px-2 py-1 text-white rounded-sm
+}
 .app__menu_btn {
   @apply inline-flex w-full justify-center focus:outline-none focus:ring-0
 }
@@ -76,6 +79,9 @@
 }
 .app__btn_green {
   @apply bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-500 border border-emerald-600 font-bold px-2 py-1 text-xs text-white rounded-sm
+}
+.app__btn_green_large {
+  @apply bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-500 border border-emerald-600 font-bold px-2 py-1 text-sm text-white rounded-sm
 }
 .app__btn_green_sm {
   @apply bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-500 border border-emerald-600 font-bold px-2 py-1 text-sm text-white rounded-sm

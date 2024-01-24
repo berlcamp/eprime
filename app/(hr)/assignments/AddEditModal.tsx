@@ -353,7 +353,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
-          <div className='app__form_field_container'>
+            <div className='app__form_field_container'>
               <div className='w-full'>
 
                 {
