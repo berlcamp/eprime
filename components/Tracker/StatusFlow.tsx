@@ -50,7 +50,8 @@ function StatusFlow ({ documentId, updateStatusFlow }: { documentId: string, upd
                   {
                     item.hrm_tracker_logs.length > 0 && item.hrm_tracker_logs.map((log, index) => (
                       <div key={index} className='text-[11px]'>
-                          {log.message === 'Approval Recommended' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium'>{log.message}</span>}
+                          {log.message === 'Approval Recommended' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium'>{log.message}</span>}
+                          {log.message === 'Cancelled' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium'>{log.message}</span>}
                           {log.message === 'Approved' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium'>{log.message}</span>}
                           {log.message === 'Disapproved' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium'>{log.message}</span>}
                         <span className='font-normal'> by {log.hrm_user.firstname} {log.hrm_user.middlename} {log.hrm_user.lastname} </span>

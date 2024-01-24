@@ -98,6 +98,9 @@
 .app__btn_blue {
   @apply bg-blue-500 hover:bg-blue-600 border active:bg-blue-500 border-blue-600 font-bold px-2 py-1 text-xs text-white rounded-sm
 }
+.app__btn_orange {
+  @apply bg-orange-500 hover:bg-orange-600 border active:bg-orange-500 border-orange-600 font-bold px-2 py-1 text-xs text-white rounded-sm
+}
 .app__dialog_panel {
   @apply relative w-full max-w-lg max-h-[90vh] overflow-y-auto transform rounded-md bg-white p-4 text-left shadow-xl transition-all flex flex-col gap-5
 }

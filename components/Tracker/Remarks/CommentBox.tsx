@@ -86,7 +86,7 @@ export default function CommentBox ({ reply, document }: ModalProps) {
       userIds.forEach((userId) => {
         notificationData.push({
           message: `${user.firstname} ${user.middlename} ${user.lastname} added comment to Request ${document.reference_code}.`,
-          url: `/tracker?code=${document.reference_code}`,
+          url: `/tracker/${document.reference_code}`,
           type: 'Remarks',
           user_id: userId,
           reference_id: document.id,
@@ -117,19 +117,19 @@ export default function CommentBox ({ reply, document }: ModalProps) {
             onClick={() => setShowCommentInput(true)}
             className="text-xs mb-2 font-semibold underline text-green-700"
             type="button">
-              Write Comment</button>
+              Reply</button>
       }
       {
         showCommentInput &&
           <>
             <div className='flex space-x-2'>
-              <span className='flex-1 font-bold'>Comment:</span>
+              <span className='flex-1 font-bold'>Reply:</span>
             </div>
             <input
               type="text"
               value={comment}
               onChange={e => setComment(e.target.value)}
-              placeholder='Write your comment here..'
+              placeholder='Write your reply here..'
               className='w-full border focus:ring-0 focus:outline-none p-1 text-sm text-gray-700 dark:bg-gray-900 dark:text-gray-300'/>
 
               <div className='flex items-center space-x-2 justify-start'>

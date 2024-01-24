@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from 'react'
 import { CustomButton } from '@/components'
 import { requestTypes } from '@/constants'
 import LeaveForm from './LeaveForm'
+import TravelForm from './TravelForm'
+import PassSlipForm from './PassSlipForm'
 
 interface ModalProps {
   hideModal: () => void
@@ -66,7 +68,15 @@ export default function AddDocumentModal ({ hideModal }: ModalProps) {
               <hr className='my-6 mx-4'/>
               {
                 requestType === 'Leave' &&
-                  <LeaveForm/>
+                  <LeaveForm hideModal={hideModal}/>
+              }
+              {
+                requestType === 'Travel' &&
+                  <TravelForm hideModal={hideModal}/>
+              }
+              {
+                requestType === 'Pass Slip' &&
+                  <PassSlipForm hideModal={hideModal}/>
               }
             </div>
           </div>

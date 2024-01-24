@@ -262,17 +262,6 @@ export async function fetchAssignments (filters: { filterKeyword?: string, filte
     // filter status
     if (filters.filterStatus && filters.filterStatus !== '') {
       query = query.eq('status', filters.filterStatus)
-      // const today = format(new Date(), 'yyyy-MM-dd')
-      // if (filters.filterStatus === 'Active') {
-      //   // filter where date (to) is blank or less than the current date
-      //   query = query.or(`to.gte.'${today}',to.is.null`)
-      //   query = query.gte('from', `${today}`)
-      // }
-      // if (filters.filterStatus === 'Expired') {
-      //   // filter where date (to) is green than the today's date
-      //   query = query.lt('to', `${today}`)
-      //   query = query.not('to', 'is', null)
-      // }
     }
 
     // Per Page from context
@@ -733,6 +722,10 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
     // Filter type
     if (typeof filters.filterType !== 'undefined' && filters.filterType !== '') {
       query = query.eq('type', filters.filterType)
+    }
+
+    if (typeof filters.filterStatus !== 'undefined' && filters.filterStatus !== '') {
+      query = query.eq('current_status', filters.filterStatus)
     }
 
     // Filter Requester

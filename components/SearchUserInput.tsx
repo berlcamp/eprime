@@ -11,9 +11,10 @@ interface PropTypes {
   isMultiple: boolean
   handleSelectedUsers: (users: namesType[] | []) => void
   selectedUsers?: namesType[] | []
+  excludedIds?: string[] | []
 }
 
-export default function SearchUserInput ({ classNames, isMultiple, handleSelectedUsers, selectedUsers }: PropTypes) {
+export default function SearchUserInput ({ classNames, isMultiple, handleSelectedUsers, selectedUsers, excludedIds }: PropTypes) {
   const [searchHead, setSearchHead] = useState('')
   const [searchResults, setSearchResults] = useState<namesType[] | []>([])
   const [selectedItems, setSelectedItems] = useState<namesType[] | []>(selectedUsers ?? [])
@@ -34,6 +35,9 @@ export default function SearchUserInput ({ classNames, isMultiple, handleSelecte
     const results = systemUsers.filter(user => {
       // exclude already selected users
       if (selectedItems.some(obj => obj.id.toString() === user.id.toString())) return false
+
+      // exclude excluded Ids from props
+      if (excludedIds?.some(id => id === user.id.toString())) return false
 
       const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
       return searchWords.every(word => fullName.includes(word))

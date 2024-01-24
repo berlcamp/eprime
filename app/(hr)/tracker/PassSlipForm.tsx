@@ -21,7 +21,7 @@ interface ModalProps {
   hideModal: () => void
 }
 
-const LeaveForm = ({ hideModal }: ModalProps) => {
+const PassSlipForm = ({ hideModal }: ModalProps) => {
   const { setToast } = useFilter()
   const { supabase, session, systemUsers } = useSupabase()
 
@@ -80,7 +80,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
 
     try {
       const newData = {
-        type: 'Leave',
+        type: 'Pass Slip',
         reference_code: refCode,
         leave_type: formdata.type,
         leave_location: formdata.location,
@@ -107,7 +107,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         .select()
 
       if (error) {
-        void logError('Create Leave Request', 'hrm_request_trackers', JSON.stringify(newData), error.message)
+        void logError('Create Pass Slip Request', 'hrm_request_trackers', JSON.stringify(newData), error.message)
         setToast('error', 'Saving failed, please reload the page and try again.')
         throw new Error(error.message)
       }
@@ -126,7 +126,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         }])
 
       if (error2) {
-        void logError('Create Leave Request Tracker Flow', 'hrm_tracker_flow', JSON.stringify({ tracker_id: data[0].id, user_id: currentUser.id, status: 'Request Created' }), error2.message)
+        void logError('Create Pass Slip Request Tracker Flow', 'hrm_tracker_flow', JSON.stringify({ tracker_id: data[0].id, user_id: currentUser.id, status: 'Request Created' }), error2.message)
         setToast('error', 'Saving failed, please reload the page and try again.')
         throw new Error(error2.message)
       }
@@ -166,7 +166,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
       const { error: error3 } = await supabase
         .from('hrm_notifications')
         .insert({
-          message: `New Leave Request #${refCode} has been forwarded to you for recommendation/approval.`,
+          message: `New Pass Slip Request #${refCode} has been forwarded to you for recommendation/approval.`,
           url: `/tracker/${refCode}`,
           type: 'Forwarded',
           user_id: receiverId,
@@ -482,4 +482,4 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   )
 }
 
-export default LeaveForm
+export default PassSlipForm

@@ -83,7 +83,9 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
 
   const [showConfirmForwardModal, setShowConfirmForwardModal] = useState(false)
   const [showConfirmApproveModal, setShowConfirmApproveModal] = useState(false)
+  const [showConfirmCancelModal, setShowConfirmCancelModal] = useState(false)
   const [showConfirmDisapproveModal, setShowConfirmDisapproveModal] = useState(false)
+  const [showConfirmRecommendModal, setShowConfirmRecommendModal] = useState(false)
 
   // Forward to this user
   const [selectedUser, setSelectedUser] = useState<namesType | null>(null)
@@ -91,7 +93,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
   const [selectedImages, setSelectedImages] = useState<any>([])
   const { systemUsers, session, supabase } = useSupabase()
 
-  const { setToast } = useFilter()
+  const { setToast, hasAccess } = useFilter()
 
   const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -203,6 +205,14 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     setShowConfirmForwardModal(true)
   }
 
+  const handleCancel = () => {
+    setShowConfirmCancelModal(true)
+  }
+
+  const handleRecommend = () => {
+    setShowConfirmRecommendModal(true)
+  }
+
   const handleApprove = () => {
     setShowConfirmApproveModal(true)
   }
@@ -282,6 +292,80 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     setSaving(true)
 
     const newData = {
+      current_status: 'Approved',
+      current_approver_id: session.user.id
+    }
+    try {
+      const { error } = await supabase
+        .from('hrm_request_trackers')
+        .update(newData)
+        .eq('id', documentData.id)
+
+      if (error) {
+        void logError('Approval', 'hrm_request_trackers', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
+      // Added log to latest tracker flow
+      const { data } = await supabase
+        .from('hrm_tracker_flow')
+        .select()
+        .eq('tracker_id', documentData.id)
+        .order('id', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (data) {
+        const newData = {
+          message: 'Approved',
+          tracker_flow_id: data.id,
+          user_id: session.user.id
+        }
+
+        const { error: error2 } = await supabase
+          .from('hrm_tracker_logs')
+          .insert(newData)
+          .eq('id', documentData.id)
+
+        if (error2) {
+          void logError('Approval Flow Logs', 'hrm_tracker_flow', '', error2.message)
+        }
+      }
+
+      // Update data in redux
+      const items: DocumentTypes[] = [...globallist]
+      const updatedData = { ...newData, id: documentData.id }
+      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      items[foundIndex] = { ...items[foundIndex], ...updatedData }
+      dispatch(updateList(items))
+      setDocumentData(items[foundIndex]) // update ui with new data
+
+      // Notify requester and follower
+      void handleNotify(items[foundIndex], 'Approved')
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      // hide the modal
+      setShowConfirmApproveModal(false)
+
+      // Recount sidebar counter
+      dispatch(recount())
+
+      setUpdateStatusFlow(!updateStatusFlow)
+      setSaving(false)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleConfirmedRecommend = async () => {
+    if (saving) return
+
+    setSaving(true)
+
+    const newData = {
       current_status: 'Approval Recommended',
       current_approver_id: session.user.id
     }
@@ -338,10 +422,78 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       setToast('success', 'Successfully saved.')
 
       // hide the modal
-      setShowConfirmApproveModal(false)
+      setShowConfirmRecommendModal(false)
 
       // Recount sidebar counter
       dispatch(recount())
+
+      setUpdateStatusFlow(!updateStatusFlow)
+      setSaving(false)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleConfirmedCancel = async () => {
+    if (saving) return
+
+    setSaving(true)
+
+    const newData = {
+      current_status: 'Cancelled',
+      current_approver_id: session.user.id
+    }
+    try {
+      const { error } = await supabase
+        .from('hrm_request_trackers')
+        .update(newData)
+        .eq('id', documentData.id)
+
+      if (error) {
+        void logError('Cancel Request', 'hrm_request_trackers', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
+      // Added log to latest tracker flow
+      const { data } = await supabase
+        .from('hrm_tracker_flow')
+        .select()
+        .eq('tracker_id', documentData.id)
+        .order('id', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (data) {
+        const newData = {
+          message: 'Cancelled',
+          tracker_flow_id: data.id,
+          user_id: session.user.id
+        }
+
+        const { error: error2 } = await supabase
+          .from('hrm_tracker_logs')
+          .insert(newData)
+          .eq('id', documentData.id)
+
+        if (error2) {
+          void logError('Cancel Request Flow Logs', 'hrm_tracker_flow', '', error2.message)
+        }
+      }
+
+      // Update data in redux
+      const items: DocumentTypes[] = [...globallist]
+      const updatedData = { ...newData, id: documentData.id }
+      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      items[foundIndex] = { ...items[foundIndex], ...updatedData }
+      dispatch(updateList(items))
+      setDocumentData(items[foundIndex]) // update ui with new data
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      // hide the modal
+      setShowConfirmCancelModal(false)
 
       setUpdateStatusFlow(!updateStatusFlow)
       setSaving(false)
@@ -593,15 +745,65 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
               </div>
             </div>
             <div className="flex space-x-2 items-center justify-between border-b p-4 bg-orange-50">
-              {/* Approval and Forwarding */}
               <div className='w-full'>
+                {/* Cancel Request */}
                 {
-                  (documentData.current_approver_id !== session.user.id && documentData.receiver_id === session.user.id) &&
+                  (documentData.created_by === session.user.id && documentData.current_status !== 'Approved' && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled') &&
+                    <div className='mb-6'>
+                      <div className='space-x-2'>
+                        <CustomButton
+                          containerStyles='app__btn_orange'
+                          title={saving ? 'Saving...' : 'Cancel This Request'}
+                          btnType='button'
+                          handleClick={handleCancel}
+                        />
+                      </div>
+                      <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Cancel&apos;, your request process will be terminated.</div>
+                    </div>
+                }
+                {/* Recommending Approval */}
+                {
+                  (
+                    (documentData.current_approver_id !== session.user.id && documentData.receiver_id === session.user.id && documentData.current_status !== 'Approved' && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled') &&
+                    !(
+                      (hasAccess('leave_approver') && documentData.type === 'Leave') ||
+                      (hasAccess('travel_approver') && documentData.type === 'Travel') ||
+                      (hasAccess('passslip_approver') && documentData.type === 'Pass Slip')
+                    )
+                  ) &&
                     <div className='mb-6'>
                       <div className='space-x-2'>
                         <CustomButton
                           containerStyles='app__btn_green'
                           title={saving ? 'Saving...' : 'Approval Recommended'}
+                          btnType='button'
+                          handleClick={handleRecommend}
+                        />
+                        <CustomButton
+                          containerStyles='app__btn_red'
+                          title={saving ? 'Saving...' : 'Disapprove'}
+                          btnType='button'
+                          handleClick={handleDisapprove}
+                        />
+                      </div>
+                      <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Approve&apos;, you are authorizing and granting permission to the requester to proceed with the specified request.</div>
+                    </div>
+                }
+                {/* Final Approval */}
+                {
+                  (
+                    (documentData.receiver_id === session.user.id && documentData.current_status !== 'Approved' && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled') &&
+                    (
+                      (hasAccess('leave_approver') && documentData.type === 'Leave') ||
+                      (hasAccess('travel_approver') && documentData.type === 'Travel') ||
+                      (hasAccess('passslip_approver') && documentData.type === 'Pass Slip')
+                    )
+                  ) &&
+                    <div className='mb-6'>
+                      <div className='space-x-2'>
+                        <CustomButton
+                          containerStyles='app__btn_green'
+                          title={saving ? 'Saving...' : 'Approve'}
                           btnType='button'
                           handleClick={handleApprove}
                         />
@@ -615,13 +817,15 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                       <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Approve&apos;, you are authorizing and granting permission to the requester to proceed with the specified request.</div>
                     </div>
                 }
+                {/* Forward */}
                 {
-                  documentData.receiver_id === session.user.id &&
+                  (documentData.receiver_id === session.user.id && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled') &&
                     <div className="">
                       <div className='font-medium text-sm text-gray-700'>Forward this request to:</div>
                       <div className="flex w-full space-x-2">
                         <SearchUserInput
                           isMultiple={false}
+                          excludedIds={[session.user.id]}
                           classNames='w-1/2'
                           handleSelectedUsers={handleSelectedUsers}/>
                         <CustomButton
@@ -654,7 +858,8 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                           <td className='px-2 py-2 font-light text-right'>Current Status:</td>
                           <td>
                             {documentData.current_status === 'Request Created' && <span className='text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium text-sm'>{documentData.current_status}</span>}
-                            {documentData.current_status === 'Approval Recommended' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium text-sm'>{documentData.current_status}</span>}
+                            {documentData.current_status === 'Approval Recommended' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium text-sm'>{documentData.current_status}</span>}
+                            {documentData.current_status === 'Cancelled' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium text-sm'>{documentData.current_status}</span>}
                             {documentData.current_status === 'Approved' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium text-sm'>{documentData.current_status}</span>}
                             {documentData.current_status === 'Disapproved' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium text-sm'>{documentData.current_status}</span>}
                           </td>
@@ -845,6 +1050,30 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
               message="Are you sure you want to approve this request?"
               onConfirm={handleConfirmedApprove}
               onCancel={() => setShowConfirmApproveModal(false)}
+            />
+          )
+        }
+        {/* Recommend Confirmation Modal */}
+        {
+          showConfirmRecommendModal && (
+            <ConfirmModal
+              header='Recommend Approval Confirmation'
+              btnText='Confirm'
+              message="Are you sure you want to recommend this request for approval?"
+              onConfirm={handleConfirmedRecommend}
+              onCancel={() => setShowConfirmRecommendModal(false)}
+            />
+          )
+        }
+        {/* Cancel Confirmation Modal */}
+        {
+          showConfirmCancelModal && (
+            <ConfirmModal
+              header='Approval Confirmation'
+              btnText='Confirm'
+              message="Are you sure you want to cancel this request?"
+              onConfirm={handleConfirmedCancel}
+              onCancel={() => setShowConfirmCancelModal(false)}
             />
           )
         }

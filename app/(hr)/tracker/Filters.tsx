@@ -171,7 +171,8 @@ const Filters = ({ setFilterKeyword, setFilterType, setFilterStatus, setFilterRe
                 className='app__filter_select'>
                   <option value=''>Status:</option>
                   <option value='Approved'>Approved</option>
-                  <option value='Pending'>Pending</option>
+                  <option value='Approval Recommended'>Approval Recommended</option>
+                  <option value='Request Created'>Request Created</option>
                   <option value='Disapproved'>Disapproved</option>
               </select>
             </div>

@@ -57,13 +57,11 @@ const Page: React.FC = () => {
                   <ChooseUsers multiple={true} type='settings' users={users} title='Who can manage System Settings'/>
                   <ChooseUsers multiple={true} type='employee_accounts' users={users} title='Who can manage Employee Accounts'/>
                   <ChooseUsers multiple={true} type='records' users={users} title='Who can manage Records (Assignments, Designations, CTOs, Service Credits)'/>
-                  <ChooseUsers multiple={true} type='rsp' users={users} title='Who can manage R/S/P Settings'/>
-                  <ChooseUsers multiple={true} type='pms' users={users} title='Who can manage PMS Settings'/>
-                  <ChooseUsers multiple={true} type='lad' users={users} title='Who can manage L & D Settings'/>
+                  <ChooseUsers multiple={false} type='leave_approver' users={users} title='Final Approval for Leave Request'/>
+                  <ChooseUsers multiple={false} type='travel_approver' users={users} title='Final Approval for Travel Request'/>
+                  <ChooseUsers multiple={false} type='passslip_approver' users={users} title='Final Approval for Pass Slip'/>
                   <ChooseUsers multiple={false} type='sds' users={users} title='Current SDS'/>
                   <ChooseUsers multiple={false} type='asds' users={users} title='Current ASDS'/>
-                  <ChooseUsers multiple={false} type='cid' users={users} title='Current CID Chief'/>
-                  <ChooseUsers multiple={false} type='sgod' users={users} title='Current SGOD Chief'/>
                   </>
               }
             </div>
