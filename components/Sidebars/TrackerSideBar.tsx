@@ -23,13 +23,12 @@ const TrackerSideBar = () => {
       .from('hrm_request_trackers')
       .select('*', { count: 'exact' })
       .eq('receiver_id', session.user.id)
-      .eq('current_status', 'Forwarded')
+      .eq('current_tracker', 'Forwarded')
 
     setForwardedCount(forwarded)
   }
   useEffect(() => {
     void counter()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recountStatus])
   return (
     <>

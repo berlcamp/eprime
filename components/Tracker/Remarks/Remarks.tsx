@@ -50,11 +50,11 @@ export default function Remarks ({ document }: ModalProps) {
         </div>
         {/* Only receiving department can make remarks */}
         {
-          ((document.current_status === 'Request Created' && document.created_by === session.user.id) || (document.current_status === 'Forwarded' && document.receiver_id === session.user.id)) && <RemarkBox document={document}/>
+          document.receiver_id === session.user.id && <RemarkBox document={document}/>
         }
         {/* Added extra height if no remarks found */}
         {
-          remarksData?.length === 0 && <div className='h-20'>&nbsp;</div>
+          remarksData?.length === 0 && <div className='h-20 px-4'>No remarks found.&nbsp;</div>
         }
         {
           remarksData?.map((reply, index) => (

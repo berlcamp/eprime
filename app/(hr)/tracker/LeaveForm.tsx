@@ -92,8 +92,10 @@ const LeaveForm = () => {
         leave_to: formdata.to,
         leave_commutation: formdata.commutation,
         created_by: session.user.id,
+        current_approver_id: session.user.id,
         receiver_id: user.id,
-        current_status: 'Forwarded'
+        current_status: 'Request Created',
+        current_tracker: 'Forwarded'
       }
 
       const { data, error }: { data: any, error: any } = await supabase

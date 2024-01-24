@@ -704,12 +704,13 @@ export interface DocumentFilterTypes {
   filterRequester?: string
 }
 
-export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: string | null, user: Employee | null, perPageCount: number, rangeFrom: number) {
+export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: string | null, userId: string, perPageCount: number, rangeFrom: number) {
   try {
     // Get Department ID within Tracker Flow
     const { data: trackerFlow } = await supabase
       .from('hrm_tracker_flow')
       .select()
+      .or(`user_id.eq.${userId},receiver_id.eq.${userId}`)
 
     const trackerIds: string[] = []
     trackerFlow?.forEach((item: FlowListTypes) => {
@@ -718,7 +719,7 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
 
     let query = supabase
       .from('hrm_request_trackers')
-      .select('*, hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,avatar_url),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)', { count: 'exact' })
+      .select('*, hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,avatar_url),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)', { count: 'exact' })
       .in('id', trackerIds)
 
     // Full text search
@@ -744,7 +745,7 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
       const { data }: { data: FollowersTypes[] | null } = await supabase
         .from('hrm_tracker_followers')
         .select()
-        .eq('user_id', user?.id)
+        .eq('user_id', userId)
 
       if (data) {
         data.forEach(d => {
@@ -756,8 +757,8 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
     }
 
     if (filterUrl && filterUrl === 'forwarded') {
-      query = query.eq('receiver_id', user?.id)
-      query = query.eq('current_status', 'Forwarded')
+      query = query.eq('receiver_id', userId)
+      query = query.eq('current_tracker', 'Forwarded')
     }
 
     // Perform count before paginations

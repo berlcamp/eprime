@@ -13,6 +13,7 @@ import type { DocumentTypes } from '@/types'
 import { statusList } from '@/constants'
 import StickiesModal from '../StickiesModal'
 import Link from 'next/link'
+import { useSupabase } from '@/context/SupabaseProvider'
 
 export default function Page ({ params }: { params: { ref: string } }) {
   const [loading, setLoading] = useState(false)
@@ -21,13 +22,15 @@ export default function Page ({ params }: { params: { ref: string } }) {
   const [list, setList] = useState<DocumentTypes[]>([])
   const [selectedItem, setSelectedItem] = useState<DocumentTypes | null>(null)
 
+  const { session } = useSupabase()
+
   const refCode = params.ref
 
   const fetchData = async () => {
     setLoading(true)
 
     try {
-      const result = await fetchDocuments({ filterKeyword: refCode }, null, null, 10, 0)
+      const result = await fetchDocuments({ filterKeyword: refCode }, null, session.user.id, 10, 0)
 
       setList(result.data)
       setLoading(false)

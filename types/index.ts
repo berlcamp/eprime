@@ -329,7 +329,9 @@ export interface DocumentTypes {
   type: string
   reference_code: string
   current_status: string
+  current_tracker: string
   receiver_id: string
+  current_approver_id: string
   date_created: string
   leave_type: string
   leave_location: string
@@ -350,6 +352,7 @@ export interface DocumentTypes {
   hrm_remarks: RemarksTypes[]
   creator: Employee
   receiver: Employee
+  approver: Employee
   hrm_tracker_followers: FollowersTypes[]
   hrm_request_tracker_stickies: StickiesTypes[]
 }

@@ -11,12 +11,11 @@ import Filters from './Filters'
 import { format } from 'date-fns'
 
 // Types
-import type { Employee, DocumentTypes } from '@/types'
+import type { DocumentTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
-import { statusList } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
 import StickiesModal from './StickiesModal'
 import { useSearchParams } from 'next/navigation'
@@ -40,9 +39,7 @@ const Page: React.FC = () => {
 
   const searchParams = useSearchParams()
 
-  const { session, systemUsers } = useSupabase()
-
-  const user: Employee = systemUsers.find((user: Employee) => user.id === session.user.id)
+  const { session } = useSupabase()
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -54,7 +51,7 @@ const Page: React.FC = () => {
     try {
       const filterUrl = searchParams.get('filter')
 
-      const result = await fetchDocuments({ filterKeyword, filterType, filterStatus, filterRequester }, filterUrl, user, perPageCount, 0)
+      const result = await fetchDocuments({ filterKeyword, filterType, filterStatus, filterRequester }, filterUrl, session.user.id, perPageCount, 0)
 
       // update the list in redux
       dispatch(updateList(result.data))
@@ -75,7 +72,7 @@ const Page: React.FC = () => {
     try {
       const filterUrl = searchParams.get('filter')
 
-      const result = await fetchDocuments({ filterKeyword, filterType, filterStatus, filterRequester }, filterUrl, user, perPageCount, list.length)
+      const result = await fetchDocuments({ filterKeyword, filterType, filterStatus, filterRequester }, filterUrl, session.user.id, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -102,15 +99,6 @@ const Page: React.FC = () => {
   const handleShowDetailsModal = (item: DocumentTypes) => {
     setShowDetailsModal(true)
     setSelectedItem(item)
-  }
-
-  const getStatusColor = (status: string): string => {
-    const statusArr = statusList.filter(item => item.status === status)
-    if (statusArr.length > 0) {
-      return statusArr[0].color
-    } else {
-      return '#000000'
-    }
   }
 
   // Update list whenever list in redux updates
@@ -260,13 +248,10 @@ const Page: React.FC = () => {
                           <UserBlock user={item.creator}/>
                       </td>
                       <td className='hidden sm:table-cell app__td'>
-                        {
-                          item.current_status !== 'Request Created' &&
-                            <>
-                            <div className='font-medium pb-1' style={{ color: `${getStatusColor(item.current_status)}` }}>{item.current_status}</div>
-                            <UserBlock user={item.receiver}/>
-                            </>
-                        }
+                        {item.current_status === 'Approval Recommended' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium'>{item.current_status}</span>}
+                        {item.current_status === 'Approved' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium'>{item.current_status}</span>}
+                        {item.current_status === 'Disapproved' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium'>{item.current_status}</span>}
+                        <div className='mt-1'>by {item.approver.firstname} {item.approver.middlename} {item.approver.lastname}</div>
                       </td>
                     </tr>
                   ))

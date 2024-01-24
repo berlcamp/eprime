@@ -16,7 +16,6 @@ import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { recount } from '@/GlobalRedux/Features/recountSlice'
 import { useFilter } from '@/context/FilterContext'
 import { BellAlertIcon, BellSlashIcon, StarIcon, XMarkIcon } from '@heroicons/react/20/solid'
-import { statusList } from '@/constants'
 import AddStickyModal from './AddStickyModal'
 import { logError } from '@/utils/fetchApi'
 import { Tooltip } from 'react-tooltip'
@@ -158,6 +157,11 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       // Notify the origin
       userIds.push(document.created_by)
 
+      // Notify the receiver if status is forwarded
+      if (actionType === 'Forwarded') {
+        userIds.push(document.receiver_id)
+      }
+
       // Remove the duplicated IDs
       const uniqueIds = userIds.reduce((accumulator: string[], currentValue: string) => {
         if (!accumulator.includes(currentValue)) {
@@ -215,7 +219,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     setSaving(true)
 
     const newData = {
-      current_status: 'Forwarded',
+      current_tracker: 'Forwarded',
       receiver_id: selectedUser.id
     }
     try {
@@ -245,9 +249,6 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
         throw new Error(error2.message)
       }
 
-      // Notify followers and Departments
-      void handleNotify(documentData, 'Forwarded')
-
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
@@ -255,6 +256,9 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
       setDocumentData(items[foundIndex]) // update ui with new data
+
+      // Notify requester and receiver
+      void handleNotify(items[foundIndex], 'Forwarded')
 
       // pop up the success message
       setToast('success', 'Successfully saved.')
@@ -278,7 +282,8 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     setSaving(true)
 
     const newData = {
-      current_status: 'Partially Approved'
+      current_status: 'Approval Recommended',
+      current_approver_id: session.user.id
     }
     try {
       const { error } = await supabase
@@ -287,27 +292,36 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
         .eq('id', documentData.id)
 
       if (error) {
-        void logError('Partially Approved', 'hrm_request_trackers', JSON.stringify(newData), error.message)
+        void logError('Approval Recommended', 'hrm_request_trackers', JSON.stringify(newData), error.message)
         setToast('error', 'Saving failed, please reload the page and try again.')
         throw new Error(error.message)
       }
 
-      const { error: error2 } = await supabase
+      // Added log to latest tracker flow
+      const { data } = await supabase
         .from('hrm_tracker_flow')
-        .insert({
-          tracker_id: documentData.id,
-          user_id: session.user.id,
-          status: 'Partially Approved'
-        })
+        .select()
+        .eq('tracker_id', documentData.id)
+        .order('id', { ascending: false })
+        .limit(1)
+        .single()
 
-      if (error2) {
-        void logError('Partially Approved Flow', 'hrm_tracker_flow', '', error2.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
-        throw new Error(error2.message)
+      if (data) {
+        const newData = {
+          message: 'Approval Recommended',
+          tracker_flow_id: data.id,
+          user_id: session.user.id
+        }
+
+        const { error: error2 } = await supabase
+          .from('hrm_tracker_logs')
+          .insert(newData)
+          .eq('id', documentData.id)
+
+        if (error2) {
+          void logError('Approval Recommended Flow Logs', 'hrm_tracker_flow', '', error2.message)
+        }
       }
-
-      // Notify followers and Departments
-      void handleNotify(documentData, 'Partially Approved')
 
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
@@ -316,6 +330,9 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
       setDocumentData(items[foundIndex]) // update ui with new data
+
+      // Notify requester and follower
+      void handleNotify(items[foundIndex], 'Approval Recommended')
 
       // pop up the success message
       setToast('success', 'Successfully saved.')
@@ -339,7 +356,8 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     setSaving(true)
 
     const newData = {
-      current_status: 'Disapproved'
+      current_status: 'Disapproved',
+      current_approver_id: session.user.id
     }
     try {
       const { error } = await supabase
@@ -367,9 +385,6 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
         throw new Error(error2.message)
       }
 
-      // Notify followers and Departments
-      void handleNotify(documentData, 'Disapproved')
-
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
@@ -377,6 +392,9 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
       setDocumentData(items[foundIndex]) // update ui with new data
+
+      // Notify requester and follower
+      void handleNotify(items[foundIndex], 'Disapproved')
 
       // pop up the success message
       setToast('success', 'Successfully saved.')
@@ -479,15 +497,6 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     setSelectedItem(item)
   }
 
-  const getStatusColor = (status: string): string => {
-    const statusArr = statusList.filter(item => item.status === status)
-    if (statusArr.length > 0) {
-      return statusArr[0].color
-    } else {
-      return '#000000'
-    }
-  }
-
   const handleSelectedUsers = (selectedUsers: namesType[]) => {
     if (selectedUsers.length > 0) {
       setSelectedUser(selectedUsers[0])
@@ -587,12 +596,12 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
               {/* Approval and Forwarding */}
               <div className='w-full'>
                 {
-                  (documentData.current_status === 'Forwarded' && documentData.receiver_id === session.user.id) &&
+                  (documentData.current_approver_id !== session.user.id && documentData.receiver_id === session.user.id) &&
                     <div className='mb-6'>
                       <div className='space-x-2'>
                         <CustomButton
                           containerStyles='app__btn_green'
-                          title={saving ? 'Saving...' : 'Approve'}
+                          title={saving ? 'Saving...' : 'Approval Recommended'}
                           btnType='button'
                           handleClick={handleApprove}
                         />
@@ -608,7 +617,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                 }
                 {
                   ((documentData.current_status === 'Request Created' && documentData.created_by === session.user.id) ||
-                    (['Forwarded', 'Partially Approved'].includes(documentData.current_status) && documentData.receiver_id === session.user.id)
+                    (['Forwarded', 'Approval Recommended'].includes(documentData.current_status) && documentData.receiver_id === session.user.id)
                   ) &&
                     <div className="">
                       <div className='font-medium text-sm text-gray-700'>Forward this request to:</div>
@@ -646,7 +655,10 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                         <tr>
                           <td className='px-2 py-2 font-light text-right'>Current Status:</td>
                           <td>
-                            <span className='font-medium text-sm' style={{ color: `${getStatusColor(documentData.current_status)}` }}>{documentData.current_status}</span>
+                            {documentData.current_status === 'Request Created' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium text-sm'>{documentData.current_status}</span>}
+                            {documentData.current_status === 'Approval Recommended' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium text-sm'>{documentData.current_status}</span>}
+                            {documentData.current_status === 'Approved' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium text-sm'>{documentData.current_status}</span>}
+                            {documentData.current_status === 'Disapproved' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium text-sm'>{documentData.current_status}</span>}
                           </td>
                         </tr>
                         <tr>
