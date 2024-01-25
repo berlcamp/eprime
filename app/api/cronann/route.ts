@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
 import { format } from 'date-fns'
 
 export async function GET () {
@@ -15,17 +14,15 @@ export async function GET () {
 
   const today = format(new Date(), 'yyyy-MM-dd')
 
-  try {
-    const { error } = await supabase
-      .from('hrm_ctos')
-      .update({ status: 'Expired' })
-      .is('status', null)
-      .lte('expiration', today)
+  const { error } = await supabase
+    .from('hrm_ctos')
+    .update({ status: 'Expired' })
+    .is('status', null)
+    .lte('expiration', today)
 
-    if (error) throw new Error('ctos error' + error.message)
-
-    return NextResponse.json('ctos updated')
-  } catch (error) {
-    console.log(error)
+  if (error) {
+    console.log('ctos update error' + error.message)
+  } else {
+    console.log('ctos update successfull')
   }
 }
