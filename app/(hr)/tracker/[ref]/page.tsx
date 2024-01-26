@@ -13,6 +13,8 @@ import type { DocumentTypes } from '@/types'
 import StickiesModal from '../StickiesModal'
 import Link from 'next/link'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { useDispatch, useSelector } from 'react-redux'
+import { updateList } from '@/GlobalRedux/Features/listSlice'
 
 export default function Page ({ params }: { params: { ref: string } }) {
   const [loading, setLoading] = useState(false)
@@ -25,11 +27,18 @@ export default function Page ({ params }: { params: { ref: string } }) {
 
   const refCode = params.ref
 
+  // Redux staff
+  const globallist = useSelector((state: any) => state.list.value)
+  const dispatch = useDispatch()
+
   const fetchData = async () => {
     setLoading(true)
 
     try {
       const result = await fetchDocuments({ filterKeyword: refCode }, null, session.user.id, 10, 0)
+
+      // update the list in redux
+      dispatch(updateList(result.data))
 
       setList(result.data)
       setLoading(false)
@@ -42,6 +51,11 @@ export default function Page ({ params }: { params: { ref: string } }) {
     setShowDetailsModal(true)
     setSelectedItem(item)
   }
+
+  // Update list whenever list in redux updates
+  useEffect(() => {
+    setList(globallist)
+  }, [globallist])
 
   // Featch data
   useEffect(() => {

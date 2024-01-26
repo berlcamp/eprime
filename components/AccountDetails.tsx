@@ -16,8 +16,9 @@ import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 
 // Types
-import { type PositionTypes, type AccountDetailsForm, type SchoolTypes, type DistrictTypes, type Office } from '@/types'
+import type { PositionTypes, SchoolTypes, DistrictTypes, Office, Employee } from '@/types'
 import { generateReferenceCode } from '@/utils/text-helper'
+import CustomButton from './CustomButton'
 
 interface ModalProps {
   hideModal: () => void
@@ -54,17 +55,17 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   // Check access from employee_accounts settings or Super Admins
   const isAdmin = hasAccess('employee_accounts') || superAdmins.includes(session.user.email)
 
-  const { register, formState: { errors }, reset, handleSubmit } = useForm<AccountDetailsForm>({
+  const { register, formState: { errors }, reset, handleSubmit } = useForm<Employee>({
     mode: 'onSubmit'
   })
 
-  const onSubmit = async (formdata: AccountDetailsForm) => {
+  const onSubmit = async (formdata: Employee) => {
     if (loading || saving) return
 
     void handleUpdate(formdata)
   }
 
-  const handleUpdate = async (formdata: AccountDetailsForm) => {
+  const handleUpdate = async (formdata: Employee) => {
     setSaving(true)
 
     let newData
@@ -79,12 +80,16 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         middlename: formdata.middlename,
         lastname: formdata.lastname,
         assignment: formdata.assignment,
+        birthday: formdata.birthday ? new Date(formdata.birthday) : null, // use the string data before storing the redux to avoid error
         district_id: district,
         school_id: school,
         office_id: office,
-        position_id: formdata.position_id === '' ? null : formdata.position_id,
+        position_id: formdata.position_id ? formdata.position_id : null,
         salary_grade: formdata.salary_grade,
-        salary_step: formdata.salary_step
+        salary_step: formdata.salary_step,
+        position_type: formdata.position_type,
+        date_of_last_promotion: formdata.date_of_last_promotion ? new Date(formdata.date_of_last_promotion) : null, // use the string data before storing the redux to avoid error
+        joining_date: formdata.joining_date ? new Date(formdata.joining_date) : null // use the string data before storing the redux to avoid error
       }
     } else {
       newData = {
@@ -92,6 +97,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         middlename: formdata.middlename,
         lastname: formdata.lastname,
         assignment: formdata.assignment,
+        birthday: formdata.birthday ? new Date(formdata.birthday) : null, // use the string data before storing the redux to avoid error
         district_id: district,
         school_id: school,
         office_id: office
@@ -115,7 +121,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         console.log('redux updated')
         const items = [...globallist]
         const updatedDropdownData = getUpdatedDropdownData(formdata)
-        const updatedData = { ...newData, id, ...updatedDropdownData }
+        const updatedData = { ...newData, birthday: formdata.birthday, joining_date: formdata.joining_date, date_of_last_promotion: formdata.date_of_last_promotion, id, ...updatedDropdownData }
         const foundIndex = items.findIndex(x => x.id === updatedData.id)
         items[foundIndex] = { ...items[foundIndex], ...updatedData }
         dispatch(updateList(items))
@@ -133,11 +139,11 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
     }
   }
 
-  const getUpdatedDropdownData = (formdata: AccountDetailsForm) => {
+  const getUpdatedDropdownData = (formdata: Employee) => {
     let json = {}
 
     // Positions
-    const pos = positions.filter(x => x.id.toString() === formdata.position_id)
+    const pos = positions.filter(x => x.id.toString() === formdata.position_id.toString())
     if (pos.length > 0) {
       json = { ...json, hrm_positions: { id: pos[0].id, name: pos[0].name } }
     }
@@ -239,7 +245,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
           .select()
           .eq('id', id)
           .limit(1)
-          .maybeSingle()
+          .single()
 
         if (error) throw new Error(error.message)
 
@@ -258,12 +264,16 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
           middlename: data ? data.middlename : '',
           lastname: data ? data.lastname : '',
           assignment: data ? data.assignment : '',
+          birthday: (data?.birthday) ? data.birthday : '',
           district_id: data ? data.district_id : '',
           school_id: data ? data.school_id : '',
           office_id: data ? data.office_id : '',
           position_id: data ? data.position_id : '',
+          position_type: data ? data.position_type : '',
           salary_grade: data ? data.salary_grade : '',
-          salary_step: data ? data.salary_step : ''
+          salary_step: data ? data.salary_step : '',
+          joining_date: (data?.joining_date) ? data.joining_date : '',
+          date_of_last_promotion: (data?.date_of_last_promotion) ? data.date_of_last_promotion : ''
         })
       } catch (e) {
         console.error('fetch error: ', e)
@@ -314,7 +324,13 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
               <h5 className="app__modal_header_text">
                 Account Details
               </h5>
-              <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+              <CustomButton
+                containerStyles='app__btn_gray'
+                title='Close'
+                isDisabled={saving}
+                btnType='button'
+                handleClick={hideModal}
+              />
             </div>
 
             {/* Modal Content */}
@@ -372,6 +388,17 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                             type="text"
                             className='app__input_standard'/>
                           {errors.lastname && <div className='app__error_message'>Last Name is required</div>}
+                        </div>
+                      </div>
+                    </div>
+                    <div className='app__form_field_container'>
+                      <div className='w-full'>
+                        <div className='app__label_standard'>Birthday:</div>
+                        <div>
+                          <input
+                            {...register('birthday')}
+                            type="date"
+                            className='app__input_standard'/>
                         </div>
                       </div>
                     </div>
@@ -484,7 +511,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                               <div className='app__label_standard'>Current Position:</div>
                               <div>
                                 <select
-                                  {...register('position_id')}
+                                  {...register('position_id', { required: true })}
                                   value={selectedPosition}
                                   onChange={e => setSelectedPosition(e.target.value)}
                                   className='app__input_standard'>
@@ -493,6 +520,22 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                                       positions.map((position: PositionTypes) => <option key={uuid()} value={position.id}>{position.name}</option>)
                                     }
                                 </select>
+                                {errors.position_id && <div className='app__error_message'>Current Position is required</div>}
+                              </div>
+                            </div>
+                          </div>
+                          <div className='app__form_field_container'>
+                            <div className='w-full'>
+                              <div className='app__label_standard'>Position Type:</div>
+                              <div>
+                                <select
+                                  {...register('position_type', { required: true })}
+                                  className='app__input_standard'>
+                                    <option value=''>Choose Type</option>
+                                    <option value='Teaching'>Teaching</option>
+                                    <option value='Non-teaching'>Non-teaching</option>
+                                </select>
+                                {errors.position_type && <div className='app__error_message'>Position Type is required</div>}
                               </div>
                             </div>
                           </div>
@@ -519,6 +562,28 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                                     <option value=''>Choose Salary Grade (Step)</option>
                                     {salaryStepOptions}
                                 </select>
+                              </div>
+                            </div>
+                          </div>
+                          <div className='app__form_field_container'>
+                            <div className='w-full'>
+                              <div className='app__label_standard'>Joining Date:</div>
+                              <div>
+                                <input
+                                  {...register('joining_date')}
+                                  type="date"
+                                  className='app__input_standard'/>
+                              </div>
+                            </div>
+                          </div>
+                          <div className='app__form_field_container'>
+                            <div className='w-full'>
+                              <div className='app__label_standard'>Date of last Promotion:</div>
+                              <div>
+                                <input
+                                  {...register('date_of_last_promotion')}
+                                  type="date"
+                                  className='app__input_standard'/>
                               </div>
                             </div>
                           </div>

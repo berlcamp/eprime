@@ -778,3 +778,33 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
     return { data: [], count: 0 }
   }
 }
+
+export async function fetchLeaveCards (userId: string, perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_leave_cards')
+      .select('*, hrm_user:user_id(id,firstname,lastname,middlename,avatar_url)', { count: 'exact' })
+      .eq('user_id', userId)
+      .order('id', { ascending: false })
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, count, error } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch error xx', error)
+    return { data: [], count: 0 }
+  }
+}

@@ -96,15 +96,19 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
           org_id: process.env.NEXT_PUBLIC_ORG_ID
         }
 
-        const { error: registrationError } = await supabase
+        const { data, error: registrationError } = await supabase
           .from('hrm_registrations')
           .insert(newUserData)
+          .select()
 
         if (registrationError) {
           void logError('Registration', 'hrm_registrations', JSON.stringify(newUserData), registrationError.message)
           setError('Registration failed this time, please reload the page and try again.')
           throw new Error(registrationError.message)
         }
+
+        const fullname = `${formdata.firstname} ${formdata.middlename} ${formdata.lastname}`
+        void handleNotify(fullname, data[0].id)
 
         setComplete(true)
       }
@@ -113,6 +117,54 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
       setError(null)
     } catch (error) {
       setLoading(false)
+    }
+  }
+
+  const handleNotify = async (fullname: string, id: string) => {
+    //
+    try {
+      const userIds: string[] = []
+
+      // Approvers
+      const { data, error } = await supabase
+        .from('hrm_system_access')
+        .select('user_id')
+        .eq('type', 'employee_accounts')
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      data.forEach((item: any) => {
+        userIds.push(item.user_id)
+      })
+
+      const notificationData: any[] = []
+
+      userIds.forEach((userId) => {
+        notificationData.push({
+          message: `${fullname} has recently registered. Kindly review and approve his registration.`,
+          url: '/registrations',
+          type: 'New Registration',
+          user_id: userId,
+          reference_id: id,
+          reference_table: 'hrm_registrations'
+        })
+      })
+
+      if (notificationData.length > 0) {
+        // insert to notifications
+        const { error: error3 } = await supabase
+          .from('hrm_notifications')
+          .insert(notificationData)
+
+        if (error3) {
+          throw new Error(error3.message)
+        }
+      }
+    } catch (e) {
+      console.error(e)
     }
   }
 

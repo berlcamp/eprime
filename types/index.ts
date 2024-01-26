@@ -97,6 +97,7 @@ export interface Employee {
   position_id: number
   salary_grade: string
   salary_step: string
+  position_type: string
   assignment: string
   district_id: string
   org_id: string
@@ -108,7 +109,31 @@ export interface Employee {
   hrm_offices?: Office
   hrm_assignments: AssignmentTypes[]
   hrm_designations: DesignationTypes[]
+  hrm_leave_cards: LeaveCardTypes[]
   hrm_positions?: PositionTypes
+  joining_date: string
+  birthday: string
+  date_of_last_promotion: string
+  date_of_last_designation: string
+}
+
+export interface LeaveCardTypes {
+  id: string
+  from: string
+  to: string
+  particulars: string
+  credits_used: string
+  credits_earned: string
+  balance: string
+  absence_with_pay: string
+  absence_without_pay: string
+  type: string
+  transaction_type: string
+  remarks: string
+  user_id: string
+  updated_by: string
+  created_at: string
+  adjustment_date: string
 }
 
 export interface AccountDetailsForm {

@@ -3,9 +3,8 @@
 import { fetchEmployees } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { CheckCircleIcon, ChevronDownIcon, Cog8ToothIcon, CreditCardIcon, PencilSquareIcon, TableCellsIcon, UserIcon, XMarkIcon } from '@heroicons/react/20/solid'
+import { CheckCircleIcon, ChevronDownIcon, TableCellsIcon, UserIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, EmployeesSideBar, Title, Unauthorized, AccountDetails, UserBlock } from '@/components'
-import uuid from 'react-uuid'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
 
@@ -17,6 +16,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { superAdmins } from '@/constants'
+import LeaveCardModal from '@/components/LeaveCardModal'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -26,7 +26,9 @@ const Page: React.FC = () => {
   const [filterOffice, setFilterOffice] = useState<string>('')
   const [filterSetupStatus, setFilterSetupStatus] = useState<string>('')
   const [perPageCount, setPerPageCount] = useState<number>(10)
+
   const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false)
+  const [showLeaveCardModal, setShowLeaveCardModal] = useState(false)
   const [selectedId, setSelectedId] = useState<string>('')
 
   // Redux staff
@@ -72,6 +74,11 @@ const Page: React.FC = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleViewLeaveCard = (item: Employee) => {
+    setSelectedId(item.id)
+    setShowLeaveCardModal(true)
   }
 
   const handleViewDetails = (item: Employee) => {
@@ -127,7 +134,7 @@ const Page: React.FC = () => {
             />
           </div>
 
-          <div className='app__warning_text'><span className='app__warning_title'>Warning:</span> Accounts with incomplete setup will not be included on Automated Leave Card Adjustment System (ALCAS). Use filter &quot;Account Setup&quot; to identify incomplete setup accounts.</div>
+          <div className='app__warning_text'><span className='app__warning_title'>Warning:</span> Accounts with incomplete setup will not be included on Automations such as Leave Card Adjustment, NOSI, NOSA. Use filter &quot;Account Setup&quot; to identify incomplete setup accounts.</div>
 
           {/* Per Page */}
           <PerPage
@@ -158,9 +165,9 @@ const Page: React.FC = () => {
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: Employee) => (
+                  !isDataEmpty && list.map((item: Employee, index) => (
                     <tr
-                      key={uuid()}
+                      key={index}
                       className="app__tr">
                       <td
                         className="w-6 pl-4 app__td">
@@ -193,47 +200,11 @@ const Page: React.FC = () => {
                                 </Menu.Item>
                                 <Menu.Item>
                                   <div
-                                      // onClick={() => handleViewDetails(item)}
+                                      onClick={() => handleViewLeaveCard(item)}
                                       className='app__dropdown_item'
                                     >
                                       <TableCellsIcon className='w-4 h-4'/>
-                                      <span>Service Record</span>
-                                    </div>
-                                </Menu.Item>
-                                <Menu.Item>
-                                  <div
-                                      // onClick={() => handleViewDetails(item)}
-                                      className='app__dropdown_item'
-                                    >
-                                      <CreditCardIcon className='w-4 h-4'/>
                                       <span>Leave Card</span>
-                                    </div>
-                                </Menu.Item>
-                                <Menu.Item>
-                                  <div
-                                      // onClick={() => handleViewDetails(item)}
-                                      className='app__dropdown_item'
-                                    >
-                                      <PencilSquareIcon className='w-4 h-4'/>
-                                      <span>PDS</span>
-                                    </div>
-                                </Menu.Item>
-                                <Menu.Item>
-                                  <div
-                                      // onClick={() => handleViewDetails(item)}
-                                      className='app__dropdown_item'
-                                    >
-                                      <PencilSquareIcon className='w-4 h-4'/>
-                                      <span>PDF</span>
-                                    </div>
-                                </Menu.Item>
-                                <Menu.Item>
-                                  <div
-                                      // onClick={() => handleViewDetails(item)}
-                                      className='app__dropdown_item'
-                                    >
-                                      <Cog8ToothIcon className='w-4 h-4'/>
-                                      <span>Account Settings</span>
                                     </div>
                                 </Menu.Item>
                               </div>
@@ -349,9 +320,9 @@ const Page: React.FC = () => {
                         </div>
                         {
                           item.hrm_assignments.length > 0 && (
-                            item.hrm_assignments.map((assignment: AssignmentTypes) => (
+                            item.hrm_assignments.map((assignment: AssignmentTypes, index) => (
                               (assignment.status === 'Active' && assignment.type === 'Re-assignment') &&
-                                <div key={uuid()}>
+                                <div key={index}>
                                   <div className='font-semibold text-green-700'>Current Assignment:</div>
                                   {
                                     assignment.area_assigned === 'office'
@@ -364,9 +335,9 @@ const Page: React.FC = () => {
                         }
                         {
                           item.hrm_designations.length > 0 && (
-                            item.hrm_designations.map((designation: DesignationTypes) => (
+                            item.hrm_designations.map((designation: DesignationTypes, index) => (
                               designation.status === 'Active' &&
-                                <div key={uuid()}>
+                                <div key={index}>
                                   <div className='font-semibold text-green-700'>Current Designation:</div>
                                   {
                                     designation.type === 'Function only'
@@ -413,13 +384,21 @@ const Page: React.FC = () => {
           }
       </div>
     </div>
-    {/* Add/Edit Modal */}
+    {/* Account Details Modal */}
     {
       showAccountDetailsModal && (
         <AccountDetails
           id={selectedId}
           shouldUpdateRedux={true}
           hideModal={() => setShowAccountDetailsModal(false)}/>
+      )
+    }
+    {/* Leave Card Modal */}
+    {
+      showLeaveCardModal && (
+        <LeaveCardModal
+          userId={selectedId}
+          hideModal={() => setShowLeaveCardModal(false)}/>
       )
     }
   </>

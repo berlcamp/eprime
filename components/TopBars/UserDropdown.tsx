@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 'use client'
 import { Menu, Transition } from '@headlessui/react'
 import { LockClosedIcon } from '@heroicons/react/24/solid'
@@ -11,6 +12,8 @@ import Image from 'next/image'
 
 // types
 import type { Employee } from '@/types'
+import LeaveCardModal from '../LeaveCardModal'
+import Link from 'next/link'
 
 interface propTypes {
   darkMode?: boolean
@@ -18,6 +21,7 @@ interface propTypes {
 
 const UserDropdown = ({ darkMode }: propTypes) => {
   const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false)
+  const [showLeaveCardModal, setShowLeaveCardModal] = useState(false)
 
   const { supabase, session, systemUsers } = useSupabase()
   const router = useRouter()
@@ -74,14 +78,13 @@ const UserDropdown = ({ darkMode }: propTypes) => {
                     <UserIcon className='w-5 h-5'/>
                     <div className='text-sm font-semibold text-gray-700'>Account Details</div>
                   </div>
-                  <div
-                    // onClick={() => setShowAccountDetailsModal(true)}
+                  <Link href={`/myservicerecords/${session.user.id}`}
                     className='app__user_menu_items'>
                     <TableCellsIcon className='w-5 h-5'/>
                     <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>Service Record</div>
-                  </div>
+                  </Link>
                   <div
-                    // onClick={() => setShowAccountDetailsModal(true)}
+                    onClick={() => setShowLeaveCardModal(true)}
                     className='app__user_menu_items'>
                       <CreditCardIcon className='w-5 h-5'/>
                       <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>Leave Card</div>
@@ -127,6 +130,14 @@ const UserDropdown = ({ darkMode }: propTypes) => {
             id={session.user.id}
             shouldUpdateRedux={false}
             hideModal={() => setShowAccountDetailsModal(false)}/>
+        )
+      }
+      {/* Leave Card Modal */}
+      {
+        showLeaveCardModal && (
+          <LeaveCardModal
+            userId={session.user.id}
+            hideModal={() => setShowLeaveCardModal(false)}/>
         )
       }
 

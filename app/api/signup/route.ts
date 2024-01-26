@@ -54,7 +54,7 @@ export async function POST (req: NextRequest) {
     // Update registration data
     const { error: updateRegistrationError } = await supabase
       .from('hrm_registrations')
-      .update({ status: 'Approved' })
+      .delete()
       .eq('id', item.id)
 
     if (updateRegistrationError) throw new Error(updateRegistrationError.message)
@@ -63,7 +63,7 @@ export async function POST (req: NextRequest) {
     const mailgun = new Mailgun(FormData)
     const mg = mailgun.client({ username: 'api', key: process.env.NEXT_PUBLIC_MAILGUN_KEY ?? '' })
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://deped.hrmprime.com/'
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://primehrm.sortbrite.com/'
     const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'PRIME-HRM'
     let emailMessage = `Hello ${item.firstname} ${item.middlename} ${item.lastname},`
     emailMessage += `<p>Welcome to ${appName}`
