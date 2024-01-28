@@ -1,0 +1,249 @@
+import React, { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useFilter } from '@/context/FilterContext'
+import { useSupabase } from '@/context/SupabaseProvider'
+import { fetchPositions, logError } from '@/utils/fetchApi'
+import { CustomButton, SearchUserInput, UserBlock } from '@/components'
+
+// Types
+import type { PromotionTypes, PositionTypes, namesType } from '@/types'
+
+// Redux imports
+import { useSelector, useDispatch } from 'react-redux'
+import { updateList } from '@/GlobalRedux/Features/listSlice'
+import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+
+interface ModalProps {
+  hideModal: () => void
+  editData: PromotionTypes | null
+}
+
+const AddEditModal = ({ hideModal, editData }: ModalProps) => {
+  const { setToast } = useFilter()
+  const { supabase } = useSupabase()
+  const [saving, setSaving] = useState(false)
+
+  const [user, setUser] = useState<namesType | null>(null)
+
+  const [selectedPosition, setSelectedPosition] = useState('')
+
+  const [positions, setPositions] = useState<PositionTypes[] | []>([])
+
+  // Redux staff
+  const globallist = useSelector((state: any) => state.list.value)
+  const resultsCounter = useSelector((state: any) => state.results.value)
+  const dispatch = useDispatch()
+
+  const { register, formState: { errors }, reset, handleSubmit } = useForm<PromotionTypes>({
+    mode: 'onSubmit'
+  })
+
+  const onSubmit = async (formdata: PromotionTypes) => {
+    if (!user) return
+
+    if (saving) return
+
+    setSaving(true)
+
+    if (editData) {
+      void handleUpdate(formdata)
+    } else {
+      void handleCreate(formdata)
+    }
+  }
+
+  const handleCreate = async (formdata: PromotionTypes) => {
+    if (!user) return
+
+    const newData = {
+      user_id: user.id,
+      position_id: formdata.position_id,
+      effectivity_date: formdata.effectivity_date,
+      org_id: process.env.NEXT_PUBLIC_ORG_ID
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('hrm_promotions')
+        .insert(newData)
+        .select()
+
+      if (error) {
+        void logError('Create New Promotion', 'hrm_promotions', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
+      // Append new data in redux
+      const hrmPosition = positions.find(p => p.id.toString() === formdata.position_id)
+      const updatedData = { ...newData, hrm_position: hrmPosition, hrm_user: user ?? null, id: data[0].id }
+      dispatch(updateList([updatedData, ...globallist]))
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      // Updating showing text in redux
+      dispatch(updateResultCounter({ showing: Number(resultsCounter.showing) + 1, results: Number(resultsCounter.results) + 1 }))
+
+      setSaving(false)
+
+      // hide the modal
+      hideModal()
+
+      // reset all form fields
+      reset()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleUpdate = async (formdata: PromotionTypes) => {
+    if (!editData) return
+
+    const newData = {
+      position_id: formdata.position_id,
+      effectivity_date: formdata.effectivity_date
+    }
+
+    try {
+      const { error } = await supabase
+        .from('hrm_promotions')
+        .update(newData)
+        .eq('id', editData.id)
+
+      if (error) {
+        void logError('Update promotion', 'hrm_promotions', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
+      // Update data in redux
+      const hrmPosition = positions.find(p => p.id.toString() === formdata.position_id)
+      const items = [...globallist]
+      const updatedData = { ...newData, hrm_position: hrmPosition, id: editData.id }
+      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      items[foundIndex] = { ...items[foundIndex], ...updatedData }
+      dispatch(updateList(items))
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      setSaving(false)
+
+      // hide the modal
+      hideModal()
+
+      // reset all form fields
+      reset()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+    if (selectedUsers.length > 0) {
+      setUser(selectedUsers[0])
+    } else {
+      setUser(null)
+    }
+  }
+
+  // manually set the defaultValues of use-form-hook whenever the component receives new props.
+  useEffect(() => {
+    // display the default values of dynamic dropdowns
+    if (editData) {
+      setSelectedPosition(editData.position_id ?? '')
+    }
+
+    reset({
+      position_id: editData ? editData.position_id : '',
+      effectivity_date: editData ? editData.effectivity_date : ''
+    })
+
+    const fetchPositionsData = async () => {
+      const result = await fetchPositions('', 300, 0)
+      setPositions(result.data.length > 0 ? result.data : [])
+    }
+
+    void fetchPositionsData()
+  }, [editData, reset])
+
+  return (
+  <>
+    <div className="app__modal_wrapper">
+      <div className="app__modal_wrapper2">
+        <div className="app__modal_wrapper3">
+          <div className="app__modal_header">
+            <h5 className="app__modal_header_text">
+              Promotion Details
+            </h5>
+            <CustomButton
+                containerStyles='app__btn_gray'
+                title='Close'
+                isDisabled={saving}
+                btnType='button'
+                handleClick={hideModal}
+              />
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
+            <div className='app__form_field_container'>
+              <div className='w-full'>
+                <div className='app__label_standard'>Employee:</div>
+                {
+                  editData?.hrm_user
+                    ? <UserBlock user={editData.hrm_user}/>
+                    : <SearchUserInput
+                        isMultiple={false}
+                        handleSelectedUsers={handleSelectedUsers}/>
+                }
+                {!user && !editData && <div className='app__error_message'>Employee name is required</div>}
+              </div>
+            </div>
+            <div className='app__form_field_container'>
+              <div className='w-full'>
+                <div className='app__label_standard'>Position</div>
+                <div>
+                  <select
+                    {...register('position_id', { required: true })}
+                    value={selectedPosition}
+                    onChange={e => setSelectedPosition(e.target.value)}
+                    className='app__input_standard'>
+                      <option value=''>Choose Position</option>
+                      {
+                        positions.map((position: PositionTypes, index) => <option key={index} value={position.id}>{position.name}</option>)
+                      }
+                  </select>
+                  {errors.position_id && <div className='app__error_message'>Position is required</div>}
+                </div>
+              </div>
+            </div>
+            <div className='app__form_field_container'>
+              <div className='w-full'>
+                <div className='app__label_standard'>Effectivity Date</div>
+                <div>
+                  <input
+                    {...register('effectivity_date', { required: true })}
+                    type='date'
+                    className='app__input_standard'/>
+                  {errors.effectivity_date && <div className='app__error_message'>Effectivity Date is required</div>}
+                </div>
+              </div>
+            </div>
+            <div className="app__modal_footer">
+                  <CustomButton
+                    btnType='submit'
+                    isDisabled={saving}
+                    title={saving ? 'Saving...' : 'Save'}
+                    containerStyles="app__btn_green"
+                  />
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </>
+  )
+}
+
+export default AddEditModal

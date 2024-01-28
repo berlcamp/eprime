@@ -115,6 +115,7 @@ export interface Employee {
   birthday: string
   date_of_last_promotion: string
   date_of_last_designation: string
+  confirmed: string
 }
 
 export interface LeaveCardTypes {
@@ -169,6 +170,54 @@ export interface AssignmentTypes {
   hrm_districts: DistrictTypes
   hrm_offices: Office
   hrm_positions: PositionTypes
+}
+
+export interface ItemTypes {
+  id: string
+  item_number: string
+  user_id: string
+  position_id: string
+  implementing_unit: string
+  school_id?: string
+  hrm_school: SchoolTypes
+  hrm_position: PositionTypes
+  hrm_user: Employee
+}
+
+export interface PlantillaTypes {
+  id: string
+  item_number: string
+  user_id: string
+  position_id: string
+  school_id?: string
+  hrm_school: SchoolTypes
+  hrm_position: PositionTypes
+  hrm_user: Employee
+  salary_grade: string
+  vice: string
+  sex: string
+  birthday: string
+  eligibility: string
+  date_of_last_promotion: string
+  date_of_original_appointment: string
+  status: string
+  authorized_annual_salary: string
+  actual_annual_salary: string
+  area_code: string
+  area_type: string
+  level: string
+  tin_no: string
+  umid_no: string
+  confirmed: string
+}
+
+export interface PromotionTypes {
+  id: string
+  user_id: string
+  position_id: string
+  effectivity_date: string
+  hrm_position: PositionTypes
+  hrm_user: Employee
 }
 
 export interface DesignationTypes {

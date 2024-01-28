@@ -3,7 +3,7 @@ import { fullTextQuery } from '@/utils/text-helper'
 import { format } from 'date-fns'
 
 // types
-import type { AssignmentTypes, DesignationTypes, excludedItemsTypes, Employee, CtoTypes, FlowListTypes, FollowersTypes } from '@/types'
+import type { AssignmentTypes, DesignationTypes, excludedItemsTypes, Employee, CtoTypes, FlowListTypes, FollowersTypes, ItemTypes } from '@/types'
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
@@ -285,6 +285,162 @@ export async function fetchAssignments (filters: { filterKeyword?: string, filte
     return { data, count }
   } catch (error) {
     console.error('fetch assignments error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchItems (filters: { filterKeyword?: string, filterSchool?: string, filterPosition?: string, filterStatus?: string, filterUser?: string }, perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_items')
+      .select('*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_school:school_id(name),hrm_position:position_id(name)', { count: 'exact' })
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    // Item Number
+    if (filters.filterKeyword && filters.filterKeyword !== '') {
+      query = query.eq('item_number', filters.filterKeyword)
+    }
+
+    // filter position
+    if (filters.filterPosition && filters.filterPosition !== '') {
+      query = query.eq('position_id', filters.filterPosition)
+    }
+
+    // filter school
+    if (filters.filterSchool && filters.filterSchool !== '') {
+      if (filters.filterSchool === 'division') {
+        query = query.is('school_id', null)
+      } else {
+        query = query.eq('school_id', filters.filterSchool)
+      }
+    }
+
+    // filter status
+    if (filters.filterStatus && filters.filterStatus !== '') {
+      if (filters.filterStatus === 'Vacant') {
+        query = query.is('user_id', null)
+      }
+    }
+
+    // filter user
+    if (filters.filterUser && filters.filterUser !== '') {
+      query = query.eq('user_id', filters.filterUser)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data: assignmentsData, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    const data: ItemTypes[] = assignmentsData
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch items error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchPlantillas (filters: { filterSchool?: string, filterPosition?: string, filterUser?: string }, perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_plantillas')
+      .select('*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_school:school_id(name),hrm_position:position_id(name)', { count: 'exact' })
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    // filter position
+    if (filters.filterPosition && filters.filterPosition !== '') {
+      query = query.eq('position_id', filters.filterPosition)
+    }
+
+    // filter school
+    if (filters.filterSchool && filters.filterSchool !== '') {
+      if (filters.filterSchool === 'division') {
+        query = query.is('school_id', null)
+      } else {
+        query = query.eq('school_id', filters.filterSchool)
+      }
+    }
+
+    // filter user
+    if (filters.filterUser && filters.filterUser !== '') {
+      query = query.eq('user_id', filters.filterUser)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data: assignmentsData, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    const data: ItemTypes[] = assignmentsData
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch plantillas error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchPromotions (filters: { filterPosition?: string, filterUser?: string }, perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_promotions')
+      .select('*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_position:position_id(name)', { count: 'exact' })
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    // filter position
+    if (filters.filterPosition && filters.filterPosition !== '') {
+      query = query.eq('position_id', filters.filterPosition)
+    }
+
+    // filter user
+    if (filters.filterUser && filters.filterUser !== '') {
+      query = query.eq('user_id', filters.filterUser)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data: assignmentsData, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    const data: ItemTypes[] = assignmentsData
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch promotions error', error)
     return { data: [], count: 0 }
   }
 }

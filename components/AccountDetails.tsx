@@ -36,6 +36,8 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   const [saving, setSaving] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState('')
 
+  const [userData, setUserData] = useState<Employee | null>(null)
+
   const [loadingSchools, setLoadingSchools] = useState(false)
   const [assignment, setAssignment] = useState('')
   const [selectedDistrict, setSelectedDistrict] = useState('')
@@ -242,12 +244,14 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
       try {
         const { data, error } = await supabase
           .from('hrm_users')
-          .select()
+          .select('*, hrm_positions:position_id(name)')
           .eq('id', id)
           .limit(1)
           .single()
 
         if (error) throw new Error(error.message)
+
+        setUserData(data)
 
         setAvatarUrl(data.avatar_url)
         setAssignment(data.assignment)
@@ -318,7 +322,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   return (
     <>
       <div className="app__modal_wrapper">
-        <div className="app__modal_wrapper2">
+        <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
               <h5 className="app__modal_header_text">
@@ -339,256 +343,276 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
               {
                 !loading &&
                   <form onSubmit={handleSubmit(onSubmit)} className="">
-                    <div className='text-center'>
-                      {
-                        (avatarUrl && avatarUrl !== '')
-                          ? <Image src={avatarUrl} width={60} height={60} alt="alt" className='mx-auto'/>
-                          : <Avatar round={false} size="60" name={session.user.email.split('@')[0]} />
-                      }
-                      <div className="relative">
-                        <input type="file" onChange={handleUploadPhoto} className="hidden" id="file-input" accept="image/*"/>
-                        {
-                          !uploading
-                            ? <label htmlFor="file-input" className="cursor-pointer py-px px-1 text-xs text-blue-600">
-                                Change Profile Photo
-                              </label>
-                            : <span className='py-px px-1 text-xs text-blue-600'>Uploading...</span>
-                        }
-                      </div>
-                    </div>
-                    <div className='app__form_field_container'>
-                      <div className='w-full'>
-                        <div className='app__label_standard'>First Name:</div>
-                        <div>
-                          <input
-                            {...register('firstname', { required: true })}
-                            type="text"
-                            className='app__input_standard'/>
-                          {errors.firstname && <div className='app__error_message'>First Name is required</div>}
-                        </div>
-                      </div>
-                    </div>
-                    <div className='app__form_field_container'>
-                      <div className='w-full'>
-                        <div className='app__label_standard'>Middle Name:</div>
-                        <div>
-                          <input
-                            {...register('middlename')}
-                            type="text"
-                            className='app__input_standard'/>
-                        </div>
-                      </div>
-                    </div>
-                    <div className='app__form_field_container'>
-                      <div className='w-full'>
-                        <div className='app__label_standard'>Last Name:</div>
-                        <div>
-                          <input
-                            {...register('lastname', { required: true })}
-                            type="text"
-                            className='app__input_standard'/>
-                          {errors.lastname && <div className='app__error_message'>Last Name is required</div>}
-                        </div>
-                      </div>
-                    </div>
-                    <div className='app__form_field_container'>
-                      <div className='w-full'>
-                        <div className='app__label_standard'>Birthday:</div>
-                        <div>
-                          <input
-                            {...register('birthday')}
-                            type="date"
-                            className='app__input_standard'/>
-                        </div>
-                      </div>
-                    </div>
-                    <div className='app__form_field_container'>
-                      <div className='w-full'>
-                        <div className='app__label_standard'>Original assignment</div>
-                        <div>
-                          <select
-                            {...register('assignment', { required: true })}
-                            value={assignment}
-                            onChange={e => setAssignment(e.target.value)}
-                            className='app__select_standard'>
-                              <option value=''>Choose</option>
-                              <option value='school'>School</option>
-                              <option value='office'>Division Office</option>
-                          </select>
-                          {errors.assignment && <div className='app__error_message'>Assignment is required</div>}
-                        </div>
-                      </div>
-                    </div>
-                    {
-                      assignment === 'school' &&
-                        <>
-                          <div className='app__form_field_container'>
-                            <div className='w-full'>
-                              <div className='app__label_standard'>Choose district</div>
-                              <div>
-                                <select
-                                  {...register('district_id', { required: true })}
-                                  onChange={async e => await handleDistrictChange(e.target.value)}
-                                  value={selectedDistrict}
-                                  className='app__select_standard'>
-                                    <option value=''>Choose</option>
-                                    {
-                                      districts?.map(item => (
-                                        <option key={uuid()} value={item.id}>{item.name}</option>
-                                      ))
-                                    }
-                                </select>
-                                {errors.district_id && <div className='app__error_message'>District is required</div>}
-                              </div>
-                            </div>
+                    <div className='flex flex-col lg:flex-row w-full items-start justify-between text-xs dark:text-gray-400'>
+                      {/* Begin First Column */}
+                      <div className='w-full px-4'>
+
+                        <div className='text-center'>
+                          {
+                            (avatarUrl && avatarUrl !== '')
+                              ? <Image src={avatarUrl} width={60} height={60} alt="alt" className='mx-auto'/>
+                              : <Avatar round={false} size="60" name={session.user.email.split('@')[0]} />
+                          }
+                          <div className="relative">
+                            <input type="file" onChange={handleUploadPhoto} className="hidden" id="file-input" accept="image/*"/>
+                            {
+                              !uploading
+                                ? <label htmlFor="file-input" className="cursor-pointer py-px px-1 text-xs text-blue-600">
+                                    Change Profile Photo
+                                  </label>
+                                : <span className='py-px px-1 text-xs text-blue-600'>Uploading...</span>
+                            }
                           </div>
-                        </>
-                    }
-                    {
-                      loadingSchools &&
-                        <div className=''>
-                          <OneColLayoutLoading rows={1}/>
                         </div>
-                    }
-                    {
-                      (assignment === 'school' && !loadingSchools) &&
-                        <>
-                          <div className='app__form_field_container'>
-                            <div className='w-full'>
-                              <div className='app__label_standard'>Choose School</div>
-                              <div>
-                                <select
-                                  {...register('school_id', { required: true })}
-                                  value={selectedSchool}
-                                  onChange={e => setSelectedSchool(e.target.value)}
-                                  className='app__select_standard'>
-                                    <option value=''>Choose</option>
-                                    {
-                                      schools.map(item => (
-                                        <option key={uuid()} value={item.id}>{item.name}</option>
-                                      ))
-                                    }
-                                </select>
-                                {errors.school_id && <div className='app__error_message'>School is required</div>}
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                    }
-                    {
-                      assignment === 'office' &&
                         <div className='app__form_field_container'>
                           <div className='w-full'>
-                            <div className='app__label_standard'>Choose office</div>
+                            <div className='app__label_standard'>First Name:</div>
                             <div>
-                              <select
-                                {...register('office_id', { required: true })}
-                                value={selectedOffice}
-                                onChange={e => setSelectedOffice(e.target.value)}
-                                className='app__select_standard'>
-                                  <option value=''>Choose</option>
-                                  {
-                                    offices.map(item => (
-                                      <option key={uuid()} value={item.id}>{item.name}</option>
-                                    ))
-                                  }
-                              </select>
-                              {errors.office_id && <div className='app__error_message'>Office is required</div>}
+                              <input
+                                {...register('firstname', { required: true })}
+                                type="text"
+                                className='app__input_standard'/>
+                              {errors.firstname && <div className='app__error_message'>First Name is required</div>}
                             </div>
                           </div>
                         </div>
-                    }
-                    {
-                      isAdmin &&
-                        <>
-                          <div className="flex items-center">
-                            <div className="flex-grow bg-gray-300 h-px"></div>
-                            <div className="mx-4 text-gray-500 text-sm">Editable only by Administrators</div>
-                            <div className="flex-grow bg-gray-300 h-px"></div>
-                          </div>
-                          <div className='app__form_field_container'>
-                            <div className='w-full'>
-                              <div className='app__label_standard'>Current Position:</div>
-                              <div>
-                                <select
-                                  {...register('position_id', { required: true })}
-                                  value={selectedPosition}
-                                  onChange={e => setSelectedPosition(e.target.value)}
-                                  className='app__input_standard'>
-                                    <option value=''>Choose Position</option>
-                                    {
-                                      positions.map((position: PositionTypes) => <option key={uuid()} value={position.id}>{position.name}</option>)
-                                    }
-                                </select>
-                                {errors.position_id && <div className='app__error_message'>Current Position is required</div>}
-                              </div>
+                        <div className='app__form_field_container'>
+                          <div className='w-full'>
+                            <div className='app__label_standard'>Middle Name:</div>
+                            <div>
+                              <input
+                                {...register('middlename')}
+                                type="text"
+                                className='app__input_standard'/>
                             </div>
                           </div>
-                          <div className='app__form_field_container'>
-                            <div className='w-full'>
-                              <div className='app__label_standard'>Position Type:</div>
-                              <div>
-                                <select
-                                  {...register('position_type', { required: true })}
-                                  className='app__input_standard'>
-                                    <option value=''>Choose Type</option>
-                                    <option value='Teaching'>Teaching</option>
-                                    <option value='Non-teaching'>Non-teaching</option>
-                                </select>
-                                {errors.position_type && <div className='app__error_message'>Position Type is required</div>}
-                              </div>
+                        </div>
+                        <div className='app__form_field_container'>
+                          <div className='w-full'>
+                            <div className='app__label_standard'>Last Name:</div>
+                            <div>
+                              <input
+                                {...register('lastname', { required: true })}
+                                type="text"
+                                className='app__input_standard'/>
+                              {errors.lastname && <div className='app__error_message'>Last Name is required</div>}
                             </div>
                           </div>
-                          <div className='app__form_field_container'>
-                            <div className='w-full'>
-                              <div className='app__label_standard'>Current Salary Grade:</div>
-                              <div>
-                                <select
-                                  {...register('salary_grade')}
-                                  className='app__input_standard'>
-                                    <option value=''>Choose Salary Grade</option>
-                                    {salaryGradeOptions}
-                                </select>
-                              </div>
+                        </div>
+                        <div className='app__form_field_container'>
+                          <div className='w-full'>
+                            <div className='app__label_standard'>Birthday:</div>
+                            <div>
+                              <input
+                                {...register('birthday')}
+                                type="date"
+                                className='app__input_standard'/>
                             </div>
                           </div>
-                          <div className='app__form_field_container'>
-                            <div className='w-full'>
-                              <div className='app__label_standard'>Current Salary Grade (Step):</div>
-                              <div>
-                                <select
-                                  {...register('salary_step')}
-                                  className='app__input_standard'>
-                                    <option value=''>Choose Salary Grade (Step)</option>
-                                    {salaryStepOptions}
-                                </select>
-                              </div>
+                        </div>
+                        <div className='app__form_field_container'>
+                          <div className='w-full'>
+                            <div className='app__label_standard'>Original assignment</div>
+                            <div>
+                              <select
+                                {...register('assignment', { required: true })}
+                                value={assignment}
+                                onChange={e => setAssignment(e.target.value)}
+                                className='app__select_standard'>
+                                  <option value=''>Choose</option>
+                                  <option value='school'>School</option>
+                                  <option value='office'>Division Office</option>
+                              </select>
+                              {errors.assignment && <div className='app__error_message'>Assignment is required</div>}
                             </div>
                           </div>
-                          <div className='app__form_field_container'>
-                            <div className='w-full'>
-                              <div className='app__label_standard'>Joining Date:</div>
-                              <div>
-                                <input
-                                  {...register('joining_date')}
-                                  type="date"
-                                  className='app__input_standard'/>
+                        </div>
+                        {
+                          assignment === 'school' &&
+                            <>
+                              <div className='app__form_field_container'>
+                                <div className='w-full'>
+                                  <div className='app__label_standard'>Choose district</div>
+                                  <div>
+                                    <select
+                                      {...register('district_id', { required: true })}
+                                      onChange={async e => await handleDistrictChange(e.target.value)}
+                                      value={selectedDistrict}
+                                      className='app__select_standard'>
+                                        <option value=''>Choose</option>
+                                        {
+                                          districts?.map(item => (
+                                            <option key={uuid()} value={item.id}>{item.name}</option>
+                                          ))
+                                        }
+                                    </select>
+                                    {errors.district_id && <div className='app__error_message'>District is required</div>}
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                        }
+                        {
+                          loadingSchools &&
+                            <div className=''>
+                              <OneColLayoutLoading rows={1}/>
+                            </div>
+                        }
+                        {
+                          (assignment === 'school' && !loadingSchools) &&
+                            <>
+                              <div className='app__form_field_container'>
+                                <div className='w-full'>
+                                  <div className='app__label_standard'>Choose School</div>
+                                  <div>
+                                    <select
+                                      {...register('school_id', { required: true })}
+                                      value={selectedSchool}
+                                      onChange={e => setSelectedSchool(e.target.value)}
+                                      className='app__select_standard'>
+                                        <option value=''>Choose</option>
+                                        {
+                                          schools.map(item => (
+                                            <option key={uuid()} value={item.id}>{item.name}</option>
+                                          ))
+                                        }
+                                    </select>
+                                    {errors.school_id && <div className='app__error_message'>School is required</div>}
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                        }
+                        {
+                          assignment === 'office' &&
+                            <div className='app__form_field_container'>
+                              <div className='w-full'>
+                                <div className='app__label_standard'>Choose office</div>
+                                <div>
+                                  <select
+                                    {...register('office_id', { required: true })}
+                                    value={selectedOffice}
+                                    onChange={e => setSelectedOffice(e.target.value)}
+                                    className='app__select_standard'>
+                                      <option value=''>Choose</option>
+                                      {
+                                        offices.map(item => (
+                                          <option key={uuid()} value={item.id}>{item.name}</option>
+                                        ))
+                                      }
+                                  </select>
+                                  {errors.office_id && <div className='app__error_message'>Office is required</div>}
+                                </div>
                               </div>
                             </div>
+                        }
+                      </div>
+                      {/* End First Column */}
+                      {/* Begin Second Column */}
+                      <div className='w-full px-4'>
+                        <div className='text-base text-center font-medium text-gray-600'>EDITABLE ONLY HR</div>
+                        <div className="flex items-center">
+                          <div className="flex-grow bg-gray-300 h-px"></div>
+                          <div className="mx-4 my-4 text-gray-500 text-sm">Position Settings</div>
+                          <div className="flex-grow bg-gray-300 h-px"></div>
+                        </div>
+                        <div className='app__form_field_container'>
+                          <div className='w-full'>
+                            <div className='app__label_standard'>Current Position:</div>
+                            {
+                              !isAdmin
+                                ? <div className='app__label_value'>{userData ? userData.hrm_positions?.name : ''}</div>
+                                : <div>
+                                    <select
+                                      {...register('position_id', { required: true })}
+                                      value={selectedPosition}
+                                      onChange={e => setSelectedPosition(e.target.value)}
+                                      className='app__input_standard'>
+                                        <option value=''>Choose Position</option>
+                                        {
+                                          positions.map((position: PositionTypes) => <option key={uuid()} value={position.id}>{position.name}</option>)
+                                        }
+                                    </select>
+                                    {errors.position_id && <div className='app__error_message'>Current Position is required</div>}
+                                  </div>
+                            }
                           </div>
-                          <div className='app__form_field_container'>
-                            <div className='w-full'>
-                              <div className='app__label_standard'>Date of last Promotion:</div>
-                              <div>
-                                <input
-                                  {...register('date_of_last_promotion')}
-                                  type="date"
-                                  className='app__input_standard'/>
-                              </div>
-                            </div>
+                        </div>
+                        <div className='app__form_field_container'>
+                          <div className='w-full'>
+                            <div className='app__label_standard'>Current Position Type:</div>
+                            {
+                              !isAdmin
+                                ? <div className='app__label_value'>{userData ? userData.position_type : ''}</div>
+                                : <div>
+                                    <select
+                                      {...register('position_type', { required: true })}
+                                      className='app__input_standard'>
+                                        <option value=''>Choose Type</option>
+                                        <option value='Teaching'>Teaching</option>
+                                        <option value='Non-teaching'>Non-teaching</option>
+                                    </select>
+                                    {errors.position_type && <div className='app__error_message'>Position Type is required</div>}
+                                  </div>
+                            }
+                            <div className='text-gray-600 italic mt-1'>(Teaching employees will not be included on VL/SL increment)</div>
                           </div>
-                        </>
-                    }
+                        </div>
+                        <div className="flex items-center">
+                          <div className="flex-grow bg-gray-300 h-px"></div>
+                          <div className="mx-4 my-4 text-gray-500 text-sm">NOSI/NOSA Settings</div>
+                          <div className="flex-grow bg-gray-300 h-px"></div>
+                        </div>
+                        <div className='app__form_field_container'>
+                          <div className='w-full'>
+                            <div className='app__label_standard'>Current Salary Grade:</div>
+                            {
+                              !isAdmin
+                                ? <div className='app__label_value'>{userData ? userData.salary_grade : ''}</div>
+                                : <div>
+                                    <select
+                                      {...register('salary_grade')}
+                                      className='app__input_standard'>
+                                        <option value=''>Choose Salary Grade</option>
+                                        {salaryGradeOptions}
+                                    </select>
+                                  </div>
+                            }
+                          </div>
+                        </div>
+                        <div className='app__form_field_container'>
+                          <div className='w-full'>
+                            <div className='app__label_standard'>Current Salary Grade (Step):</div>
+                            {
+                              !isAdmin
+                                ? <div className='app__label_value'>{userData ? userData.salary_step : ''}</div>
+                                : <div>
+                                    <select
+                                      {...register('salary_step')}
+                                      className='app__input_standard'>
+                                        <option value=''>Choose Salary Grade (Step)</option>
+                                        {salaryStepOptions}
+                                    </select>
+                                  </div>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                      {/* End Second Column */}
+                    </div>
+                    <hr className='my-6 mx-4'/>
+                    <div className='w-full px-4'>
+                      <div className='app__label_standard'>
+                        <label className='flex items-center space-x-1'>
+                          <input
+                            {...register('confirmed', { required: true })}
+                            type='checkbox'
+                            className=''/>
+                          <span className='font-normal text-xs'>By checking this box, you acknowledge that all information is accurate and up-to-date.</span>
+                        </label>
+                        {errors.confirmed && <div className='app__error_message'>Confirmation is required</div>}
+                      </div>
+                    </div>
                     <div className="app__modal_footer">
                           <button
                             type="submit"

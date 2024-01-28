@@ -13,6 +13,7 @@ interface InsertArrayTypes {
   particulars: string
   credits_earned: string
   type: string
+  transaction_type: string
   remarks: string
 }
 
@@ -50,7 +51,9 @@ const Page = () => {
     }
   }
 
-  const handleIncrements = (employees: Employee[], type: string, transactionType: string) => {
+  const handleIncrements = async (employees: Employee[], type: string) => {
+    if (!employees) return
+
     // Filter only those position type equal to Non-teaching and has joining date or date_of_last_promotion or date_of_last_designation
     const filteredEmployees = employees.filter((employee: Employee) => {
       if (employee.position_type !== 'Non-teaching') return false
@@ -74,7 +77,7 @@ const Page = () => {
         console.log('balance', balance)
 
         // Get the last date of auto increment and add 1 month and add to insert array
-        const increments = credits.filter(item => item.transaction_type === transactionType)
+        const increments = credits.filter(item => item.transaction_type === `Earned ${type}`)
         if (increments.length > 0) {
           const sorteIncrements = increments.sort(compareFunction)
           const adjustmentDate = sorteIncrements[0].adjustment_date
@@ -83,6 +86,7 @@ const Page = () => {
           const newAdjustmentDate = new Date(adjustmentDate)
           newAdjustmentDate.setMonth(newAdjustmentDate.getMonth() + 1)
 
+          // If date is less than or equal to today, add to insert array
           const today = new Date()
           if (newAdjustmentDate <= today) {
             // Add to insert array
@@ -91,6 +95,7 @@ const Page = () => {
               balance: Number(balance) + 1.250,
               user_id: employee.id,
               particulars: type,
+              transaction_type: `Earned ${type}`,
               credits_earned: '1.250',
               type,
               remarks: 'System Automation'
@@ -101,32 +106,51 @@ const Page = () => {
           const latestDate = getLatestDateLessThanOrEqualToday(employee.joining_date, employee.date_of_last_promotion, employee.date_of_last_designation)
 
           if (latestDate) {
-            // Add 1 month
-            const newAdjustmentDate = new Date(latestDate)
-            newAdjustmentDate.setMonth(newAdjustmentDate.getMonth() + 1)
-
+            // Add 1 month until it reaches to the latest date prior todays date
             const today = new Date()
-            if (newAdjustmentDate <= today) {
-              // Add to insert array
-              insertArray.push({
-                adjustment_date: format(newAdjustmentDate, 'yyyy-MM-dd'),
-                balance: Number(balance) + 1.250,
-                user_id: employee.id,
-                particulars: type,
-                credits_earned: '1.250',
-                type,
-                remarks: 'System Automation'
-              })
+            const updatedDate = new Date(latestDate)
+
+            // eslint-disable-next-line no-unmodified-loop-condition
+            while (updatedDate < today) {
+              updatedDate.setMonth(updatedDate.getMonth() + 1)
+              console.log(updatedDate)
             }
+
+            // if (newAdjustmentDate <= today) {
+            //   // Add to insert array
+            //   insertArray.push({
+            //     adjustment_date: format(newAdjustmentDate, 'yyyy-MM-dd'),
+            //     balance: Number(balance) + 1.250,
+            //     user_id: employee.id,
+            //     particulars: type,
+            //     credits_earned: '1.250',
+            //     transaction_type: transactionType,
+            //     type,
+            //     remarks: 'System Automation'
+            //   })
+            // }
           }
         }
-
-        // Insert array = [{ user_id, particulars, type, credits earned, balance }, ...]
       }
     })
 
     console.log('insertArray', insertArray)
+
     // Insert the insert array to leave card table in the database
+    if (insertArray.length > 0) {
+      try {
+        const { error } = await supabase
+          .from('hrm_leave_cardsxx')
+          .insert(insertArray)
+
+        if (error) {
+          void logError('Cron Job Insert Incremented Credits', 'hrm_leave_cards', JSON.stringify(insertArray), error.message)
+          throw new Error(error.message)
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
   }
 
   useEffect(() => {
@@ -134,17 +158,20 @@ const Page = () => {
       console.log('Initializing')
 
       // Get all employees from database and join the related leave card table
-      const { data: employees, error: errors2 } = await supabase
+      const { data: employees, error } = await supabase
         .from('hrm_users')
-        .select('*, hrm_leave_cards(*)', { count: 'exact' })
+        .select('*, hrm_leave_cards(*)')
         .eq('status', 'Active')
 
-      if (errors2) {
-        void logError('Cron Job', 'hrm_ctos', '', errors2.message)
-        throw new Error(errors2.message)
+      if (error) {
+        void logError('Cron Job get users', 'hrm_users', '', error.message)
       }
 
-      void handleIncrements(employees, 'Sick Leave', 'Earned Sick Leave')
+      console.log(employees)
+
+      if (!employees) return
+
+      void handleIncrements(employees, 'Sick Leave')
     })()
   }, [])
 }

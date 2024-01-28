@@ -7,13 +7,12 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import { useRouter } from 'next/navigation'
 import Avatar from 'react-avatar'
 import { AccountDetails } from '@/components'
-import { Cog8ToothIcon, CreditCardIcon, PencilSquareIcon, TableCellsIcon, UserIcon } from '@heroicons/react/20/solid'
+import { UserIcon } from '@heroicons/react/20/solid'
 import Image from 'next/image'
 
 // types
 import type { Employee } from '@/types'
 import LeaveCardModal from '../LeaveCardModal'
-import Link from 'next/link'
 
 interface propTypes {
   darkMode?: boolean
@@ -65,49 +64,14 @@ const UserDropdown = ({ darkMode }: propTypes) => {
           <Menu.Items className="absolute right-0 z-30 mt-2 origin-top-right rounded-md bg-gray-100 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
             <div className="py-1">
               <Menu.Item>
-                <div className='px-4 py-4'>
-                  <div className='flex items-center space-x-2'>
-                    <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>Manage Your Account</div>
-                  </div>
-                  <div className='py-4'>
-                    <hr/>
-                  </div>
+                <div className='px-4 py-2'>
                   <div
                     onClick={() => setShowAccountDetailsModal(true)}
                     className='app__user_menu_items'>
                     <UserIcon className='w-5 h-5'/>
                     <div className='text-sm font-semibold text-gray-700'>Account Details</div>
                   </div>
-                  <Link href={`/myservicerecords/${session.user.id}`}
-                    className='app__user_menu_items'>
-                    <TableCellsIcon className='w-5 h-5'/>
-                    <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>Service Record</div>
-                  </Link>
-                  <div
-                    onClick={() => setShowLeaveCardModal(true)}
-                    className='app__user_menu_items'>
-                      <CreditCardIcon className='w-5 h-5'/>
-                      <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>Leave Card</div>
-                  </div>
-                  <div
-                    // onClick={() => setShowAccountDetailsModal(true)}
-                    className='app__user_menu_items'>
-                      <PencilSquareIcon className='w-5 h-5'/>
-                      <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>PDS</div>
-                    </div>
-                  <div
-                    // onClick={() => setShowAccountDetailsModal(true)}
-                    className='app__user_menu_items'>
-                      <PencilSquareIcon className='w-5 h-5'/>
-                      <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>PDF</div>
-                  </div>
-                  <div
-                    // onClick={() => setShowAccountDetailsModal(true)}
-                    className='app__user_menu_items'>
-                      <Cog8ToothIcon className='w-5 h-5'/>
-                      <div className='text-sm font-semibold text-gray-700 whitespace-nowrap'>Login Settings</div>
-                  </div>
-                  <div className='py-4'>
+                  <div className='py-2'>
                     <hr/>
                   </div>
                   <div

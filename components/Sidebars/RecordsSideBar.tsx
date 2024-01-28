@@ -97,7 +97,7 @@ const RecordsSideBar = () => {
               <Link
                 href="/items"
                 className={`app__menu_link ${currentRoute === '/items' ? 'app_menu_link_active' : ''}`}>
-                <span className="flex-1 ml-3 whitespace-nowrap">Vacant Items</span>
+                <span className="flex-1 ml-3 whitespace-nowrap">Items</span>
               </Link>
               </li>
             <li>

@@ -21,6 +21,7 @@ interface AdjustmentTypes {
   balance: string
   remarks: string
   confirmed: string
+  adjustment_date: string
 }
 
 export default function LeaveCardModal ({ hideModal, userId }: ModalProps) {
@@ -106,7 +107,7 @@ export default function LeaveCardModal ({ hideModal, userId }: ModalProps) {
 
       // update the list in redux
       const newList = [{
-        adjustment_date: format(new Date(), 'MMM dd, yyyy'),
+        adjustment_date: format(new Date(formdata.adjustment_date), 'MMM dd, yyyy'),
         particulars: `${formdata.type} Adjustment`,
         credits_used: '',
         credits_earned: '',
@@ -196,8 +197,9 @@ export default function LeaveCardModal ({ hideModal, userId }: ModalProps) {
                               btnType='button'
                               handleClick={() => setShowAdjustmentForm(true)}
                               />
-                          : <form onSubmit={handleSubmit(onSubmit)} className='w-2/3'>
+                          : <form onSubmit={handleSubmit(onSubmit)} className='w-2/3 space-y-4'>
                               <div className='mb-2 w-full'>
+                                <div className='app__label_standard'>Adjustment Type:</div>
                                 <select
                                   {...register('type', { required: true })}
                                   className='app__select_standard'>
@@ -208,6 +210,7 @@ export default function LeaveCardModal ({ hideModal, userId }: ModalProps) {
                                 {errors.type && <div className='app__error_message'>Type is required</div>}
                               </div>
                               <div className='mb-2 w-full'>
+                                <div className='app__label_standard'>Updated Balance:</div>
                                 <input
                                   {...register('balance', { required: true })}
                                   type='number'
@@ -216,6 +219,17 @@ export default function LeaveCardModal ({ hideModal, userId }: ModalProps) {
                                 {errors.balance && <div className='app__error_message'>Update Balance is required</div>}
                               </div>
                               <div className='mb-2 w-full'>
+                                <div className='app__label_standard'>Adjustment Date:</div>
+                                <input
+                                  {...register('adjustment_date', { required: true })}
+                                  type='date'
+                                  placeholder='Updated Balance'
+                                  className='app__input_standard'/>
+                                <div className='text-xs text-gray-600 italic mt-1'>(Next auto increment will be in 1 month from this adjustment date)</div>
+                                {errors.adjustment_date && <div className='app__error_message'>Adjustment Date is required</div>}
+                              </div>
+                              <div className='mb-2 w-full'>
+                                <div className='app__label_standard'>Remarks:</div>
                                 <input
                                   {...register('remarks', { required: true })}
                                   type='text'
