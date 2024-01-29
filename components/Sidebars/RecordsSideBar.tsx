@@ -1,15 +1,46 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
+'use client'
+
 import Link from 'next/link'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { TableCellsIcon } from '@heroicons/react/20/solid'
 import { useFilter } from '@/context/FilterContext'
 import { superAdmins } from '@/constants'
+import { useSelector } from 'react-redux'
+import { useSupabase } from '@/context/SupabaseProvider'
+import { format } from 'date-fns'
 
 const RecordsSideBar = () => {
   const currentRoute = usePathname()
 
-  const { hasAccess, session } = useFilter()
+  // counters
+  const [myctoCount, setMyctoCount] = useState(0)
+
+  const { hasAccess } = useFilter()
+  const { supabase, session } = useSupabase()
+
+  // Redux staff
+  const recountStatus = useSelector((state: any) => state.recount.value)
+
+  const counter = async () => {
+    const today = new Date()
+
+    // add 1 month
+    const filterDate = format(new Date(today.setMonth(today.getMonth() + 1)), 'yyyy-MM-dd')
+
+    const { count: ctoCounter } = await supabase
+      .from('hrm_cto_users')
+      .select('id', { count: 'exact' })
+      .eq('hrm_user_id', session.user.id)
+      .is('status', null)
+      .lte('expiration', filterDate)
+
+    setMyctoCount(ctoCounter)
+  }
+  useEffect(() => {
+    void counter()
+  }, [recountStatus])
 
   return (
     <>
@@ -31,6 +62,12 @@ const RecordsSideBar = () => {
             href="/myctos"
             className={`app__menu_link ${currentRoute.includes('myctos') ? 'app_menu_link_active' : ''}`}>
             <span className="flex-1 ml-3 whitespace-nowrap">CTOs</span>
+            {
+              myctoCount > 0 &&
+                <span className='inline-flex items-center justify-center rounded-full bg-red-500 w-5 h-5'>
+                  <span className='rounded-full px-1 text-white text-xs'>{myctoCount}</span>
+                </span>
+            }
           </Link>
         </li>
         <li>
@@ -38,6 +75,13 @@ const RecordsSideBar = () => {
             href="/myservicecredits"
             className={`app__menu_link ${currentRoute === '/myservicecredits' ? 'app_menu_link_active' : ''}`}>
             <span className="flex-1 ml-3 whitespace-nowrap">Service Credits</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/mypromotions"
+            className={`app__menu_link ${currentRoute === '/mypromotions' ? 'app_menu_link_active' : ''}`}>
+            <span className="flex-1 ml-3 whitespace-nowrap">Promotions</span>
           </Link>
         </li>
       </ul>
@@ -97,14 +141,7 @@ const RecordsSideBar = () => {
               <Link
                 href="/items"
                 className={`app__menu_link ${currentRoute === '/items' ? 'app_menu_link_active' : ''}`}>
-                <span className="flex-1 ml-3 whitespace-nowrap">Items</span>
-              </Link>
-              </li>
-            <li>
-              <Link
-                href="/plantillas"
-                className={`app__menu_link ${currentRoute === '/plantillas' ? 'app_menu_link_active' : ''}`}>
-                <span className="flex-1 ml-3 whitespace-nowrap">Plantillas</span>
+                <span className="flex-1 ml-3 whitespace-nowrap">Plantilla Items</span>
               </Link>
             </li>
           </ul>

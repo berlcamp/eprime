@@ -775,7 +775,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                       <div className='space-x-2'>
                         <CustomButton
                           containerStyles='app__btn_green'
-                          title={saving ? 'Saving...' : 'Approval Recommended'}
+                          title={saving ? 'Saving...' : 'Recommend Approval'}
                           btnType='button'
                           handleClick={handleRecommend}
                         />

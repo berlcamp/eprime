@@ -26,6 +26,7 @@ export interface namesType {
   firstname: string
   middlename: string
   lastname: string
+  position_type: string
   avatar_url: string
   id: string
 }
@@ -170,6 +171,7 @@ export interface AssignmentTypes {
   hrm_districts: DistrictTypes
   hrm_offices: Office
   hrm_positions: PositionTypes
+  service_record_status: string
 }
 
 export interface ItemTypes {
@@ -177,18 +179,8 @@ export interface ItemTypes {
   item_number: string
   user_id: string
   position_id: string
-  implementing_unit: string
-  school_id?: string
-  hrm_school: SchoolTypes
-  hrm_position: PositionTypes
-  hrm_user: Employee
-}
-
-export interface PlantillaTypes {
-  id: string
-  item_number: string
-  user_id: string
-  position_id: string
+  implementing_unit_id?: string
+  implementing_unit: SchoolTypes
   school_id?: string
   hrm_school: SchoolTypes
   hrm_position: PositionTypes
@@ -209,12 +201,14 @@ export interface PlantillaTypes {
   tin_no: string
   umid_no: string
   confirmed: string
+  vacancy_type: string
 }
 
 export interface PromotionTypes {
   id: string
   user_id: string
   position_id: string
+  status: string
   effectivity_date: string
   hrm_position: PositionTypes
   hrm_user: Employee
@@ -235,10 +229,39 @@ export interface DesignationTypes {
   district_id: string
   school_id: string
   designation: string
+  position_id: string
+  hrm_positions: PositionTypes
   office_id: string
   hrm_schools: SchoolTypes
   hrm_districts: DistrictTypes
   hrm_offices: Office
+  service_record_status: string
+  confirmed: string
+}
+
+export interface RevokeTypes {
+  reference_code: string
+  hrm_user_id: string
+  id: string
+  area_assigned: string
+  from: string
+  to: string
+  type: string
+  status: string
+  add_to_service_record: boolean
+  add_to_leave_card: boolean
+  hrm_users: Employee
+  district_id: string
+  school_id: string
+  designation: string
+  office_id: string
+  hrm_schools: SchoolTypes
+  hrm_districts: DistrictTypes
+  hrm_offices: Office
+  service_record_status: string
+  position_id: string
+  hrm_positions: PositionTypes
+  confirmed: string
 }
 
 export interface CtoUserTypes {
@@ -251,6 +274,7 @@ export interface CtoUserTypes {
   expiration: string
   coc: number
   used_coc?: number
+  status: string
 }
 
 export interface CtoTypes {
@@ -278,7 +302,7 @@ export interface ServiceCreditUserTypes {
   id: string
   hrm_user_id: string
   hrm_service_credits?: ServiceCreditTypes
-  hrm_users: Employee
+  hrm_users: namesType
   service_credit_id: string
   is_approved: boolean
   service_credits: number
@@ -297,6 +321,7 @@ export interface ServiceCreditTypes {
   total_hours: string
   particulars: string
   service_credits: string
+  is_approved: boolean
   hrm_service_credit_users: ServiceCreditUserTypes[]
 }
 
@@ -327,6 +352,7 @@ export interface ServiceRecordTypes {
   salary: string
   station: string
   branch: string
+  assignment_id: string
   separation_date: string
   separation_cause: string
   remarks: string
@@ -442,6 +468,17 @@ export interface RemarksTypes {
   files: string[] | null
   hrm_users: Employee
   hrm_remarks_comments: CommentsTypes[]
+}
+
+export interface GlobalRemarksTypes {
+  id: string
+  created_at: string
+  sender_id: string
+  promotion_id?: string
+  message: string
+  is_private: boolean
+  reply_type: string
+  hrm_users: Employee
 }
 
 export interface CommentsTypes {

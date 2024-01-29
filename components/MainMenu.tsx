@@ -4,8 +4,12 @@ import { MdOutlineMoreTime } from 'react-icons/md'
 import { useFilter } from '@/context/FilterContext'
 import { BookOpenIcon, CalendarDaysIcon, CalendarIcon, ChartBarSquareIcon, DocumentDuplicateIcon, HomeIcon, TableCellsIcon, TrophyIcon, UsersIcon } from '@heroicons/react/20/solid'
 import Link from 'next/link'
+import LeaveCardModal from './LeaveCardModal'
+import { useState } from 'react'
 
 const MainMenu = () => {
+  const [showLeaveCardModal, setShowLeaveCardModal] = useState(false)
+
   const { session } = useFilter()
   return (
     <div className="py-1 relative">
@@ -18,10 +22,10 @@ const MainMenu = () => {
               <CalendarDaysIcon className='w-6 h-6'/>
               <div className='app__menu_item_label'>My Requests</div>
             </Link>
-            <Link href='/' className='app__menu_item'>
+            <div className='app__menu_item cursor-pointer' onClick={() => setShowLeaveCardModal(true)}>
               <TableCellsIcon className='w-6 h-6'/>
               <div className='app__menu_item_label'>My Leave Card</div>
-            </Link>
+            </div>
             <Link href={`/myservicerecords/${session.user.id}`} className='app__menu_item'>
               <TableCellsIcon className='w-6 h-6'/>
               <div className='app__menu_item_label'>My Service Records</div>
@@ -151,6 +155,14 @@ const MainMenu = () => {
           </div>
         </div>
       </div>
+      {/* Leave Card Modal */}
+      {
+        showLeaveCardModal && (
+          <LeaveCardModal
+            userId={session.user.id}
+            hideModal={() => setShowLeaveCardModal(false)}/>
+        )
+      }
     </div>
   )
 }

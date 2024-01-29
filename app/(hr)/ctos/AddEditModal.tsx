@@ -62,6 +62,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       date_issued: new Date(formdata.date_issued),
       expiration: expireDate,
+      status: expireDate <= new Date() ? 'Expired' : null,
       total_hours: formdata.total_hours,
       particulars: formdata.particulars,
       is_holiday: isHolidayChecked,
@@ -116,11 +117,11 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     expireDate.setFullYear(expireDate.getFullYear() + 1)
 
     const newData = {
-      reference_code: generateReferenceCode(),
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
       to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       date_issued: new Date(formdata.date_issued),
       expiration: expireDate,
+      status: expireDate <= new Date() ? 'Expired' : null,
       total_hours: formdata.total_hours,
       particulars: formdata.particulars,
       is_holiday: isHolidayChecked,
@@ -135,7 +136,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       if (error) {
         void logError('Update CTO', 'hrm_ctos', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        setToast('error', 'Saving failed, please reload the `page and try again.')
         throw new Error(error.message)
       }
 
@@ -144,7 +145,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .from('hrm_cto_users')
         .update({
           coc,
-          expiration: expireDate
+          expiration: expireDate,
+          status: expireDate <= new Date() ? 'Expired' : null
         })
         .eq('cto_id', editData.id)
 

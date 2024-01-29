@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchDistricts, fetchOffices, fetchSchools, logError } from '@/utils/fetchApi'
+import { fetchDistricts, fetchLeaveCards, fetchOffices, fetchSchools, handleConvertEmployeeToNonTeaching, logError } from '@/utils/fetchApi'
 import { CustomButton, OneColLayoutLoading, SearchUserInput, UserBlock } from '@/components'
 import { generateReferenceCode } from '@/utils/text-helper'
 
@@ -14,6 +14,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { XCircleIcon } from '@heroicons/react/24/solid'
+import { format } from 'date-fns'
 
 interface ModalProps {
   hideModal: () => void
@@ -22,8 +23,12 @@ interface ModalProps {
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const { setToast } = useFilter()
-  const { supabase }: { supabase: any } = useSupabase()
+  const { supabase, session } = useSupabase()
   const [saving, setSaving] = useState(false)
+
+  const [isTeaching, setIsTeaching] = useState(false)
+  const [vlslBalance, setVlslBalance] = useState(0)
+  const [scBalance, setScBalance] = useState(0)
 
   // Search employee
   const [user, setUser] = useState<namesType | null>(null)
@@ -42,8 +47,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const [districts, setDistricts] = useState<DistrictTypes[] | []>([])
   const [offices, setOffices] = useState<Office[] | []>([])
 
-  const [isServiceRecordChecked, setIsServiceRecordChecked] = useState(true)
-  const [isLeaveCardChecked, setIsLeaveCardChecked] = useState(true)
+  const [isServiceRecordChecked, setIsServiceRecordChecked] = useState(false)
+  const [isLeaveCardChecked, setIsLeaveCardChecked] = useState(false)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -55,14 +60,14 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   })
 
   const onSubmit = async (formdata: DesignationTypes) => {
-    if (saving) return
-
-    setSaving(true)
-
     if (!editData && !user) {
       setErrorMessage('Employee Name is Required')
       return
     }
+
+    if (saving) return
+
+    setSaving(true)
 
     const hasErrors: boolean = await validateEmployee(formdata)
 
@@ -120,6 +125,16 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       }
 
       newId = data[0].id // newly created ID use this on 'finally' block
+
+      // add to service record
+      if (isServiceRecordChecked) {
+        void handleAddToServiceRecord(formdata, newId)
+      }
+
+      // update position type of employee to Non-teaching only if checkbox is checked and convert employee to non-teaching and service credits to vl/sl
+      if (isTeaching && isLeaveCardChecked) {
+        void handleConvertEmployeeToNonTeaching(user.id)
+      }
 
       // Append new data in redux
       const updatedDropdownData = getUpdatedDropdownData(formdata)
@@ -207,6 +222,53 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
+  const handleAddToServiceRecord = async (formdata: DesignationTypes, newId: string) => {
+    if (!user) return
+
+    console.log('formdata', formdata)
+
+    let station = ''
+    if (formdata.area_assigned === 'school') {
+      const hrmSchool = schools.find(p => p.id.toString() === formdata.school_id?.toString())
+      station = hrmSchool ? hrmSchool.name : ''
+    } else {
+      const hrmOffice = offices.find(p => p.id.toString() === formdata.office_id?.toString())
+      station = hrmOffice ? hrmOffice.name : ''
+    }
+
+    console.log('station', station)
+
+    const newData = {
+      user_id: user.id,
+      designation_id: newId,
+      org_id: process.env.NEXT_PUBLIC_ORG_ID,
+      from: formdata.from,
+      designation: formdata.designation,
+      status: formdata.service_record_status,
+      salary: '',
+      station,
+      branch: 'National',
+      separation_date: '',
+      separation_cause: '',
+      remarks: '',
+      created_by: session.user.id
+    }
+
+    try {
+      const { error } = await supabase
+        .from('hrm_service_records')
+        .insert(newData)
+
+      if (error) {
+        void logError('Create service record from assignments', 'hrm_service_records', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const getUpdatedDropdownData = (formdata: DesignationTypes) => {
     let json = {}
     if (formdata.area_assigned === 'school') {
@@ -278,9 +340,16 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
   const handleSelectedUsers = (selectedUsers: namesType[]) => {
     if (selectedUsers.length > 0) {
+      if (selectedUsers[0].position_type === 'Teaching') {
+        setIsTeaching(true)
+
+        // fetch leave card information
+        void handleFetchLeaveCard(selectedUsers[0].id)
+      }
       setUser(selectedUsers[0])
     } else {
       setUser(null)
+      setIsTeaching(false)
     }
   }
 
@@ -292,6 +361,20 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     setSchools(result.data.length > 0 ? result.data : [])
     setLoadingSchools(false)
+  }
+
+  const handleFetchLeaveCard = async (userId: string) => {
+    // Count Service Credits balance if teaching
+    const result = await fetchLeaveCards(userId, 'Service Credit', 10, 0)
+    if (result.count && result.count > 0) {
+      // first index of array should be the latest and updated balance
+      const sc = result.data[0].balance
+      setScBalance(sc)
+
+      // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
+      const vlsl = (30 * Number(sc)) / 69
+      setVlslBalance(vlsl)
+    }
   }
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
@@ -352,7 +435,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
-          <div className='app__form_field_container'>
+            <div className='app__form_field_container'>
               <div className='w-full'>
 
                 {
@@ -510,40 +593,94 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
               <div className='w-full'>
                 <div className='app__label_standard'>Start Date</div>
                 <div>
+                  {
+                    !editData
+                      ? <>
+                          <input
+                            {...register('from', { required: true })}
+                            type='date'
+                            className='app__select_standard'/>
+                          {errors.from && <div className='app__error_message'>Start Date is required</div>}
+                        </>
+                      : <div className='app__label_value'>{format(new Date(editData.from), 'MMMM dd, yyyy')}</div>
+                  }
+                </div>
+              </div>
+            </div>
+            <div className='app__form_field_container'>
+              <div className='w-full'>
+                <div className='app__label_standard'>
+                  <label className='flex items-center space-x-1'>
+                    {
+                      !editData
+                        ? <>
+                            <input
+                              onChange={() => setIsServiceRecordChecked(!isServiceRecordChecked)}
+                              checked={isServiceRecordChecked}
+                              type='checkbox'
+                              className=''/>
+                            <span>Include this to Employee&apos;s Service Record</span>
+                          </>
+                        : <span className='text-xs italic font-normal text-gray-600'>{editData.add_to_service_record ? <span>(Included on Employee&apos;s Service Record)</span> : ''}</span>
+                    }
+                  </label>
+                </div>
+              </div>
+            </div>
+            {
+              (!editData && isTeaching) &&
+                <div className='app__form_field_container'>
+                  <div className='w-full'>
+                    <div className='app__label_standard'>
+                      <label className='flex items-center space-x-1'>
+                        <input
+                          onChange={() => setIsLeaveCardChecked(!isLeaveCardChecked)}
+                          checked={isLeaveCardChecked}
+                          type='checkbox'
+                          className=''/>
+                        <span>Convert employee&apos;s Service Credits to SL/VL</span>
+                      </label>
+                    </div>
+                    {isLeaveCardChecked && <div className='ml-4 text-xs text-gray-700'><span className='text-green-700 font-bold'>{Number(scBalance).toFixed(3)}</span> Service Credits will be converted to <span className='text-green-700 font-bold'>{(vlslBalance / 2).toFixed(3)}</span> VL and <span className='text-green-700 font-bold'>{(vlslBalance / 2).toFixed(3)}</span> SL</div>}
+                  </div>
+                </div>
+            }
+            {
+              (!editData && isServiceRecordChecked) &&
+                <div className='app__form_field_container'>
+                  <div className='w-full'>
+                    <div className='app__label_standard'>Status</div>
+                    <div>
+                      <select
+                        {...register('service_record_status', { required: true })}
+                        className='app__select_standard'>
+                          <option value=''>Choose</option>
+                          <option value="Casual">Casual</option>
+                          <option value="Contractual">Contractual</option>
+                          <option value="Permanent">Permanent</option>
+                          <option value="Provisionary">Provisionary</option>
+                          <option value="Provisional">Provisional</option>
+                          <option value="Permanent">Permanent</option>
+                          <option value="School Board">School Board</option>
+                          <option value="Substitute">Substitute</option>
+                          <option value="Temporary">Temporary</option>
+                      </select>
+                      {errors.service_record_status && <div className='app__error_message'>Status is required</div>}
+                    </div>
+                  </div>
+                </div>
+            }
+            <hr className='my-6'/>
+            <div className='app__form_field_container'>
+              <div className='app__label_standard'>
+                <label className='flex items-center space-x-1'>
                   <input
-                    {...register('from', { required: true })}
-                    type='date'
-                    className='app__select_standard'/>
-                  {errors.from && <div className='app__error_message'>Start Date is required</div>}
-                </div>
-              </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>
-                  <label className='flex items-center space-x-1'>
-                    <input
-                      onChange={() => setIsServiceRecordChecked(!isServiceRecordChecked)}
-                      checked={isServiceRecordChecked}
-                      type='checkbox'
-                      className=''/>
-                    <span>Include this to Employee&apos;s Service Record</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>
-                  <label className='flex items-center space-x-1'>
-                    <input
-                      onChange={() => setIsLeaveCardChecked(!isLeaveCardChecked)}
-                      checked={isLeaveCardChecked}
-                      type='checkbox'
-                      className=''/>
-                    <span>Include this to Employee&apos;s Leave Credits Increments</span>
-                  </label>
-                </div>
+                    {...register('confirmed', { required: true })}
+                    type='checkbox'
+                    className=''/>
+                  <span className='font-normal text-xs'>After submitting, it will make adjustments on emloyee&apos; leave card and service record. By checking this box, you acknowledge that all information is accurate.</span>
+                </label>
+                {errors.confirmed && <div className='app__error_message'>Confirmation is required</div>}
               </div>
             </div>
             <div className="app__modal_footer">

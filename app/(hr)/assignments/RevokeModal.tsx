@@ -59,9 +59,14 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
         .eq('id', editData.id)
 
       if (error) throw new Error(error.message)
-    } catch (e) {
-      console.error(e)
-    } finally {
+
+      const { error: error2 } = await supabase
+        .from('hrm_service_records')
+        .update({ to: endDate })
+        .eq('assignment_id', editData.id)
+
+      if (error2) throw new Error(error2.message)
+
       // Update data in redux
       const items = [...globallist]
       const updatedData = { ...newData, to: endDate, id: editData.id }
@@ -76,6 +81,8 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
 
       // hide the modal
       hideModal()
+    } catch (e) {
+      console.error(e)
     }
   }
 

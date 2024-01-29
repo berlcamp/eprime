@@ -22,7 +22,7 @@ interface ModalProps {
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const { setToast } = useFilter()
-  const { supabase }: { supabase: any } = useSupabase()
+  const { supabase, session } = useSupabase()
   const [saving, setSaving] = useState(false)
 
   const [user, setUser] = useState<namesType | null>(null)
@@ -112,9 +112,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       }
 
       newId = data[0].id // newly created ID use this on 'finally' block
-    } catch (e) {
-      console.error(e)
-    } finally {
+
+      // add to service record
+      if (isServiceRecordChecked) {
+        void handleAddToServiceRecord(formdata, newId)
+      }
+
       // Append new data in redux
       const updatedDropdownData = getUpdatedDropdownData(formdata)
       const updatedData = { ...newData, from: formdata.from, hrm_users: user, ...updatedDropdownData, id: newId }
@@ -133,6 +136,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // reset all form fields
       reset()
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -187,6 +192,51 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // reset all form fields
       reset()
+    }
+  }
+
+  const handleAddToServiceRecord = async (formdata: AssignmentTypes, newId: string) => {
+    if (!user) return
+
+    const hrmPosition = positions.find(p => p.id.toString() === formdata.position_id?.toString())
+
+    let station = ''
+    if (formdata.area_assigned === 'school') {
+      const hrmSchool = schools.find(p => p.id.toString() === formdata.school_id?.toString())
+      station = hrmSchool ? hrmSchool.name : ''
+    } else {
+      const hrmOffice = offices.find(p => p.id.toString() === formdata.office_id?.toString())
+      station = hrmOffice ? hrmOffice.name : ''
+    }
+
+    const newData = {
+      user_id: user.id,
+      assignment_id: newId,
+      org_id: process.env.NEXT_PUBLIC_ORG_ID,
+      from: formdata.from,
+      designation: hrmPosition?.name,
+      status: formdata.service_record_status,
+      salary: '',
+      station,
+      branch: 'National',
+      separation_date: '',
+      separation_cause: '',
+      remarks: '',
+      created_by: session.user.id
+    }
+
+    try {
+      const { error } = await supabase
+        .from('hrm_service_records')
+        .insert(newData)
+
+      if (error) {
+        void logError('Create service record from assignments', 'hrm_service_records', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -534,6 +584,31 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                 </div>
               </div>
             </div>
+            {
+              isServiceRecordChecked &&
+                <div className='app__form_field_container'>
+                  <div className='w-full'>
+                    <div className='app__label_standard'>Status</div>
+                    <div>
+                      <select
+                        {...register('service_record_status', { required: true })}
+                        className='app__select_standard'>
+                          <option value=''>Choose</option>
+                          <option value="Casual">Casual</option>
+                          <option value="Contractual">Contractual</option>
+                          <option value="Permanent">Permanent</option>
+                          <option value="Provisionary">Provisionary</option>
+                          <option value="Provisional">Provisional</option>
+                          <option value="Permanent">Permanent</option>
+                          <option value="School Board">School Board</option>
+                          <option value="Substitute">Substitute</option>
+                          <option value="Temporary">Temporary</option>
+                      </select>
+                      {errors.service_record_status && <div className='app__error_message'>Status is required</div>}
+                    </div>
+                  </div>
+                </div>
+            }
             <div className="app__modal_footer">
                   <CustomButton
                     btnType='submit'

@@ -18,7 +18,7 @@ import { SearchUserInput } from '@/components'
 
 const classList = [
   'IP School',
-  'Madrata',
+  'Madrasa',
   'Senior High School Only',
   'Integrated'
 ]
@@ -236,9 +236,11 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       className='app__select_standard'>
                         <option value=''>Choose Type</option>
                         <option value='Elementary'>Elementary</option>
-                        <option value='Secondary'>Secondary</option>
-                        <option value='Senior Highschool'>Senior Highschool</option>
+                        <option value='Complete Secondary'>Complete Secondary</option>
+                        <option value='Secondary - Junior Highschool Only'>Secondary - Junior Highschool Only</option>
+                        <option value='Secondary - Senior Highschool Only'>Secondary - Senior Highschool Only</option>
                         <option value='SPED Centers'>SPED Centers</option>
+                        <option value='Integrated School'>Integrated School</option>
                     </select>
                     {errors.type && <div className='app__error_message'>Type is required</div>}
                   </div>
@@ -264,7 +266,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
               </div>
               <div className='app__form_field_container'>
                 <div className='w-full'>
-                  <div className='app__label_standard'>Class:</div>
+                  <div className='app__label_standard'>Curriculum Implemented:</div>
                   <div>
                     <div className="w-full">
                       <Listbox value={selectedClass} onChange={setSelectedClass} multiple>

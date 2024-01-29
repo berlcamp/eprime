@@ -59,6 +59,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       user_id: user.id,
       position_id: formdata.position_id,
       effectivity_date: formdata.effectivity_date,
+      status: 'For Verification',
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
 
@@ -72,6 +73,22 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         void logError('Create New Promotion', 'hrm_promotions', JSON.stringify(newData), error.message)
         setToast('error', 'Saving failed, please reload the page and try again.')
         throw new Error(error.message)
+      }
+
+      // insert to notifications
+      const { error2 } = await supabase
+        .from('hrm_notifications')
+        .insert({
+          message: 'You are added to a <b>Promotion</b>, please upload supporting documents.',
+          url: '/mypromotions',
+          type: 'promotion',
+          user_id: user.id,
+          reference_id: data[0].id,
+          reference_table: 'hrm_promotions'
+        })
+
+      if (error2) {
+        throw new Error(error2.message)
       }
 
       // Append new data in redux

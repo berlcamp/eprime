@@ -3,9 +3,9 @@ import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { CustomButton, ConfirmModal, TableRowLoading, UserBlock } from '@/components'
+import { CustomButton, ConfirmModal, TableRowLoading, UserBlock, SearchUserInput } from '@/components'
 import uuid from 'react-uuid'
-import { ArrowPathIcon, ChevronDownIcon, TrashIcon, XMarkIcon } from '@heroicons/react/20/solid'
+import { ArrowPathIcon, ChevronDownIcon, TrashIcon } from '@heroicons/react/20/solid'
 import AttachmentsModal from './AttachmentsModal'
 
 // Redux imports
@@ -13,7 +13,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 
 // Types
-import type { ServiceCreditTypes, ServiceCreditUserTypes, excludedItemsTypes, Employee } from '@/types'
+import type { ServiceCreditTypes, ServiceCreditUserTypes, namesType } from '@/types'
+import { fetchLeaveCards, logError } from '@/utils/fetchApi'
 
 interface ModalProps {
   hideModal: () => void
@@ -21,8 +22,8 @@ interface ModalProps {
 }
 
 const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
-  const { setToast } = useFilter()
-  const { supabase, systemUsers }: { systemUsers: Employee[], supabase: any } = useSupabase()
+  const { setToast, hasAccess } = useFilter()
+  const { supabase } = useSupabase()
 
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -33,9 +34,8 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
   const [showApproveModal, setShowApproveModal] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | ''>('')
 
-  const [searchHead, setSearchHead] = useState('')
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const [selectedItems, setSelectedItems] = useState<Employee[] | []>([])
+  const [user, setUser] = useState<namesType | null>(null)
+  const [clear, setClear] = useState(false)
 
   const [list, setList] = useState<ServiceCreditUserTypes[]>([])
 
@@ -46,13 +46,13 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
   const handleAddEmployee = async () => {
     if (!scData) return
 
-    if (selectedItems.length === 0) {
+    if (!user) {
       setErrorMessage('Employee name is required')
       return
     }
 
     // if for some reason the employee selected already exists
-    if (list.some((item) => selectedItems[0].id === item.hrm_user_id)) {
+    if (list.some((item) => user.id === item.hrm_user_id)) {
       return
     }
 
@@ -60,7 +60,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
 
     const newData = {
       service_credit_id: scData.id,
-      hrm_user_id: selectedItems[0].id,
+      hrm_user_id: user.id,
       reference_code: refCode,
       is_approved: false,
       service_credits: Number(scData.service_credits)
@@ -74,9 +74,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
 
       if (error) throw new Error(error.message)
 
-      setSelectedItems([])
-
-      const updatedData = { ...newData, hrm_users: selectedItems[0], id: data[0].id }
+      const updatedData = { ...newData, hrm_users: user, id: data[0].id }
 
       // add to list
       setList([updatedData, ...list])
@@ -95,10 +93,10 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
       const { error2 } = await supabase
         .from('hrm_notifications')
         .insert({
-          message: 'You are added to a <b>Service Credit</b>, please upload supporting documents.',
+          message: 'You are added to a <b>Service Credit</b>, please upload supporting documents if necessary.',
           url: `/myservicecredits/${refCode}`,
           type: 'service_credit',
-          user_id: selectedItems[0].id,
+          user_id: user.id,
           reference_id: data[0].id,
           reference_table: 'hrm_service_credit_users'
         })
@@ -106,6 +104,10 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
       if (error2) {
         throw new Error(error2.message)
       }
+
+      // Clear search user box
+      setUser(null)
+      setClear(!clear)
 
       // pop up the success message
       setToast('success', 'Successfully saved.')
@@ -134,6 +136,8 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
   const handleApproveConfirmed = async () => {
     if (!scData) return
 
+    if (!selectedRow) return
+
     try {
       const refCode = scData.reference_code
 
@@ -157,6 +161,35 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
         })
 
       if (error2) throw new Error(error2.message)
+
+      let sc = selectedRow.service_credits
+      // Get the previous COC balance from leave cards
+      const result = await fetchLeaveCards(selectedRow.hrm_user_id, 'Service Credit', 10, 0)
+      if (result.count && result.count > 0) {
+        // first index of array should be the latest and updated balance
+        sc = sc + Number(result.data[0].balance)
+      }
+
+      // Update leave card
+      const newData = {
+        type: 'Service Credit',
+        balance: sc,
+        remarks: '',
+        credits_earned: selectedRow.service_credits,
+        user_id: selectedRow.hrm_user_id,
+        particulars: 'Earned Service Credit'
+      }
+
+      const { error: error3 } = await supabase
+        .from('hrm_leave_cards')
+        .insert(newData)
+        .select()
+
+      if (error3) {
+        void logError('Earned Service Credit on SC approval', 'hrm_leave_cards', JSON.stringify(newData), error3.message)
+        setToast('error', 'Error updating leave card, please adjust the employees leave card manually.')
+        throw new Error(error3.message)
+      }
 
       // Update list
       const updatedData = list.map(item => {
@@ -226,47 +259,12 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
     setShowDeleteModal(false)
   }
 
-  const handleSearchUser = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = e.target.value
-    setSearchHead(searchTerm)
-    setErrorMessage('')
-
-    if (searchTerm.trim().length < 3) {
-      setSearchResults([])
-      return
-    }
-
-    const excludedItems: excludedItemsTypes[] = []
-    list.forEach((item: ServiceCreditUserTypes) => {
-      excludedItems.push({ id: item.hrm_user_id })
-    })
-    excludedItems.push(...selectedItems)
-
-    // Search user
-    const searchWords = (e.target.value).split(' ')
-    const results = systemUsers.filter(user => {
-      // exclude already selected users
-      if (excludedItems.some(obj => obj.id.toString() === user.id.toString())) return false
-
-      const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
-      return searchWords.every(word => fullName.includes(word))
-    })
-
-    setSearchResults(results)
-  }
-
-  const handleSelected = (item: Employee, multiple = false) => {
-    if (multiple) {
-      setSelectedItems([...selectedItems, item])
+  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+    if (selectedUsers.length > 0) {
+      setUser(selectedUsers[0])
     } else {
-      setSelectedItems([item])
+      setUser(null)
     }
-
-    setSearchResults([])
-    setSearchHead('')
-  }
-  const handleRemoveSelected = (id: string) => {
-    setSelectedItems(prevSelectedItems => prevSelectedItems.filter(item => item.id !== id))
   }
 
   const fetchData = async () => {
@@ -276,7 +274,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
     try {
       const { data, error } = await supabase
         .from('hrm_service_credit_users')
-        .select('*, hrm_users:hrm_user_id(lastname,firstname,middlename)')
+        .select('*, hrm_users:hrm_user_id(lastname,firstname,middlename,avatar_url)')
         .eq('service_credit_id', scData?.id)
         .order('id', { ascending: false })
 
@@ -323,46 +321,12 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
               <div className='app__form_field_container'>
                 <div className='w-full'>
                   <div className='app__label_standard'>Add Employee:</div>
-                  <div className='app__selected_users_container'>
-                    {
-                      selectedItems.length > 0 &&
-                        selectedItems.map(item => (
-                          <div key={uuid()} className='w-full flex mb-1'>
-                            <span className='app__selected_user'>
-                              {item.firstname} {item.middlename} {item.lastname}
-                              <XMarkIcon onClick={() => handleRemoveSelected(item.id)} className='w-4 h-4 ml-2 cursor-pointer'/>
-                            </span>
-                          </div>
-                        ))
-                    }
-                    {
-                      selectedItems.length === 0 &&
-                        <div className='relative'>
-                          <input
-                            type="text"
-                            placeholder='Search employee..'
-                            value={searchHead}
-                            onChange={async (e) => await handleSearchUser(e)}
-                            className='app__input_noborder'/>
-
-                            {
-                              searchResults.length > 0 &&
-                                <div className='app__search_user_results_container'>
-                                  {
-                                    searchResults.map((item: Employee) => (
-                                      <div
-                                        key={uuid()}
-                                        onClick={() => handleSelected(item)}
-                                        className='app__search_user_results'>
-                                          <UserBlock user={item}/>
-                                      </div>
-                                    ))
-                                  }
-                                </div>
-                            }
-                        </div>
-                    }
-                  </div>
+                  <SearchUserInput
+                    isMultiple={false}
+                    teachingOnly={true}
+                    clear={clear}
+                    excludedIds={list.map(obj => obj.hrm_user_id)}
+                    handleSelectedUsers={handleSelectedUsers}/>
                   {errorMessage && <div className='app__error_message'>{errorMessage}</div>}
                 </div>
               </div>
@@ -502,7 +466,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
                         <td
                           className="hidden md:table-cell app__td">
                             {
-                              !item.is_approved &&
+                              (!item.is_approved && hasAccess('cto_sc_approver')) &&
                                 <CustomButton
                                   btnType='button'
                                   title='Approve'

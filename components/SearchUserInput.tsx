@@ -3,18 +3,21 @@
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { Employee, namesType } from '@/types'
 import { XMarkIcon } from '@heroicons/react/20/solid'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import UserBlock from './UserBlock'
 
 interface PropTypes {
   classNames?: string
-  isMultiple: boolean
+  isMultiple?: boolean
+  clear?: boolean
+  nonTeachingOnly?: boolean
+  teachingOnly?: boolean
   handleSelectedUsers: (users: namesType[] | []) => void
   selectedUsers?: namesType[] | []
   excludedIds?: string[] | []
 }
 
-export default function SearchUserInput ({ classNames, isMultiple, handleSelectedUsers, selectedUsers, excludedIds }: PropTypes) {
+export default function SearchUserInput ({ classNames, isMultiple, clear, nonTeachingOnly, teachingOnly, handleSelectedUsers, selectedUsers, excludedIds }: PropTypes) {
   const [searchHead, setSearchHead] = useState('')
   const [searchResults, setSearchResults] = useState<namesType[] | []>([])
   const [selectedItems, setSelectedItems] = useState<namesType[] | []>(selectedUsers ?? [])
@@ -39,8 +42,14 @@ export default function SearchUserInput ({ classNames, isMultiple, handleSelecte
       // exclude excluded Ids from props
       if (excludedIds?.some(id => id === user.id.toString())) return false
 
+      // filter only Non Teaching
+      if (nonTeachingOnly && user.position_type === 'Teaching') return false
+
+      // filter only Teaching
+      if (teachingOnly && user.position_type === 'Non-teaching') return false
+
       const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
-      return searchWords.every(word => fullName.includes(word))
+      return searchWords.every(word => fullName.includes(word.toLowerCase()))
     })
 
     setSearchResults(results)
@@ -63,6 +72,10 @@ export default function SearchUserInput ({ classNames, isMultiple, handleSelecte
     setSelectedItems(updatedData)
     handleSelectedUsers(updatedData)
   }
+
+  useEffect(() => {
+    setSelectedItems([])
+  }, [clear])
 
   return (
     <div className={`app__selected_users_container ${classNames ?? ''}`}>

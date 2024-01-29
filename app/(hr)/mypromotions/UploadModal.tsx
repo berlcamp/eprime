@@ -10,12 +10,12 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import { CustomButton } from '@/components'
 
 // types
-import type { CtoUserTypes } from '@/types'
+import type { PromotionTypes } from '@/types'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 
 interface ModalProps {
   hideModal: () => void
-  editData: CtoUserTypes | null
+  editData: PromotionTypes | null
 }
 
 export default function UploadModal ({ editData, hideModal }: ModalProps) {
@@ -56,9 +56,9 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
     // Upload files
     await handleUploadFiles(editData.id)
 
-    // Notify approvers
-    const fullname = `${editData.hrm_users.firstname} ${editData.hrm_users.middlename} ${editData.hrm_users.lastname}`
-    await handleNotify(fullname, editData.cto_id)
+    // Notify hrm
+    const fullname = `${editData.hrm_user.firstname} ${editData.hrm_user.middlename} ${editData.hrm_user.lastname}`
+    await handleNotify(fullname, editData.id)
 
     // refetch attachments
     void fetchAttachments()
@@ -78,7 +78,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
       selectedImages.map(async (file: { name: string }) => {
         const { error } = await supabase.storage
           .from('hrm')
-          .upload(`ctos/${id}/${file.name}`, file)
+          .upload(`promotions/${id}/${file.name}`, file)
         if (error) console.error(error)
       })
     )
@@ -104,7 +104,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
     const { data, error } = await supabase
       .storage
       .from('hrm')
-      .download(`ctos/${editData.id}/${file}`)
+      .download(`promotions/${editData.id}/${file}`)
 
     if (error) console.error(error)
 
@@ -138,7 +138,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
     const { error } = await supabase
       .storage
       .from('hrm')
-      .remove([`ctos/${editData.id}/${selectedFile}`])
+      .remove([`promotions/${editData.id}/${selectedFile}`])
 
     if (error) {
       console.error(error)
@@ -155,7 +155,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
     const { data, error } = await supabase
       .storage
       .from('hrm')
-      .list(`ctos/${editData.id}`, {
+      .list(`promotions/${editData.id}`, {
         limit: 100,
         offset: 0,
         sortBy: { column: 'name', order: 'asc' }
@@ -175,7 +175,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
       const { data, error } = await supabase
         .from('hrm_system_access')
         .select('user_id')
-        .eq('type', 'cto_sc_approver')
+        .eq('type', 'records')
         .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
       if (error) {
@@ -190,12 +190,12 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
 
       userIds.forEach((userId) => {
         notificationData.push({
-          message: `${fullname} uploaded supporting documents for CTO. Kindly review and take action necessarily.`,
-          url: `/ctos?ref=${id}`,
-          type: 'CTO Supporting Document',
+          message: `${fullname} uploaded supporting documents for PROMOTION. Kindly review and take action necessarily.`,
+          url: `/promotions?ref=${id}`,
+          type: 'PROMOTION Supporting Document',
           user_id: userId,
           reference_id: id,
-          reference_table: 'hrm_ctos'
+          reference_table: 'hrm_promotions'
         })
       })
 
@@ -267,7 +267,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
                                       }
                                   </div>
                                   {
-                                    (editData && !editData.is_approved) &&
+                                    (editData?.status !== 'Approved') &&
                                       <span
                                         onClick={() => handleDeleteClick(file.name)}
                                         className='text-red-600 cursor-pointer text-xs font-bold'>
@@ -283,7 +283,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
                 </div>
               </div>
               {
-                (editData && !editData.is_approved) &&
+                (editData?.status !== 'Approved') &&
                   <>
                     <div className="flex-auto overflow-y-auto relative p-4">
                       <div className='grid grid-cols-1 gap-4 mb-4'>

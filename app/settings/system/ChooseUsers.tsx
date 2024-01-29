@@ -5,6 +5,7 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import type { Employee, UserAccessTypes, namesType } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import { XMarkIcon } from '@heroicons/react/24/solid'
+import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import uuid from 'react-uuid'
 
@@ -25,6 +26,8 @@ export default function ChooseUsers ({ multiple, type, users, title }: ChooseUse
 
   const { systemUsers, supabase }: { systemUsers: Employee[], supabase: any } = useSupabase()
   const { setToast } = useFilter()
+
+  const router = useRouter()
 
   const handleSearchUser = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchManager('')
@@ -94,6 +97,8 @@ export default function ChooseUsers ({ multiple, type, users, title }: ChooseUse
         }
 
         setToast('success', 'Successfully saved')
+
+        router.refresh()
       }
     } catch (err) {
       console.log(err)

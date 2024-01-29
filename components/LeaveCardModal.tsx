@@ -44,7 +44,7 @@ export default function LeaveCardModal ({ hideModal, userId }: ModalProps) {
     setLoading(true)
 
     try {
-      const result = await fetchLeaveCards(userId, 10, 0)
+      const result = await fetchLeaveCards(userId, '', 10, 0)
 
       // update the list
       const newList = [...list, ...result.data]
@@ -63,7 +63,7 @@ export default function LeaveCardModal ({ hideModal, userId }: ModalProps) {
     setLoading(true)
 
     try {
-      const result = await fetchLeaveCards(userId, 10, list.length)
+      const result = await fetchLeaveCards(userId, '', 10, list.length)
 
       // update the list
       const newList = [...list, ...result.data]
@@ -161,14 +161,23 @@ export default function LeaveCardModal ({ hideModal, userId }: ModalProps) {
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
+  // Count VL and SL balance
   let slBalance
   let vlBalance
+  let scBalance
+  let cocBalance
+
   if (!isDataEmpty) {
     const slList = list.filter(item => item.type === 'Sick Leave')
     const vlList = list.filter(item => item.type === 'Vacation Leave')
+    const scList = list.filter(item => item.type === 'Service Credit')
+    const cocList = list.filter(item => item.type === 'Compensatory Overtime Credit')
 
+    // first index of array should be the latest and updated balance
     slBalance = slList.length > 0 ? slList[0].balance : 0
     vlBalance = vlList.length > 0 ? vlList[0].balance : 0
+    scBalance = scList.length > 0 ? scList[0].balance : 0
+    cocBalance = cocList.length > 0 ? cocList[0].balance : 0
   }
 
   return (
@@ -204,6 +213,7 @@ export default function LeaveCardModal ({ hideModal, userId }: ModalProps) {
                                   {...register('type', { required: true })}
                                   className='app__select_standard'>
                                     <option value=''>Choose Type</option>
+                                    <option value='Service Credit'>Service Credit Adjustment</option>
                                     <option value='Sick Leave'>Sick Leave Adjustment</option>
                                     <option value='Vacation Leave'>Vacation Leave Adjustment</option>
                                 </select>
@@ -214,6 +224,7 @@ export default function LeaveCardModal ({ hideModal, userId }: ModalProps) {
                                 <input
                                   {...register('balance', { required: true })}
                                   type='number'
+                                  step='any'
                                   placeholder='Updated Balance'
                                   className='app__input_standard'/>
                                 {errors.balance && <div className='app__error_message'>Update Balance is required</div>}
@@ -267,8 +278,20 @@ export default function LeaveCardModal ({ hideModal, userId }: ModalProps) {
               }
               <div className='flex justify-end mt-2 mb-2 px-4'>
                 <div className='space-x-1'>
-                  <span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm'>SL:&nbsp;{slBalance}</span>
-                  <span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm'>VL:&nbsp;{vlBalance}</span>
+                  {
+                    user.position_type === 'Teaching' &&
+                      <>
+                        <span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm'>Service Credits:&nbsp;{scBalance}</span>
+                      </>
+                  }
+                  {
+                    user.position_type !== 'Teaching' &&
+                      <>
+                        <span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm'>SL:&nbsp;{slBalance}</span>
+                        <span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm'>VL:&nbsp;{vlBalance}</span>
+                        <span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm'>COC:&nbsp;{cocBalance}</span>
+                      </>
+                  }
                 </div>
               </div>
 

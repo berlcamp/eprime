@@ -216,6 +216,7 @@ const Page: React.FC = () => {
                         className="app__th_firstcol">
                           <UserBlock user={item}/>
                           <div className='ml-8 font-light'>{item.email}</div>
+                          <div className='ml-8 font-light'>{item.position_type}</div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">

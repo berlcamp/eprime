@@ -1,14 +1,14 @@
 'use client'
 
-import { fetchLeaveCards, fetchMyCtos } from '@/utils/fetchApi'
+import { fetchMyPromotions } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, CustomButton, RecordsSideBar } from '@/components'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, CustomButton, RecordsSideBar, UserBlock } from '@/components'
 import UploadModal from './UploadModal'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { format } from 'date-fns'
 
 // Types
-import type { CtoUserTypes } from '@/types'
+import type { PromotionTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -18,15 +18,12 @@ import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
 
-  const [list, setList] = useState<CtoUserTypes[]>([])
-  const [editData, setEditData] = useState<CtoUserTypes | null>(null)
+  const [list, setList] = useState<PromotionTypes[]>([])
+  const [editData, setEditData] = useState<PromotionTypes | null>(null)
 
   const [showUploadModal, setShowUploadModal] = useState(false)
 
   const [perPageCount, setPerPageCount] = useState<number>(10)
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [cocBalance, setCocBalance] = useState(0)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -39,7 +36,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchMyCtos({ userId: session.user.id }, perPageCount, 0)
+      const result = await fetchMyPromotions(session.user.id, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -57,7 +54,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchMyCtos({ userId: session.user.id }, perPageCount, list.length)
+      const result = await fetchMyPromotions(session.user.id, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -72,7 +69,7 @@ const Page: React.FC = () => {
     }
   }
 
-  const handleEdit = (item: CtoUserTypes) => {
+  const handleAttachments = (item: PromotionTypes) => {
     setShowUploadModal(true)
     setEditData(item)
   }
@@ -92,17 +89,6 @@ const Page: React.FC = () => {
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
-  useEffect(() => {
-    void (async () => {
-      const result = await fetchLeaveCards(session.user.id, 'Compensatory Overtime Credit', 10, 0)
-      if (result.count && result.count > 0) {
-        // first index of array should be the latest and updated balance
-        const coc = result.data[0].balance
-        setCocBalance(coc)
-      }
-    })()
-  }, [])
-
   return (
     <>
     <Sidebar>
@@ -112,11 +98,10 @@ const Page: React.FC = () => {
     <div className="app__main">
       <div>
           <div className='app__title'>
-            <Title title='My CTOs'/>
+            <Title title='My Promotions'/>
           </div>
 
-          {/* <div className='flex justify-end mt-2 px-4'><span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm'>Available COC Balance: {cocBalance}</span></div> */}
-          <div className='app__warning_text'><span className='app__warning_title'>Note:</span> You need to provide supporting documents as basis for CTO approval.</div>
+          <div className='app__warning_text'><span className='app__warning_title'>Note:</span> You need to provide supporting documents as basis for Promotion approval.</div>
 
           {/* Per Page */}
           <PerPage
@@ -130,55 +115,42 @@ const Page: React.FC = () => {
             <table className="app__table">
               <thead className="app__thead">
                   <tr>
-                      <th className="hidden md:table-cell text-gray-700 pl-4">
-                          Reference Code
+                      <th className="hidden md:table-cell app__th_firstcol pl-4">
+                          Employee
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          COC
+                          New Position
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Approval Status
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Particulars
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Duration
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Expiration
+                          Status
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Supporting Documents
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Expiration Status
+                          Effectivity Date
                       </th>
                   </tr>
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: CtoUserTypes, index) => (
+                  !isDataEmpty && list.map((item: PromotionTypes, index) => (
                     <tr
                       key={index}
                       className="app__tr">
                       <th
                         className="pl-4">
-                        <div className='hidden md:inline-block font-medium'>{item.hrm_ctos?.reference_code}</div>
+                        <UserBlock user={item.hrm_user}/>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td_mobile">
-                            <div><span className='app_td_mobile_label'>Reference Code:</span> {item.hrm_ctos?.reference_code}</div>
-                            <div><span className='app_td_mobile_label'>Particulars:</span> {item.hrm_ctos?.particulars}</div>
-                            <div><span className='app_td_mobile_label'>COC:</span> {item.coc}</div>
-                            <div><span className='app_td_mobile_label'>Duration: </span>{item.hrm_ctos ? format(new Date(item.hrm_ctos.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.hrm_ctos.to), 'MMM d, yyyy') : ''}</div>
-                            <div><span className='app_td_mobile_label'>Expiration: </span>{format(new Date(item.expiration), 'MMM d, yyyy')}</div>
-                            <div><span className='app_td_mobile_label'>Expiration Status: </span>
-                              {
-                                item.hrm_ctos?.status === 'Expired'
-                                  ? <span className='app__status_container_red'>Expired</span>
-                                  : <span className='app__status_container_green'>Active</span>
-                              }
+                            <div><span className='app_td_mobile_label'>New Position:</span> {item.hrm_position.name}</div>
+                            <div><span className='app_td_mobile_label'>Effectivity Date: </span>{format(new Date(item.effectivity_date), 'MMM d, yyyy')}</div>
+                            <div>
+                              <span className='app_td_mobile_label'>Status: </span>
+                              {item.status === 'Approved' && <span className='app__status_container_green'>Expired</span>}
+                              {item.status === 'For Verification' && <span className='app__status_container_orange'>For Verification</span>}
+                              {item.status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
                             </div>
                           </div>
                         </div>
@@ -187,52 +159,34 @@ const Page: React.FC = () => {
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{item.coc}</div>
+                        <div className='font-semibold'>{item.hrm_position.name}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        {
-                          item.is_approved
-                            ? <span className='app__status_container_green'>Approved</span>
-                            : <span className='app__status_container_orange'>Pending Approval</span>
-                        }
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div className=''>{item.hrm_ctos?.particulars}</div>
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div>{item.hrm_ctos ? format(new Date(item.hrm_ctos.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.hrm_ctos.to), 'MMM d, yyyy') : ''}</div>
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div>{format(new Date(item.expiration), 'MMM d, yyyy')}</div>
+                          {item.status === 'Approved' && <span className='app__status_container_green'>Expired</span>}
+                          {item.status === 'For Verification' && <span className='app__status_container_orange'>For Verification</span>}
+                          {item.status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
                           {
-                            item.hrm_ctos?.status !== 'Expired' &&
+                            item.status !== 'Approved' &&
                               <CustomButton
                                 btnType='button'
                                 title='Supporting Documents'
-                                handleClick={() => handleEdit(item)}
+                                handleClick={() => handleAttachments(item)}
                                 containerStyles="app__btn_green"
                               />
                           }
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                          {
-                            item.hrm_ctos?.status === 'Expired'
-                              ? <span className='app__status_container_red'>Expired</span>
-                              : <span className='app__status_container_green'>Active</span>
-                          }
+                        <div>{format(new Date(item.effectivity_date), 'MMM d, yyyy')}</div>
                       </td>
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={8} rows={2}/> }
+                { loading && <TableRowLoading cols={5} rows={2}/> }
               </tbody>
             </table>
             {

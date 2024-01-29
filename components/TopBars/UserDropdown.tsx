@@ -12,7 +12,6 @@ import Image from 'next/image'
 
 // types
 import type { Employee } from '@/types'
-import LeaveCardModal from '../LeaveCardModal'
 
 interface propTypes {
   darkMode?: boolean
@@ -20,7 +19,6 @@ interface propTypes {
 
 const UserDropdown = ({ darkMode }: propTypes) => {
   const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false)
-  const [showLeaveCardModal, setShowLeaveCardModal] = useState(false)
 
   const { supabase, session, systemUsers } = useSupabase()
   const router = useRouter()
@@ -96,15 +94,6 @@ const UserDropdown = ({ darkMode }: propTypes) => {
             hideModal={() => setShowAccountDetailsModal(false)}/>
         )
       }
-      {/* Leave Card Modal */}
-      {
-        showLeaveCardModal && (
-          <LeaveCardModal
-            userId={session.user.id}
-            hideModal={() => setShowLeaveCardModal(false)}/>
-        )
-      }
-
     </div>
   )
 }

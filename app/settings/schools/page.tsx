@@ -148,7 +148,7 @@ const Page: React.FC = () => {
                           Type
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Size & Class
+                          Size & Curriculum Implemented
                       </th>
                       <th className="hidden md:table-cell app__th">
                           District

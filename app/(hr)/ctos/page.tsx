@@ -3,7 +3,7 @@
 import { fetchCtos } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
+import { ArrowLeftIcon, ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar } from '@/components'
 import { superAdmins } from '@/constants'
 import Filters from './Filters'
@@ -20,6 +20,8 @@ import type { CtoTypes } from '@/types'
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -42,11 +44,14 @@ const Page: React.FC = () => {
   const { session } = useSupabase()
   const { hasAccess } = useFilter()
 
+  const searchParams = useSearchParams()
+  const filterUrl = searchParams.get('ref')
+
   const fetchData = async () => {
     setLoading(true)
 
     try {
-      const result = await fetchCtos({ filterKeyword, filterStatus }, perPageCount, 0)
+      const result = await fetchCtos({ filterKeyword, filterStatus }, filterUrl, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -64,7 +69,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchCtos({ filterKeyword, filterStatus }, perPageCount, list.length)
+      const result = await fetchCtos({ filterKeyword, filterStatus }, null, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -125,32 +130,46 @@ const Page: React.FC = () => {
     <TopBar/>
     <div className="app__main">
       <div>
-          <div className='app__title'>
-            <Title title='Compensatory Time Off'/>
-            <CustomButton
-              containerStyles='app__btn_green'
-              title='Create New CTO'
-              btnType='button'
-              handleClick={handleAdd}
-            />
-          </div>
+        {
+          filterUrl &&
+            <div className='app__title'>
+              <Link href="/ctos" className='flex items-center app__btn_gray'>
+                <ArrowLeftIcon className='w-5 h-5'/>
+                View All CTOs
+              </Link>
+            </div>
+        }
+        {
+          !filterUrl &&
+            <>
+            <div className='app__title'>
+              <Title title='Compensatory Time Off'/>
+              <CustomButton
+                containerStyles='app__btn_green'
+                title='Create New CTO'
+                btnType='button'
+                handleClick={handleAdd}
+              />
+            </div>
 
-          {/* Filters */}
-          <div className='app__filters'>
-            <Filters
-              setFilterKeyword={setFilterKeyword}
-              setFilterStatus={setFilterStatus}
-            />
-          </div>
+            {/* Filters */}
+            <div className='app__filters'>
+              <Filters
+                setFilterKeyword={setFilterKeyword}
+                setFilterStatus={setFilterStatus}
+              />
+            </div>
 
-          <div className='app__warning_text'><span className='app__warning_title'>Note:</span> CTO with employee/s cannot be deleted.</div>
+            <div className='app__warning_text'><span className='app__warning_title'>Note:</span> CTO with employee/s cannot be deleted.</div>
 
-          {/* Per Page */}
-          <PerPage
-            showingCount={resultsCounter.showing}
-            resultsCount={resultsCounter.results}
-            perPageCount={perPageCount}
-            setPerPageCount={setPerPageCount}/>
+            {/* Per Page */}
+            <PerPage
+              showingCount={resultsCounter.showing}
+              resultsCount={resultsCounter.results}
+              perPageCount={perPageCount}
+              setPerPageCount={setPerPageCount}/>
+            </>
+        }
 
           {/* Main Content */}
           <div>
@@ -165,10 +184,10 @@ const Page: React.FC = () => {
                           COC
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Particulars
+                          Employees
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Total Employees
+                          Particulars
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Duration
@@ -270,13 +289,16 @@ const Page: React.FC = () => {
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{item.particulars}</div>
+                        <CustomButton
+                          containerStyles='app__btn_blue'
+                          title='Manage Employees'
+                          btnType='button'
+                          handleClick={() => handleManageEmployees(item)}
+                        />
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>
-                          {item.hrm_cto_users?.length}
-                        </div>
+                        <div className='font-semibold'>{item.particulars}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">

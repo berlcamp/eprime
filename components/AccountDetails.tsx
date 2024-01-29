@@ -4,8 +4,7 @@ import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import OneColLayoutLoading from './Loading/OneColLayoutLoading'
-import { superAdmins } from '@/constants'
-import { fetchDistricts, fetchOffices, fetchPositions, fetchSchools, logError } from '@/utils/fetchApi'
+import { fetchDistricts, fetchLeaveCards, fetchOffices, fetchPositions, fetchSchools, handleConvertEmployeeToNonTeaching, handleConvertEmployeeToTeaching, logError } from '@/utils/fetchApi'
 import uuid from 'react-uuid'
 import Avatar from 'react-avatar'
 import Image from 'next/image'
@@ -29,6 +28,12 @@ interface ModalProps {
 const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   const { setToast, hasAccess } = useFilter()
   const { supabase, session } = useSupabase()
+
+  const [positionTypeChange, setPositionTypeChange] = useState('')
+  const [slBalance, setSlBalance] = useState(0)
+  const [vlBalance, setVlBalance] = useState(0)
+  const [vlslBalance, setVlslBalance] = useState(0)
+  const [scBalance, setScBalance] = useState(0)
 
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -55,7 +60,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   const router = useRouter()
 
   // Check access from employee_accounts settings or Super Admins
-  const isAdmin = hasAccess('employee_accounts') || superAdmins.includes(session.user.email)
+  const isAdmin = hasAccess('employee_accounts')
 
   const { register, formState: { errors }, reset, handleSubmit } = useForm<Employee>({
     mode: 'onSubmit'
@@ -129,10 +134,20 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         dispatch(updateList(items))
       }
 
+      // Update leave if position type is changed
+      if (positionTypeChange === 'Non-teaching') {
+        void handleConvertEmployeeToNonTeaching(id)
+      }
+      if (positionTypeChange === 'Teaching') {
+        void handleConvertEmployeeToTeaching(id)
+      }
+
       // pop up the success message
       setToast('success', 'Successfully saved.')
 
       setSaving(false)
+
+      router.refresh()
 
       // hide the modal
       hideModal()
@@ -309,6 +324,55 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, reset])
+
+  const handleChangePositionType = async (type: string) => {
+    if (!userData) return
+
+    const result = await fetchLeaveCards(id, '', 1000, 0) // fetch all
+
+    // Count Service Credits balance if teaching
+    if (type === 'Non-teaching' && userData.position_type !== 'Non-teaching') {
+      if (result.count && result.count > 0) {
+        const scList = result.data.filter(item => item.type === 'Service Credit')
+
+        // first index of array should be the latest and updated balance
+        const sc = scList.length > 0 ? scList[0].balance : 0
+        setScBalance(sc)
+
+        // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
+        const vlsl = (30 * Number(sc)) / 69
+        setVlslBalance(vlsl)
+
+        // display the change to the UI
+        setPositionTypeChange('Non-teaching')
+      }
+    }
+
+    // Count VL/SL balance if non-teaching
+    if (type === 'Teaching' && userData.position_type !== 'Teaching') {
+      if (result.count && result.count > 0) {
+        const vlList = result.data.filter(item => item.type === 'Vacation Leave')
+        const slList = result.data.filter(item => item.type === 'Sick Leave')
+
+        // first index of array should be the latest and updated balance
+        const sl = slList.length > 0 ? slList[0].balance : 0
+        const vl = vlList.length > 0 ? vlList[0].balance : 0
+        setSlBalance(sl)
+        setVlBalance(vl)
+
+        // formula to convert vl/sl to sc as amended by CSC MC No.41, s. 1998
+        const sc = ((Number(vl) + Number(sl)) / 30) * 69
+        setScBalance(sc)
+
+        // display the change to the UI
+        setPositionTypeChange('Teaching')
+      }
+    }
+
+    if (type === '' || type === userData.position_type) {
+      setPositionTypeChange('')
+    }
+  }
 
   const salaryGradeOptions = []
   for (let i = 1; i <= 33; i++) {
@@ -510,7 +574,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                       {/* End First Column */}
                       {/* Begin Second Column */}
                       <div className='w-full px-4'>
-                        <div className='text-base text-center font-medium text-gray-600'>EDITABLE ONLY HR</div>
+                        <div className='text-base text-center font-medium text-gray-600'>EDITABLE ONLY BY HR</div>
                         <div className="flex items-center">
                           <div className="flex-grow bg-gray-300 h-px"></div>
                           <div className="mx-4 my-4 text-gray-500 text-sm">Position Settings</div>
@@ -547,6 +611,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                                 : <div>
                                     <select
                                       {...register('position_type', { required: true })}
+                                      onChange={e => handleChangePositionType(e.target.value)}
                                       className='app__input_standard'>
                                         <option value=''>Choose Type</option>
                                         <option value='Teaching'>Teaching</option>
@@ -555,8 +620,10 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                                     {errors.position_type && <div className='app__error_message'>Position Type is required</div>}
                                   </div>
                             }
-                            <div className='text-gray-600 italic mt-1'>(Teaching employees will not be included on VL/SL increment)</div>
+                            <div className='text-gray-600 italic mt-1'>(Changing position type will convert either VL/SL to Service Credit or Service Credit to VL/SL)</div>
                           </div>
+                          {positionTypeChange === 'Non-teaching' && <div className='ml-4 text-xs text-gray-700'><span className='text-green-700 font-bold'>{Number(scBalance).toFixed(3)}</span> Service Credits will be converted to <span className='text-green-700 font-bold'>{(vlslBalance / 2).toFixed(3)}</span> VL and <span className='text-green-700 font-bold'>{(vlslBalance / 2).toFixed(3)}</span> SL</div>}
+                          {positionTypeChange === 'Teaching' && <div className='ml-4 text-xs text-gray-700'><span className='text-green-700 font-bold'>{Number(vlBalance).toFixed(3)}</span> VL and <span className='text-green-700 font-bold'>{Number(slBalance).toFixed(3)}</span> SL will be converted to {Number(scBalance).toFixed(3)} Service Credit</div>}
                         </div>
                         <div className="flex items-center">
                           <div className="flex-grow bg-gray-300 h-px"></div>

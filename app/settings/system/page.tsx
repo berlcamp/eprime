@@ -57,9 +57,11 @@ const Page: React.FC = () => {
                   <ChooseUsers multiple={true} type='settings' users={users} title='Who can manage System Settings'/>
                   <ChooseUsers multiple={true} type='employee_accounts' users={users} title='Who can manage Employee Accounts'/>
                   <ChooseUsers multiple={true} type='records' users={users} title='Who can manage Records (Assignments, Designations, CTOs, Service Credits)'/>
-                  <ChooseUsers multiple={false} type='leave_approver' users={users} title='Final Approval for Leave Request'/>
-                  <ChooseUsers multiple={false} type='travel_approver' users={users} title='Final Approval for Travel Request'/>
-                  <ChooseUsers multiple={false} type='passslip_approver' users={users} title='Final Approval for Pass Slip'/>
+                  <ChooseUsers multiple={true} type='cto_sc_approver' users={users} title='Who can approve CTOs and Service Credits'/>
+                  <ChooseUsers multiple={true} type='leave_approver' users={users} title='Final Approval for Leave Request'/>
+                  <ChooseUsers multiple={true} type='travel_approver' users={users} title='Final Approval for Travel Request'/>
+                  <ChooseUsers multiple={true} type='passslip_approver' users={users} title='Final Approval for Pass Slip'/>
+                  <ChooseUsers multiple={true} type='certify_leave_credits' users={users} title='Who can Certify Leave Credits'/>
                   <ChooseUsers multiple={false} type='sds' users={users} title='Current SDS'/>
                   <ChooseUsers multiple={false} type='asds' users={users} title='Current ASDS'/>
                   </>

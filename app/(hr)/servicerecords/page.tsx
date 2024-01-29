@@ -243,11 +243,15 @@ export default function Page () {
                                               </div>
                                           </Menu.Item>
                                           <Menu.Item>
-                                            <div onClick={ () => handleDelete(item.id) } className='app__dropdown_item'>
-                                              <TrashIcon className='w-4 h-4'/>
-                                              <span>Delete</span>
-                                            </div>
-                                          </Menu.Item>
+                                          {
+                                            !item.assignment_id
+                                              ? <div onClick={ () => handleDelete(item.id) } className='app__dropdown_item'>
+                                                    <TrashIcon className='w-4 h-4'/>
+                                                    <span>Delete</span>
+                                                  </div>
+                                              : <div className='app__dropdown_item_disabled'><TrashIcon className='w-4 h-4'/><span>Delete (This record is associated with an Assignment record)</span></div>
+                                          }
+                                        </Menu.Item>
                                           </>
                                       }
                                     </div>

@@ -3,8 +3,8 @@
 import { fetchDesignations } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, PencilSquareIcon, PrinterIcon, TrashIcon } from '@heroicons/react/20/solid'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar, UserBlock } from '@/components'
+import { ChevronDownIcon, PencilSquareIcon, PrinterIcon } from '@heroicons/react/20/solid'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, RecordsSideBar, UserBlock } from '@/components'
 import uuid from 'react-uuid'
 import { superAdmins } from '@/constants'
 import Filters from './Filters'
@@ -28,11 +28,9 @@ const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showRevokeModal, setShowRevokeModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showPrintModal, setShowPrintModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState<DesignationTypes | null>(null)
 
-  const [selectedId, setSelectedId] = useState<string>('')
   const [list, setList] = useState<DesignationTypes[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
   const [filterSchool, setFilterSchool] = useState<string>('')
@@ -91,6 +89,7 @@ const Page: React.FC = () => {
     setEditData(null)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleEdit = (item: DesignationTypes) => {
     setShowAddModal(true)
     setEditData(item)
@@ -104,11 +103,6 @@ const Page: React.FC = () => {
   const handleRevoke = (item: DesignationTypes) => {
     setShowRevokeModal(true)
     setEditData(item)
-  }
-
-  const handleDelete = (id: string) => {
-    setSelectedId(id)
-    setShowDeleteModal(true)
   }
 
   // Update list whenever list in redux updates
@@ -231,7 +225,7 @@ const Page: React.FC = () => {
                                 {
                                   item.status !== 'Revoked' &&
                                     <>
-                                    <Menu.Item>
+                                    {/* <Menu.Item>
                                       <div
                                           onClick={() => handleEdit(item)}
                                           className='app__dropdown_item'
@@ -239,7 +233,7 @@ const Page: React.FC = () => {
                                           <PencilSquareIcon className='w-4 h-4'/>
                                           <span>Edit</span>
                                         </div>
-                                    </Menu.Item>
+                                    </Menu.Item> */}
                                     <Menu.Item>
                                       <div
                                           onClick={() => handleRevoke(item)}
@@ -247,15 +241,6 @@ const Page: React.FC = () => {
                                         >
                                           <PencilSquareIcon className='w-4 h-4'/>
                                           <span>Revoke</span>
-                                        </div>
-                                    </Menu.Item>
-                                    <Menu.Item>
-                                      <div
-                                          onClick={ () => handleDelete(item.id) }
-                                          className='app__dropdown_item'
-                                        >
-                                          <TrashIcon className='w-4 h-4'/>
-                                          <span>Delete</span>
                                         </div>
                                     </Menu.Item>
                                     </>
@@ -312,7 +297,7 @@ const Page: React.FC = () => {
                         className="hidden md:table-cell app__td">
                         <div className='font-semibold'>{item.type}</div>
                         <div>{item.add_to_service_record ? '(Included on Service Record)' : '(Excluded on Service Record)'}</div>
-                        <div>{item.add_to_leave_card ? '(Included on Leave Credits Increments)' : '(Excluded on Leave Credits Increments)'}</div>
+                        <div>{item.add_to_leave_card && '(Service Credits converted to SL/VL)'}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
@@ -374,7 +359,7 @@ const Page: React.FC = () => {
 
     {/* Revoke Modal */}
     {
-      showRevokeModal && (
+      (showRevokeModal && editData) && (
         <RevokeModal
           editData={editData}
           hideModal={() => setShowRevokeModal(false)}/>
@@ -387,16 +372,6 @@ const Page: React.FC = () => {
         <PrintModal
           item={selectedItem}
           hideModal={() => setShowPrintModal(false)}/>
-      )
-    }
-
-    {/* Delete Modal */}
-    {
-      showDeleteModal && (
-        <DeleteModal
-          id={selectedId}
-          table='hrm_designations'
-          hideModal={() => setShowDeleteModal(false)}/>
       )
     }
   </>

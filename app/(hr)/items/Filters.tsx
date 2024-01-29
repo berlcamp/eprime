@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { MagnifyingGlassIcon, TagIcon, UserIcon, XMarkIcon } from '@heroicons/react/20/solid'
+import { TagIcon, UserIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import { CustomButton, UserBlock } from '@/components'
 import { fetchPositions, fetchSchools } from '@/utils/fetchApi'
 
@@ -7,18 +7,14 @@ import type { Employee, PositionTypes, SchoolTypes, namesType } from '@/types'
 import { useSupabase } from '@/context/SupabaseProvider'
 
 interface FilterTypes {
-  setFilterKeyword: (keyword: string) => void
   setFilterSchool: (type: string) => void
   setFilterPosition: (type: string) => void
-  setFilterStatus: (type: string) => void
   setFilterUser: (employee: string) => void
 }
 
-const Filters = ({ setFilterKeyword, setFilterSchool, setFilterStatus, setFilterUser, setFilterPosition }: FilterTypes) => {
+const Filters = ({ setFilterSchool, setFilterUser, setFilterPosition }: FilterTypes) => {
   const [selectedSchool, setSelectedSchool] = useState('')
   const [selectedPosition, setSelectedPosition] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState('')
-  const [keyword, setKeyword] = useState<string>('')
   const [schools, setSchools] = useState<SchoolTypes[]>([])
   const [positions, setPositions] = useState<PositionTypes[]>([])
 
@@ -31,12 +27,10 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterStatus, setFilter
   const [selectedUserId, setSelectedUserId] = useState('')
 
   const handleApply = () => {
-    if (keyword.trim() === '' && selectedSchool !== '' && selectedPosition !== '' && selectedStatus === '' && selectedUserId === '') return
+    if (selectedSchool !== '' && selectedPosition !== '' && selectedUserId === '') return
 
     // pass filter values to parent
-    setFilterKeyword(keyword)
     setFilterSchool(selectedSchool)
-    setFilterStatus(selectedStatus)
     setFilterUser(selectedUserId)
     setFilterPosition(selectedPosition)
   }
@@ -44,26 +38,20 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterStatus, setFilter
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (keyword.trim() === '' && selectedSchool !== '' && selectedPosition !== '' && selectedStatus === '' && selectedUserId === '') return
+    if (selectedSchool !== '' && selectedPosition !== '' && selectedUserId === '') return
 
     // pass filter values to parent
-    setFilterKeyword(keyword)
     setFilterSchool(selectedSchool)
-    setFilterStatus(selectedStatus)
     setFilterUser(selectedUserId)
     setFilterPosition(selectedPosition)
   }
 
   // clear all filters
   const handleClear = () => {
-    setFilterKeyword('')
-    setKeyword('')
     setFilterSchool('')
     setSelectedSchool('')
     setFilterPosition('')
     setSelectedPosition('')
-    setFilterStatus('')
-    setSelectedStatus('')
     setFilterUser('')
     setSelectedUserId('')
     setSelectedItems([])
@@ -121,14 +109,6 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterStatus, setFilter
       <div className='items-center space-x-2 space-y-1'>
         <form onSubmit={handleSubmit} className='items-center inline-flex app__filter_field_container'>
           <div className='items-center space-y-1'>
-            <div className='app__filter_container'>
-              <MagnifyingGlassIcon className="w-4 h-4 mr-1"/>
-              <input
-                placeholder='Item Number'
-                value={keyword}
-                onChange={e => setKeyword(e.target.value)}
-                className="app__filter_input"/>
-            </div>
             <div className='app__filter_container'>
               <UserIcon className="w-4 h-4 mr-1"/>
               {
@@ -197,17 +177,6 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterStatus, setFilter
                       <option key={index} value={item.id}>{item.name}</option>
                     ))
                   }
-              </select>
-            </div>
-            <div className='app__filter_container'>
-              <TagIcon className="w-4 h-4 mr-1"/>
-              <select
-                value={selectedStatus}
-                onChange={e => setSelectedStatus(e.target.value)}
-                className='app__filter_select'>
-                  <option value=''>Vacancy Status:</option>
-                  <option value='All'>All</option>
-                  <option value='Vacant'>Vacant</option>
               </select>
             </div>
           </div>

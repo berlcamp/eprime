@@ -3,7 +3,7 @@
 import { fetchPromotions } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
+import { ArrowLeftIcon, ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar, UserBlock } from '@/components'
 import uuid from 'react-uuid'
 import { superAdmins } from '@/constants'
@@ -20,12 +20,18 @@ import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { format } from 'date-fns'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import DetailsModal from './DetailsModal'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+
   const [selectedId, setSelectedId] = useState<string>('')
+  const [selectedItem, setSelectedItem] = useState<PromotionTypes | null>(null)
 
   const [list, setList] = useState<PromotionTypes[]>([])
   const [filterPosition, setFilterPosition] = useState<string>('')
@@ -42,11 +48,14 @@ const Page: React.FC = () => {
   const { session } = useSupabase()
   const { hasAccess } = useFilter()
 
+  const searchParams = useSearchParams()
+  const filterUrl = searchParams.get('ref')
+
   const fetchData = async () => {
     setLoading(true)
 
     try {
-      const result = await fetchPromotions({ filterPosition, filterUser }, perPageCount, 0)
+      const result = await fetchPromotions({ filterPosition, filterUser }, filterUrl, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -64,7 +73,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchPromotions({ filterPosition, filterUser }, perPageCount, list.length)
+      const result = await fetchPromotions({ filterPosition, filterUser }, filterUrl, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -87,6 +96,11 @@ const Page: React.FC = () => {
   const handleEdit = (item: PromotionTypes) => {
     setShowAddModal(true)
     setEditData(item)
+  }
+
+  const handleViewDetails = (item: PromotionTypes) => {
+    setSelectedItem(item)
+    setShowDetailsModal(true)
   }
 
   const handleDelete = (id: string) => {
@@ -119,30 +133,44 @@ const Page: React.FC = () => {
     <TopBar/>
     <div className="app__main">
       <div>
-          <div className='app__title'>
-            <Title title='Promotions'/>
-            <CustomButton
-              containerStyles='app__btn_green'
-              title='Create New Promotion'
-              btnType='button'
-              handleClick={handleAdd}
-            />
-          </div>
+        {
+          filterUrl &&
+            <div className='app__title'>
+              <Link href="/promotions" className='flex items-center app__btn_gray'>
+                <ArrowLeftIcon className='w-5 h-5'/>
+                View All Promotions
+              </Link>
+            </div>
+        }
+        {
+          !filterUrl &&
+            <>
+            <div className='app__title'>
+              <Title title='Promotions'/>
+              <CustomButton
+                containerStyles='app__btn_green'
+                title='Create New Promotion'
+                btnType='button'
+                handleClick={handleAdd}
+              />
+            </div>
 
-          {/* Filters */}
-          <div className='app__filters'>
-            <Filters
-              setFilterPosition={setFilterPosition}
-              setFilterUser={setFilterUser}
-            />
-          </div>
+            {/* Filters */}
+            <div className='app__filters'>
+              <Filters
+                setFilterPosition={setFilterPosition}
+                setFilterUser={setFilterUser}
+              />
+            </div>
 
-          {/* Per Page */}
-          <PerPage
-            showingCount={resultsCounter.showing}
-            resultsCount={resultsCounter.results}
-            perPageCount={perPageCount}
-            setPerPageCount={setPerPageCount}/>
+            {/* Per Page */}
+            <PerPage
+              showingCount={resultsCounter.showing}
+              resultsCount={resultsCounter.results}
+              perPageCount={perPageCount}
+              setPerPageCount={setPerPageCount}/>
+            </>
+        }
 
           {/* Main Content */}
           <div>
@@ -154,10 +182,15 @@ const Page: React.FC = () => {
                           Employee Name
                       </th>
                       <th className="hidden md:table-cell app__th">
+                      </th>
+                      <th className="hidden md:table-cell app__th">
                           Position
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Effectivity Date
+                      </th>
+                      <th className="hidden md:table-cell app__th">
+                          Status
                       </th>
                   </tr>
               </thead>
@@ -218,24 +251,55 @@ const Page: React.FC = () => {
                           <div className="md:hidden app__td_mobile">
                             <div><span className='app_td_mobile_label'>Position:</span> <span>{item.hrm_position.name}</span></div>
                             <div><span className='app_td_mobile_label'>Effectivity Date:</span> <span>{format(new Date(item.effectivity_date), 'MMMM dd, yyyy')}</span></div>
+                            <div>
+                              {item.status === 'Approved' && <span className='app__status_container_green'>Expired</span>}
+                              {item.status === 'For Verification' && <span className='app__status_container_orange'>For Verification</span>}
+                              {item.status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
+                            </div>
+                            <div>
+                              <CustomButton
+                                btnType='button'
+                                title='Details'
+                                handleClick={() => handleViewDetails(item)}
+                                containerStyles="app__btn_green"
+                              />
+                            </div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
                       </th>
+
                       <td
                         className="hidden md:table-cell app__td">
-                          {
-                            item.hrm_position.name
-                          }
+                        <div>
+                          <CustomButton
+                            btnType='button'
+                            title='Details'
+                            handleClick={() => handleViewDetails(item)}
+                            containerStyles="app__btn_green"
+                          />
+                        </div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        {
+                          item.hrm_position.name
+                        }
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
                           {format(new Date(item.effectivity_date), 'MMMM dd, yyyy')}
                       </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                          {item.status === 'Approved' && <span className='app__status_container_green'>Expired</span>}
+                          {item.status === 'For Verification' && <span className='app__status_container_orange'>For Verification</span>}
+                          {item.status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
+                      </td>
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={4} rows={2}/> }
+                { loading && <TableRowLoading cols={6} rows={2}/> }
               </tbody>
             </table>
             {
@@ -268,6 +332,14 @@ const Page: React.FC = () => {
           id={selectedId}
           table='hrm_promotions'
           hideModal={() => setShowDeleteModal(false)}/>
+      )
+    }
+    {/* Details Modal */}
+    {
+      (showDetailsModal && selectedItem) && (
+        <DetailsModal
+          promotionData={selectedItem}
+          hideModal={() => setShowDetailsModal(false)}/>
       )
     }
   </>

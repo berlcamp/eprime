@@ -1,6 +1,6 @@
 'use client'
 
-import { fetchMyServiceCredits } from '@/utils/fetchApi'
+import { fetchLeaveCards, fetchMyServiceCredits } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
 import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, CustomButton, RecordsSideBar } from '@/components'
 import UploadModal from './UploadModal'
@@ -20,6 +20,9 @@ const Page: React.FC = () => {
 
   const [list, setList] = useState<ServiceCreditUserTypes[]>([])
   const [editData, setEditData] = useState<ServiceCreditUserTypes | null>(null)
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [scBalance, setScBalance] = useState(0)
 
   const [showUploadModal, setShowUploadModal] = useState(false)
 
@@ -89,15 +92,16 @@ const Page: React.FC = () => {
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
-  // count coc balance based on approved and active sc
-  const scBalance = !isDataEmpty
-    ? list.reduce((accumulator, sc) => {
-      if (sc.is_approved && sc.hrm_service_credits?.status !== 'Expired') {
-        return sc.service_credits + accumulator
+  useEffect(() => {
+    void (async () => {
+      const result = await fetchLeaveCards(session.user.id, 'Service Credit', 10, 0)
+      if (result.count && result.count > 0) {
+        // first index of array should be the latest and updated balance
+        const sc = result.data[0].balance
+        setScBalance(sc)
       }
-      return accumulator
-    }, 0)
-    : 0
+    })()
+  }, [])
 
   return (
     <>
@@ -111,7 +115,7 @@ const Page: React.FC = () => {
             <Title title='My Service Credits'/>
           </div>
 
-          <div className='flex justify-end mt-2 px-4'><span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm'>Available Service Credit Balance: {scBalance}</span></div>
+          {/* <div className='flex justify-end mt-2 px-4'><span className='border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm'>Available Service Credit Balance: {scBalance}</span></div> */}
           <div className='app__warning_text'><span className='app__warning_title'>Note:</span> You need to provide supporting documents as basis for approval.</div>
 
           {/* Per Page */}
@@ -133,10 +137,7 @@ const Page: React.FC = () => {
                           Status
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Service Credit Balance
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Used Service Credit
+                          Service Credit
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Particulars
@@ -198,10 +199,6 @@ const Page: React.FC = () => {
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                        <div className='font-semibold'>{item.used_service_credits}</div>
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
                         <div className=''>{item.hrm_service_credits?.particulars}</div>
                       </td>
                       <td
@@ -210,15 +207,12 @@ const Page: React.FC = () => {
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                          {
-                            item.hrm_service_credits?.status !== 'Expired' &&
-                              <CustomButton
-                                btnType='button'
-                                title='Supporting Documents'
-                                handleClick={() => handleEdit(item)}
-                                containerStyles="app__btn_green"
-                              />
-                          }
+                          <CustomButton
+                            btnType='button'
+                            title='Supporting Documents'
+                            handleClick={() => handleEdit(item)}
+                            containerStyles="app__btn_green"
+                          />
                       </td>
                     </tr>
                   ))

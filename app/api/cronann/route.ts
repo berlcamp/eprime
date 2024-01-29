@@ -31,6 +31,17 @@ export async function GET () {
       throw new Error(error.message)
     }
 
+    const { error: error2 } = await supabase
+      .from('hrm_cto_users')
+      .update({ status: 'Expired' })
+      .is('status', null)
+      .lte('expiration', today)
+
+    if (error2) {
+      void logError('Cron Job', 'hrm_cto_users', '', error2.message)
+      throw new Error(error2.message)
+    }
+
     /*
      * Auto update employee's date_of_last_designation and position_type based from effectivity date of designation
     */

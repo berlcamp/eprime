@@ -56,6 +56,10 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
     // Upload files
     await handleUploadFiles(editData.id)
 
+    // Notify approvers
+    const fullname = `${editData.hrm_users.firstname} ${editData.hrm_users.middlename} ${editData.hrm_users.lastname}`
+    await handleNotify(fullname, editData.service_credit_id)
+
     // refetch attachments
     void fetchAttachments()
 
@@ -162,6 +166,54 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
     setAttachments(data)
   }
 
+  const handleNotify = async (fullname: string, id: string) => {
+    //
+    try {
+      const userIds: string[] = []
+
+      // Approvers
+      const { data, error } = await supabase
+        .from('hrm_system_access')
+        .select('user_id')
+        .eq('type', 'cto_sc_approver')
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      data.forEach((item: any) => {
+        userIds.push(item.user_id)
+      })
+
+      const notificationData: any[] = []
+
+      userIds.forEach((userId) => {
+        notificationData.push({
+          message: `${fullname} uploaded supporting documents for Service Credit. Kindly review and take action necessarily.`,
+          url: `/servicecredits?ref=${id}`,
+          type: 'Service Credit Supporting Document',
+          user_id: userId,
+          reference_id: id,
+          reference_table: 'hrm_ctos'
+        })
+      })
+
+      if (notificationData.length > 0) {
+        // insert to notifications
+        const { error: error3 } = await supabase
+          .from('hrm_notifications')
+          .insert(notificationData)
+
+        if (error3) {
+          throw new Error(error3.message)
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   useEffect(() => {
     if (fileRejections.length > 0) {
       setSelectedImages([])
@@ -186,7 +238,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
               btnType='button'
               isDisabled={saving}
               handleClick={hideModal}
-              title={saving ? 'Saving...' : 'Close'}
+              title='Close'
               containerStyles="app__btn_gray"
             />
           </div>
@@ -265,13 +317,6 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
                           handleClick={handleUpload}
                           title={saving ? 'Saving...' : 'Save'}
                           containerStyles="app__btn_green"
-                        />
-                        <CustomButton
-                          btnType='button'
-                          isDisabled={saving}
-                          handleClick={hideModal}
-                          title={saving ? 'Saving...' : 'Cancel'}
-                          containerStyles="app__btn_gray"
                         />
                     </div>
                   </>

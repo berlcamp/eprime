@@ -3,9 +3,8 @@
 import { fetchItems } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar, UserBlock } from '@/components'
-import uuid from 'react-uuid'
+import { ChevronDownIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, RecordsSideBar, UserBlock } from '@/components'
 import { superAdmins } from '@/constants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
@@ -22,15 +21,11 @@ import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [selectedId, setSelectedId] = useState<string>('')
 
   const [list, setList] = useState<ItemTypes[]>([])
-  const [filterKeyword, setFilterKeyword] = useState<string>('')
-  const [filterSchool, setFilterSchool] = useState<string>('')
   const [filterPosition, setFilterPosition] = useState<string>('')
-  const [filterStatus, setFilterStatus] = useState<string>('')
+  const [filterSchool, setFilterSchool] = useState<string>('')
   const [filterUser, setFilterUser] = useState<string>('')
 
   const [perPageCount, setPerPageCount] = useState<number>(10)
@@ -48,7 +43,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchItems({ filterKeyword, filterSchool, filterPosition, filterStatus, filterUser }, perPageCount, 0)
+      const result = await fetchItems({ filterSchool, filterPosition, filterUser }, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -66,7 +61,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchItems({ filterKeyword, filterSchool, filterPosition, filterStatus, filterUser }, perPageCount, list.length)
+      const result = await fetchItems({ filterSchool, filterPosition, filterUser }, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -91,11 +86,6 @@ const Page: React.FC = () => {
     setEditData(item)
   }
 
-  const handleDelete = (id: string) => {
-    setSelectedId(id)
-    setShowDeleteModal(true)
-  }
-
   // Update list whenever list in redux updates
   useEffect(() => {
     setList(globallist)
@@ -106,7 +96,7 @@ const Page: React.FC = () => {
     setList([])
     void fetchData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, perPageCount, filterSchool, filterStatus, filterUser, filterPosition])
+  }, [perPageCount, filterUser, filterPosition, filterSchool])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -122,7 +112,7 @@ const Page: React.FC = () => {
     <div className="app__main">
       <div>
           <div className='app__title'>
-            <Title title='Items'/>
+            <Title title='Plantilla Items'/>
             <CustomButton
               containerStyles='app__btn_green'
               title='Create New Item'
@@ -134,10 +124,8 @@ const Page: React.FC = () => {
           {/* Filters */}
           <div className='app__filters'>
             <Filters
-              setFilterKeyword={setFilterKeyword}
-              setFilterPosition={setFilterPosition}
               setFilterSchool={setFilterSchool}
-              setFilterStatus={setFilterStatus}
+              setFilterPosition={setFilterPosition}
               setFilterUser={setFilterUser}
             />
           </div>
@@ -162,21 +150,21 @@ const Page: React.FC = () => {
                           Employee Name
                       </th>
                       <th className="hidden md:table-cell app__th">
+                          Type
+                      </th>
+                      <th className="hidden md:table-cell app__th">
                           Position
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Implementing Unit
                       </th>
-                      <th className="hidden md:table-cell app__th">
-                          Status
-                      </th>
                   </tr>
               </thead>
               <tbody>
                 {
-                  !isDataEmpty && list.map((item: ItemTypes) => (
+                  !isDataEmpty && list.map((item: ItemTypes, index) => (
                     <tr
-                      key={uuid()}
+                      key={index}
                       className="app__tr">
                       <td
                         className="w-6 pl-4 app__td">
@@ -207,15 +195,6 @@ const Page: React.FC = () => {
                                         <span>Edit</span>
                                       </div>
                                   </Menu.Item>
-                                  <Menu.Item>
-                                    <div
-                                        onClick={ () => handleDelete(item.id) }
-                                        className='app__dropdown_item'
-                                      >
-                                        <TrashIcon className='w-4 h-4'/>
-                                        <span>Delete</span>
-                                      </div>
-                                  </Menu.Item>
                               </div>
                             </Menu.Items>
                           </Transition>
@@ -233,8 +212,8 @@ const Page: React.FC = () => {
                             }
                             </div>
                             <div><span className='app_td_mobile_label'>Position:</span> {item.hrm_position && <span>{item.hrm_position.name}</span>}</div>
-                            <div><span className='app_td_mobile_label'>Implementing Unit:</span> {item.hrm_school ? <span>{item.hrm_school.name}</span> : <span>Division</span>}</div>
-                            <div><span className='app_td_mobile_label'>Position:</span> {item.hrm_position && <span>{item.hrm_position.name}</span>}</div>
+                            <div><span className='app_td_mobile_label'>Implementing Unit:</span> {item.implementing_unit ? <span>{item.implementing_unit.name}</span> : <span>Division</span>}</div>
+                            <div><span className='app_td_mobile_label'>Vacancy Type:</span> {item.vacancy_type ? item.vacancy_type : 'New'}</div>
                             <div>
                               {
                                 !item.hrm_user && <span className='app__status_container_green'>Vacant</span>
@@ -249,6 +228,13 @@ const Page: React.FC = () => {
                           {
                             item.hrm_user && <UserBlock user={item.hrm_user}/>
                           }
+                          {
+                            !item.hrm_user && <span className='app__status_container_green'>Vacant</span>
+                          }
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                          <div>{item.vacancy_type ? item.vacancy_type : 'New'}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
@@ -257,20 +243,15 @@ const Page: React.FC = () => {
                       <td
                         className="hidden md:table-cell app__td">
                           {
-                            item.hrm_school
-                              ? <div>{item.hrm_school.name}</div>
+                            item.implementing_unit
+                              ? <div>{item.implementing_unit.name}</div>
                               : <div>Division</div>
                           }
-                      </td>
-                      <td className="hidden md:table-cell app__td">
-                        {
-                          !item.hrm_user && <span className='app__status_container_green'>Vacant</span>
-                        }
                       </td>
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={6} rows={2}/> }
+                { loading && <TableRowLoading cols={5} rows={2}/> }
               </tbody>
             </table>
             {
@@ -294,15 +275,6 @@ const Page: React.FC = () => {
         <AddEditModal
           editData={editData}
           hideModal={() => setShowAddModal(false)}/>
-      )
-    }
-    {/* Delete Modal */}
-    {
-      showDeleteModal && (
-        <DeleteModal
-          id={selectedId}
-          table='hrm_items'
-          hideModal={() => setShowDeleteModal(false)}/>
       )
     }
   </>
