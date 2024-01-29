@@ -356,7 +356,7 @@ export async function fetchPromotions (filters: { filterPosition?: string, filte
   try {
     let query = supabase
       .from('hrm_promotions')
-      .select('*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_position:position_id(name)', { count: 'exact' })
+      .select('*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_item:item_id(item_number,hrm_position:position_id(name))', { count: 'exact' })
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // filter position
@@ -403,7 +403,7 @@ export async function fetchMyPromotions (userId: string, perPageCount: number, r
   try {
     let query = supabase
       .from('hrm_promotions')
-      .select('*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_position:position_id(name)', { count: 'exact' })
+      .select('*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_item:item_id(item_number,hrm_position:position_id(name))', { count: 'exact' })
       .eq('user_id', userId)
 
     // Per Page from context

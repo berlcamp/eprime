@@ -194,7 +194,7 @@ const Page: React.FC = () => {
                         {
                           item.is_approved
                             ? <span className='app__status_container_green'>Approved</span>
-                            : <span className='app__status_container_orange'>Pending Approval</span>
+                            : <span className='app__status_container_orange'>Pending&nbsp;Approval</span>
                         }
                       </td>
                       <td
@@ -215,7 +215,7 @@ const Page: React.FC = () => {
                             item.hrm_ctos?.status !== 'Expired' &&
                               <CustomButton
                                 btnType='button'
-                                title='Supporting Documents'
+                                title='Supporting&nbsp;Documents'
                                 handleClick={() => handleEdit(item)}
                                 containerStyles="app__btn_green"
                               />

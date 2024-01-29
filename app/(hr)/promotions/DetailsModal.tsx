@@ -269,7 +269,7 @@ export default function DetailsModal ({ promotionData, hideModal }: ModalProps) 
                 <div className='app__form_field_container'>
                   <div className='w-full'>
                     <div className='app__label_standard'>New Position:</div>
-                    <div className='app__label_value'>{promotionData.hrm_position.name}</div>
+                    <div className='app__label_value'>{promotionData.hrm_item.hrm_position.name}</div>
                   </div>
                 </div>
                 <div className='app__form_field_container'>

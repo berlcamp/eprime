@@ -249,7 +249,7 @@ const Page: React.FC = () => {
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td_mobile">
-                            <div><span className='app_td_mobile_label'>Position:</span> <span>{item.hrm_position.name}</span></div>
+                            <div><span className='app_td_mobile_label'>Position:</span> <span>{item.hrm_item?.hrm_position?.name}</span></div>
                             <div><span className='app_td_mobile_label'>Effectivity Date:</span> <span>{format(new Date(item.effectivity_date), 'MMMM dd, yyyy')}</span></div>
                             <div>
                               {item.status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
@@ -284,7 +284,7 @@ const Page: React.FC = () => {
                       <td
                         className="hidden md:table-cell app__td">
                         {
-                          item.hrm_position.name
+                          item.hrm_item?.hrm_position?.name
                         }
                       </td>
                       <td

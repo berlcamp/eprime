@@ -39,8 +39,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   })
 
   const onSubmit = async (formdata: PromotionTypes) => {
-    if (!user) return
-
     if (saving) return
 
     setSaving(true)
@@ -54,6 +52,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
   const handleCreate = async (formdata: PromotionTypes) => {
     if (!user) return
+
+    if (saving) return
 
     const newData = {
       user_id: user.id,
@@ -117,6 +117,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const handleUpdate = async (formdata: PromotionTypes) => {
     if (!editData) return
 
+    if (saving) return
+
     const newData = {
       item_id: formdata.item_id,
       effectivity_date: formdata.effectivity_date
@@ -135,9 +137,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       }
 
       // Update data in redux
-      const hrmPosition = plantillaItems.find(p => p.id.toString() === formdata.item_id)
+      const hrmItems = plantillaItems.find(p => p.id.toString() === formdata.item_id)
       const items = [...globallist]
-      const updatedData = { ...newData, hrm_position: hrmPosition, id: editData.id }
+      const updatedData = { ...newData, hrm_item: hrmItems, id: editData.id }
+      console.log('updatedData', updatedData)
       const foundIndex = items.findIndex(x => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))

@@ -210,7 +210,7 @@ export interface PromotionTypes {
   item_id: string
   status: string
   effectivity_date: string
-  hrm_position: PositionTypes
+  hrm_item: ItemTypes
   hrm_user: Employee
 }
 
