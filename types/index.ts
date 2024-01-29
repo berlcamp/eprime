@@ -341,6 +341,51 @@ export interface LeaveTypes {
   confirmed: string
 }
 
+export interface TravelTypes {
+  type: string
+  purpose: string
+  host: string
+  from: string
+  to: string
+  destination: string
+  fund_source: string
+  confirmed: string
+}
+
+export interface PassSlipTypes {
+  type: string
+  intended_time_departure: string
+  intended_time_arrival: string
+  fixed_time_from: string
+  fixed_time_to: string
+  purpose: string
+  reason: string
+  confirmed: string
+}
+
+export interface ServiceRecordPrintRequestTypes {
+  id: string
+  purpose: string
+  confirmed: string
+}
+
+export interface UndertimePermitTypes {
+  id: string
+  time: string
+  reason: string
+  confirmed: string
+}
+
+export interface LocatorSlipTypes {
+  id: string
+  purpose: string
+  type: string
+  date: string
+  time: string
+  destination: string
+  confirmed: string
+}
+
 export interface ServiceRecordTypes {
   id: string
   user_id: string
@@ -445,6 +490,28 @@ export interface DocumentTypes {
   leave_from: string
   leave_to: string
   leave_commutation: string
+  locator_slip_purpose: string
+  locator_slip_type: string
+  locator_slip_date: string
+  locator_slip_time: string
+  locator_slip_destination: string
+  service_record_print_request_purpose: string
+  pass_slip_type: string
+  pass_slip_intended_time_departure: string
+  pass_slip_intended_time_arrival: string
+  pass_slip_fixed_time_from: string
+  pass_slip_fixed_time_to: string
+  pass_slip_purpose: string
+  pass_slip_reason: string
+  travel_type: string
+  travel_purpose: string
+  travel_host: string
+  travel_from: string
+  travel_to: string
+  travel_destination: string
+  travel_fund_source: string
+  undertime_permit_time: string
+  undertime_permit_reason: string
   particulars: string
   date_received: string
   created_at: string

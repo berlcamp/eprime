@@ -768,6 +768,8 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                     !(
                       (hasAccess('leave_approver') && documentData.type === 'Leave') ||
                       (hasAccess('travel_approver') && documentData.type === 'Travel') ||
+                      (hasAccess('undertime_permit_approver') && documentData.type === 'Undertime Permit') ||
+                      (hasAccess('locator_slip_approver') && documentData.type === 'Locator Slip') ||
                       (hasAccess('passslip_approver') && documentData.type === 'Pass Slip')
                     )
                   ) &&
@@ -796,6 +798,8 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                     (
                       (hasAccess('leave_approver') && documentData.type === 'Leave') ||
                       (hasAccess('travel_approver') && documentData.type === 'Travel') ||
+                      (hasAccess('undertime_permit_approver') && documentData.type === 'Undertime Permit') ||
+                      (hasAccess('locator_slip_approver') && documentData.type === 'Locator Slip') ||
                       (hasAccess('passslip_approver') && documentData.type === 'Pass Slip')
                     )
                   ) &&
@@ -935,6 +939,147 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                             </>
                         }
                         {/* End - Leave Requests Fields */}
+
+                        {/* Locator Slip Fields */}
+                        {
+                          documentData.type === 'Locator Slip' &&
+                            <>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Travel Type:</td>
+                                <td className='text-sm font-medium'>{documentData.locator_slip_type}</td>
+                              </tr>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Purpose:</td>
+                                <td className='text-sm font-medium'>{documentData.locator_slip_purpose}</td>
+                              </tr>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Date:</td>
+                                <td className='text-sm font-medium'>{format(new Date(documentData.locator_slip_date), 'MMMM dd, yyyy')}</td>
+                              </tr>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Time:</td>
+                                <td className='text-sm font-medium'>{documentData.locator_slip_time}</td>
+                              </tr>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Destination:</td>
+                                <td className='text-sm font-medium'>{documentData.locator_slip_destination}</td>
+                              </tr>
+                            </>
+                        }
+                        {/* End - Locator Slip Fields */}
+
+                        {/* Service Record Print Request Fields */}
+                        {
+                          documentData.type === 'Service Record Print Request' &&
+                            <>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Purpose:</td>
+                                <td className='text-sm font-medium'>{documentData.service_record_print_request_purpose}</td>
+                              </tr>
+                            </>
+                        }
+                        {/* End - Locator Slip Fields */}
+
+                        {/* Service Undertime Permit Fields */}
+                        {
+                          documentData.type === 'Undertime Permit' &&
+                            <>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Time to leave the office:</td>
+                                <td className='text-sm font-medium'>{documentData.undertime_permit_time}</td>
+                              </tr>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Reason:</td>
+                                <td className='text-sm font-medium'>{documentData.undertime_permit_reason}</td>
+                              </tr>
+                            </>
+                        }
+                        {/* End - Undertime Permit Fields */}
+
+                        {/* Pass Slip Fields */}
+                        {
+                          documentData.type === 'Pass Slip' &&
+                            <>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Request Permission To:</td>
+                                <td className='text-sm font-medium'>{documentData.pass_slip_type}</td>
+                              </tr>
+                              {
+                                (documentData.pass_slip_intended_time_departure && documentData.pass_slip_intended_time_departure.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Intended Time of Departure:</td>
+                                    <td className='text-sm font-medium'>{documentData.pass_slip_intended_time_departure}</td>
+                                  </tr>
+                              }
+                              {
+                                (documentData.pass_slip_intended_time_arrival && documentData.pass_slip_intended_time_arrival.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Intended Time of Departure:</td>
+                                    <td className='text-sm font-medium'>{documentData.pass_slip_intended_time_arrival}</td>
+                                  </tr>
+                              }
+                              {
+                                (documentData.pass_slip_fixed_time_from && documentData.pass_slip_fixed_time_from.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>From:</td>
+                                    <td className='text-sm font-medium'>{documentData.pass_slip_fixed_time_from}</td>
+                                  </tr>
+                              }
+                              {
+                                (documentData.pass_slip_fixed_time_to && documentData.pass_slip_fixed_time_to.trim() !== '') &&
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>To:</td>
+                                    <td className='text-sm font-medium'>{documentData.pass_slip_fixed_time_to}</td>
+                                  </tr>
+                              }
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Purpose:</td>
+                                <td className='text-sm font-medium'>{documentData.pass_slip_purpose}</td>
+                              </tr>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Reason:</td>
+                                <td className='text-sm font-medium'>{documentData.pass_slip_reason}</td>
+                              </tr>
+                            </>
+                        }
+                        {/* End - Pass Slip Fields */}
+
+                        {/* Travel Authority Fields */}
+                        {
+                          documentData.type === 'Travel Authority' &&
+                            <>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Travel Type:</td>
+                                <td className='text-sm font-medium'>{documentData.travel_type}</td>
+                              </tr>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Purpose:</td>
+                                <td className='text-sm font-medium'>{documentData.travel_purpose}</td>
+                              </tr>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Inclusive Date (From):</td>
+                                <td className='text-sm font-medium'>{format(new Date(documentData.travel_from), 'MMMM dd, yyyy')}</td>
+                              </tr>
+                              <tr>
+                                <td className='px-2 py-2 font-light text-right'>Inclusive Date (To):</td>
+                                <td className='text-sm font-medium'>{format(new Date(documentData.travel_to), 'MMMM dd, yyyy')}</td>
+                              </tr>
+                              {
+                                documentData.travel_type === 'Official Travel' &&
+                                  <>
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Fund Source:</td>
+                                    <td className='text-sm font-medium'>{documentData.travel_fund_source}</td>
+                                  </tr>
+                                  <tr>
+                                    <td className='px-2 py-2 font-light text-right'>Host of Activity:</td>
+                                    <td className='text-sm font-medium'>{documentData.travel_host}</td>
+                                  </tr>
+                                  </>
+                              }
+                            </>
+                        }
+                        {/* End - Travel Authority Fields */}
                       </tbody>
                     </table>
                   </div>

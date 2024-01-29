@@ -5,7 +5,14 @@ export const statusList = [
   { status: 'Approved', class: 'text-green-700 font-medium text-lg px-1 py-px bg-green-100 border border-green-500', color: '#287f00' }
 ]
 
-export const requestTypes = ['Leave', 'Travel', 'Pass Slip']
+export const requestTypes = [
+  'Leave',
+  'Locator Slip',
+  'Pass Slip',
+  'Service Record Print Request',
+  'Travel Authority',
+  'Undertime Permit'
+]
 
 export const leaveTypes = [
   'Vacation Leave',

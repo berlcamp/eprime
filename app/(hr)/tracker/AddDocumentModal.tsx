@@ -5,6 +5,9 @@ import { requestTypes } from '@/constants'
 import LeaveForm from './LeaveForm'
 import TravelForm from './TravelForm'
 import PassSlipForm from './PassSlipForm'
+import LocatorSlipForm from './LocatorSlipForm'
+import ServiceRecordPrintRequestForm from './ServiceRecordPrintRequestForm'
+import UndertimeForm from './UndertimeForm'
 
 interface ModalProps {
   hideModal: () => void
@@ -71,12 +74,24 @@ export default function AddDocumentModal ({ hideModal }: ModalProps) {
                   <LeaveForm hideModal={hideModal}/>
               }
               {
-                requestType === 'Travel' &&
+                requestType === 'Locator Slip' &&
+                  <LocatorSlipForm hideModal={hideModal}/>
+              }
+              {
+                requestType === 'Travel Authority' &&
                   <TravelForm hideModal={hideModal}/>
               }
               {
                 requestType === 'Pass Slip' &&
                   <PassSlipForm hideModal={hideModal}/>
+              }
+              {
+                requestType === 'Service Record Print Request' &&
+                  <ServiceRecordPrintRequestForm hideModal={hideModal}/>
+              }
+              {
+                requestType === 'Undertime Permit' &&
+                  <UndertimeForm hideModal={hideModal}/>
               }
             </div>
           </div>

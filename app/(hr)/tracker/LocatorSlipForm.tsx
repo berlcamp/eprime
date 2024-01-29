@@ -6,7 +6,7 @@ import { CustomButton, SearchUserInput } from '@/components'
 import { generateReferenceCode } from '@/utils/text-helper'
 
 // Types
-import type { Employee, TravelTypes, namesType } from '@/types'
+import type { Employee, LocatorSlipTypes, namesType } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -20,13 +20,13 @@ interface ModalProps {
   hideModal: () => void
 }
 
-const TravelForm = ({ hideModal }: ModalProps) => {
+const LocatorSlipForm = ({ hideModal }: ModalProps) => {
   const { setToast } = useFilter()
   const { supabase, session, systemUsers } = useSupabase()
 
   const [selectedImages, setSelectedImages] = useState<any>([])
   const [saving, setSaving] = useState(false)
-  const [travelType, setTravelType] = useState('')
+  const [locatorType, setLocatorType] = useState('')
   const [approverError, setApproverError] = useState('')
 
   const currentUser: Employee = systemUsers.find((user: Employee) => user.id === session.user.id)
@@ -59,18 +59,18 @@ const TravelForm = ({ hideModal }: ModalProps) => {
     maxSize
   })
 
-  const { register, formState: { errors }, reset, handleSubmit } = useForm<TravelTypes>({
+  const { register, formState: { errors }, reset, handleSubmit } = useForm<LocatorSlipTypes>({
     mode: 'onSubmit'
   })
 
-  const onSubmit = async (formdata: TravelTypes) => {
+  const onSubmit = async (formdata: LocatorSlipTypes) => {
     if (!user) {
       setApproverError('This field is required')
     }
     await handleCreate(formdata)
   }
 
-  const handleCreate = async (formdata: TravelTypes) => {
+  const handleCreate = async (formdata: LocatorSlipTypes) => {
     if (!user) return
 
     setSaving(true)
@@ -79,15 +79,13 @@ const TravelForm = ({ hideModal }: ModalProps) => {
 
     try {
       const newData = {
-        type: 'Travel Authority',
+        type: 'Locator Slip',
         reference_code: refCode,
-        travel_type: formdata.type,
-        travel_purpose: formdata.purpose,
-        travel_host: formdata.host,
-        travel_from: formdata.from,
-        travel_to: formdata.to,
-        travel_destination: formdata.destination,
-        travel_fund_source: formdata.fund_source,
+        locator_slip_purpose: formdata.purpose,
+        locator_slip_type: formdata.type,
+        locator_slip_date: formdata.date,
+        locator_slip_time: formdata.time,
+        locator_slip_destination: formdata.destination,
         created_by: session.user.id,
         current_approver_id: session.user.id,
         receiver_id: user.id,
@@ -101,7 +99,7 @@ const TravelForm = ({ hideModal }: ModalProps) => {
         .select()
 
       if (error) {
-        void logError('Create Travel Authority Request', 'hrm_request_trackers', JSON.stringify(newData), error.message)
+        void logError('Create Locator Slip Request', 'hrm_request_trackers', JSON.stringify(newData), error.message)
         setToast('error', 'Saving failed, please reload the page and try again.')
         throw new Error(error.message)
       }
@@ -120,7 +118,7 @@ const TravelForm = ({ hideModal }: ModalProps) => {
         }])
 
       if (error2) {
-        void logError('Create Travel Authority Request Tracker Flow', 'hrm_tracker_flow', JSON.stringify({ tracker_id: data[0].id, user_id: currentUser.id, status: 'Request Created' }), error2.message)
+        void logError('Create Locator Slip Request Tracker Flow', 'hrm_tracker_flow', JSON.stringify({ tracker_id: data[0].id, user_id: currentUser.id, status: 'Request Created' }), error2.message)
         setToast('error', 'Saving failed, please reload the page and try again.')
         throw new Error(error2.message)
       }
@@ -160,7 +158,7 @@ const TravelForm = ({ hideModal }: ModalProps) => {
       const { error: error3 } = await supabase
         .from('hrm_notifications')
         .insert({
-          message: `New Travel Authority Request #${refCode} has been forwarded to you for recommendation/approval.`,
+          message: `New Locator Slip Request #${refCode} has been forwarded to you for recommendation/approval.`,
           url: `/tracker/${refCode}`,
           type: 'Forwarded',
           user_id: receiverId,
@@ -229,51 +227,14 @@ const TravelForm = ({ hideModal }: ModalProps) => {
                 <div>
                   <select
                     {...register('type', { required: true })}
-                    value={travelType}
-                    onChange={e => setTravelType(e.target.value)}
+                    value={locatorType}
+                    onChange={e => setLocatorType(e.target.value)}
                     className='app__select_standard'>
                       <option value=''>Choose</option>
-                      <option value='Personal Travel'>Personall Travel</option>
-                      <option value='Official Travel'>Official Travel</option>
+                      <option value='Official Business'>Official Business</option>
+                      <option value='Official Time'>Official Time</option>
                   </select>
                   {errors.type && <div className='app__error_message'>Type is required</div>}
-                </div>
-              </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>Inclusive Date (From)</div>
-                <div>
-                  <input
-                    {...register('from', { required: true })}
-                    type='date'
-                    className='app__select_standard'/>
-                  {errors.from && <div className='app__error_message'>Inclusive Date (From) is required</div>}
-                </div>
-              </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>Inclusive Date (To)</div>
-                <div>
-                  <input
-                    {...register('to', { required: true })}
-                    type='date'
-                    className='app__select_standard'/>
-                  {errors.to && <div className='app__error_message'>Inclusive Date (To) is required</div>}
-                </div>
-              </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>Destination</div>
-                <div>
-                  <input
-                    {...register('destination', { required: true })}
-                    type='text'
-                    placeholder='Destination'
-                    className='app__select_standard'/>
-                  {errors.destination && <div className='app__error_message'>Destination is required</div>}
                 </div>
               </div>
             </div>
@@ -290,37 +251,43 @@ const TravelForm = ({ hideModal }: ModalProps) => {
                 </div>
               </div>
             </div>
-            {
-              travelType === 'Official Travel' &&
-                <>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Host of Activity</div>
-                    <div>
-                      <input
-                        {...register('host', { required: true })}
-                        type='text'
-                        placeholder='Host of Activity'
-                        className='app__select_standard'/>
-                      {errors.host && <div className='app__error_message'>Host of Activity is required</div>}
-                    </div>
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                <div className='w-full'>
-                  <div className='app__label_standard'>Fund Source</div>
-                  <div>
-                    <input
-                      {...register('fund_source', { required: true })}
-                      type='text'
-                      placeholder='Fund Source'
-                      className='app__select_standard'/>
-                    {errors.fund_source && <div className='app__error_message'>Fund Source is required</div>}
-                  </div>
+            <div className='app__form_field_container'>
+              <div className='w-full'>
+                <div className='app__label_standard'>Date</div>
+                <div>
+                  <input
+                    {...register('date', { required: true })}
+                    type='date'
+                    className='app__select_standard'/>
+                  {errors.date && <div className='app__error_message'>Date is required</div>}
                 </div>
               </div>
-              </>
-            }
+            </div>
+            <div className='app__form_field_container'>
+              <div className='w-full'>
+                <div className='app__label_standard'>Time</div>
+                <div>
+                  <input
+                    {...register('time', { required: true })}
+                    type='time'
+                    className='app__select_standard'/>
+                  {errors.time && <div className='app__error_message'>Time is required</div>}
+                </div>
+              </div>
+            </div>
+            <div className='app__form_field_container'>
+              <div className='w-full'>
+                <div className='app__label_standard'>Destination</div>
+                <div>
+                  <input
+                    {...register('destination', { required: true })}
+                    type='text'
+                    placeholder='Destination'
+                    className='app__select_standard'/>
+                  {errors.destination && <div className='app__error_message'>Destination is required</div>}
+                </div>
+              </div>
+            </div>
           </div>
           {/* End First Column */}
           {/* Begin Second Column */}
@@ -391,4 +358,4 @@ const TravelForm = ({ hideModal }: ModalProps) => {
   )
 }
 
-export default TravelForm
+export default LocatorSlipForm
