@@ -213,7 +213,11 @@ const Page: React.FC = () => {
                             </div>
                             <div><span className='app_td_mobile_label'>Position:</span> {item.hrm_position && <span>{item.hrm_position.name}</span>}</div>
                             <div><span className='app_td_mobile_label'>Implementing Unit:</span> {item.implementing_unit ? <span>{item.implementing_unit.name}</span> : <span>Division</span>}</div>
-                            <div><span className='app_td_mobile_label'>Vacancy Type:</span> {item.vacancy_type ? item.vacancy_type : 'New'}</div>
+                            <div>
+                              {
+                                !item.hrm_user && <div>{item.vacancy_type ? item.vacancy_type : 'New'}</div>
+                              }
+                            </div>
                             <div>
                               {
                                 !item.hrm_user && <span className='app__status_container_green'>Vacant</span>
@@ -234,11 +238,13 @@ const Page: React.FC = () => {
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                          <div>{item.vacancy_type ? item.vacancy_type : 'New'}</div>
+                          {
+                            !item.hrm_user && <div>{item.vacancy_type ? item.vacancy_type : 'New'}</div>
+                          }
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                          {item.hrm_position && <div>{item.hrm_position.name}</div>}
+                          <span>{item.hrm_position.name}</span>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
@@ -251,7 +257,7 @@ const Page: React.FC = () => {
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={5} rows={2}/> }
+                { loading && <TableRowLoading cols={6} rows={2}/> }
               </tbody>
             </table>
             {

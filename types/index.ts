@@ -207,7 +207,7 @@ export interface ItemTypes {
 export interface PromotionTypes {
   id: string
   user_id: string
-  position_id: string
+  item_id: string
   status: string
   effectivity_date: string
   hrm_position: PositionTypes
@@ -476,8 +476,6 @@ export interface GlobalRemarksTypes {
   sender_id: string
   promotion_id?: string
   message: string
-  is_private: boolean
-  reply_type: string
   hrm_users: Employee
 }
 

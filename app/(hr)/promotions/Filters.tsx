@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { TagIcon, UserIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import { CustomButton, UserBlock } from '@/components'
-import { fetchPositions } from '@/utils/fetchApi'
+import { fetchItems } from '@/utils/fetchApi'
 
-import type { Employee, PositionTypes, namesType } from '@/types'
+import type { Employee, ItemTypes, namesType } from '@/types'
 import { useSupabase } from '@/context/SupabaseProvider'
 
 interface FilterTypes {
@@ -13,7 +13,7 @@ interface FilterTypes {
 
 const Filters = ({ setFilterUser, setFilterPosition }: FilterTypes) => {
   const [selectedPosition, setSelectedPosition] = useState('')
-  const [positions, setPositions] = useState<PositionTypes[]>([])
+  const [positions, setPositions] = useState<ItemTypes[] | []>([])
 
   const { systemUsers }: { systemUsers: Employee[] } = useSupabase()
 
@@ -86,7 +86,7 @@ const Filters = ({ setFilterUser, setFilterPosition }: FilterTypes) => {
   // Featch data
   useEffect(() => {
     const fetchPositionsData = async () => {
-      const result = await fetchPositions('', 3000, 0)
+      const result = await fetchItems({}, 3000, 0)
       setPositions(result.data.length > 0 ? result.data : [])
     }
     void fetchPositionsData()
@@ -147,7 +147,7 @@ const Filters = ({ setFilterUser, setFilterPosition }: FilterTypes) => {
                   <option value=''>Choose Position</option>
                   {
                     positions.map((item, index) => (
-                      <option key={index} value={item.id}>{item.name}</option>
+                      <option key={index} value={item.id}>{item.hrm_position?.name}</option>
                     ))
                   }
               </select>

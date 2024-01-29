@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchPositions, logError } from '@/utils/fetchApi'
+import { logError } from '@/utils/fetchApi'
 import { CustomButton, SearchUserInput, UserBlock } from '@/components'
 
 // Types
-import type { PromotionTypes, PositionTypes, namesType } from '@/types'
+import type { PromotionTypes, namesType, ItemTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -25,9 +25,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
   const [user, setUser] = useState<namesType | null>(null)
 
-  const [selectedPosition, setSelectedPosition] = useState('')
+  const [selectedItem, setSelectedItem] = useState('')
 
-  const [positions, setPositions] = useState<PositionTypes[] | []>([])
+  const [plantillaItems, setPlantillaItems] = useState<ItemTypes[] | []>([])
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -57,7 +57,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     const newData = {
       user_id: user.id,
-      position_id: formdata.position_id,
+      item_id: formdata.item_id,
       effectivity_date: formdata.effectivity_date,
       status: 'For Verification',
       org_id: process.env.NEXT_PUBLIC_ORG_ID
@@ -92,8 +92,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       }
 
       // Append new data in redux
-      const hrmPosition = positions.find(p => p.id.toString() === formdata.position_id)
-      const updatedData = { ...newData, hrm_position: hrmPosition, hrm_user: user ?? null, id: data[0].id }
+      const hrmItem = plantillaItems.find(p => p.id.toString() === formdata.item_id)
+      const updatedData = { ...newData, hrm_item: hrmItem, hrm_user: user ?? null, id: data[0].id }
       dispatch(updateList([updatedData, ...globallist]))
 
       // pop up the success message
@@ -118,7 +118,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     if (!editData) return
 
     const newData = {
-      position_id: formdata.position_id,
+      item_id: formdata.item_id,
       effectivity_date: formdata.effectivity_date
     }
 
@@ -135,7 +135,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       }
 
       // Update data in redux
-      const hrmPosition = positions.find(p => p.id.toString() === formdata.position_id)
+      const hrmPosition = plantillaItems.find(p => p.id.toString() === formdata.item_id)
       const items = [...globallist]
       const updatedData = { ...newData, hrm_position: hrmPosition, id: editData.id }
       const foundIndex = items.findIndex(x => x.id === updatedData.id)
@@ -169,17 +169,22 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   useEffect(() => {
     // display the default values of dynamic dropdowns
     if (editData) {
-      setSelectedPosition(editData.position_id ?? '')
+      setSelectedItem(editData.item_id ?? '')
     }
 
     reset({
-      position_id: editData ? editData.position_id : '',
+      item_id: editData ? editData.item_id : '',
       effectivity_date: editData ? editData.effectivity_date : ''
     })
 
     const fetchPositionsData = async () => {
-      const result = await fetchPositions('', 300, 0)
-      setPositions(result.data.length > 0 ? result.data : [])
+      const { data } = await supabase
+        .from('hrm_items')
+        .select('*, hrm_position:position_id(name)')
+        .is('user_id', null)
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+      setPlantillaItems(data ?? [])
     }
 
     void fetchPositionsData()
@@ -219,19 +224,19 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
             </div>
             <div className='app__form_field_container'>
               <div className='w-full'>
-                <div className='app__label_standard'>Position</div>
+                <div className='app__label_standard'>Vacant Item/Position <span className='text-xs italic font-normal'>(Refer on Plantilla Items records)</span></div>
                 <div>
                   <select
-                    {...register('position_id', { required: true })}
-                    value={selectedPosition}
-                    onChange={e => setSelectedPosition(e.target.value)}
+                    {...register('item_id', { required: true })}
+                    value={selectedItem}
+                    onChange={e => setSelectedItem(e.target.value)}
                     className='app__input_standard'>
                       <option value=''>Choose Position</option>
                       {
-                        positions.map((position: PositionTypes, index) => <option key={index} value={position.id}>{position.name}</option>)
+                        plantillaItems.map((item: ItemTypes, index) => <option key={index} value={item.id}>{item.hrm_position.name}</option>)
                       }
                   </select>
-                  {errors.position_id && <div className='app__error_message'>Position is required</div>}
+                  {errors.item_id && <div className='app__error_message'>Position is required</div>}
                 </div>
               </div>
             </div>

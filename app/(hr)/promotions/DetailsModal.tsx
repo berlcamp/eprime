@@ -7,6 +7,10 @@ import { CustomButton, UserBlock } from '@/components'
 import type { PromotionTypes } from '@/types'
 import { format } from 'date-fns'
 import GlobalRemarks from '@/components/GlobalRemarks/GlobalRemarks'
+import { useFilter } from '@/context/FilterContext'
+import { logError } from '@/utils/fetchApi'
+import { useDispatch, useSelector } from 'react-redux'
+import { updateList } from '@/GlobalRedux/Features/listSlice'
 
 interface ModalProps {
   hideModal: () => void
@@ -15,8 +19,13 @@ interface ModalProps {
 
 export default function DetailsModal ({ promotionData, hideModal }: ModalProps) {
   const { supabase } = useSupabase()
+  const { setToast, hasAccess } = useFilter()
 
   const [attachments, setAttachments] = useState([])
+
+  // Redux staff
+  const globallist = useSelector((state: any) => state.list.value)
+  const dispatch = useDispatch()
 
   const handleDownloadFile = async (file: string) => {
     const { data, error } = await supabase
@@ -51,6 +60,138 @@ export default function DetailsModal ({ promotionData, hideModal }: ModalProps) 
     setAttachments(data)
   }
 
+  const handleRecommendApproval = async () => {
+    try {
+      const newData = {
+        status: 'For Final Approval'
+      }
+      const { error } = await supabase
+        .from('hrm_promotions')
+        .update(newData)
+        .eq('id', promotionData.id)
+
+      if (error) {
+        void logError('Promotion - final approval', 'hrm_promotions', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
+      // Update data in redux
+      const items = [...globallist]
+      const updatedData = { ...newData, id: promotionData.id }
+      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      items[foundIndex] = { ...items[foundIndex], ...updatedData }
+      dispatch(updateList(items))
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      // hide the modal
+      hideModal()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleApprove = async () => {
+    try {
+      const newData = {
+        status: 'Approved'
+      }
+      const { error } = await supabase
+        .from('hrm_promotions')
+        .update(newData)
+        .eq('id', promotionData.id)
+
+      if (error) {
+        void logError('Promotion - final approval', 'hrm_promotions', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
+      // Update data in redux
+      const items = [...globallist]
+      const updatedData = { ...newData, id: promotionData.id }
+      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      items[foundIndex] = { ...items[foundIndex], ...updatedData }
+      dispatch(updateList(items))
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      // hide the modal
+      hideModal()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleReverification = async () => {
+    try {
+      const newData = {
+        status: 'For Verification'
+      }
+      const { error } = await supabase
+        .from('hrm_promotions')
+        .update(newData)
+        .eq('id', promotionData.id)
+
+      if (error) {
+        void logError('Promotion - For Verification', 'hrm_promotions', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
+      // Update data in redux
+      const items = [...globallist]
+      const updatedData = { ...newData, id: promotionData.id }
+      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      items[foundIndex] = { ...items[foundIndex], ...updatedData }
+      dispatch(updateList(items))
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      // hide the modal
+      hideModal()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleDisapprove = async () => {
+    try {
+      const newData = {
+        status: 'Disapproved'
+      }
+      const { error } = await supabase
+        .from('hrm_promotions')
+        .update(newData)
+        .eq('id', promotionData.id)
+
+      if (error) {
+        void logError('Promotion - Disapproved', 'hrm_promotions', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
+      // Update data in redux
+      const items = [...globallist]
+      const updatedData = { ...newData, id: promotionData.id }
+      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      items[foundIndex] = { ...items[foundIndex], ...updatedData }
+      dispatch(updateList(items))
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      // hide the modal
+      hideModal()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   useEffect(() => {
     void fetchAttachments()
   }, [])
@@ -71,7 +212,48 @@ export default function DetailsModal ({ promotionData, hideModal }: ModalProps) 
                 handleClick={hideModal}
               />
           </div>
-
+          {
+            (hasAccess('records') && promotionData.status === 'For Verification') &&
+              <div className="flex space-x-2 items-center justify-between border-b p-4 bg-orange-50">
+                <div className='w-full'>
+                    <CustomButton
+                      containerStyles='app__btn_green'
+                      title='Recommend Approval'
+                      btnType='button'
+                      handleClick={handleRecommendApproval}
+                    />
+                  <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Recommend Approval&apos;, this promotion request will be forwarded to SDS for final approval.</div>
+                </div>
+              </div>
+          }
+          {
+            (hasAccess('sds') && promotionData.status === 'For Final Approval') &&
+              <div className="flex space-x-2 items-center justify-between border-b p-4 bg-orange-50">
+                <div className='w-full'>
+                  <div className='flex space-x-4'>
+                    <CustomButton
+                      containerStyles='app__btn_green'
+                      title='Approve'
+                      btnType='button'
+                      handleClick={handleApprove}
+                    />
+                    <CustomButton
+                      containerStyles='app__btn_orange'
+                      title='Return to HR for Reverification'
+                      btnType='button'
+                      handleClick={handleReverification}
+                    />
+                    <CustomButton
+                      containerStyles='app__btn_red'
+                      title='Disapprove'
+                      btnType='button'
+                      handleClick={handleDisapprove}
+                    />
+                  </div>
+                  <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Approve&apos;, this promotion will be approve and NOSI/NOSA will automatically be created on effectivity date.</div>
+                </div>
+              </div>
+          }
           <div className="app__modal_body">
             <div className='flex flex-col lg:flex-row w-full items-start justify-between space-x-2 text-xs dark:text-gray-400'>
               {/* First Column */}
@@ -102,6 +284,7 @@ export default function DetailsModal ({ promotionData, hideModal }: ModalProps) 
                     <div className='app__label_value'>
                       {promotionData.status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
                       {promotionData.status === 'For Verification' && <span className='app__status_container_orange'>For Verification</span>}
+                      {promotionData.status === 'For Final Approval' && <span className='app__status_container_orange'>For Final Approval</span>}
                       {promotionData.status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
                     </div>
                   </div>
@@ -140,7 +323,7 @@ export default function DetailsModal ({ promotionData, hideModal }: ModalProps) 
               </div>
             </div>
             <div>
-              <GlobalRemarks referenceColumn='promotion_id' referenceValue={promotionData.id} />
+              <GlobalRemarks referenceColumn='promotion_id' referenceValue={promotionData.id.toString()} />
             </div>
           </div>
         </div>

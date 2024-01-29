@@ -252,8 +252,9 @@ const Page: React.FC = () => {
                             <div><span className='app_td_mobile_label'>Position:</span> <span>{item.hrm_position.name}</span></div>
                             <div><span className='app_td_mobile_label'>Effectivity Date:</span> <span>{format(new Date(item.effectivity_date), 'MMMM dd, yyyy')}</span></div>
                             <div>
-                              {item.status === 'Approved' && <span className='app__status_container_green'>Expired</span>}
+                              {item.status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
                               {item.status === 'For Verification' && <span className='app__status_container_orange'>For Verification</span>}
+                              {item.status === 'For Final Approval' && <span className='app__status_container_orange'>For Final Approval</span>}
                               {item.status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
                             </div>
                             <div>
@@ -292,8 +293,9 @@ const Page: React.FC = () => {
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                          {item.status === 'Approved' && <span className='app__status_container_green'>Expired</span>}
+                          {item.status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
                           {item.status === 'For Verification' && <span className='app__status_container_orange'>For Verification</span>}
+                          {item.status === 'For Final Approval' && <span className='app__status_container_orange'>For Final Approval</span>}
                           {item.status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
                       </td>
                     </tr>

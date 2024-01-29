@@ -115,7 +115,8 @@ const Page: React.FC = () => {
             <table className="app__table">
               <thead className="app__thead">
                   <tr>
-                      <th className="hidden md:table-cell app__th_firstcol pl-4">
+                      <th className="hidden md:table-cell"></th>
+                      <th className="hidden md:table-cell app__th">
                           Employee
                       </th>
                       <th className="hidden md:table-cell app__th">
@@ -138,8 +139,10 @@ const Page: React.FC = () => {
                     <tr
                       key={index}
                       className="app__tr">
+                      <td
+                        className="w-6 pl-4 app__td"></td>
                       <th
-                        className="pl-4">
+                        className="app__td">
                         <UserBlock user={item.hrm_user}/>
                         {/* Mobile View */}
                         <div>
@@ -148,8 +151,9 @@ const Page: React.FC = () => {
                             <div><span className='app_td_mobile_label'>Effectivity Date: </span>{format(new Date(item.effectivity_date), 'MMM d, yyyy')}</div>
                             <div>
                               <span className='app_td_mobile_label'>Status: </span>
-                              {item.status === 'Approved' && <span className='app__status_container_green'>Expired</span>}
+                              {item.status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
                               {item.status === 'For Verification' && <span className='app__status_container_orange'>For Verification</span>}
+                              {item.status === 'For Final Approval' && <span className='app__status_container_orange'>For Final Approval</span>}
                               {item.status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
                             </div>
                           </div>
@@ -163,8 +167,9 @@ const Page: React.FC = () => {
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
-                          {item.status === 'Approved' && <span className='app__status_container_green'>Expired</span>}
+                          {item.status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
                           {item.status === 'For Verification' && <span className='app__status_container_orange'>For Verification</span>}
+                          {item.status === 'For Final Approval' && <span className='app__status_container_orange'>For Final Approval</span>}
                           {item.status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
                       </td>
                       <td
@@ -186,7 +191,7 @@ const Page: React.FC = () => {
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={5} rows={2}/> }
+                { loading && <TableRowLoading cols={6} rows={2}/> }
               </tbody>
             </table>
             {
