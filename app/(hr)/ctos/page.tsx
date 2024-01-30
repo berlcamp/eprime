@@ -295,6 +295,7 @@ const Page: React.FC = () => {
                           btnType='button'
                           handleClick={() => handleManageEmployees(item)}
                         />
+                        <div className='text-red-500 font-medium text-[10px]'>(4 Pending Approval)</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">

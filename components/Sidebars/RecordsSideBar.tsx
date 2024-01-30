@@ -15,7 +15,8 @@ const RecordsSideBar = () => {
   const currentRoute = usePathname()
 
   // counters
-  const [myctoCount, setMyctoCount] = useState(0)
+  const [myctoCount, setMyctoCount] = useState('')
+  const [promotionsCount, setPromotionsCount] = useState('')
 
   const { hasAccess } = useFilter()
   const { supabase, session } = useSupabase()
@@ -36,7 +37,23 @@ const RecordsSideBar = () => {
       .is('status', null)
       .lte('expiration', filterDate)
 
-    setMyctoCount(ctoCounter)
+    setMyctoCount(`Expiring soon (${ctoCounter})`)
+
+    if (hasAccess('sds')) {
+      const { count: promotionCount } = await supabase
+        .from('hrm_promotions')
+        .select('id', { count: 'exact' })
+        .eq('status', 'For Final Approval')
+
+      setPromotionsCount(`${promotionCount} for Approval`)
+    } else if (hasAccess('verify_promotions')) {
+      const { count: promotionCount } = await supabase
+        .from('hrm_promotions')
+        .select('id', { count: 'exact' })
+        .eq('status', 'For Verification')
+
+      setPromotionsCount(`For Verification (${promotionCount})`)
+    }
   }
   useEffect(() => {
     void counter()
@@ -63,9 +80,9 @@ const RecordsSideBar = () => {
             className={`app__menu_link ${currentRoute.includes('myctos') ? 'app_menu_link_active' : ''}`}>
             <span className="flex-1 ml-3 whitespace-nowrap">CTOs</span>
             {
-              myctoCount > 0 &&
-                <span className='inline-flex items-center justify-center rounded-full bg-red-500 w-5 h-5'>
-                  <span className='rounded-full px-1 text-white text-xs'>{myctoCount}</span>
+              myctoCount !== '' &&
+                <span className='inline-flex items-center justify-center rounded-lg bg-red-500'>
+                  <span className='px-1 text-white text-xs'>{myctoCount}</span>
                 </span>
             }
           </Link>
@@ -135,6 +152,13 @@ const RecordsSideBar = () => {
                 href="/promotions"
                 className={`app__menu_link ${currentRoute === '/promotions' ? 'app_menu_link_active' : ''}`}>
                 <span className="flex-1 ml-3 whitespace-nowrap">Promotions</span>
+                {
+                  promotionsCount !== '' &&
+                    <span className='inline-flex items-center justify-center rounded-lg bg-red-500'>
+                      <span className='px-1 text-white text-xs'>{promotionsCount}</span>
+                    </span>
+
+                }
               </Link>
             </li>
             <li>
