@@ -142,7 +142,7 @@ export async function POST (req: NextRequest) {
     const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'PRIME-HRM'
     let emailMessage = `Hello ${item.firstname} ${item.middlename} ${item.lastname},`
     emailMessage += `<p>Welcome to ${appName}`
-    emailMessage += `<p>Your registration to ${appName} has been approved. You can now login using your username/email and password using the link below.</p>`
+    emailMessage += `<p>Your registration to ${appName} has been approved. You can now login with your email and password using the link below.</p>`
     emailMessage += `<a href="${baseUrl}">${baseUrl}</a>`
     emailMessage += '<p>Have a great day!</p>'
     emailMessage += '<br><p>This is a system generated message, please do not reply.</p>'
@@ -155,7 +155,10 @@ export async function POST (req: NextRequest) {
       html: emailMessage
     })
       .then(msg => console.log(msg)) // logs response data
-      .catch(err => console.error(err)) // logs any error
+      .catch(err => {
+        // logs any error
+        void logError('Auto add leave card record on registration approval', 'hrm_leave_cards', '', JSON.stringify(err))
+      })
 
     return NextResponse.json({ message: 'Successfully approved' })
   } catch (error) {
