@@ -3,10 +3,13 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 import { type Employee } from '@/types'
 
-// Mailgun stuff
-import FormData from 'form-data'
-import Mailgun from 'mailgun.js'
 import { logError } from '@/utils/fetchApi'
+
+import { RegisteredTemplate } from '@/components/Emails/RegisteredTemplate'
+import { Resend } from 'resend'
+import type * as React from 'react'
+
+const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_KEY)
 
 export async function POST (req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
@@ -134,31 +137,16 @@ export async function POST (req: NextRequest) {
       throw new Error(error3.message)
     }
 
-    // Mailgun stuff
-    const mailgun = new Mailgun(FormData)
-    const mg = mailgun.client({ username: 'api', key: process.env.NEXT_PUBLIC_MAILGUN_KEY ?? '' })
-
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://primehrm.sortbrite.com/'
-    const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'PRIME-HRM'
-    let emailMessage = `Hello ${item.firstname} ${item.middlename} ${item.lastname},`
-    emailMessage += `<p>Welcome to ${appName}`
-    emailMessage += `<p>Your registration to ${appName} has been approved. You can now login with your email and password using the link below.</p>`
-    emailMessage += `<a href="${baseUrl}">${baseUrl}</a>`
-    emailMessage += '<p>Have a great day!</p>'
-    emailMessage += '<br><p>This is a system generated message, please do not reply.</p>'
-
-    mg.messages.create('hrmprime.com', {
-      from: `${appName} (No-reply) <mailgun@sandbox-123.mailgun.org>`,
+    const { error: error2 } = await resend.emails.send({
+      from: 'DepEd Bayugan (No-reply) <noreply@hrmprime.com>',
       to: [item.email],
       subject: 'PRIME-HRM Registration Approved',
-      text: emailMessage,
-      html: emailMessage
+      react: RegisteredTemplate({ firstname: item.firstname, middlename: item.middlename, lastname: item.lastname }) as React.ReactElement
     })
-      .then(msg => console.log(msg)) // logs response data
-      .catch(err => {
-        // logs any error
-        void logError('Auto add leave card record on registration approval', 'hrm_leave_cards', '', JSON.stringify(err))
-      })
+
+    if (error2) {
+      return Response.json({ error2 })
+    }
 
     return NextResponse.json({ message: 'Successfully approved' })
   } catch (error) {
