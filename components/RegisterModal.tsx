@@ -17,8 +17,10 @@ interface FormValues {
   firstname: string
   middlename: string
   lastname: string
+  gender: string
   email: string
   password: string
+  confirm_password: string
   assignment: string
   school_id?: string
   district_id?: string
@@ -50,6 +52,13 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
   }
 
   const handleSignup = async (formdata: FormValues) => {
+    if (loading) return
+
+    if (formdata.password !== formdata.confirm_password) {
+      setError('Passwords do not match')
+      return
+    }
+
     setLoading(true)
 
     // Check if the email domain is allowed
@@ -86,6 +95,7 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
           firstname: formdata.firstname,
           middlename: formdata.middlename,
           lastname: formdata.lastname,
+          gender: formdata.gender,
           email: formdata.email,
           password: formdata.password,
           assignment: formdata.assignment,
@@ -223,6 +233,7 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
                         <input
                           {...register('firstname', { required: true })}
                           type="text"
+                          placeholder='First Name'
                           className='app__input_standard'/>
                         {errors.firstname && <div className='app__error_message'>First Name is required</div>}
                       </div>
@@ -235,6 +246,7 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
                         <input
                           {...register('middlename')}
                           type="text"
+                          placeholder='Middle Name'
                           className='app__input_standard'/>
                       </div>
                     </div>
@@ -246,8 +258,24 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
                         <input
                           {...register('lastname', { required: true })}
                           type="text"
+                          placeholder='Last Name'
                           className='app__input_standard'/>
                         {errors.lastname && <div className='app__error_message'>Last Name is required</div>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className='app__form_field_container'>
+                    <div className='w-full'>
+                      <div className='app__label_standard'>Gender</div>
+                      <div>
+                        <select
+                          {...register('gender', { required: true })}
+                          className='app__select_standard'>
+                            <option value=''>Choose</option>
+                            <option value='Male'>Male</option>
+                            <option value='Female'>Female</option>
+                        </select>
+                        {errors.gender && <div className='app__error_message'>Gender is required</div>}
                       </div>
                     </div>
                   </div>
@@ -258,6 +286,7 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
                         <input
                           {...register('email', { required: true })}
                           type="email"
+                          placeholder='Your DepEd email address'
                           onChange={() => setError('')}
                           className='app__input_standard'/>
                         {errors.email && <div className='app__error_message'>Email is required</div>}
@@ -275,6 +304,18 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
                           type="password"
                           className='app__input_standard'/>
                         {errors.password && <div className='app__error_message'>Password is required</div>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className='app__form_field_container'>
+                    <div className='w-full'>
+                      <div className='app__label_standard'>Re-type Password</div>
+                      <div>
+                        <input
+                          {...register('confirm_password', { required: true })}
+                          type="password"
+                          className='app__input_standard'/>
+                        {errors.confirm_password && <div className='app__error_message'>Confirm Password is required</div>}
                       </div>
                     </div>
                   </div>

@@ -10,7 +10,7 @@ import { useState } from 'react'
 const MainMenu = () => {
   const [showLeaveCardModal, setShowLeaveCardModal] = useState(false)
 
-  const { session } = useFilter()
+  const { session, hasAccess } = useFilter()
   return (
     <div className="py-1 relative">
       <div className='px-6 mt-2 text-gray-700 text-xl font-semibold'>Menu</div>
@@ -56,17 +56,20 @@ const MainMenu = () => {
                 </div>
               </div>
             </Link>
-            <Link href='/employees'>
-              <div className='app__menu_item'>
-                <div className='pt-1'>
-                  <UsersIcon className='w-8 h-8'/>
-                </div>
-                <div>
-                  <div className='app__menu_item_label'>Manage Employees</div>
-                  <div className='app__menu_item_label_description'>Employee details and account settings.</div>
-                </div>
-              </div>
-            </Link>
+            {
+              hasAccess('employee_accounts') &&
+                <Link href='/employees'>
+                  <div className='app__menu_item'>
+                    <div className='pt-1'>
+                      <UsersIcon className='w-8 h-8'/>
+                    </div>
+                    <div>
+                      <div className='app__menu_item_label'>Manage Employees</div>
+                      <div className='app__menu_item_label_description'>Employee details and account settings.</div>
+                    </div>
+                  </div>
+                </Link>
+            }
             <Link href='/tracker'>
               <div className='app__menu_item'>
                 <div className='pt-1'>
@@ -93,7 +96,7 @@ const MainMenu = () => {
               <hr/>
             </div>
             <div className='text-gray-700 text-lg font-semibold'>PRIME</div>
-            <Link href='/'>
+            <Link href='#'>
               <div className='app__menu_item'>
                 <div className='pt-1'>
                   <UsersIcon className='w-8 h-8'/>
@@ -104,7 +107,7 @@ const MainMenu = () => {
                 </div>
               </div>
             </Link>
-            <Link href='/'>
+            <Link href='#'>
               <div className='app__menu_item'>
                 <div className='pt-1'>
                   <ChartBarSquareIcon className='w-8 h-8'/>
@@ -115,7 +118,7 @@ const MainMenu = () => {
                 </div>
               </div>
             </Link>
-            <Link href='/'>
+            <Link href='#'>
               <div className='app__menu_item'>
                 <div className='pt-1'>
                   <BookOpenIcon className='w-8 h-8'/>
@@ -126,7 +129,7 @@ const MainMenu = () => {
                 </div>
               </div>
             </Link>
-            <Link href='/'>
+            <Link href='#'>
               <div className='app__menu_item'>
                 <div className='pt-1'>
                   <TrophyIcon className='w-8 h-8'/>
@@ -140,18 +143,23 @@ const MainMenu = () => {
             <div className='pt-4'>
               <hr/>
             </div>
-            <div className='text-gray-700 text-lg font-semibold'>System</div>
-            <Link href='/settings/system'>
-              <div className='app__menu_item'>
-                <div className='pt-1'>
-                  <UsersIcon className='w-8 h-8'/>
-                </div>
-                <div>
-                  <div className='app__menu_item_label'>System Settings</div>
-                  <div className='app__menu_item_label_description'>System Access, Schools, Districts, Positions. </div>
-                </div>
-              </div>
-            </Link>
+            {
+              hasAccess('employee_accounts') &&
+                <>
+                  <div className='text-gray-700 text-lg font-semibold'>System</div>
+                  <Link href='/settings/system'>
+                    <div className='app__menu_item'>
+                      <div className='pt-1'>
+                        <UsersIcon className='w-8 h-8'/>
+                      </div>
+                      <div>
+                        <div className='app__menu_item_label'>System Settings</div>
+                        <div className='app__menu_item_label_description'>System Access, Schools, Districts, Positions. </div>
+                      </div>
+                    </div>
+                  </Link>
+                </>
+            }
           </div>
         </div>
       </div>

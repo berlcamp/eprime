@@ -92,6 +92,7 @@ export interface Employee {
   firstname: string
   middlename: string
   lastname: string
+  gender: string
   password: string
   email: string
   status?: string

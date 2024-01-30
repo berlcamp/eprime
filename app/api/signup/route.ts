@@ -6,6 +6,7 @@ import { type Employee } from '@/types'
 // Mailgun stuff
 import FormData from 'form-data'
 import Mailgun from 'mailgun.js'
+import { logError } from '@/utils/fetchApi'
 
 export async function POST (req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
@@ -27,8 +28,11 @@ export async function POST (req: NextRequest) {
       password: item.password,
       email_confirm: true
     })
-    console.log('signUpData', signUpData)
-    if (error) throw new Error(error.message)
+
+    if (error) {
+      void logError('Signup to supabase auth system on registration approval', 'auth.users', '', error.message)
+      throw new Error(error.message)
+    }
 
     const newUser: any = signUpData
 
@@ -40,6 +44,7 @@ export async function POST (req: NextRequest) {
         firstname: item.firstname,
         middlename: item.middlename,
         lastname: item.lastname,
+        gender: item.gender,
         assignment: item.assignment,
         school_id: item.school_id ? item.school_id : null,
         district_id: item.district_id ? item.district_id : null,
@@ -49,7 +54,10 @@ export async function POST (req: NextRequest) {
         status: 'Active'
       }, { onConflict: 'id' })
 
-    if (hrmUserError) throw new Error('hrmUserError' + hrmUserError.message)
+    if (hrmUserError) {
+      void logError('Add user on registration approval', 'hrm_users', '', hrmUserError.message)
+      throw new Error('hrmUserError' + hrmUserError.message)
+    }
 
     // Update registration data
     const { error: updateRegistrationError } = await supabase
@@ -57,7 +65,74 @@ export async function POST (req: NextRequest) {
       .delete()
       .eq('id', item.id)
 
-    if (updateRegistrationError) throw new Error(updateRegistrationError.message)
+    if (updateRegistrationError) {
+      void logError('Delete registration record after approval', 'hrm_registrations', '', updateRegistrationError.message)
+      throw new Error('hrmUserError' + updateRegistrationError.message)
+    }
+
+    let leaveCardData
+    if (item.gender === 'Male') {
+      leaveCardData = [{
+        type: 'Paternity Leave',
+        balance: 7,
+        remarks: 'Auto added to system after signup, adjust accordingly',
+        user_id: newUser.user.id,
+        particulars: 'Paternity Leave Adjustment'
+      },
+      {
+        type: 'Special Privilege Leave',
+        balance: 3,
+        remarks: 'Auto added to system after signup, adjust accordingly',
+        user_id: newUser.user.id,
+        particulars: 'Special Privilege Leave Adjustment'
+      },
+      {
+        type: 'Rehabilitation Leave',
+        balance: 180,
+        remarks: 'Auto added to system after signup, adjust accordingly',
+        user_id: newUser.user.id,
+        particulars: 'Rehabilitation Leave Adjustment'
+      }]
+    } else {
+      leaveCardData = [{
+        type: 'Maternity Leave',
+        balance: 105,
+        remarks: 'Auto added to system after signup, adjust accordingly',
+        user_id: newUser.user.id,
+        particulars: 'Maternity Leave Adjustment'
+      },
+      {
+        type: 'Special Privilege Leave',
+        balance: 3,
+        remarks: 'Auto added to system after signup, adjust accordingly',
+        user_id: newUser.user.id,
+        particulars: 'Special Privilege Leave Adjustment'
+      },
+      {
+        type: 'Rehabilitation Leave',
+        balance: 180,
+        remarks: 'Auto added to system after signup, adjust accordingly',
+        user_id: newUser.user.id,
+        particulars: 'Rehabilitation Leave Adjustment'
+      },
+      {
+        type: 'Special Leave Benefits For Women',
+        balance: 60,
+        remarks: 'Auto added to system after signup, adjust accordingly',
+        user_id: newUser.user.id,
+        particulars: 'Special Leave Benefits For Women Adjustment'
+      }]
+    }
+
+    // Generate default leave credit values for all leave types expect SL, VL, COC, SC
+    const { error: error3 } = await supabase
+      .from('hrm_leave_cards')
+      .insert(leaveCardData)
+
+    if (error3) {
+      void logError('Auto add leave card record on registration approval', 'hrm_leave_cards', '', error3.message)
+      throw new Error(error3.message)
+    }
 
     // Mailgun stuff
     const mailgun = new Mailgun(FormData)

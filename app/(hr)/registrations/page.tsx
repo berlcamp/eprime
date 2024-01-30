@@ -16,6 +16,7 @@ import type { Employee } from '@/types'
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { useRouter } from 'next/navigation'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -35,6 +36,8 @@ const Page: React.FC = () => {
 
   const { session } = useSupabase()
   const { hasAccess, setToast } = useFilter()
+
+  const router = useRouter()
 
   const fetchData = async () => {
     setLoading(true)
@@ -94,6 +97,8 @@ const Page: React.FC = () => {
       void logError('Approving registration', 'hrm_registrations', JSON.stringify(item), JSON.stringify(error))
       console.error(error)
     })
+
+    router.refresh()
   }
 
   const handleDelete = (id: string) => {
