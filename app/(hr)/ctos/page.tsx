@@ -14,7 +14,7 @@ import EmployeesModal from './EmployeesModal'
 import { format } from 'date-fns'
 
 // Types
-import type { CtoTypes } from '@/types'
+import type { CtoTypes, CtoUserTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -102,6 +102,13 @@ const Page: React.FC = () => {
   const handleDelete = (id: string) => {
     setSelectedId(id)
     setShowDeleteModal(true)
+  }
+
+  const countPending = (users: CtoUserTypes[] | null) => {
+    if (!users) return 0
+
+    const filtered = users.filter(user => !user.is_approved)
+    return filtered.length
   }
 
   // Update list whenever list in redux updates
@@ -295,7 +302,10 @@ const Page: React.FC = () => {
                           btnType='button'
                           handleClick={() => handleManageEmployees(item)}
                         />
-                        <div className='text-red-500 font-medium text-[10px]'>(4 Pending Approval)</div>
+                        {
+                          (item.status !== 'Expired' && countPending(item.hrm_cto_users ?? null) > 0) &&
+                            <div className='text-red-500 font-semibold text-[10px]'>For Approval({countPending(item.hrm_cto_users ?? null)})</div>
+                        }
                       </td>
                       <td
                         className="hidden md:table-cell app__td">

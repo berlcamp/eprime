@@ -434,7 +434,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                                 {
                                   item.is_approved
                                     ? <span className='app__status_container_green'>Approved</span>
-                                    : <span className='app__status_container_orange'>Pending Approval</span>
+                                    : <span className='app__status_container_orange'>For Approval</span>
                                 }
                               </div>
                               <div>

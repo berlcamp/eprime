@@ -63,7 +63,7 @@ const MainMenu = () => {
                 </div>
                 <div>
                   <div className='app__menu_item_label'>Manage Employees</div>
-                  <div className='app__menu_item_label_description'>Employee details, records, and account settings.</div>
+                  <div className='app__menu_item_label_description'>Employee details and account settings.</div>
                 </div>
               </div>
             </Link>
@@ -74,7 +74,7 @@ const MainMenu = () => {
                 </div>
                 <div>
                   <div className='app__menu_item_label'>Requests Tracker</div>
-                  <div className='app__menu_item_label_description'>Leave requests, travel authorities, pass slips.</div>
+                  <div className='app__menu_item_label_description'>Leave, Travel Authority, Pass slip, Undertime Permit, Locator Slip.</div>
                 </div>
               </div>
             </Link>
@@ -85,7 +85,7 @@ const MainMenu = () => {
                 </div>
                 <div>
                   <div className='app__menu_item_label'>Records & Credits</div>
-                  <div className='app__menu_item_label_description'>Assignments, designations, CTO, service credits, promotions, items.</div>
+                  <div className='app__menu_item_label_description'>Service Records, Assignments, Designations, CTO, Service Credits, Promotions, Plantillas, NOSI/NOSA.</div>
                 </div>
               </div>
             </Link>

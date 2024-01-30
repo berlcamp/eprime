@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import uuid from 'react-uuid'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { CustomButton, UserBlock } from '@/components'
+import { ConfirmModal, CustomButton, UserBlock } from '@/components'
 import type { PromotionTypes } from '@/types'
 import { format } from 'date-fns'
 import GlobalRemarks from '@/components/GlobalRemarks/GlobalRemarks'
@@ -20,6 +20,9 @@ interface ModalProps {
 export default function DetailsModal ({ promotionData, hideModal }: ModalProps) {
   const { supabase } = useSupabase()
   const { setToast, hasAccess } = useFilter()
+
+  const [confirmModal, setConfirmModal] = useState('')
+  const [confirmMessage, setConfirmMessage] = useState('')
 
   const [attachments, setAttachments] = useState([])
 
@@ -58,6 +61,48 @@ export default function DetailsModal ({ promotionData, hideModal }: ModalProps) 
     if (error) console.error(error)
 
     setAttachments(data)
+  }
+
+  // display confirm modal
+  const HandleConfirm = (action: string) => {
+    setConfirmModal(action)
+    if (action === 'Recommend Approval') {
+      setConfirmMessage('Are you sure you want to recommend this for approval?')
+    }
+    if (action === 'Approve') {
+      setConfirmMessage('Are you sure you want to Approve this?')
+    }
+    if (action === 'Return to HR for Reverification') {
+      setConfirmMessage('Are you sure you want to Return this to HR for Reverification?')
+    }
+    if (action === 'Disapprove') {
+      setConfirmMessage('Are you sure you want to Disapprove this?')
+    }
+  }
+
+  // based from confirm modal
+  const HandleOnConfirm = () => {
+    if (confirmModal === 'Recommend Approval') {
+      void handleRecommendApproval()
+    }
+    if (confirmModal === 'Approve') {
+      void handleApprove()
+    }
+    if (confirmModal === 'Return to HR for Reverification') {
+      void handleReverification()
+    }
+    if (confirmModal === 'Disapprove') {
+      void handleDisapprove()
+    }
+    setConfirmModal('')
+    setConfirmMessage('')
+  }
+
+  // based from confirm modal
+  const handleCancel = () => {
+    // hide the modal
+    setConfirmModal('')
+    setConfirmMessage('')
   }
 
   const handleRecommendApproval = async () => {
@@ -213,14 +258,14 @@ export default function DetailsModal ({ promotionData, hideModal }: ModalProps) 
               />
           </div>
           {
-            (hasAccess('records') && promotionData.status === 'For Verification') &&
+            (hasAccess('verify_promotions') && promotionData.status === 'For Verification') &&
               <div className="flex space-x-2 items-center justify-between border-b p-4 bg-orange-50">
                 <div className='w-full'>
                     <CustomButton
                       containerStyles='app__btn_green'
                       title='Recommend Approval'
                       btnType='button'
-                      handleClick={handleRecommendApproval}
+                      handleClick={() => HandleConfirm('Recommend Approval')}
                     />
                   <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Recommend Approval&apos;, this promotion request will be forwarded to SDS for final approval.</div>
                 </div>
@@ -235,19 +280,19 @@ export default function DetailsModal ({ promotionData, hideModal }: ModalProps) 
                       containerStyles='app__btn_green'
                       title='Approve'
                       btnType='button'
-                      handleClick={handleApprove}
+                      handleClick={() => HandleConfirm('Approve')}
                     />
                     <CustomButton
                       containerStyles='app__btn_orange'
                       title='Return to HR for Reverification'
                       btnType='button'
-                      handleClick={handleReverification}
+                      handleClick={() => HandleConfirm('Return to HR for Reverification')}
                     />
                     <CustomButton
                       containerStyles='app__btn_red'
                       title='Disapprove'
                       btnType='button'
-                      handleClick={handleDisapprove}
+                      handleClick={() => HandleConfirm('Disapprove')}
                     />
                   </div>
                   <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Approve&apos;, this promotion will be approve and NOSI/NOSA will automatically be created on effectivity date.</div>
@@ -328,6 +373,18 @@ export default function DetailsModal ({ promotionData, hideModal }: ModalProps) 
           </div>
         </div>
       </div>
+      {/* Approve Confirmation Modal */}
+      {
+          confirmModal !== '' && (
+            <ConfirmModal
+              header='Confirmation'
+              btnText='Confirm'
+              message={confirmMessage}
+              onConfirm={HandleOnConfirm}
+              onCancel={handleCancel}
+            />
+          )
+        }
     </div>
   </>
   )

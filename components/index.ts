@@ -21,7 +21,6 @@ import RegisterModal from './RegisterModal'
 import SettingsSideBar from './Sidebars/SettingsSideBar'
 import RecordsSideBar from './Sidebars/RecordsSideBar'
 import TrackerSideBar from './Sidebars/TrackerSideBar'
-import RequestsSideBar from './Sidebars/RequestsSideBar'
 import EmployeesSideBar from './Sidebars/EmployeesSideBar'
 import OneColLayoutLoading from './Loading/OneColLayoutLoading'
 import ThreeColTableLoading from './Loading/ThreeColTableLoading'
@@ -40,7 +39,6 @@ export {
   SettingsSideBar,
   TrackerSideBar,
   RecordsSideBar,
-  RequestsSideBar,
   EmployeesSideBar,
   CustomButton,
   OneColLayoutLoading,

@@ -179,9 +179,9 @@ const Page: React.FC = () => {
                   <tr>
                       <th className="hidden md:table-cell app__th pl-4"></th>
                       <th className="hidden md:table-cell app__th">
-                          Employee Name
                       </th>
                       <th className="hidden md:table-cell app__th">
+                          Employee Name
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Position
@@ -245,7 +245,12 @@ const Page: React.FC = () => {
                       </td>
                       <th
                         className="app__th_firstcol">
-                        <UserBlock user={item.hrm_user}/>
+                        <CustomButton
+                            btnType='button'
+                            title='Details'
+                            handleClick={() => handleViewDetails(item)}
+                            containerStyles="app__btn_green"
+                          />
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td_mobile">
@@ -273,12 +278,7 @@ const Page: React.FC = () => {
                       <td
                         className="hidden md:table-cell app__td">
                         <div>
-                          <CustomButton
-                            btnType='button'
-                            title='Details'
-                            handleClick={() => handleViewDetails(item)}
-                            containerStyles="app__btn_green"
-                          />
+                          <UserBlock user={item.hrm_user}/>
                         </div>
                       </td>
                       <td
@@ -295,7 +295,7 @@ const Page: React.FC = () => {
                         className="hidden md:table-cell app__td">
                           {item.status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
                           {item.status === 'For Verification' && <span className='app__status_container_orange'>For Verification</span>}
-                          {item.status === 'For Final Approval' && <span className='app__status_container_orange'>For Final Approval</span>}
+                          {item.status === 'For Final Approval' && <span className='app__status_container_blue'>For Final Approval</span>}
                           {item.status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
                       </td>
                     </tr>

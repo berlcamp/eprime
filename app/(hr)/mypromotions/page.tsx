@@ -117,19 +117,19 @@ const Page: React.FC = () => {
                   <tr>
                       <th className="hidden md:table-cell"></th>
                       <th className="hidden md:table-cell app__th">
+                          Supporting Documents
+                      </th>
+                      <th className="hidden md:table-cell app__th">
                           Employee
                       </th>
                       <th className="hidden md:table-cell app__th">
                           New Position
                       </th>
                       <th className="hidden md:table-cell app__th">
-                          Status
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Supporting Documents
-                      </th>
-                      <th className="hidden md:table-cell app__th">
                           Effectivity Date
+                      </th>
+                      <th className="hidden md:table-cell app__th">
+                          Status
                       </th>
                   </tr>
               </thead>
@@ -143,7 +143,15 @@ const Page: React.FC = () => {
                         className="w-6 pl-4 app__td"></td>
                       <th
                         className="app__td">
-                        <UserBlock user={item.hrm_user}/>
+                        {
+                          item.status !== 'Approved' &&
+                            <CustomButton
+                              btnType='button'
+                              title='Supporting Documents'
+                              handleClick={() => handleAttachments(item)}
+                              containerStyles="app__btn_green"
+                            />
+                        }
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td_mobile">
@@ -163,7 +171,15 @@ const Page: React.FC = () => {
                       </th>
                       <td
                         className="hidden md:table-cell app__td">
+                          <UserBlock user={item.hrm_user}/>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
                         <div className='font-semibold'>{item.hrm_item.hrm_position.name}</div>
+                      </td>
+                      <td
+                        className="hidden md:table-cell app__td">
+                        <div>{format(new Date(item.effectivity_date), 'MMM d, yyyy')}</div>
                       </td>
                       <td
                         className="hidden md:table-cell app__td">
@@ -171,22 +187,6 @@ const Page: React.FC = () => {
                           {item.status === 'For Verification' && <span className='app__status_container_orange'>For Verification</span>}
                           {item.status === 'For Final Approval' && <span className='app__status_container_orange'>For Final Approval</span>}
                           {item.status === 'Disapproved' && <span className='app__status_container_red'>Disapproved</span>}
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                          {
-                            item.status !== 'Approved' &&
-                              <CustomButton
-                                btnType='button'
-                                title='Supporting Documents'
-                                handleClick={() => handleAttachments(item)}
-                                containerStyles="app__btn_green"
-                              />
-                          }
-                      </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div>{format(new Date(item.effectivity_date), 'MMM d, yyyy')}</div>
                       </td>
                     </tr>
                   ))

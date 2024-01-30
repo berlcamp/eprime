@@ -224,3 +224,6 @@
 .app__status_container_orange {
   @apply font-medium text-orange-600 border px-1 py-px border-orange-400 bg-orange-100
 }
+.app__status_container_blue {
+  @apply font-medium text-blue-600 border px-1 py-px border-blue-400 bg-blue-100
+}

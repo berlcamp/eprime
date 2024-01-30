@@ -59,6 +59,7 @@ export default function Page ({ params }: { params: { ref: string } }) {
 
   // Featch data
   useEffect(() => {
+    setList([])
     void fetchData()
   }, [])
 
