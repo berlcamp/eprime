@@ -145,7 +145,7 @@ export async function POST (req: NextRequest) {
     })
 
     if (error2) {
-      return Response.json({ error2 })
+      return NextResponse.json({ error2 })
     }
 
     return NextResponse.json({ message: 'Successfully approved' })
