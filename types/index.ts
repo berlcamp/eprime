@@ -490,6 +490,10 @@ export interface DocumentTypes {
   leave_from: string
   leave_to: string
   leave_commutation: string
+  leave_credit_use_vl: string
+  leave_credit_use_sl: string
+  leave_credit_use_coc: string
+  leave_credit_use_sc: string
   locator_slip_purpose: string
   locator_slip_type: string
   locator_slip_date: string

@@ -24,6 +24,9 @@ const TrackerSideBar = () => {
       .select('*', { count: 'exact' })
       .eq('receiver_id', session.user.id)
       .eq('current_tracker', 'Forwarded')
+      .neq('current_status', 'Approved')
+      .neq('current_status', 'Cancelled')
+      .neq('current_status', 'Disapproved')
 
     setForwardedCount(forwarded)
   }

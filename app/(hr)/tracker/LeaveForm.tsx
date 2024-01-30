@@ -30,10 +30,10 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   const [leaveType, setLeaveType] = useState('')
   const [approverError, setApproverError] = useState('')
 
-  const currentUser: Employee = systemUsers.find((user: Employee) => user.id === session.user.id)
-
   // selected approver
   const [user, setUser] = useState<namesType | null>(null)
+
+  const currentUser: Employee = systemUsers.find((user: Employee) => user.id === session.user.id)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)

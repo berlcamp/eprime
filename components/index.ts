@@ -27,6 +27,7 @@ import ThreeColTableLoading from './Loading/ThreeColTableLoading'
 import TableRowLoading from './Loading/TableRowLoading'
 import StatusFlow from './Tracker/StatusFlow'
 import SearchUserInput from './SearchUserInput'
+import LeaveBalanceBoxes from './LeaveBalanceBoxes'
 
 export {
   LoginBox,
@@ -36,6 +37,7 @@ export {
   Title,
   TopBar,
   UserBlock,
+  LeaveBalanceBoxes,
   SettingsSideBar,
   TrackerSideBar,
   RecordsSideBar,

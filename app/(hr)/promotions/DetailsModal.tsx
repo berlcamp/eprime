@@ -373,18 +373,18 @@ export default function DetailsModal ({ promotionData, hideModal }: ModalProps) 
           </div>
         </div>
       </div>
-      {/* Approve Confirmation Modal */}
+      {/* Action Confirmation Modal */}
       {
-          confirmModal !== '' && (
-            <ConfirmModal
-              header='Confirmation'
-              btnText='Confirm'
-              message={confirmMessage}
-              onConfirm={HandleOnConfirm}
-              onCancel={handleCancel}
-            />
-          )
-        }
+        confirmModal !== '' && (
+          <ConfirmModal
+            header='Confirmation'
+            btnText='Confirm'
+            message={confirmMessage}
+            onConfirm={HandleOnConfirm}
+            onCancel={handleCancel}
+          />
+        )
+      }
     </div>
   </>
   )

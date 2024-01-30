@@ -221,22 +221,24 @@ const Page: React.FC = () => {
                             <Menu.Items className="app__dropdown_items">
                               <div className="py-1">
                                   <Menu.Item>
-                                    <div
-                                        onClick={() => handleEdit(item)}
-                                        className='app__dropdown_item'
-                                      >
-                                        <PencilSquareIcon className='w-4 h-4'/>
-                                        <span>Edit</span>
-                                      </div>
+                                    {
+                                      item.status === 'For Verification'
+                                        ? <div onClick={ () => handleEdit(item) } className='app__dropdown_item'>
+                                            <PencilSquareIcon className='w-4 h-4'/>
+                                            <span>Edit</span>
+                                          </div>
+                                        : <div className='app__dropdown_item_disabled'><PencilSquareIcon className='w-4 h-4'/><span>Edit</span></div>
+                                    }
                                   </Menu.Item>
                                   <Menu.Item>
-                                    <div
-                                        onClick={ () => handleDelete(item.id) }
-                                        className='app__dropdown_item'
-                                      >
-                                        <TrashIcon className='w-4 h-4'/>
-                                        <span>Delete</span>
-                                      </div>
+                                    {
+                                      item.status === 'For Verification'
+                                        ? <div onClick={ () => handleDelete(item.id) } className='app__dropdown_item'>
+                                              <TrashIcon className='w-4 h-4'/>
+                                              <span>Delete</span>
+                                            </div>
+                                        : <div className='app__dropdown_item_disabled'><TrashIcon className='w-4 h-4'/><span>Delete</span></div>
+                                    }
                                   </Menu.Item>
                               </div>
                             </Menu.Items>

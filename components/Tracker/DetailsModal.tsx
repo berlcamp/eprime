@@ -19,6 +19,7 @@ import { BellAlertIcon, BellSlashIcon, StarIcon, XMarkIcon } from '@heroicons/re
 import AddStickyModal from './AddStickyModal'
 import { logError } from '@/utils/fetchApi'
 import { Tooltip } from 'react-tooltip'
+import CreditsCertification from './CreditsCertification'
 
 interface ModalProps {
   hideModal: () => void
@@ -81,11 +82,8 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
   const [hideStickyButton, setHideStickyButton] = useState(false)
   const [hideFollowButton, setHideFollowButton] = useState(false)
 
-  const [showConfirmForwardModal, setShowConfirmForwardModal] = useState(false)
-  const [showConfirmApproveModal, setShowConfirmApproveModal] = useState(false)
-  const [showConfirmCancelModal, setShowConfirmCancelModal] = useState(false)
-  const [showConfirmDisapproveModal, setShowConfirmDisapproveModal] = useState(false)
-  const [showConfirmRecommendModal, setShowConfirmRecommendModal] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState('')
+  const [confirmMessage, setConfirmMessage] = useState('')
 
   // Forward to this user
   const [selectedUser, setSelectedUser] = useState<namesType | null>(null)
@@ -200,25 +198,56 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     }
   }
 
-  const handleForward = () => {
-    if (!selectedUser) return
-    setShowConfirmForwardModal(true)
+  // display confirm modal
+  const HandleConfirm = (action: string) => {
+    if (action === 'Recommend Approval') {
+      setConfirmMessage('Are you sure you want to recommend this for approval?')
+    }
+    if (action === 'Approve') {
+      setConfirmMessage('Are you sure you want to Approve this?')
+    }
+    if (action === 'Disapprove') {
+      setConfirmMessage('Are you sure you want to Disapprove this?')
+    }
+    if (action === 'Cancel') {
+      setConfirmMessage('Are you sure you want to Cancel this request?')
+    }
+    if (action === 'Forward') {
+      if (!selectedUser) {
+        return
+      }
+      setConfirmMessage('Are you sure you want to Forward this request?')
+    }
+
+    setShowConfirmModal(action)
   }
 
-  const handleCancel = () => {
-    setShowConfirmCancelModal(true)
+  // based from confirm modal
+  const HandleOnConfirm = () => {
+    if (showConfirmModal === 'Forward') {
+      void handleConfirmedForward()
+    }
+    if (showConfirmModal === 'Approve') {
+      void handleConfirmedApprove()
+    }
+    if (showConfirmModal === 'Disapprove') {
+      void handleConfirmedDisapprove()
+    }
+    if (showConfirmModal === 'Recommend Approval') {
+      void handleConfirmedRecommend()
+    }
+    if (showConfirmModal === 'Cancel') {
+      void handleConfirmedCancel()
+    }
+    setShowConfirmModal('')
+    setConfirmMessage('')
   }
 
-  const handleRecommend = () => {
-    setShowConfirmRecommendModal(true)
-  }
-
-  const handleApprove = () => {
-    setShowConfirmApproveModal(true)
-  }
-
-  const handleDisapprove = () => {
-    setShowConfirmDisapproveModal(true)
+  // based from confirm modal
+  const handleOnCancel = () => {
+    // hide the modal
+    setShowConfirmModal('')
+    setConfirmMessage('')
   }
 
   const handleConfirmedForward = async () => {
@@ -272,9 +301,6 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
 
       // pop up the success message
       setToast('success', 'Successfully saved.')
-
-      // hide the modal
-      setShowConfirmForwardModal(false)
 
       // Recount sidebar counter
       dispatch(recount())
@@ -347,9 +373,6 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       // pop up the success message
       setToast('success', 'Successfully saved.')
 
-      // hide the modal
-      setShowConfirmApproveModal(false)
-
       // Recount sidebar counter
       dispatch(recount())
 
@@ -421,9 +444,6 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       // pop up the success message
       setToast('success', 'Successfully saved.')
 
-      // hide the modal
-      setShowConfirmRecommendModal(false)
-
       // Recount sidebar counter
       dispatch(recount())
 
@@ -492,9 +512,6 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       // pop up the success message
       setToast('success', 'Successfully saved.')
 
-      // hide the modal
-      setShowConfirmCancelModal(false)
-
       setUpdateStatusFlow(!updateStatusFlow)
       setSaving(false)
     } catch (e) {
@@ -550,9 +567,6 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
 
       // pop up the success message
       setToast('success', 'Successfully saved.')
-
-      // hide the modal
-      setShowConfirmDisapproveModal(false)
 
       // Recount sidebar counter
       dispatch(recount())
@@ -755,7 +769,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                           containerStyles='app__btn_orange'
                           title={saving ? 'Saving...' : 'Cancel This Request'}
                           btnType='button'
-                          handleClick={handleCancel}
+                          handleClick={() => HandleConfirm('Cancel')}
                         />
                       </div>
                       <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Cancel&apos;, your request process will be terminated.</div>
@@ -779,13 +793,13 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                           containerStyles='app__btn_green'
                           title={saving ? 'Saving...' : 'Recommend Approval'}
                           btnType='button'
-                          handleClick={handleRecommend}
+                          handleClick={() => HandleConfirm('Recommend Approval')}
                         />
                         <CustomButton
                           containerStyles='app__btn_red'
                           title={saving ? 'Saving...' : 'Disapprove'}
                           btnType='button'
-                          handleClick={handleDisapprove}
+                          handleClick={() => HandleConfirm('Disapprove')}
                         />
                       </div>
                       <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Approve&apos;, you are authorizing and granting permission to the requester to proceed with the specified request.</div>
@@ -809,13 +823,13 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                           containerStyles='app__btn_green'
                           title={saving ? 'Saving...' : 'Approve'}
                           btnType='button'
-                          handleClick={handleApprove}
+                          handleClick={() => HandleConfirm('Approve')}
                         />
                         <CustomButton
                           containerStyles='app__btn_red'
                           title={saving ? 'Saving...' : 'Disapprove'}
                           btnType='button'
-                          handleClick={handleDisapprove}
+                          handleClick={() => HandleConfirm('Disapprove')}
                         />
                       </div>
                       <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Approve&apos;, you are authorizing and granting permission to the requester to proceed with the specified request.</div>
@@ -836,7 +850,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                           containerStyles='app__btn_green'
                           title={saving ? 'Saving...' : 'Forward'}
                           btnType='button'
-                          handleClick={handleForward}
+                          handleClick={() => HandleConfirm('Forward')}
                         />
                       </div>
                     </div>
@@ -853,10 +867,8 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                       <thead><tr><th className='w-40'></th><th></th></tr></thead>
                       <tbody>
                         <tr>
-                          <td className='px-2 py-2 font-light text-right'>Reference Code:</td>
-                          <td>
-                            <span className='font-medium text-sm'>{documentData.reference_code}</span>
-                          </td>
+                          <td className='px-2 py-2 font-light text-right'>Request Type:</td>
+                          <td className='text-sm font-medium'>{documentData.type}</td>
                         </tr>
                         <tr>
                           <td className='px-2 py-2 font-light text-right'>Current Status:</td>
@@ -869,8 +881,10 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                           </td>
                         </tr>
                         <tr>
-                          <td className='px-2 py-2 font-light text-right'>Request Type:</td>
-                          <td className='text-sm font-medium'>{documentData.type}</td>
+                          <td className='px-2 py-2 font-light text-right'>Reference Code:</td>
+                          <td>
+                            <span className='font-medium text-sm'>{documentData.reference_code}</span>
+                          </td>
                         </tr>
                         {/* Leave Requests Fields */}
                         {
@@ -1148,6 +1162,11 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                         </tr>
                       </tbody>
                     </table>
+                    {/* Certification of leave credits */}
+                    {
+                      (documentData.type === 'Leave') &&
+                        <CreditsCertification documentData={documentData}/>
+                    }
                   </div>
                 </div>
               </div>
@@ -1174,63 +1193,15 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
             </div>
           </div>
         </div>
-        {/* Forward Confirmation Modal */}
+        {/* Action Confirmation Modal */}
         {
-          showConfirmForwardModal && (
+          showConfirmModal !== '' && (
             <ConfirmModal
-              header='Forward Confirmation'
+              header='Confirmation'
               btnText='Confirm'
-              message="Are you sure you want to forward this request?"
-              onConfirm={handleConfirmedForward}
-              onCancel={() => setShowConfirmForwardModal(false)}
-            />
-          )
-        }
-        {/* Approve Confirmation Modal */}
-        {
-          showConfirmApproveModal && (
-            <ConfirmModal
-              header='Approval Confirmation'
-              btnText='Confirm'
-              message="Are you sure you want to approve this request?"
-              onConfirm={handleConfirmedApprove}
-              onCancel={() => setShowConfirmApproveModal(false)}
-            />
-          )
-        }
-        {/* Recommend Confirmation Modal */}
-        {
-          showConfirmRecommendModal && (
-            <ConfirmModal
-              header='Recommend Approval Confirmation'
-              btnText='Confirm'
-              message="Are you sure you want to recommend this request for approval?"
-              onConfirm={handleConfirmedRecommend}
-              onCancel={() => setShowConfirmRecommendModal(false)}
-            />
-          )
-        }
-        {/* Cancel Confirmation Modal */}
-        {
-          showConfirmCancelModal && (
-            <ConfirmModal
-              header='Approval Confirmation'
-              btnText='Confirm'
-              message="Are you sure you want to cancel this request?"
-              onConfirm={handleConfirmedCancel}
-              onCancel={() => setShowConfirmCancelModal(false)}
-            />
-          )
-        }
-        {/* Disapprove Confirmation Modal */}
-        {
-          showConfirmDisapproveModal && (
-            <ConfirmModal
-              header='Disapproval Confirmation'
-              btnText='Confirm'
-              message="Are you sure you want to disapprove this request?"
-              onConfirm={handleConfirmedDisapprove}
-              onCancel={() => setShowConfirmDisapproveModal(false)}
+              message={confirmMessage}
+              onConfirm={HandleOnConfirm}
+              onCancel={handleOnCancel}
             />
           )
         }

@@ -10,7 +10,7 @@ import { superAdmins } from '@/constants'
 import { useSelector } from 'react-redux'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { format } from 'date-fns'
-import type { CtoTypes } from '@/types'
+import type { CtoTypes, ServiceCreditTypes } from '@/types'
 
 const RecordsSideBar = () => {
   const currentRoute = usePathname()
@@ -18,6 +18,7 @@ const RecordsSideBar = () => {
   // counters
   const [myctoCount, setMyctoCount] = useState('')
   const [ctoCount, setCtoCount] = useState('')
+  const [scCount, setScCount] = useState('')
   const [promotionsCount, setPromotionsCount] = useState('')
 
   const { hasAccess } = useFilter()
@@ -47,7 +48,7 @@ const RecordsSideBar = () => {
         .select('id', { count: 'exact' })
         .eq('status', 'For Final Approval')
 
-      if (promotionCount > 0) setPromotionsCount(`${promotionCount} for Approval`)
+      if (promotionCount > 0) setPromotionsCount(`For Approval (${promotionCount})`)
     } else if (hasAccess('verify_promotions')) {
       const { count: promotionCount } = await supabase
         .from('hrm_promotions')
@@ -58,10 +59,12 @@ const RecordsSideBar = () => {
     }
 
     if (hasAccess('cto_sc_approver')) {
+      // CTO Counter
       const { data } = await supabase
         .from('hrm_ctos')
-        .select('status, hrm_cto_users(status, is_approved)')
+        .select('status, hrm_cto_users(is_approved)')
         .is('status', null)
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
       if (data) {
         let count = 0
@@ -72,6 +75,24 @@ const RecordsSideBar = () => {
         })
         if (count > 0) {
           setCtoCount(`For Approval (${count})`)
+        }
+      }
+
+      // SC Counter
+      const { data: scData } = await supabase
+        .from('hrm_service_credits')
+        .select('status, hrm_service_credit_users(is_approved)')
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+      if (scData) {
+        let count = 0
+        const sc: ServiceCreditTypes[] = scData
+        sc.forEach(item => {
+          const users = item.hrm_service_credit_users?.filter(user => !user.is_approved)
+          count += users ? users.length : 0
+        })
+        if (count > 0) {
+          setScCount(`For Approval (${count})`)
         }
       }
     }
@@ -173,6 +194,13 @@ const RecordsSideBar = () => {
                 href="/servicecredits"
                 className={`app__menu_link ${currentRoute === '/servicecredits' ? 'app_menu_link_active' : ''}`}>
                 <span className="flex-1 ml-3 whitespace-nowrap">Service Credits</span>
+                {
+                  scCount !== '' &&
+                    <span className='inline-flex items-center justify-center rounded-lg bg-red-500'>
+                      <span className='px-1 text-white text-xs'>{scCount}</span>
+                    </span>
+
+                }
               </Link>
             </li>
             <li>

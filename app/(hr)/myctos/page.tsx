@@ -192,9 +192,15 @@ const Page: React.FC = () => {
                       <td
                         className="hidden md:table-cell app__td">
                         {
-                          item.is_approved
-                            ? <span className='app__status_container_green'>Approved</span>
-                            : <span className='app__status_container_orange'>Pending&nbsp;Approval</span>
+                          item.hrm_ctos?.status === 'Expired'
+                            ? <span className='app__status_container_red'>Expired</span>
+                            : <>
+                                {
+                                  item.is_approved
+                                    ? <span className='app__status_container_green'>Approved</span>
+                                    : <span className='app__status_container_orange'>Pending&nbsp;Approval</span>
+                                }
+                              </>
                         }
                       </td>
                       <td
