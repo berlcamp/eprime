@@ -944,14 +944,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                 {
                   (
                     (documentData.current_approver_id !== session.user.id && documentData.receiver_id === session.user.id && documentData.current_status !== 'Approved' && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled') &&
-                    !(
-                      (hasAccess('leave_approver') && documentData.type === 'Leave') ||
-                      (hasAccess('travel_approver') && documentData.type === 'Travel Authority') ||
-                      (hasAccess('service_record_print_approver') && documentData.type === 'Service Record Print Request') ||
-                      (hasAccess('undertime_permit_approver') && documentData.type === 'Undertime Permit') ||
-                      (hasAccess('locator_slip_approver') && documentData.type === 'Locator Slip') ||
-                      (hasAccess('passslip_approver') && documentData.type === 'Pass Slip')
-                    )
+                    !(hasAccess('sds') || hasAccess('asds'))
                   ) &&
                     <div className='mb-6'>
                       <div className='space-x-2'>
@@ -975,14 +968,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                 {
                   (
                     (documentData.receiver_id === session.user.id && documentData.current_status === 'Approval Recommended') &&
-                    (
-                      (hasAccess('leave_approver') && documentData.type === 'Leave') ||
-                      (hasAccess('travel_approver') && documentData.type === 'Travel Authority') ||
-                      (hasAccess('service_record_print_approver') && documentData.type === 'Service Record Print Request') ||
-                      (hasAccess('undertime_permit_approver') && documentData.type === 'Undertime Permit') ||
-                      (hasAccess('locator_slip_approver') && documentData.type === 'Locator Slip') ||
-                      (hasAccess('passslip_approver') && documentData.type === 'Pass Slip')
-                    )
+                    (hasAccess('sds') || hasAccess('asds'))
                   ) &&
                     <div className='mb-6'>
                       <div className='space-x-2'>
