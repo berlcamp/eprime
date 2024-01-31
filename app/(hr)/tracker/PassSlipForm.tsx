@@ -68,7 +68,7 @@ const PassSlipForm = ({ hideModal }: ModalProps) => {
         created_by: session.user.id,
         current_approver_id: session.user.id,
         receiver_id: user.id,
-        current_status: 'Request Created',
+        current_status: 'For Verification',
         current_tracker: 'Forwarded'
       }
 
@@ -88,7 +88,7 @@ const PassSlipForm = ({ hideModal }: ModalProps) => {
         .insert([{
           tracker_id: data[0].id,
           user_id: currentUser.id,
-          status: 'Request Created'
+          status: 'For Verification'
         }, {
           tracker_id: data[0].id,
           user_id: currentUser.id,
@@ -97,7 +97,7 @@ const PassSlipForm = ({ hideModal }: ModalProps) => {
         }])
 
       if (error2) {
-        void logError('Create Pass Slip Request Tracker Flow', 'hrm_tracker_flow', JSON.stringify({ tracker_id: data[0].id, user_id: currentUser.id, status: 'Request Created' }), error2.message)
+        void logError('Create Pass Slip Request Tracker Flow', 'hrm_tracker_flow', JSON.stringify({ tracker_id: data[0].id, user_id: currentUser.id, status: 'For Verification' }), error2.message)
         setToast('error', 'Saving failed, please reload the page and try again.')
         throw new Error(error2.message)
       }
@@ -138,7 +138,7 @@ const PassSlipForm = ({ hideModal }: ModalProps) => {
           url: `/tracker/${refCode}`,
           type: 'Forwarded',
           user_id: receiverId,
-          reference_id: trackerId,
+          request_tracker_id: trackerId,
           reference_table: 'hrm_request_trackers'
         })
 

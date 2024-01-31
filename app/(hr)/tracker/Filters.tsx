@@ -172,7 +172,7 @@ const Filters = ({ setFilterKeyword, setFilterType, setFilterStatus, setFilterRe
                   <option value=''>Status:</option>
                   <option value='Approved'>Approved</option>
                   <option value='Approval Recommended'>Approval Recommended</option>
-                  <option value='Request Created'>Request Created</option>
+                  <option value='For Verification'>For Verification</option>
                   <option value='Disapproved'>Disapproved</option>
               </select>
             </div>

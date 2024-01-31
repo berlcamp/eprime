@@ -40,7 +40,7 @@ const RecordsSideBar = () => {
       .is('status', null)
       .lte('expiration', filterDate)
 
-    setMyctoCount(`Expiring soon (${ctoCounter})`)
+    if (ctoCounter > 0) setMyctoCount(`Expiring soon (${ctoCounter})`)
 
     if (hasAccess('sds')) {
       const { count: promotionCount } = await supabase

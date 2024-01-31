@@ -122,7 +122,7 @@ const Page: React.FC = () => {
     void fetchData()
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, perPageCount, filterStatus])
+  }, [filterKeyword, filterUrl, perPageCount, filterStatus])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -237,13 +237,17 @@ const Page: React.FC = () => {
                                   item.status !== 'Revoked' &&
                                     <>
                                     <Menu.Item>
-                                      <div
-                                          onClick={() => handleEdit(item)}
-                                          className='app__dropdown_item'
-                                        >
-                                          <PencilSquareIcon className='w-4 h-4'/>
-                                          <span>Edit</span>
-                                        </div>
+                                      {
+                                        item.hrm_cto_users?.length === 0
+                                          ? <div
+                                                onClick={() => handleEdit(item)}
+                                                className='app__dropdown_item'
+                                              >
+                                                <PencilSquareIcon className='w-4 h-4'/>
+                                                <span>Edit</span>
+                                              </div>
+                                          : <div className='app__dropdown_item_disabled'><PencilSquareIcon className='w-4 h-4'/><span>Edit</span></div>
+                                      }
                                     </Menu.Item>
                                     <Menu.Item>
                                       <div

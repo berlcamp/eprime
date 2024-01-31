@@ -883,6 +883,7 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
       query = query.eq('created_by', filters.filterRequester)
     }
 
+    // Following
     if (filterUrl && filterUrl === 'following') {
       const docIds: string[] = []
       const { data }: { data: FollowersTypes[] | null } = await supabase
@@ -899,9 +900,13 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
       }
     }
 
+    // Forwarded to me
     if (filterUrl && filterUrl === 'forwarded') {
       query = query.eq('receiver_id', userId)
       query = query.eq('current_tracker', 'Forwarded')
+      query = query.neq('current_status', 'Cancelled')
+      query = query.neq('current_status', 'Disapproved')
+      query = query.neq('current_status', 'Approved')
     }
 
     // Perform count before paginations

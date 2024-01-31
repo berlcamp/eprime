@@ -118,7 +118,7 @@ const Page: React.FC = () => {
     setList([])
     void fetchData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPageCount, filterUser, filterPosition])
+  }, [perPageCount, filterUrl, filterUser, filterPosition])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 

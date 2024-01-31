@@ -83,7 +83,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
           url: '/mypromotions',
           type: 'promotion',
           user_id: user.id,
-          reference_id: data[0].id,
+          promotion_id: data[0].id,
           reference_table: 'hrm_promotions'
         })
 

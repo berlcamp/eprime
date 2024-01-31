@@ -141,7 +141,7 @@ export default function Page ({ params }: { params: { ref: string } }) {
                         {item.current_status === 'Approval Recommended' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium'>{item.current_status}</span>}
                         {item.current_status === 'Approved' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium'>{item.current_status}</span>}
                         {item.current_status === 'Disapproved' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium'>{item.current_status}</span>}
-                        {item.current_status === 'Request Created' && <span className='text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium'>{item.current_status}</span>}
+                        {item.current_status === 'For Verification' && <span className='text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium'>{item.current_status}</span>}
                         <div className='mt-1'>by {item.approver.firstname} {item.approver.middlename} {item.approver.lastname}</div>
                       </td>
                     </tr>

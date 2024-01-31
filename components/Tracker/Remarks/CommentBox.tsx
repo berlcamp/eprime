@@ -65,7 +65,7 @@ export default function CommentBox ({ reply, document }: ModalProps) {
       dispatch(updateRemarksList(items))
 
       // Notify followers and departments
-      void handleNotify()
+      void handleNotify(data[0].id)
 
       setComment('')
       setShowCommentInput(false)
@@ -75,7 +75,7 @@ export default function CommentBox ({ reply, document }: ModalProps) {
     }
   }
 
-  const handleNotify = async () => {
+  const handleNotify = async (id: string) => {
     //
     try {
       // Send notification to remarks author
@@ -87,10 +87,10 @@ export default function CommentBox ({ reply, document }: ModalProps) {
         notificationData.push({
           message: `${user.firstname} ${user.middlename} ${user.lastname} added comment to Request ${document.reference_code}.`,
           url: `/tracker/${document.reference_code}`,
-          type: 'Remarks',
+          type: 'Remarks comments',
           user_id: userId,
-          reference_id: document.id,
-          reference_table: 'hrm_request_trackers'
+          remarks_comment_id: id,
+          reference_table: 'hrm_remarks_comments'
         })
       })
 

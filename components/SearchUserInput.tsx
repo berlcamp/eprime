@@ -43,10 +43,10 @@ export default function SearchUserInput ({ classNames, isMultiple, clear, nonTea
       if (excludedIds?.some(id => id === user.id.toString())) return false
 
       // filter only Non Teaching
-      if (nonTeachingOnly && user.position_type === 'Teaching') return false
+      if (nonTeachingOnly && user.position_type !== 'Non-teaching') return false
 
       // filter only Teaching
-      if (teachingOnly && user.position_type === 'Non-teaching') return false
+      if (teachingOnly && user.position_type !== 'Teaching') return false
 
       const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
       return searchWords.every(word => fullName.includes(word.toLowerCase()))

@@ -194,7 +194,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
           url: `/promotions?ref=${id}`,
           type: 'PROMOTION Supporting Document',
           user_id: userId,
-          reference_id: id,
+          promotion_id: id,
           reference_table: 'hrm_promotions'
         })
       })

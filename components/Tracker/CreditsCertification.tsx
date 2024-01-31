@@ -15,7 +15,7 @@ interface boxes {
 }
 
 export default function CreditsCertification ({ documentData }: PropTypes) {
-  const { supabase } = useSupabase()
+  const { supabase, session } = useSupabase()
   const { setToast, hasAccess } = useFilter()
 
   const [creditsUsed, setCreditsUsed] = useState<boxes[] | []>([])
@@ -99,7 +99,7 @@ export default function CreditsCertification ({ documentData }: PropTypes) {
               </>
           }
           {
-            hasAccess('certify_leave_credits') &&
+            (hasAccess('certify_leave_credits') && documentData.receiver_id === session.user.id && documentData.current_status === 'For Verification') &&
               <>
               <div className='text-gray-600 text-xs mt-4 mb-2'>Use the following credits for this Leave:</div>
               {

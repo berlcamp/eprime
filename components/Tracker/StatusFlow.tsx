@@ -39,7 +39,7 @@ function StatusFlow ({ documentId, updateStatusFlow }: { documentId: string, upd
               <div className={`${flowList.length > 1 && (index + 1) < flowList.length ? 'text-gray-500' : 'text-gray-700 text-sm'} flex-1 ml-8 pb-4`}>
                 <div className='font-bold'>{item.status}</div>
                 {
-                  (item.status === 'Request Created' || item.status === 'Approval Recommended' || item.status === 'Disapproved' || item.status === 'Approved') &&
+                  (item.status === 'For Verification' || item.status === 'Approval Recommended' || item.status === 'Disapproved' || item.status === 'Approved') &&
                     <div className='text-xs'>by {item.hrm_user.firstname} {item.hrm_user.middlename} {item.hrm_user.lastname}</div>
                 }
                 {
@@ -51,8 +51,9 @@ function StatusFlow ({ documentId, updateStatusFlow }: { documentId: string, upd
                     item.hrm_tracker_logs.length > 0 && item.hrm_tracker_logs.map((log, index) => (
                       <div key={index} className='text-[11px]'>
                           {log.message === 'Approval Recommended' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium'>{log.message}</span>}
-                          {log.message === 'Cancelled' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium'>{log.message}</span>}
-                          {log.message === 'Approved' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium'>{log.message}</span>}
+                          {log.message === 'For Reverification' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium'>{log.message}</span>}
+                          {log.message === 'Cancelled' && <span className='text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium'>{log.message}</span>}
+                          {log.message === 'Approved' && <span className='text-green-900 px-1 bg-green-300 border border-green-700 font-medium'>{log.message}</span>}
                           {log.message === 'Disapproved' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium'>{log.message}</span>}
                         <span className='font-normal'> by {log.hrm_user.firstname} {log.hrm_user.middlename} {log.hrm_user.lastname} </span>
                         <span> on {format(new Date(log.created_at), 'MMM dd,  yyyy h:mm a')}</span>

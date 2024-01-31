@@ -194,7 +194,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
           url: `/servicecredits?ref=${id}`,
           type: 'Service Credit Supporting Document',
           user_id: userId,
-          reference_id: id,
+          service_credit_id: id,
           reference_table: 'hrm_ctos'
         })
       })

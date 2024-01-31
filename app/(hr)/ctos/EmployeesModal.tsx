@@ -99,7 +99,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
           url: `/myctos/${refCode}`,
           type: 'cto',
           user_id: user.id,
-          reference_id: data[0].id,
+          cto_user_id: data[0].id,
           reference_table: 'hrm_cto_users'
         })
 
@@ -158,8 +158,8 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
           url: `/myctos/${refCode}`,
           type: 'cto',
           user_id: selectedRow.hrm_user_id,
-          reference_id: selectedRow.id,
-          reference_table: 'hrm_cto_users'
+          cto_id: ctoData.id,
+          reference_table: 'hrm_ctos'
         })
 
       if (error2) throw new Error(error2.message)
@@ -219,15 +219,6 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
         .eq('id', selectedId)
 
       if (error) throw new Error(error.message)
-
-      // delete to notifications
-      const { error2 } = await supabase
-        .from('hrm_notifications')
-        .delete()
-        .eq('reference_table', 'hrm_cto_users')
-        .eq('reference_id', selectedId)
-
-      if (error2) throw new Error(error2.message)
 
       // Update list
       const updatedData = list.filter(item => item.id !== selectedId)

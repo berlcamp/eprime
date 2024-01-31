@@ -62,6 +62,7 @@ const Page: React.FC = () => {
                   <ChooseUsers multiple={true} type='cto_sc_approver' users={users} title='Final Approval for CTOs and Service Credits'/>
                   <ChooseUsers multiple={true} type='leave_approver' users={users} title='Final Approval for Leave Request'/>
                   <ChooseUsers multiple={true} type='travel_approver' users={users} title='Final Approval for Travel Request'/>
+                  <ChooseUsers multiple={true} type='service_record_print_approver' users={users} title='Final Approval for Service Record Print Request'/>
                   <ChooseUsers multiple={true} type='locator_slip_approver' users={users} title='Final Approval for Locator Slip'/>
                   <ChooseUsers multiple={true} type='undertime_permit_approver' users={users} title='Final Approval for Undertime Permit'/>
                   <ChooseUsers multiple={true} type='passslip_approver' users={users} title='Final Approval for Pass Slip'/>

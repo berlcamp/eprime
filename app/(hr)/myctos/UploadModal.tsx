@@ -167,7 +167,8 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
   }
 
   const handleNotify = async (fullname: string, id: string) => {
-    //
+    if (!editData) return
+
     try {
       const userIds: string[] = []
 
@@ -194,7 +195,7 @@ export default function UploadModal ({ editData, hideModal }: ModalProps) {
           url: `/ctos?ref=${id}`,
           type: 'CTO Supporting Document',
           user_id: userId,
-          reference_id: id,
+          cto_user_id: editData.id,
           reference_table: 'hrm_ctos'
         })
       })

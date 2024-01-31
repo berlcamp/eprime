@@ -158,7 +158,7 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
           url: '/registrations',
           type: 'New Registration',
           user_id: userId,
-          reference_id: id,
+          registration_id: id,
           reference_table: 'hrm_registrations'
         })
       })

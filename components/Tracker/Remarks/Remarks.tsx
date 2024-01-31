@@ -50,7 +50,8 @@ export default function Remarks ({ document }: ModalProps) {
         </div>
         {/* Only receiving department can make remarks */}
         {
-          document.receiver_id === session.user.id && <RemarkBox document={document}/>
+          (document.receiver_id === session.user.id && document.current_status !== 'Approved' && document.current_status !== 'Disapproved' && document.current_status !== 'Cancelled') &&
+            <RemarkBox document={document}/>
         }
         {/* Added extra height if no remarks found */}
         {

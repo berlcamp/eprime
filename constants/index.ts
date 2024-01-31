@@ -1,6 +1,6 @@
 export const statusList = [
   { status: 'Disapproved', class: 'text-red-700 font-medium text-lg px-1 py-px bg-red-100 border border-red-500', color: '#e02626' },
-  { status: 'Request Created', class: 'text-blue-700 font-medium text-lg px-1 py-px bg-blue-100 border border-blue-500', color: '#997c00' },
+  { status: 'For Verification', class: 'text-blue-700 font-medium text-lg px-1 py-px bg-blue-100 border border-blue-500', color: '#997c00' },
   { status: 'Approval Recommended', class: 'text-orange-700 font-medium text-lg px-1 py-px bg-orange-100 border border-orange-500', color: '#a44508' },
   { status: 'Approved', class: 'text-green-700 font-medium text-lg px-1 py-px bg-green-100 border border-green-500', color: '#287f00' }
 ]

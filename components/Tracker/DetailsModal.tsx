@@ -17,7 +17,7 @@ import { recount } from '@/GlobalRedux/Features/recountSlice'
 import { useFilter } from '@/context/FilterContext'
 import { BellAlertIcon, BellSlashIcon, StarIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import AddStickyModal from './AddStickyModal'
-import { logError } from '@/utils/fetchApi'
+import { fetchLeaveCards, logError } from '@/utils/fetchApi'
 import { Tooltip } from 'react-tooltip'
 import CreditsCertification from './CreditsCertification'
 
@@ -172,13 +172,17 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
 
       const notificationData: any[] = []
 
+      const message = actionType === 'Forwarded'
+        ? `The ${document.type} Request #${document.reference_code} has been forwarded to you for verification/approval.`
+        : `The status of ${document.type} request #${document.reference_code} has been changed to ${actionType}.`
+
       uniqueIds.forEach((userId) => {
         notificationData.push({
-          message: `The request ${document.reference_code} has been ${actionType}.`,
+          message,
           url: `/tracker/${document.reference_code}`,
           type: actionType,
           user_id: userId,
-          reference_id: document.id,
+          request_tracker_id: document.id,
           reference_table: 'hrm_request_trackers'
         })
       })
@@ -206,6 +210,9 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     if (action === 'Approve') {
       setConfirmMessage('Are you sure you want to Approve this?')
     }
+    if (action === 'For Reverification') {
+      setConfirmMessage('Are you sure you want to change this to "For Reverification?"')
+    }
     if (action === 'Disapprove') {
       setConfirmMessage('Are you sure you want to Disapprove this?')
     }
@@ -230,6 +237,9 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     if (showConfirmModal === 'Approve') {
       void handleConfirmedApprove()
     }
+    if (showConfirmModal === 'For Reverification') {
+      void handleConfirmedReverification()
+    }
     if (showConfirmModal === 'Disapprove') {
       void handleConfirmedDisapprove()
     }
@@ -239,6 +249,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     if (showConfirmModal === 'Cancel') {
       void handleConfirmedCancel()
     }
+
     setShowConfirmModal('')
     setConfirmMessage('')
   }
@@ -359,6 +370,89 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
         }
       }
 
+      // Add entry to employees leave card if type of request is Leave
+      if (documentData.type === 'Leave') {
+        const result = await fetchLeaveCards(documentData.created_by, '', 300, 0) // fetch all
+
+        if (result.data) {
+          const slList = result.data.filter(item => item.type === 'Sick Leave')
+          const vlList = result.data.filter(item => item.type === 'Vacation Leave')
+          const scList = result.data.filter(item => item.type === 'Service Credit')
+          const cocList = result.data.filter(item => item.type === 'Compensatory Overtime Credit')
+
+          // first index of array should be the latest and updated balance
+          const slBalance = slList.length > 0 ? Number(slList[0].balance) : 0
+          const vlBalance = vlList.length > 0 ? Number(vlList[0].balance) : 0
+          const scBalance = scList.length > 0 ? Number(scList[0].balance) : 0
+          const cocBalance = cocList.length > 0 ? Number(cocList[0].balance) : 0
+
+          // insert array
+          const leaveCardData = []
+          if (documentData.leave_credit_use_coc && cocBalance > Number(documentData.leave_credit_use_coc)) {
+            leaveCardData.push({
+              adjustment_date: new Date(),
+              particulars: 'Compensatory Overtime Credit Adjustment',
+              remarks: 'Credit used from Leave Request',
+              credits_used: documentData.leave_credit_use_coc,
+              balance: (cocBalance - Number(documentData.leave_credit_use_coc)).toFixed(3),
+              type: 'Compensatory Overtime Credit',
+              tracker_id: documentData.id,
+              user_id: documentData.created_by
+            })
+          }
+
+          if (documentData.leave_credit_use_sc && scBalance > Number(documentData.leave_credit_use_sc)) {
+            leaveCardData.push({
+              adjustment_date: new Date(),
+              particulars: 'Service Credit Adjustment',
+              remarks: 'Credit used from Leave Request',
+              credits_used: documentData.leave_credit_use_sc,
+              balance: (scBalance - Number(documentData.leave_credit_use_sc)).toFixed(3),
+              type: 'Service Credit',
+              tracker_id: documentData.id,
+              user_id: documentData.created_by
+            })
+          }
+
+          if (documentData.leave_credit_use_vl && vlBalance > Number(documentData.leave_credit_use_vl)) {
+            leaveCardData.push({
+              adjustment_date: new Date(),
+              particulars: 'Vacation Leave Adjustment',
+              remarks: 'Credit used from Leave Request',
+              credits_used: documentData.leave_credit_use_vl,
+              balance: (vlBalance - Number(documentData.leave_credit_use_vl)).toFixed(3),
+              type: 'Vacation Leave',
+              tracker_id: documentData.id,
+              user_id: documentData.created_by
+            })
+          }
+
+          if (documentData.leave_credit_use_sl && slBalance > Number(documentData.leave_credit_use_sl)) {
+            leaveCardData.push({
+              adjustment_date: new Date(),
+              particulars: 'Sick Leave Adjustment',
+              remarks: 'Credit used from Leave Request',
+              credits_used: documentData.leave_credit_use_sl,
+              balance: (slBalance - Number(documentData.leave_credit_use_sl)).toFixed(3),
+              type: 'Sick Leave',
+              tracker_id: documentData.id,
+              user_id: documentData.created_by
+            })
+          }
+
+          // Insert to database
+          const { error } = await supabase
+            .from('hrm_leave_cards')
+            .insert(leaveCardData)
+
+          if (error) {
+            void logError('Leave request - leave card adjustment', 'hrm_leave_cards', JSON.stringify(leaveCardData), error.message)
+            throw new Error(error.message)
+          }
+        }
+      }
+      // End: Add entry to employees leave card if type of request is Leave
+
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
@@ -369,6 +463,77 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
 
       // Notify requester and follower
       void handleNotify(items[foundIndex], 'Approved')
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      // Recount sidebar counter
+      dispatch(recount())
+
+      setUpdateStatusFlow(!updateStatusFlow)
+      setSaving(false)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleConfirmedReverification = async () => {
+    if (saving) return
+
+    setSaving(true)
+
+    const newData = {
+      current_status: 'For Verification',
+      current_approver_id: session.user.id
+    }
+    try {
+      const { error } = await supabase
+        .from('hrm_request_trackers')
+        .update(newData)
+        .eq('id', documentData.id)
+
+      if (error) {
+        void logError('For Reverification', 'hrm_request_trackers', JSON.stringify(newData), error.message)
+        setToast('error', 'Saving failed, please reload the page and try again.')
+        throw new Error(error.message)
+      }
+
+      // Added log to latest tracker flow
+      const { data } = await supabase
+        .from('hrm_tracker_flow')
+        .select()
+        .eq('tracker_id', documentData.id)
+        .order('id', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (data) {
+        const newData = {
+          message: 'For Reverification',
+          tracker_flow_id: data.id,
+          user_id: session.user.id
+        }
+
+        const { error: error2 } = await supabase
+          .from('hrm_tracker_logs')
+          .insert(newData)
+          .eq('id', documentData.id)
+
+        if (error2) {
+          void logError('Approval Flow Logs', 'hrm_tracker_flow', '', error2.message)
+        }
+      }
+
+      // Update data in redux
+      const items: DocumentTypes[] = [...globallist]
+      const updatedData = { ...newData, id: documentData.id }
+      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      items[foundIndex] = { ...items[foundIndex], ...updatedData }
+      dispatch(updateList(items))
+      setDocumentData(items[foundIndex]) // update ui with new data
+
+      // Notify requester and follower
+      void handleNotify(items[foundIndex], 'For Reverification')
 
       // pop up the success message
       setToast('success', 'Successfully saved.')
@@ -766,13 +931,13 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                     <div className='mb-6'>
                       <div className='space-x-2'>
                         <CustomButton
-                          containerStyles='app__btn_orange'
+                          containerStyles='app__btn_blue'
                           title={saving ? 'Saving...' : 'Cancel This Request'}
                           btnType='button'
                           handleClick={() => HandleConfirm('Cancel')}
                         />
                       </div>
-                      <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Cancel&apos;, your request process will be terminated.</div>
+                      <div className='text-[10px] mt-1 text-gray-600'>Requests can only be cancelled by the requester, by clicking this button, your request process will be terminated.</div>
                     </div>
                 }
                 {/* Recommending Approval */}
@@ -781,7 +946,8 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                     (documentData.current_approver_id !== session.user.id && documentData.receiver_id === session.user.id && documentData.current_status !== 'Approved' && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled') &&
                     !(
                       (hasAccess('leave_approver') && documentData.type === 'Leave') ||
-                      (hasAccess('travel_approver') && documentData.type === 'Travel') ||
+                      (hasAccess('travel_approver') && documentData.type === 'Travel Authority') ||
+                      (hasAccess('service_record_print_approver') && documentData.type === 'Service Record Print Request') ||
                       (hasAccess('undertime_permit_approver') && documentData.type === 'Undertime Permit') ||
                       (hasAccess('locator_slip_approver') && documentData.type === 'Locator Slip') ||
                       (hasAccess('passslip_approver') && documentData.type === 'Pass Slip')
@@ -808,10 +974,11 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                 {/* Final Approval */}
                 {
                   (
-                    (documentData.receiver_id === session.user.id && documentData.current_status !== 'Approved' && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled') &&
+                    (documentData.receiver_id === session.user.id && documentData.current_status === 'Approval Recommended') &&
                     (
                       (hasAccess('leave_approver') && documentData.type === 'Leave') ||
-                      (hasAccess('travel_approver') && documentData.type === 'Travel') ||
+                      (hasAccess('travel_approver') && documentData.type === 'Travel Authority') ||
+                      (hasAccess('service_record_print_approver') && documentData.type === 'Service Record Print Request') ||
                       (hasAccess('undertime_permit_approver') && documentData.type === 'Undertime Permit') ||
                       (hasAccess('locator_slip_approver') && documentData.type === 'Locator Slip') ||
                       (hasAccess('passslip_approver') && documentData.type === 'Pass Slip')
@@ -826,6 +993,12 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                           handleClick={() => HandleConfirm('Approve')}
                         />
                         <CustomButton
+                          containerStyles='app__btn_orange'
+                          title='For Reverification'
+                          btnType='button'
+                          handleClick={() => HandleConfirm('For Reverification')}
+                        />
+                        <CustomButton
                           containerStyles='app__btn_red'
                           title={saving ? 'Saving...' : 'Disapprove'}
                           btnType='button'
@@ -837,7 +1010,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                 }
                 {/* Forward */}
                 {
-                  (documentData.receiver_id === session.user.id && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled') &&
+                  (documentData.receiver_id === session.user.id && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled' && documentData.current_status !== 'Approved') &&
                     <div className="">
                       <div className='font-medium text-sm text-gray-700'>Forward this request to:</div>
                       <div className="flex w-full space-x-2">
@@ -873,10 +1046,10 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
                         <tr>
                           <td className='px-2 py-2 font-light text-right'>Current Status:</td>
                           <td>
-                            {documentData.current_status === 'Request Created' && <span className='text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium text-sm'>{documentData.current_status}</span>}
+                            {documentData.current_status === 'For Verification' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium text-sm'>{documentData.current_status}</span>}
                             {documentData.current_status === 'Approval Recommended' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium text-sm'>{documentData.current_status}</span>}
-                            {documentData.current_status === 'Cancelled' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium text-sm'>{documentData.current_status}</span>}
-                            {documentData.current_status === 'Approved' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium text-sm'>{documentData.current_status}</span>}
+                            {documentData.current_status === 'Cancelled' && <span className='text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium text-sm'>{documentData.current_status}</span>}
+                            {documentData.current_status === 'Approved' && <span className='text-green-900 px-1 bg-green-300 border border-green-700 font-medium text-sm'>{documentData.current_status}</span>}
                             {documentData.current_status === 'Disapproved' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium text-sm'>{documentData.current_status}</span>}
                           </td>
                         </tr>

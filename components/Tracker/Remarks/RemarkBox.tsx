@@ -162,7 +162,7 @@ export default function RemarkBox ({ document }: ModalProps) {
           url: `/tracker/${document.reference_code}`,
           type: 'Remarks',
           user_id: userId,
-          reference_id: document.id,
+          remark_id: document.id,
           reference_table: 'hrm_request_trackers'
         })
       })

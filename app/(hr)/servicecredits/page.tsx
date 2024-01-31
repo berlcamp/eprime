@@ -15,7 +15,7 @@ import EmployeesModal from './EmployeesModal'
 import { format } from 'date-fns'
 
 // Types
-import type { ServiceCreditTypes } from '@/types'
+import type { ServiceCreditTypes, ServiceCreditUserTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -104,6 +104,13 @@ const Page: React.FC = () => {
     setShowDeleteModal(true)
   }
 
+  const countPending = (users: ServiceCreditUserTypes[] | null) => {
+    if (!users) return 0
+
+    const filtered = users.filter(user => !user.is_approved)
+    return filtered.length
+  }
+
   // Update list whenever list in redux updates
   useEffect(() => {
     setList(globallist)
@@ -115,7 +122,7 @@ const Page: React.FC = () => {
     void fetchData()
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, perPageCount])
+  }, [filterKeyword, filterUrl, perPageCount])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -223,13 +230,17 @@ const Page: React.FC = () => {
                                 item.status !== 'Revoked' &&
                                   <>
                                   <Menu.Item>
-                                    <div
-                                        onClick={() => handleEdit(item)}
-                                        className='app__dropdown_item'
-                                      >
-                                        <PencilSquareIcon className='w-4 h-4'/>
-                                        <span>Edit</span>
-                                      </div>
+                                    {
+                                      item.hrm_service_credit_users.length === 0
+                                        ? <div
+                                            onClick={() => handleEdit(item)}
+                                            className='app__dropdown_item'
+                                          >
+                                            <PencilSquareIcon className='w-4 h-4'/>
+                                            <span>Edit</span>
+                                          </div>
+                                        : <div className='app__dropdown_item_disabled'><PencilSquareIcon className='w-4 h-4'/><span>Edit</span></div>
+                                    }
                                   </Menu.Item>
                                   <Menu.Item>
                                     <div
@@ -284,6 +295,10 @@ const Page: React.FC = () => {
                           btnType='button'
                           handleClick={() => handleManageEmployees(item)}
                         />
+                        {
+                          (item.status !== 'Expired' && countPending(item.hrm_service_credit_users ?? null) > 0) &&
+                            <div className='text-red-500 font-semibold text-[10px]'>For Approval({countPending(item.hrm_service_credit_users ?? null)})</div>
+                        }
                     </td>
                     <td
                       className="hidden md:table-cell app__td">

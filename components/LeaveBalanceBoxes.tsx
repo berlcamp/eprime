@@ -18,7 +18,7 @@ export default function LeaveBalanceBoxes ({ user }: ModalProps) {
   useEffect(() => {
     void (async () => {
       try {
-        const result = await fetchLeaveCards(user.id, '', 100, 0)
+        const result = await fetchLeaveCards(user.id, '', 300, 0)
 
         const balances = []
 

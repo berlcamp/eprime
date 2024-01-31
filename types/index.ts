@@ -293,6 +293,7 @@ export interface CtoTypes {
   coc: string
   is_holiday: boolean
   hrm_cto_users?: CtoUserTypes[]
+  confirmed: string
 }
 
 export interface excludedItemsTypes {
@@ -324,6 +325,7 @@ export interface ServiceCreditTypes {
   service_credits: string
   is_approved: boolean
   hrm_service_credit_users: ServiceCreditUserTypes[]
+  confirmed: string
 }
 
 export interface LeaveTypes {

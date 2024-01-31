@@ -95,9 +95,9 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
         .insert({
           message: 'You are added to a <b>Service Credit</b>, please upload supporting documents if necessary.',
           url: `/myservicecredits/${refCode}`,
-          type: 'service_credit',
+          type: 'service_credit_users',
           user_id: user.id,
-          reference_id: data[0].id,
+          service_credit_user_id: data[0].id,
           reference_table: 'hrm_service_credit_users'
         })
 
@@ -156,7 +156,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
           url: `/myservicecredits/${refCode}`,
           type: 'service_credits',
           user_id: selectedRow?.hrm_user_id,
-          reference_id: selectedRow?.id,
+          service_credit_user_id: selectedRow?.id,
           reference_table: 'hrm_service_credit_users'
         })
 

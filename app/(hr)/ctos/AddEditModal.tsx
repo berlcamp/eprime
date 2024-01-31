@@ -312,6 +312,19 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                 </div>
               </div>
             </div>
+            <hr className='my-6'/>
+            <div className='w-full'>
+              <div className='app__label_standard'>
+                <label className='flex items-center space-x-1'>
+                  <input
+                    {...register('confirmed', { required: true })}
+                    type='checkbox'
+                    className=''/>
+                  <span className='font-normal text-xs'>By checking this box, you acknowledge that all information are correct. Details can no longer be deleted/modified if there are employees associated to this CTO.</span>
+                </label>
+                {errors.confirmed && <div className='app__error_message'>Confirmation is required</div>}
+              </div>
+            </div>
             <div className="app__modal_footer">
                   <CustomButton
                     btnType='submit'
