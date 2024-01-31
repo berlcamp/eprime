@@ -144,7 +144,7 @@ const MainMenu = () => {
               <hr/>
             </div>
             {
-              hasAccess('employee_accounts') &&
+              hasAccess('settings') &&
                 <>
                   <div className='text-gray-700 text-lg font-semibold'>System</div>
                   <Link href='/settings/system'>
