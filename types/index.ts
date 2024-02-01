@@ -570,3 +570,60 @@ export interface CommentDataTypes {
   message: string
   hrm_users: Employee
 }
+
+export interface PdsPersonalInfomationTypes {
+  firstname: string
+  middlename: string
+  lastname: string
+  ext: string
+  birthday: string
+  place_of_birth: string
+  gender: string
+  civil_status: string
+  height: string
+  weight: string
+  blood_type: string
+  citizenship: string
+  telephone: string
+  mobile_number: string
+  residential_house_no: string
+  residential_street: string
+  residential_subdivision: string
+  residential_barangay: string
+  residential_city: string
+  residential_province: string
+  residential_zip: string
+  permanent_house_no: string
+  permanent_street: string
+  permanent_subdivision: string
+  permanent_barangay: string
+  permanent_city: string
+  permanent_province: string
+  permanent_zip: string
+  gsis_no: string
+  pagibig_no: string
+  philhealth_no: string
+  sss_no: string
+  tin_no: string
+  agency_employee_no: string
+  confirmed: string
+}
+
+export interface PdsFamilyBackgroundTypes {
+  spouse_firstname: string
+  spouse_middlename: string
+  spouse_lastname: string
+  spouse_ext: string
+  spouse_occupation: string
+  spouse_employer: string
+  spouse_business_address: string
+  spouse_business_telephone: string
+  father_firstname: string
+  father_middlename: string
+  father_lastname: string
+  father_ext: string
+  mother_firstname: string
+  mother_middlename: string
+  mother_lastname: string
+  confirmed: string
+}

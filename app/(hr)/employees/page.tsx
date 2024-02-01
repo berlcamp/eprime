@@ -17,6 +17,8 @@ import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { superAdmins } from '@/constants'
 import LeaveCardModal from '@/components/LeaveCardModal'
+import PdsModal from '@/components/Pds/PdsModal'
+import { GrDocumentUser } from 'react-icons/gr'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -27,6 +29,7 @@ const Page: React.FC = () => {
   const [filterSetupStatus, setFilterSetupStatus] = useState<string>('')
   const [perPageCount, setPerPageCount] = useState<number>(10)
 
+  const [showPdsModal, setShowPdsModal] = useState(false)
   const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false)
   const [showLeaveCardModal, setShowLeaveCardModal] = useState(false)
   const [selectedId, setSelectedId] = useState<string>('')
@@ -79,6 +82,11 @@ const Page: React.FC = () => {
   const handleViewLeaveCard = (item: Employee) => {
     setSelectedId(item.id)
     setShowLeaveCardModal(true)
+  }
+
+  const handleViewPds = (item: Employee) => {
+    setSelectedId(item.id)
+    setShowPdsModal(true)
   }
 
   const handleViewDetails = (item: Employee) => {
@@ -195,7 +203,7 @@ const Page: React.FC = () => {
                                       className='app__dropdown_item'
                                     >
                                       <UserIcon className='w-4 h-4'/>
-                                      <span>Employee Details</span>
+                                      <span>Account Details</span>
                                     </div>
                                 </Menu.Item>
                                 <Menu.Item>
@@ -205,6 +213,15 @@ const Page: React.FC = () => {
                                     >
                                       <TableCellsIcon className='w-4 h-4'/>
                                       <span>Leave Card</span>
+                                    </div>
+                                </Menu.Item>
+                                <Menu.Item>
+                                  <div
+                                      onClick={() => handleViewPds(item)}
+                                      className='app__dropdown_item'
+                                    >
+                                      <GrDocumentUser className='w-4 h-4'/>
+                                      <span>Personal Data Sheet</span>
                                     </div>
                                 </Menu.Item>
                               </div>
@@ -402,6 +419,14 @@ const Page: React.FC = () => {
           hideModal={() => setShowLeaveCardModal(false)}/>
       )
     }
+    {/* PDS Modal */}
+    {
+        showPdsModal && (
+          <PdsModal
+            userId={selectedId}
+            hideModal={() => setShowPdsModal(false)}/>
+        )
+      }
   </>
   )
 }

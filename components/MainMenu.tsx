@@ -2,13 +2,16 @@
 'use client'
 import { MdOutlineMoreTime } from 'react-icons/md'
 import { useFilter } from '@/context/FilterContext'
+import { GrDocumentUser } from 'react-icons/gr'
 import { BookOpenIcon, CalendarDaysIcon, CalendarIcon, ChartBarSquareIcon, DocumentDuplicateIcon, HomeIcon, TableCellsIcon, TrophyIcon, UsersIcon } from '@heroicons/react/20/solid'
 import Link from 'next/link'
 import LeaveCardModal from './LeaveCardModal'
 import { useState } from 'react'
+import PdsModal from './Pds/PdsModal'
 
 const MainMenu = () => {
   const [showLeaveCardModal, setShowLeaveCardModal] = useState(false)
+  const [showPdsModal, setShowPdsModal] = useState(false)
 
   const { session, hasAccess } = useFilter()
   return (
@@ -25,6 +28,10 @@ const MainMenu = () => {
             <div className='app__menu_item cursor-pointer' onClick={() => setShowLeaveCardModal(true)}>
               <TableCellsIcon className='w-6 h-6'/>
               <div className='app__menu_item_label'>My Leave Card</div>
+            </div>
+            <div className='app__menu_item cursor-pointer' onClick={() => setShowPdsModal(true)}>
+              <GrDocumentUser className='w-6 h-6'/>
+              <div className='app__menu_item_label'>Personal Data Sheet</div>
             </div>
             <Link href={`/myservicerecords/${session.user.id}`} className='app__menu_item'>
               <TableCellsIcon className='w-6 h-6'/>
@@ -169,6 +176,14 @@ const MainMenu = () => {
           <LeaveCardModal
             userId={session.user.id}
             hideModal={() => setShowLeaveCardModal(false)}/>
+        )
+      }
+      {/* PDS Modal */}
+      {
+        showPdsModal && (
+          <PdsModal
+            userId={session.user.id}
+            hideModal={() => setShowPdsModal(false)}/>
         )
       }
     </div>
