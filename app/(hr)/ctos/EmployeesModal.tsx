@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
@@ -96,7 +97,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
         .from('hrm_notifications')
         .insert({
           message: 'You are added to a <b>CTO</b>, please upload supporting documents.',
-          url: `/myctos/${refCode}`,
+          url: `/profile/${user.id}?page=ctos&id=${data[0].id}`,
           type: 'cto',
           user_id: user.id,
           cto_user_id: data[0].id,

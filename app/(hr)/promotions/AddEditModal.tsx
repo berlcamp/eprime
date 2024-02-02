@@ -80,7 +80,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .from('hrm_notifications')
         .insert({
           message: 'You are added to a <b>Promotion</b>, please upload supporting documents.',
-          url: '/mypromotions',
+          url: `/profile/${user.id}?page=promotions`,
           type: 'promotion',
           user_id: user.id,
           promotion_id: data[0].id,

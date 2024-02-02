@@ -54,6 +54,9 @@
 .app__menu_container {
   @apply relative inline-block text-left mr-2
 }
+.app__pds_add_row_container {
+  @apply w-full mx-4 p-4 bg-gray-100 rounded-sm
+}
 .app__dropdown_btn {
   @apply inline-flex w-full justify-center focus:outline-none focus:ring-0
 }
@@ -201,14 +204,17 @@
 .app__user_menu_items {
   @apply py-2 my-1 px-2 flex items-center space-x-2 cursor-pointer whitespace-nowrap rounded-lg hover:bg-gray-200
 }
+.app__profile_menu_link {
+  @apply flex items-center p-1 text-xs font-light rounded-lg text-gray-300 hover:bg-gray-600 cursor-pointer
+}
 .app__menu_link {
-  @apply flex items-center p-2 text-sm font-light rounded-lg text-gray-300  hover:bg-gray-600
+  @apply flex items-center p-2 text-sm font-light rounded-lg text-gray-300  hover:bg-gray-600 cursor-pointer
 }
 .app_menu_link_active {
   @apply bg-gray-700
 }
 .app__modal_menu {
-  @apply w-full bg-white md:w-72 md:h-screen border-r border-b
+  @apply w-full bg-white md:w-52 md:h-screen border-r border-b
 }
 .app__modal_menu_link {
   @apply text-xs p-2 text-gray-700  hover:bg-gray-400 m-1 rounded-lg font-medium cursor-pointer

@@ -12,6 +12,8 @@ import Image from 'next/image'
 
 // types
 import type { Employee } from '@/types'
+import Link from 'next/link'
+import { GrDocumentUser } from 'react-icons/gr'
 
 interface propTypes {
   darkMode?: boolean
@@ -63,10 +65,14 @@ const UserDropdown = ({ darkMode }: propTypes) => {
             <div className="py-1">
               <Menu.Item>
                 <div className='px-4 py-2'>
+                  <Link href={`/profile/${session.user.id}`} className='app__user_menu_items'>
+                    <UserIcon className='w-5 h-5'/>
+                    <div className='text-sm font-semibold text-gray-700'>My Profile</div>
+                  </Link>
                   <div
                     onClick={() => setShowAccountDetailsModal(true)}
                     className='app__user_menu_items'>
-                    <UserIcon className='w-5 h-5'/>
+                    <GrDocumentUser className='w-5 h-5'/>
                     <div className='text-sm font-semibold text-gray-700'>Account Details</div>
                   </div>
                   <div className='py-2'>

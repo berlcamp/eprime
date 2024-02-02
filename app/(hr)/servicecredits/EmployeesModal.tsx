@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
@@ -94,7 +95,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
         .from('hrm_notifications')
         .insert({
           message: 'You are added to a <b>Service Credit</b>, please upload supporting documents if necessary.',
-          url: `/myservicecredits/${refCode}`,
+          url: `/profile/${user.id}?page=servicecredits&id=${data[0].id}`,
           type: 'service_credit_users',
           user_id: user.id,
           service_credit_user_id: data[0].id,

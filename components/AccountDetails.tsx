@@ -27,7 +27,7 @@ interface ModalProps {
 
 const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   const { setToast, hasAccess } = useFilter()
-  const { supabase, session } = useSupabase()
+  const { supabase } = useSupabase()
 
   const [positionTypeChange, setPositionTypeChange] = useState('')
   const [slBalance, setSlBalance] = useState(0)
@@ -415,7 +415,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           {
                             (avatarUrl && avatarUrl !== '')
                               ? <Image src={avatarUrl} width={60} height={60} alt="alt" className='mx-auto'/>
-                              : <Avatar round={false} size="60" name={session.user.email.split('@')[0]} />
+                              : <Avatar round={false} size="60" name={userData?.firstname} />
                           }
                           <div className="relative">
                             <input type="file" onChange={handleUploadPhoto} className="hidden" id="file-input" accept="image/*"/>

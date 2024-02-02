@@ -427,12 +427,15 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <td className='app__td'>{child.child_name}</td>
                             <td className='app__td'>{format(new Date(child.child_birthday), 'MMMM dd, yyyy')}</td>
                             <td className='app__td'>
-                              <CustomButton
-                                containerStyles='app__btn_red'
-                                title='Remove'
-                                btnType='button'
-                                handleClick={() => HandleRemoveChild(child)}
-                                />
+                              {
+                                userId === session.user.id &&
+                                  <CustomButton
+                                    containerStyles='app__btn_red'
+                                    title='Remove'
+                                    btnType='button'
+                                    handleClick={() => HandleRemoveChild(child)}
+                                    />
+                              }
                             </td>
                           </tr>
                         ))
@@ -445,7 +448,7 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
             {
               userId === session.user.id &&
                 <>
-                  <div className='w-full px-4'>
+                  <div className='app__pds_add_row_container'>
                     <div>
                       {
                         !showAddChildForm

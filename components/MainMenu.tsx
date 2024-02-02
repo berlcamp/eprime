@@ -2,16 +2,13 @@
 'use client'
 import { MdOutlineMoreTime } from 'react-icons/md'
 import { useFilter } from '@/context/FilterContext'
-import { GrDocumentUser } from 'react-icons/gr'
-import { BookOpenIcon, CalendarDaysIcon, CalendarIcon, ChartBarSquareIcon, DocumentDuplicateIcon, HomeIcon, TableCellsIcon, TrophyIcon, UsersIcon } from '@heroicons/react/20/solid'
+import { BookOpenIcon, CalendarDaysIcon, CalendarIcon, ChartBarSquareIcon, DocumentDuplicateIcon, HomeIcon, TableCellsIcon, TrophyIcon, UserIcon, UsersIcon } from '@heroicons/react/20/solid'
 import Link from 'next/link'
-import LeaveCardModal from './LeaveCardModal'
+import LeaveCardModal from './LeaveCard/LeaveCardModal'
 import { useState } from 'react'
-import PdsModal from './Pds/PdsModal'
 
 const MainMenu = () => {
   const [showLeaveCardModal, setShowLeaveCardModal] = useState(false)
-  const [showPdsModal, setShowPdsModal] = useState(false)
 
   const { session, hasAccess } = useFilter()
   return (
@@ -21,31 +18,23 @@ const MainMenu = () => {
         <div className='lg:flex lg:space-x-2 lg:space-y-0 space-y-2 justify-center lg:flex-row-reverse'>
           <div className='px-2 py-4 border text-gray-600 rounded-lg bg-white shadow-md flex flex-col lg:mx-2 space-y-1'>
             <div className='text-gray-700 text-lg font-semibold'>Shortcuts</div>
-            <Link href='/tracker' className='app__menu_item'>
+            <Link href={`/profile/${session.user.id}?page=requests`} className='app__menu_item'>
               <CalendarDaysIcon className='w-6 h-6'/>
               <div className='app__menu_item_label'>My Requests</div>
             </Link>
-            <div className='app__menu_item cursor-pointer' onClick={() => setShowLeaveCardModal(true)}>
+            <Link href={`/profile/${session.user.id}?page=leavecard`} className='app__menu_item'>
               <TableCellsIcon className='w-6 h-6'/>
               <div className='app__menu_item_label'>My Leave Card</div>
-            </div>
-            <div className='app__menu_item cursor-pointer' onClick={() => setShowPdsModal(true)}>
-              <GrDocumentUser className='w-6 h-6'/>
-              <div className='app__menu_item_label'>Personal Data Sheet</div>
-            </div>
-            <Link href={`/myservicerecords/${session.user.id}`} className='app__menu_item'>
+            </Link>
+            <Link href={`/profile/${session.user.id}?page=servicerecords`} className='app__menu_item'>
               <TableCellsIcon className='w-6 h-6'/>
               <div className='app__menu_item_label'>My Service Records</div>
             </Link>
-            {/* <Link href='/' className='app__menu_item'>
-              <ChartBarSquareIcon className='w-6 h-6'/>
-              <div className='app__menu_item_label'>PMS</div>
-            </Link> */}
-            <Link href='/myctos' className='app__menu_item'>
+            <Link href={`/profile/${session.user.id}?page=ctos`} className='app__menu_item'>
               <MdOutlineMoreTime className='w-6 h-6'/>
               <div className='app__menu_item_label'>My CTO&apos;s</div>
             </Link>
-            <Link href='/myservicecredits' className='app__menu_item'>
+            <Link href={`/profile/${session.user.id}?page=servicecredits`} className='app__menu_item'>
               <CalendarIcon className='w-6 h-6'/>
               <div className='app__menu_item_label'>My Service Credits</div>
             </Link>
@@ -60,6 +49,17 @@ const MainMenu = () => {
                 <div>
                   <div className='app__menu_item_label'>Home</div>
                   <div className='app__menu_item_label_description'>Go to home page.</div>
+                </div>
+              </div>
+            </Link>
+            <Link href={`/profile/${session.user.id}`}>
+              <div className='app__menu_item'>
+                <div className='pt-1'>
+                  <UserIcon className='w-8 h-8'/>
+                </div>
+                <div>
+                  <div className='app__menu_item_label'>My Profile</div>
+                  <div className='app__menu_item_label_description'>Personal Records and Requests</div>
                 </div>
               </div>
             </Link>
@@ -88,17 +88,20 @@ const MainMenu = () => {
                 </div>
               </div>
             </Link>
-            <Link href={`/myservicerecords/${session.user.id}`}>
-              <div className='app__menu_item'>
-                <div className='pt-1'>
-                  <UsersIcon className='w-8 h-8'/>
-                </div>
-                <div>
-                  <div className='app__menu_item_label'>Records & Credits</div>
-                  <div className='app__menu_item_label_description'>Service Records, Assignments, Designations, CTO, Service Credits, Promotions, Plantillas, NOSI/NOSA.</div>
-                </div>
-              </div>
-            </Link>
+            {
+              (hasAccess('records') || hasAccess('sds') || hasAccess('asds') || hasAccess('certify_leave_credits')) &&
+                <Link href='/assignments'>
+                  <div className='app__menu_item'>
+                    <div className='pt-1'>
+                      <UsersIcon className='w-8 h-8'/>
+                    </div>
+                    <div>
+                      <div className='app__menu_item_label'>Records & Credits</div>
+                      <div className='app__menu_item_label_description'>Service Records, Assignments, Designations, CTO, Service Credits, Promotions, Plantillas, NOSI/NOSA.</div>
+                    </div>
+                  </div>
+                </Link>
+            }
             <div className='pt-4'>
               <hr/>
             </div>
@@ -176,14 +179,6 @@ const MainMenu = () => {
           <LeaveCardModal
             userId={session.user.id}
             hideModal={() => setShowLeaveCardModal(false)}/>
-        )
-      }
-      {/* PDS Modal */}
-      {
-        showPdsModal && (
-          <PdsModal
-            userId={session.user.id}
-            hideModal={() => setShowPdsModal(false)}/>
         )
       }
     </div>

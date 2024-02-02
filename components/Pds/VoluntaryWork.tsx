@@ -114,7 +114,6 @@ export default function VoluntaryWork ({ userId }: { userId: string }) {
       {
         !loading &&
           <div className="w-full">
-            <hr className='my-6 mx-4'/>
             <div className='w-full px-4'>
               <div className="flex items-center">
                 <div className="flex-grow bg-gray-300 h-px"></div>
@@ -144,12 +143,15 @@ export default function VoluntaryWork ({ userId }: { userId: string }) {
                             <td className='app__td'>{item.hours}</td>
                             <td className='app__td'>{item.position}</td>
                             <td className='app__td'>
-                              <CustomButton
-                                containerStyles='app__btn_red'
-                                title='Remove'
-                                btnType='button'
-                                handleClick={() => HandleRemoveItem(item)}
-                                />
+                              {
+                                userId === session.user.id &&
+                                  <CustomButton
+                                    containerStyles='app__btn_red'
+                                    title='Remove'
+                                    btnType='button'
+                                    handleClick={() => HandleRemoveItem(item)}
+                                    />
+                              }
                             </td>
                           </tr>
                         ))
@@ -162,7 +164,7 @@ export default function VoluntaryWork ({ userId }: { userId: string }) {
             {
               userId === session.user.id &&
                 <>
-                  <div className='w-full px-4'>
+                  <div className='app__pds_add_row_container'>
                     <form onSubmit={handleSubmit(onSubmitRow)} className="text-xs">
                       {
                         !showAddRow

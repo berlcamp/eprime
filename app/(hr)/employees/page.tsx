@@ -16,9 +16,10 @@ import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { superAdmins } from '@/constants'
-import LeaveCardModal from '@/components/LeaveCardModal'
+import LeaveCardModal from '@/components/LeaveCard/LeaveCardModal'
 import PdsModal from '@/components/Pds/PdsModal'
 import { GrDocumentUser } from 'react-icons/gr'
+import Link from 'next/link'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -223,6 +224,15 @@ const Page: React.FC = () => {
                                       <GrDocumentUser className='w-4 h-4'/>
                                       <span>Personal Data Sheet</span>
                                     </div>
+                                </Menu.Item>
+                                <Menu.Item>
+                                    <Link
+                                      href={`/profile/${item.id}`}
+                                      className='app__dropdown_item'
+                                    >
+                                      <UserIcon className='w-4 h-4'/>
+                                      <span>Employee Profile</span>
+                                    </Link>
                                 </Menu.Item>
                               </div>
                             </Menu.Items>

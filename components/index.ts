@@ -27,7 +27,7 @@ import ThreeColTableLoading from './Loading/ThreeColTableLoading'
 import TableRowLoading from './Loading/TableRowLoading'
 import StatusFlow from './Tracker/StatusFlow'
 import SearchUserInput from './SearchUserInput'
-import LeaveBalanceBoxes from './LeaveBalanceBoxes'
+import LeaveBalanceBoxes from './LeaveCard/LeaveBalanceBoxes'
 
 export {
   LoginBox,
