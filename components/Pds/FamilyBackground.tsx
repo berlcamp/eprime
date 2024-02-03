@@ -155,7 +155,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('spouse_firstname')}
                               type="text"
-                              placeholder='Spouse First Name'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -171,7 +170,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('spouse_middlename')}
                               type="text"
-                              placeholder='Spouse Middle Name'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -187,7 +185,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('spouse_lastname')}
                               type="text"
-                              placeholder='Spouse Last Name'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -203,7 +200,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('spouse_ext')}
                               type="text"
-                              placeholder='Spouse Name Ext'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -219,7 +215,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('spouse_occupation')}
                               type="text"
-                              placeholder='Spouse Name Ext'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -235,7 +230,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('spouse_employer')}
                               type="text"
-                              placeholder='Spouse Employeer/Business Name'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -251,7 +245,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('spouse_business_address')}
                               type="text"
-                              placeholder='Business Address'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -267,7 +260,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('spouse_business_telephone')}
                               type="text"
-                              placeholder='Telephone No'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -292,7 +284,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('father_firstname')}
                               type="text"
-                              placeholder='Father First Name'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -308,7 +299,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('father_middlename')}
                               type="text"
-                              placeholder='Father Middle Name'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -324,7 +314,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('father_lastname')}
                               type="text"
-                              placeholder='Father Last Name'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -340,7 +329,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('father_ext')}
                               type="text"
-                              placeholder='Spouse Name Ext'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -361,7 +349,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('mother_firstname')}
                               type="text"
-                              placeholder='Mother First Name'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -377,7 +364,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('mother_middlename')}
                               type="text"
-                              placeholder='Mother Middle Name'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -393,7 +379,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                             <input
                               {...register('mother_lastname')}
                               type="text"
-                              placeholder='Mother Last Name'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -465,7 +450,6 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
                                   type='text'
                                   value={childName}
                                   onChange={e => setChildName(e.target.value)}
-                                  placeholder='Child Fullname'
                                   className='app__input_standard'/>
                               </div>
                               <div className='mb-2 w-full'>

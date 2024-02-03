@@ -206,7 +206,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('ext')}
                               type="text"
-                              placeholder='Name Ext'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -237,7 +236,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('place_of_birth')}
                               type="text"
-                              placeholder='Place of Birth'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -271,7 +269,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('civil_status')}
                               type="text"
-                              placeholder='Civil Status'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -287,7 +284,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('height')}
                               type="text"
-                              placeholder='Height (inches)'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -303,7 +299,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('weight')}
                               type="text"
-                              placeholder='Weight (kg)'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -319,7 +314,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('blood_type')}
                               type="text"
-                              placeholder='Blood Type'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -335,7 +329,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('citizenship')}
                               type="text"
-                              placeholder='Citizenship'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -351,7 +344,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('telephone')}
                               type="text"
-                              placeholder='Telephone'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -367,7 +359,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('mobile_number')}
                               type="text"
-                              placeholder='Mobile Number'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -388,7 +379,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('gsis_no', { required: true })}
                               type="text"
-                              placeholder='GSIS ID No'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -404,7 +394,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('pagibig_no', { required: true })}
                               type="text"
-                              placeholder='PAGIBIG ID No'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -420,7 +409,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('philhealth_no', { required: true })}
                               type="text"
-                              placeholder='PhilHealth ID No'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -436,7 +424,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('sss_no', { required: true })}
                               type="text"
-                              placeholder='SSS ID No'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -452,7 +439,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('tin_no', { required: true })}
                               type="text"
-                              placeholder='TIN ID No'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -468,7 +454,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('agency_employee_no', { required: true })}
                               type="text"
-                              placeholder='Agency Employee No'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -493,7 +478,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('residential_house_no')}
                               type="text"
-                              placeholder='House No'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -509,7 +493,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('residential_street')}
                               type="text"
-                              placeholder='Street'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -525,7 +508,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('residential_subdivision')}
                               type="text"
-                              placeholder='Subdivision/Village'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -541,7 +523,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('residential_barangay')}
                               type="text"
-                              placeholder='Barangay'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -557,7 +538,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('residential_city')}
                               type="text"
-                              placeholder='City/Municipality'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -573,7 +553,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('residential_province')}
                               type="text"
-                              placeholder='Province'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -589,7 +568,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('residential_zip')}
                               type="text"
-                              placeholder='Zip Code'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -610,7 +588,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('permanent_house_no')}
                               type="text"
-                              placeholder='House No'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -626,7 +603,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('permanent_street')}
                               type="text"
-                              placeholder='Street'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -642,7 +618,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('permanent_subdivision')}
                               type="text"
-                              placeholder='Subdivision/Village'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -658,7 +633,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('permanent_barangay')}
                               type="text"
-                              placeholder='Barangay'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -674,7 +648,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('permanent_city')}
                               type="text"
-                              placeholder='City/Municipality'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -690,7 +663,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('permanent_province')}
                               type="text"
-                              placeholder='Province'
                               className='app__input_standard'/>
                           </div>
                     }
@@ -706,7 +678,6 @@ export default function PersonalInfo ({ userId }: { userId: string }) {
                             <input
                               {...register('permanent_zip')}
                               type="text"
-                              placeholder='Zip Code'
                               className='app__input_standard'/>
                           </div>
                     }
