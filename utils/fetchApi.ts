@@ -121,7 +121,7 @@ export async function fetchSchools (filters: { filterKeyword?: string, filterTyp
   try {
     let query = supabase
       .from('hrm_schools')
-      .select('*,hrm_users:head_user_id(firstname,middlename,lastname),hrm_districts(name)', { count: 'exact' })
+      .select('*,hrm_users:head_user_id(id,firstname,middlename,lastname),hrm_districts(name)', { count: 'exact' })
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Full text search
@@ -220,6 +220,55 @@ export async function fetchEmployees (filters: { filterKeyword?: string, filterS
     return { data, count }
   } catch (error) {
     console.error('fetch employee error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchPersonnel (filters: { filterKeyword?: string }, schoolIds: string[], officeIds: string[], perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from('hrm_users')
+      .select('*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))', { count: 'exact' })
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    if (schoolIds.length > 0) {
+      console.log('schoolIds', schoolIds)
+      query = query.in('school_id', schoolIds)
+    }
+
+    if (officeIds.length > 0) {
+      console.log('officeIds', officeIds)
+      query = query.in('office_id', officeIds)
+    }
+
+    // Search match
+    if (filters.filterKeyword && filters.filterKeyword !== '') {
+      // query = query.or(`firstname.ilike.%${filters.filterKeyword}%,middlename.ilike.%${filters.filterKeyword}%,lastname.ilike.%${filters.filterKeyword}%`)
+      const searchQuery: string = fullTextQuery(filters.filterKeyword)
+      query = query.textSearch('fts', searchQuery)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data: userData, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    const data: Employee[] = userData
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch personnel error', error)
     return { data: [], count: 0 }
   }
 }

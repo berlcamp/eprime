@@ -155,8 +155,6 @@ export default function Pdf ({ userId }: { userId: string }) {
           <Title title='Position Description Form'/>
         </div>
 
-        <div className='app__warning_text'>Upload your signed Position Description Form (DBM CSC Form No.1) here.</div>
-
         {/* Main Content */}
         <div className='w-full mx-4 mt-4'>
           <div>
@@ -191,10 +189,10 @@ export default function Pdf ({ userId }: { userId: string }) {
 
           {/* Upload Form */}
           <div className='mt-8'>
-            <div className='w-1/2'>
+            <div className='w-2/3'>
               <div {...getRootProps()} className='border border-dashed bg-gray-100 text-gray-600 px-4 py-8'>
                 <input {...getInputProps()} />
-                <p className='text-sm text-gray-500'>Drag and drop some files here, or click to select files</p>
+                <p className='text-sm text-gray-500'>Drag the scanned copy of your signed Position Description Form (DBM CSC Form No.1) here. Or click to select file.</p>
               </div>
               {
                 (fileRejections.length === 0 && selectedImages.length > 0) &&

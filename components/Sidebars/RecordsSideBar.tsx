@@ -15,6 +15,7 @@ const RecordsSideBar = () => {
   const currentRoute = usePathname()
   const [ctoCount, setCtoCount] = useState('')
   const [scCount, setScCount] = useState('')
+  const [registrationCount, setRegistrationCount] = useState('')
   const [promotionsCount, setPromotionsCount] = useState('')
 
   const { hasAccess } = useFilter()
@@ -77,6 +78,13 @@ const RecordsSideBar = () => {
           setScCount(`For Approval (${count})`)
         }
       }
+
+      // Registrations counter
+      const { count: registrationsCount } = await supabase
+        .from('hrm_registrations')
+        .select('id', { count: 'exact' })
+
+      if (registrationsCount > 0) setRegistrationCount(registrationsCount)
     }
   }
   useEffect(() => {
@@ -94,6 +102,23 @@ const RecordsSideBar = () => {
                 <TableCellsIcon className='w-4 h-4'/>
                 <span>HR Records</span>
               </div>
+            </li>
+            <li>
+              <Link href="/employees" className={`app__menu_link ${currentRoute === '/employees' ? 'app_menu_link_active' : ''}`}>
+                <span className="flex-1 ml-3 whitespace-nowrap">Employees</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/registrations" className={`app__menu_link ${currentRoute === '/registrations' ? 'app_menu_link_active' : ''}`}>
+                <span className="flex-1 ml-3 whitespace-nowrap">Registrations</span>
+                {
+                  registrationCount !== '' &&
+                    <span className='inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-500'>
+                      <span className='text-white text-xs'>{registrationCount}</span>
+                    </span>
+
+                }
+              </Link>
             </li>
             <li>
               <Link

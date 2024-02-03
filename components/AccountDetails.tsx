@@ -1,5 +1,5 @@
 'use client'
-import React, { type ChangeEvent, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -16,7 +16,6 @@ import { updateList } from '@/GlobalRedux/Features/listSlice'
 
 // Types
 import type { PositionTypes, SchoolTypes, DistrictTypes, Office, Employee } from '@/types'
-import { generateReferenceCode } from '@/utils/text-helper'
 import CustomButton from './CustomButton'
 
 interface ModalProps {
@@ -36,7 +35,6 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   const [scBalance, setScBalance] = useState(0)
 
   const [loading, setLoading] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [positions, setPositions] = useState<PositionTypes[] | []>([])
   const [saving, setSaving] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState('')
@@ -188,68 +186,6 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
 
     setSchools(result.data.length > 0 ? result.data : [])
     setLoadingSchools(false)
-  }
-
-  const handleUploadPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      try {
-        setUploading(true)
-
-        // delete the existing user avatar on supabase storage
-        const { data: files, error: error3 } = await supabase.storage.from('hrm_public').list(`user_avatar/${id}`)
-        if (error3) throw new Error(error3.message)
-        if (files.length > 0) {
-          const filesToRemove = files.map((x: { name: string }) => `user_avatar/${id}/${x.name}`)
-          const { error: error4 } = await supabase.storage.from('hrm_public').remove(filesToRemove)
-          if (error4) throw new Error(error4.message)
-        }
-
-        // upload the new avatar
-        const file = e.target.files?.[0]
-        const newFileName = generateReferenceCode()
-        const customFilePath = `user_avatar/${id}/${newFileName}.` + (file.name.split('.').pop() as string)
-        const { error } = await supabase
-          .storage
-          .from('hrm_public')
-          .upload(`${customFilePath}`, file, {
-            cacheControl: '3600',
-            upsert: true
-          })
-        if (error) throw new Error(error.message)
-
-        // get the newly uploaded file public path
-        await handleFetchAvatar(customFilePath)
-      } catch (error) {
-        console.error('Error uploading file:', error)
-      } finally {
-        router.refresh()
-        setUploading(false)
-      }
-    }
-  }
-
-  const handleFetchAvatar = async (path: string) => {
-    try {
-      // get the public avatar url
-      const { data, error } = await supabase
-        .storage
-        .from('hrm_public')
-        .getPublicUrl(`${path}`)
-
-      if (error) throw new Error(error.message)
-
-      // update avatar url on hrm_users table
-      const { error2 } = await supabase
-        .from('hrm_users')
-        .update({ avatar_url: data.publicUrl })
-        .eq('id', id)
-
-      if (error2) throw new Error(error2.message)
-
-      setAvatarUrl(data.publicUrl)
-    } catch (error) {
-      console.error('Error fetching avatar:', error)
-    }
   }
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
@@ -414,19 +350,11 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                         <div className='text-center'>
                           {
                             (avatarUrl && avatarUrl !== '')
-                              ? <Image src={avatarUrl} width={60} height={60} alt="alt" className='mx-auto'/>
+                              ? <div className='mx-auto relative rounded-full overflow-hidden h-16 w-16 border border-gray-300'>
+                                  <Image src={avatarUrl} layout="fill" objectFit="cover" alt="profile image" className="rounded"/>
+                                </div>
                               : <Avatar round={false} size="60" name={userData?.firstname} />
                           }
-                          <div className="relative">
-                            <input type="file" onChange={handleUploadPhoto} className="hidden" id="file-input" accept="image/*"/>
-                            {
-                              !uploading
-                                ? <label htmlFor="file-input" className="cursor-pointer py-px px-1 text-xs text-blue-600">
-                                    Change Profile Photo
-                                  </label>
-                                : <span className='py-px px-1 text-xs text-blue-600'>Uploading...</span>
-                            }
-                          </div>
                         </div>
                         <div className='app__form_field_container'>
                           <div className='w-full'>

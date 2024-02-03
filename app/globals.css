@@ -208,7 +208,7 @@
   @apply flex items-center p-1 text-xs font-light rounded-lg text-gray-300 hover:bg-gray-600 cursor-pointer
 }
 .app__menu_link {
-  @apply flex items-center p-2 text-sm font-light rounded-lg text-gray-300  hover:bg-gray-600 cursor-pointer
+  @apply flex items-center p-2 text-xs font-light rounded-lg text-gray-300  hover:bg-gray-600 cursor-pointer
 }
 .app_menu_link_active {
   @apply bg-gray-700

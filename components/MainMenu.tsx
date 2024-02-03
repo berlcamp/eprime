@@ -2,15 +2,18 @@
 'use client'
 import { MdOutlineMoreTime } from 'react-icons/md'
 import { useFilter } from '@/context/FilterContext'
-import { BookOpenIcon, CalendarDaysIcon, CalendarIcon, ChartBarSquareIcon, DocumentDuplicateIcon, HomeIcon, TableCellsIcon, TrophyIcon, UserIcon, UsersIcon } from '@heroicons/react/20/solid'
+import { BookOpenIcon, CalendarDaysIcon, CalendarIcon, ChartBarIcon, ChartBarSquareIcon, DocumentDuplicateIcon, HomeIcon, TableCellsIcon, TrophyIcon, UserIcon, UsersIcon } from '@heroicons/react/20/solid'
 import Link from 'next/link'
-import LeaveCardModal from './LeaveCard/LeaveCardModal'
-import { useState } from 'react'
+import { useSupabase } from '@/context/SupabaseProvider'
+import type { Office, SchoolTypes } from '@/types'
 
 const MainMenu = () => {
-  const [showLeaveCardModal, setShowLeaveCardModal] = useState(false)
+  const { hasAccess } = useFilter()
+  const { systemSchools, systemOffices, session }: { systemSchools: SchoolTypes[], systemOffices: Office[], session: any } = useSupabase()
 
-  const { session, hasAccess } = useFilter()
+  const schools = systemSchools.filter(school => school.head_user_id === session.user.id)
+  const offices = systemOffices.filter(office => office.head_user_id === session.user.id)
+
   return (
     <div className="py-1 relative">
       <div className='px-6 mt-2 text-gray-700 text-xl font-semibold'>Menu</div>
@@ -52,6 +55,20 @@ const MainMenu = () => {
                 </div>
               </div>
             </Link>
+            {
+              (schools.length > 0 || offices.length > 0) &&
+                <Link href='/personnels'>
+                  <div className='app__menu_item'>
+                    <div className='pt-1'>
+                      <UserIcon className='w-8 h-8'/>
+                    </div>
+                    <div>
+                      <div className='app__menu_item_label'>Personnels</div>
+                      <div className='app__menu_item_label_description'>School/Office Personnels under your supervision</div>
+                    </div>
+                  </div>
+                </Link>
+            }
             <Link href={`/profile/${session.user.id}`}>
               <div className='app__menu_item'>
                 <div className='pt-1'>
@@ -63,20 +80,6 @@ const MainMenu = () => {
                 </div>
               </div>
             </Link>
-            {
-              hasAccess('employee_accounts') &&
-                <Link href='/employees'>
-                  <div className='app__menu_item'>
-                    <div className='pt-1'>
-                      <UsersIcon className='w-8 h-8'/>
-                    </div>
-                    <div>
-                      <div className='app__menu_item_label'>Manage Employees</div>
-                      <div className='app__menu_item_label_description'>Employee details and account settings.</div>
-                    </div>
-                  </div>
-                </Link>
-            }
             <Link href='/tracker'>
               <div className='app__menu_item'>
                 <div className='pt-1'>
@@ -90,6 +93,7 @@ const MainMenu = () => {
             </Link>
             {
               (hasAccess('records') || hasAccess('sds') || hasAccess('asds') || hasAccess('certify_leave_credits')) &&
+                <>
                 <Link href='/assignments'>
                   <div className='app__menu_item'>
                     <div className='pt-1'>
@@ -97,10 +101,22 @@ const MainMenu = () => {
                     </div>
                     <div>
                       <div className='app__menu_item_label'>Records & Credits</div>
-                      <div className='app__menu_item_label_description'>Service Records, Assignments, Designations, CTO, Service Credits, Promotions, Plantillas, NOSI/NOSA.</div>
+                      <div className='app__menu_item_label_description'>Employees, Service Records, Assignments, Designations, CTO, Service Credits, Promotions, Plantillas, NOSI/NOSA.</div>
                     </div>
                   </div>
                 </Link>
+                <Link href='/reports'>
+                  <div className='app__menu_item'>
+                    <div className='pt-1'>
+                      <ChartBarIcon className='w-8 h-8'/>
+                    </div>
+                    <div>
+                      <div className='app__menu_item_label'>Reports</div>
+                      <div className='app__menu_item_label_description'>HR Reports</div>
+                    </div>
+                  </div>
+                </Link>
+                </>
             }
             <div className='pt-4'>
               <hr/>
@@ -173,14 +189,6 @@ const MainMenu = () => {
           </div>
         </div>
       </div>
-      {/* Leave Card Modal */}
-      {
-        showLeaveCardModal && (
-          <LeaveCardModal
-            userId={session.user.id}
-            hideModal={() => setShowLeaveCardModal(false)}/>
-        )
-      }
     </div>
   )
 }

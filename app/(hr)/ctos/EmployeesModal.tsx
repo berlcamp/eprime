@@ -328,13 +328,13 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                     </div>
                   </div>
                   <div className="app__modal_footer_left">
-                        <CustomButton
-                          btnType='button'
-                          handleClick={handleAddEmployee}
-                          isDisabled={saving}
-                          title={saving ? 'Saving...' : 'Add'}
-                          containerStyles="app__btn_green"
-                        />
+                    <CustomButton
+                      btnType='button'
+                      handleClick={handleAddEmployee}
+                      isDisabled={saving}
+                      title={saving ? 'Saving...' : 'Add'}
+                      containerStyles="app__btn_green"
+                    />
                   </div>
                 </div>
               </div>

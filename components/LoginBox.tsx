@@ -43,7 +43,7 @@ export default function LoginBox () {
         setSigningIn(false)
       } else {
         router.refresh()
-        router.push('/')
+        router.push('/profile')
       }
     } else {
       setError('This is account is currently inactive.')

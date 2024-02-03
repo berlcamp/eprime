@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 'use client'
 
-import { OneColLayoutLoading, Sidebar, Title, TopBar } from '@/components'
+import { BsCamera } from 'react-icons/bs'
+import { Sidebar, Title, TopBar } from '@/components'
 import LeaveCard from '@/components/LeaveCard/LeaveCard'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import Pds from '@/components/Pds/Pds'
@@ -11,14 +12,16 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import type { DesignationTypes, Employee } from '@/types'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import React, { type ChangeEvent, useEffect, useState } from 'react'
 import Avatar from 'react-avatar'
 import ServiceRecords from '@/components/ServiceRecords/page'
 import ServiceCredits from '@/components/ServiceCredits/ServiceCredits'
 import Promotions from '@/components/Promotions/Promotions'
 import { format } from 'date-fns'
 import Pdf from '@/components/Pdf/Pdf'
+import ProfileDashboard from '@/components/ProfileDashboard'
+import { generateReferenceCode } from '@/utils/text-helper'
 
 export default function Page ({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(false)
@@ -28,10 +31,16 @@ export default function Page ({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams()
   const page = searchParams.get('page')
 
+  // Avatar
+  const [uploading, setUploading] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState('')
+
   // counters
   const [myctoCount, setMyctoCount] = useState('')
 
-  const { supabase } = useSupabase()
+  const { supabase, session } = useSupabase()
+
+  const router = useRouter()
 
   const counter = async () => {
     const today = new Date()
@@ -49,6 +58,68 @@ export default function Page ({ params }: { params: { id: string } }) {
     if (ctoCounter > 0) setMyctoCount(`Expiring soon (${ctoCounter})`)
   }
 
+  const handleUploadPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      try {
+        setUploading(true)
+
+        // delete the existing user avatar on supabase storage
+        const { data: files, error: error3 } = await supabase.storage.from('hrm_public').list(`user_avatar/${userId}`)
+        if (error3) throw new Error(error3.message)
+        if (files.length > 0) {
+          const filesToRemove = files.map((x: { name: string }) => `user_avatar/${userId}/${x.name}`)
+          const { error: error4 } = await supabase.storage.from('hrm_public').remove(filesToRemove)
+          if (error4) throw new Error(error4.message)
+        }
+
+        // upload the new avatar
+        const file = e.target.files?.[0]
+        const newFileName = generateReferenceCode()
+        const customFilePath = `user_avatar/${userId}/${newFileName}.` + (file.name.split('.').pop() as string)
+        const { error } = await supabase
+          .storage
+          .from('hrm_public')
+          .upload(`${customFilePath}`, file, {
+            cacheControl: '3600',
+            upsert: true
+          })
+        if (error) throw new Error(error.message)
+
+        // get the newly uploaded file public path
+        await handleFetchAvatar(customFilePath)
+      } catch (error) {
+        console.error('Error uploading file:', error)
+      } finally {
+        router.refresh()
+        setUploading(false)
+      }
+    }
+  }
+
+  const handleFetchAvatar = async (path: string) => {
+    try {
+      // get the public avatar url
+      const { data, error } = await supabase
+        .storage
+        .from('hrm_public')
+        .getPublicUrl(`${path}`)
+
+      if (error) throw new Error(error.message)
+
+      // update avatar url on hrm_users table
+      const { error2 } = await supabase
+        .from('hrm_users')
+        .update({ avatar_url: data.publicUrl })
+        .eq('id', userId)
+
+      if (error2) throw new Error(error2.message)
+
+      setAvatarUrl(data.publicUrl)
+    } catch (error) {
+      console.error('Error fetching avatar:', error)
+    }
+  }
+
   useEffect(() => {
     const fetchAccountDetails = async () => {
       setLoading(true)
@@ -62,6 +133,7 @@ export default function Page ({ params }: { params: { id: string } }) {
 
         if (error) throw new Error(error.message)
 
+        setAvatarUrl(data?.avatar_url)
         setUserData(data)
         setLoading(false)
       } catch (e) {
@@ -79,15 +151,33 @@ export default function Page ({ params }: { params: { id: string } }) {
   return (
     <>
     <Sidebar>
-      { loading && <OneColLayoutLoading rows={3}/> }
       {
         (!loading && userData) &&
           <>
             <div className="px-2 mt-12">
               <div>
                   {
-                    (userData.avatar_url && userData.avatar_url !== '')
-                      ? <div className='flex items-center justify-center'><Image src={userData.avatar_url} width={100} height={150} alt="alt" className='rounded-full'/></div>
+                    (avatarUrl && avatarUrl !== '')
+                      ? <div className='flex items-center justify-center relative'>
+                          <div className='relative rounded-full overflow-hidden h-32 w-32 border border-gray-300'>
+                            <Image src={avatarUrl} layout="fill" objectFit="cover" alt="profile image" className="rounded"/>
+                          </div>
+                          {
+                            userId === session.user.id &&
+                              <div className="absolute bottom-2 right-12">
+                                <input type="file" onChange={handleUploadPhoto} className="hidden" id="file-input" accept="image/*"/>
+                                {
+                                  !uploading
+                                    ? <div className="text-gray-300 bg-gray-700 rounded-full p-1">
+                                        <label htmlFor="file-input" className='cursor-pointer'>
+                                          <BsCamera className='w-5 h-5'/>
+                                        </label>
+                                      </div>
+                                    : <span className='py-px px-1 text-xs text-white'>Uploading...</span>
+                                }
+                              </div>
+                          }
+                        </div>
                       : <div className='flex items-center justify-center'><Avatar round={false} size="100" name={userData.firstname} className='rounded-full'/></div>
                   }
               </div>
@@ -119,6 +209,13 @@ export default function Page ({ params }: { params: { id: string } }) {
               }
               {/* Menu */}
               <ul className="pt-8 mt-4 space-y-2 border-gray-700">
+                <li>
+                    <Link
+                      href={`/profile/${userId}`}
+                      className={`app__profile_menu_link ${(!page || page === '') ? 'bg-gray-700' : ''}`}>
+                      <span className="flex-1 ml-3 whitespace-nowrap">Dashboard</span>
+                    </Link>
+                </li>
                 <li>
                     <Link
                       href={`/profile/${userId}?page=pds`}
@@ -191,6 +288,10 @@ export default function Page ({ params }: { params: { id: string } }) {
       { loading && <TwoColTableLoading/> }
       <div>
         {
+          (!page || page === '') &&
+            <ProfileDashboard userId={userId}/>
+        }
+        {
           (page && page === 'pds') &&
             <>
               <div className='app__title'>
@@ -214,7 +315,7 @@ export default function Page ({ params }: { params: { id: string } }) {
         }
         {
           (page && page === 'requests') &&
-            <UserRequests userId={userId}/>
+            <UserRequests forDashboard={false} userId={userId}/>
         }
         {
           (page && page === 'ctos') &&

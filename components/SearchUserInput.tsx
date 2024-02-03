@@ -74,7 +74,7 @@ export default function SearchUserInput ({ classNames, isMultiple, clear, nonTea
   }
 
   useEffect(() => {
-    setSelectedItems([])
+    // setSelectedItems([]) //commented this as it will cause problem on edit modals
   }, [clear])
 
   return (

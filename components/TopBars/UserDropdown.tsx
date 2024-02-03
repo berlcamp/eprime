@@ -33,6 +33,7 @@ const UserDropdown = ({ darkMode }: propTypes) => {
     }
 
     router.refresh()
+    router.push('/')
   }
 
   const user: Employee = systemUsers.find((u: { id: string }) => u.id === session.user.id)

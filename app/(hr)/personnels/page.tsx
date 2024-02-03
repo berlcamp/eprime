@@ -1,14 +1,13 @@
 'use client'
 
-import { fetchEmployees } from '@/utils/fetchApi'
+import { fetchPersonnel } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
-import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/20/solid'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, AccountDetails, UserBlock, CustomButton, RecordsSideBar } from '@/components'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, UserBlock } from '@/components'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
 
 // Types
-import type { AssignmentTypes, DesignationTypes, Employee } from '@/types'
+import type { AssignmentTypes, DesignationTypes, Employee, Office, SchoolTypes } from '@/types'
 
 // Redux imports
 import { useSelector, useDispatch } from 'react-redux'
@@ -16,31 +15,34 @@ import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { superAdmins } from '@/constants'
 import Link from 'next/link'
+import { useSupabase } from '@/context/SupabaseProvider'
+import PageNotFound from '@/components/PageNotFound'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [list, setList] = useState<Employee[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
-  const [filterSchool, setFilterSchool] = useState<string>('')
-  const [filterOffice, setFilterOffice] = useState<string>('')
-  const [filterSetupStatus, setFilterSetupStatus] = useState<string>('')
   const [perPageCount, setPerPageCount] = useState<number>(10)
-
-  const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false)
-  const [selectedId, setSelectedId] = useState<string>('')
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { hasAccess, session } = useFilter()
+  const { hasAccess } = useFilter()
+  const { systemSchools, systemOffices, session }: { systemSchools: SchoolTypes[], systemOffices: Office[], session: any } = useSupabase()
+
+  const filteredSchools = systemSchools.filter(s => s.head_user_id === session.user.id)
+  const schoolIds = filteredSchools.map(obj => obj.id)
+
+  const filteredOffices = systemOffices.filter(s => s.head_user_id === session.user.id)
+  const officeIds = filteredOffices.map(obj => obj.id)
 
   const fetchData = async () => {
     setLoading(true)
 
     try {
-      const result = await fetchEmployees({ filterKeyword, filterSchool, filterOffice, filterSetupStatus }, perPageCount, 0)
+      const result = await fetchPersonnel({ filterKeyword }, schoolIds, officeIds, perPageCount, 0)
 
       // update the list in redux
       dispatch(updateList(result.data))
@@ -59,7 +61,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchEmployees({ filterKeyword, filterSchool, filterOffice, filterSetupStatus }, perPageCount, list.length)
+      const result = await fetchPersonnel({ filterKeyword }, schoolIds, officeIds, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -74,11 +76,6 @@ const Page: React.FC = () => {
     }
   }
 
-  const handleViewDetails = (item: Employee) => {
-    setSelectedId(item.id)
-    setShowAccountDetailsModal(true)
-  }
-
   // Update list whenever list in redux updates
   useEffect(() => {
     setList(globallist)
@@ -90,44 +87,33 @@ const Page: React.FC = () => {
     void fetchData()
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, perPageCount, filterSchool, filterSetupStatus, filterOffice])
-
-  const setupCounter = (positionId: number, salaryGrade: string, salaryStep: string) => {
-    let count = 1
-    if (positionId) count++
-    if (salaryGrade !== '' && salaryStep !== '') count++
-
-    return count
-  }
+  }, [filterKeyword, perPageCount])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
   // Check access from permission settings or Super Admins
   if (!hasAccess('employee_accounts') && !superAdmins.includes(session.user.email)) return <Unauthorized/>
 
+  if (schoolIds.length === 0 && officeIds.length === 0) return <PageNotFound/>
+
   return (
     <>
     <Sidebar>
-      <RecordsSideBar/>
+      <></>
     </Sidebar>
     <TopBar/>
     <div className="app__main">
       <div>
           <div className='app__title'>
-            <Title title='Employees'/>
+            <Title title='Personnels'/>
           </div>
 
           {/* Filters */}
           <div className='app__filters'>
             <Filters
               setFilterKeyword={setFilterKeyword}
-              setFilterSchool={setFilterSchool}
-              setFilterOffice={setFilterOffice}
-              setFilterSetupStatus={setFilterSetupStatus}
             />
           </div>
-
-          <div className='app__warning_text'><span className='app__warning_title'>Warning:</span> Accounts with incomplete setup will not be included on Automations such as Leave Card Adjustment, NOSI, NOSA. Use filter &quot;Account Setup&quot; to identify incomplete setup accounts.</div>
 
           {/* Per Page */}
           <PerPage
@@ -144,9 +130,6 @@ const Page: React.FC = () => {
                       <th className="hidden md:table-cell app__th pl-4"></th>
                       <th className="hidden md:table-cell app__th">
                           Employee Name
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Account Setup
                       </th>
                       <th className="hidden md:table-cell app__th">
                           Assignment/Designation
@@ -172,55 +155,10 @@ const Page: React.FC = () => {
                           </Link>
                           <div className='ml-8 font-light'>{item.email}</div>
                           <div className='ml-8 font-light'>{item.position_type}</div>
-                          <div className='ml-8 mt-2 font-light'>
-                            <CustomButton
-                              btnType='button'
-                              title='Account&nbsp;Settings'
-                              handleClick={() => handleViewDetails(item)}
-                              containerStyles="app__btn_blue"
-                            />
-                          </div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">
                             <span className='font-light'>School or Office: {item.hrm_schools?.name} {item.hrm_offices?.name} </span>
-                          </div>
-                        </div>
-                        <div>
-                          <div className="md:hidden app__td">
-                          {
-                            item.position_id && item.salary_grade !== '' && item.salary_step !== ''
-                              ? <>
-                                  <div className='flex items-center space-x-1'>
-                                    <CheckCircleIcon className='w-4 h-4 text-green-500'/><span>Complete</span>
-                                  </div>
-                                </>
-                              : <>
-                                  <div className='font-semibold'><span className='text-red-600'>{setupCounter(item.position_id, item.salary_grade, item.salary_step)}</span> out of <span className='text-green-600'>3</span> Completed</div>
-                                  <div className='space-y-1 mt-2 pl-4'>
-                                    <div className='flex items-center space-x-1'>
-                                      <CheckCircleIcon className='w-4 h-4 text-green-500'/>
-                                      <span>Set Original Assignment</span>
-                                    </div>
-                                    <div className='flex items-center space-x-1'>
-                                      {
-                                        item.position_id
-                                          ? <CheckCircleIcon className='w-4 h-4 text-green-500'/>
-                                          : <XMarkIcon className='w-4 h-4 text-red-500'/>
-                                      }
-                                      <span>Set current Position</span>
-                                    </div>
-                                    <div className='flex items-center space-x-1'>
-                                      {
-                                        item.salary_grade !== '' && item.salary_step !== ''
-                                          ? <CheckCircleIcon className='w-4 h-4 text-green-500'/>
-                                          : <XMarkIcon className='w-4 h-4 text-red-500'/>
-                                      }
-                                      <span>Set current Salary Grade</span>
-                                    </div>
-                                  </div>
-                                </>
-                          }
                           </div>
                         </div>
                         <div>
@@ -238,44 +176,6 @@ const Page: React.FC = () => {
                         {/* End - Mobile View */}
 
                       </th>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <div>
-                          {
-                            item.position_id && item.salary_grade !== '' && item.salary_step !== ''
-                              ? <>
-                                  <div className='flex items-center space-x-1'>
-                                    <CheckCircleIcon className='w-4 h-4 text-green-500'/><span>Complete</span>
-                                  </div>
-                                </>
-                              : <>
-                                  <div className='font-semibold'><span className='text-red-600'>{setupCounter(item.position_id, item.salary_grade, item.salary_step)}</span> out of <span className='text-green-600'>3</span> Completed</div>
-                                  <div className='space-y-1 mt-2 pl-4'>
-                                    <div className='flex items-center space-x-1'>
-                                      <CheckCircleIcon className='w-4 h-4 text-green-500'/>
-                                      <span>Set Original Assignment</span>
-                                    </div>
-                                    <div className='flex items-center space-x-1'>
-                                      {
-                                        item.position_id
-                                          ? <CheckCircleIcon className='w-4 h-4 text-green-500'/>
-                                          : <XMarkIcon className='w-4 h-4 text-red-500'/>
-                                      }
-                                      <span>Set current Position</span>
-                                    </div>
-                                    <div className='flex items-center space-x-1'>
-                                      {
-                                        (item.salary_grade && item.salary_step)
-                                          ? <CheckCircleIcon className='w-4 h-4 text-green-500'/>
-                                          : <XMarkIcon className='w-4 h-4 text-red-500'/>
-                                      }
-                                      <span>Set current Salary Grade</span>
-                                    </div>
-                                  </div>
-                                </>
-                          }
-                        </div>
-                      </td>
                       <td
                         className="hidden md:table-cell app__td space-y-1">
                         <div>
@@ -331,7 +231,7 @@ const Page: React.FC = () => {
                     </tr>
                   ))
                 }
-                { loading && <TableRowLoading cols={5} rows={2}/> }
+                { loading && <TableRowLoading cols={4} rows={2}/> }
               </tbody>
             </table>
             {
@@ -348,15 +248,6 @@ const Page: React.FC = () => {
           }
       </div>
     </div>
-    {/* Account Details Modal */}
-    {
-      showAccountDetailsModal && (
-        <AccountDetails
-          id={selectedId}
-          shouldUpdateRedux={true}
-          hideModal={() => setShowAccountDetailsModal(false)}/>
-      )
-    }
   </>
   )
 }

@@ -165,7 +165,7 @@ export default function Cto ({ userId }: { userId: string }) {
                           <div><span className='app_td_mobile_label'>Particulars:</span> {item.hrm_ctos?.particulars}</div>
                           <div><span className='app_td_mobile_label'>COC:</span> {item.coc}</div>
                           <div><span className='app_td_mobile_label'>Duration: </span>{item.hrm_ctos ? format(new Date(item.hrm_ctos.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.hrm_ctos.to), 'MMM d, yyyy') : ''}</div>
-                          <div><span className='app_td_mobile_label'>Expiration: </span>{format(new Date(item.expiration), 'MMM d, yyyy')}</div>
+                          <div><span className='app_td_mobile_label'>Expiration: </span>{item.expiration && format(new Date(item.expiration), 'MMM d, yyyy')}</div>
                           <div><span className='app_td_mobile_label'>Expiration Status: </span>
                             {
                               item.hrm_ctos?.status === 'Expired'
@@ -202,11 +202,11 @@ export default function Cto ({ userId }: { userId: string }) {
                     </td>
                     <td
                       className="hidden md:table-cell app__td">
-                      <div>{item.hrm_ctos ? format(new Date(item.hrm_ctos.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.hrm_ctos.to), 'MMM d, yyyy') : ''}</div>
+                      <div>{item.hrm_ctos ? format(new Date(item.hrm_ctos?.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.hrm_ctos?.to), 'MMM d, yyyy') : ''}</div>
                     </td>
                     <td
                       className="hidden md:table-cell app__td">
-                      <div>{format(new Date(item.expiration), 'MMM d, yyyy')}</div>
+                      <div>{item.expiration && format(new Date(item.expiration), 'MMM d, yyyy')}</div>
                     </td>
                     <td
                       className="hidden md:table-cell app__td">

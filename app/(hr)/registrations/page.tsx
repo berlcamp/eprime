@@ -2,7 +2,7 @@
 
 import { fetchRegistrations, logError } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, EmployeesSideBar, Title, Unauthorized, CustomButton, DeleteModal } from '@/components'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, CustomButton, DeleteModal, RecordsSideBar } from '@/components'
 import { superAdmins } from '@/constants'
 import Filters from './Filters'
 import { useFilter } from '@/context/FilterContext'
@@ -127,7 +127,7 @@ const Page: React.FC = () => {
   return (
     <>
     <Sidebar>
-      <EmployeesSideBar/>
+      <RecordsSideBar/>
     </Sidebar>
     <TopBar/>
     <div className="app__main">

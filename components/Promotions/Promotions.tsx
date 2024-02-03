@@ -151,7 +151,7 @@ export default function Promotions ({ userId }: { userId: string }) {
                       <div>
                         <div className="md:hidden app__td_mobile">
                           <div><span className='app_td_mobile_label'>New Position:</span> {item.hrm_item?.hrm_position?.name}</div>
-                          <div><span className='app_td_mobile_label'>Effectivity Date: </span>{format(new Date(item.effectivity_date), 'MMM d, yyyy')}</div>
+                          <div><span className='app_td_mobile_label'>Effectivity Date: </span>{item.effectivity_date && format(new Date(item.effectivity_date), 'MMM d, yyyy')}</div>
                           <div>
                             <span className='app_td_mobile_label'>Status: </span>
                             {item.status === 'Approved' && <span className='app__status_container_green'>Approved</span>}
@@ -170,11 +170,11 @@ export default function Promotions ({ userId }: { userId: string }) {
                     </td>
                     <td
                       className="hidden md:table-cell app__td">
-                      <div className='font-semibold'>{item.hrm_item.hrm_position.name}</div>
+                      <div className='font-semibold'>{item.hrm_item?.hrm_position.name}</div>
                     </td>
                     <td
                       className="hidden md:table-cell app__td">
-                      <div>{format(new Date(item.effectivity_date), 'MMM d, yyyy')}</div>
+                      <div>{item.effectivity_date && format(new Date(item.effectivity_date), 'MMM d, yyyy')}</div>
                     </td>
                     <td
                       className="hidden md:table-cell app__td">

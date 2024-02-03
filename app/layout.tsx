@@ -9,7 +9,7 @@ import { Toaster } from 'react-hot-toast'
 import { LandingPage } from '@/components'
 
 import type { Metadata } from 'next'
-import type { Employee, UserAccessTypes } from '@/types'
+import type { Employee, Office, SchoolTypes, UserAccessTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
 
 export const metadata: Metadata = {
@@ -29,6 +29,8 @@ export default async function RootLayout ({ children }: { children: React.ReactN
 
   let sysUsers: Employee[] | null = []
   let sysAccess: UserAccessTypes[] | null = []
+  let sysSchools: SchoolTypes[] | null = []
+  let sysOffices: Office[] | null = []
 
   if (session) {
     try {
@@ -42,22 +44,45 @@ export default async function RootLayout ({ children }: { children: React.ReactN
         throw new Error(error.message)
       }
 
-      sysAccess = systemAccess
-
-      const { data: systemUsers, error: systemUsersError } = await supabase
+      const { data: systemUsers, error: error2 } = await supabase
         .from('hrm_users')
         .select()
         .eq('status', 'Active')
         .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
-      if (systemUsersError) {
-        void logError('root layout hrm users', 'hrm_users', '', systemUsersError.message)
-        throw new Error(systemUsersError.message)
+      if (error2) {
+        void logError('root layout hrm users', 'hrm_users', '', error2.message)
+        throw new Error(error2.message)
       }
 
+      const { data: schools, error: error3 } = await supabase
+        .from('hrm_schools')
+        .select()
+        .not('head_user_id', 'is', null)
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+      if (error3) {
+        void logError('root layout hrm schools', 'hrm_schools', '', error3.message)
+        throw new Error(error3.message)
+      }
+
+      const { data: offices, error: error4 } = await supabase
+        .from('hrm_offices')
+        .select()
+        .not('head_user_id', 'is', null)
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+      if (error4) {
+        void logError('root layout hrm offices', 'hrm_schools', '', error4.message)
+        throw new Error(error4.message)
+      }
+
+      sysAccess = systemAccess
       sysUsers = systemUsers
+      sysSchools = schools
+      sysOffices = offices
     } catch (err) {
-      console.log(err)
+      return 'Something went wrong, please contact the system administrator.'
     }
   }
 
@@ -65,7 +90,7 @@ export default async function RootLayout ({ children }: { children: React.ReactN
     <html lang="en">
       <body className={`relative ${session ? 'bg-white' : 'bg-gray-100'}`}>
 
-        <SupabaseProvider systemAccess={sysAccess} session={session} systemUsers={sysUsers}>
+        <SupabaseProvider systemAccess={sysAccess} session={session} systemUsers={sysUsers} systemSchools={sysSchools} systemOffices={sysOffices}>
             <SupabaseListener serverAccessToken={session?.access_token} />
               {!session && <LandingPage/> }
               {
