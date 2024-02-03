@@ -286,58 +286,61 @@ export default function Page ({ params }: { params: { id: string } }) {
     <TopBar/>
     <div className="app__main">
       { loading && <TwoColTableLoading/> }
-      <div>
-        {
-          (!page || page === '') &&
-            <ProfileDashboard userId={userId}/>
-        }
-        {
-          (page && page === 'pds') &&
-            <>
-              <div className='app__title'>
-                <Title title='Personal Data Sheet'/>
-              </div>
-              <div className='mt-4 mx-2'>
-                <Pds userId={userId}/>
-              </div>
-            </>
-        }
-        {
-          (page && page === 'leavecard') &&
-            <>
-              <div className='app__title'>
-                <Title title='Leave Card'/>
-              </div>
-              <div className='mt-4 mx-2'>
-                <LeaveCard userId={userId}/>
-              </div>
-            </>
-        }
-        {
-          (page && page === 'requests') &&
-            <UserRequests forDashboard={false} userId={userId}/>
-        }
-        {
-          (page && page === 'ctos') &&
-            <Cto userId={userId}/>
-        }
-        {
-          (page && page === 'servicecredits') &&
-            <ServiceCredits userId={userId}/>
-        }
-        {
-          (page && page === 'servicerecords') &&
-            <ServiceRecords userId={userId}/>
-        }
-        {
-          (page && page === 'promotions') &&
-            <Promotions userId={userId}/>
-        }
-        {
-          (page && page === 'pdf') &&
-            <Pdf userId={userId}/>
-        }
-      </div>
+      {
+        !loading &&
+          <div>
+            {
+              (!page || page === '') &&
+                <ProfileDashboard userId={userId}/>
+            }
+            {
+              (page && page === 'pds') &&
+                <>
+                  <div className='app__title'>
+                    <Title title='Personal Data Sheet'/>
+                  </div>
+                  <div className='mt-4 mx-2'>
+                    <Pds userId={userId}/>
+                  </div>
+                </>
+            }
+            {
+              (page && page === 'leavecard') &&
+                <>
+                  <div className='app__title'>
+                    <Title title='Leave Card'/>
+                  </div>
+                  <div className='mt-4 mx-2'>
+                    <LeaveCard userId={userId}/>
+                  </div>
+                </>
+            }
+            {
+              (page && page === 'requests') &&
+                <UserRequests forDashboard={false} userId={userId}/>
+            }
+            {
+              (page && page === 'ctos') &&
+                <Cto userId={userId}/>
+            }
+            {
+              (page && page === 'servicecredits') &&
+                <ServiceCredits userId={userId}/>
+            }
+            {
+              (page && page === 'servicerecords') &&
+                <ServiceRecords userId={userId}/>
+            }
+            {
+              (page && page === 'promotions') &&
+                <Promotions userId={userId}/>
+            }
+            {
+              (page && page === 'pdf') &&
+                <Pdf userId={userId}/>
+            }
+          </div>
+      }
     </div>
     </>
   )
