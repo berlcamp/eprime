@@ -2,9 +2,8 @@
 
 import { fetchPersonnel } from '@/utils/fetchApi'
 import React, { useEffect, useState } from 'react'
-import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, Unauthorized, UserBlock } from '@/components'
+import { Sidebar, PerPage, TopBar, TableRowLoading, ShowMore, Title, UserBlock } from '@/components'
 import Filters from './Filters'
-import { useFilter } from '@/context/FilterContext'
 
 // Types
 import type { AssignmentTypes, DesignationTypes, Employee, Office, SchoolTypes } from '@/types'
@@ -13,10 +12,10 @@ import type { AssignmentTypes, DesignationTypes, Employee, Office, SchoolTypes }
 import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { superAdmins } from '@/constants'
 import Link from 'next/link'
 import { useSupabase } from '@/context/SupabaseProvider'
 import PageNotFound from '@/components/PageNotFound'
+import { UsersIcon } from '@heroicons/react/20/solid'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -29,7 +28,6 @@ const Page: React.FC = () => {
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { hasAccess } = useFilter()
   const { systemSchools, systemOffices, session }: { systemSchools: SchoolTypes[], systemOffices: Office[], session: any } = useSupabase()
 
   const filteredSchools = systemSchools.filter(s => s.head_user_id === session.user.id)
@@ -91,15 +89,19 @@ const Page: React.FC = () => {
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
-  // Check access from permission settings or Super Admins
-  if (!hasAccess('employee_accounts') && !superAdmins.includes(session.user.email)) return <Unauthorized/>
-
   if (schoolIds.length === 0 && officeIds.length === 0) return <PageNotFound/>
 
   return (
     <>
     <Sidebar>
-      <></>
+      <ul className="pt-8 mt-4 space-y-2 border-gray-700">
+        <li>
+          <div className='flex items-center text-gray-500 items-centers space-x-1 px-2'>
+            <UsersIcon className='w-4 h-4'/>
+            <span>Personnels</span>
+          </div>
+        </li>
+      </ul>
     </Sidebar>
     <TopBar/>
     <div className="app__main">

@@ -69,17 +69,6 @@ const MainMenu = () => {
                   </div>
                 </Link>
             }
-            <Link href={`/profile/${session.user.id}`}>
-              <div className='app__menu_item'>
-                <div className='pt-1'>
-                  <UserIcon className='w-8 h-8'/>
-                </div>
-                <div>
-                  <div className='app__menu_item_label'>My Profile</div>
-                  <div className='app__menu_item_label_description'>Personal Records and Requests</div>
-                </div>
-              </div>
-            </Link>
             <Link href='/tracker'>
               <div className='app__menu_item'>
                 <div className='pt-1'>
@@ -94,7 +83,7 @@ const MainMenu = () => {
             {
               (hasAccess('records') || hasAccess('sds') || hasAccess('asds') || hasAccess('certify_leave_credits')) &&
                 <>
-                <Link href='/assignments'>
+                <Link href='/employees'>
                   <div className='app__menu_item'>
                     <div className='pt-1'>
                       <UsersIcon className='w-8 h-8'/>
