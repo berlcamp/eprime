@@ -6,8 +6,8 @@ import { type Employee } from '@/types'
 import { logError } from '@/utils/fetchApi'
 
 import { RegisteredTemplate } from '@/components/Emails/RegisteredTemplate'
-import { Resend } from 'resend'
 import type * as React from 'react'
+import { Resend } from 'resend'
 
 const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_KEY)
 
@@ -138,7 +138,7 @@ export async function POST (req: NextRequest) {
     }
 
     const { error: error2 } = await resend.emails.send({
-      from: 'DepEd Bayugan (No-reply) <noreply@hrmprime.com>',
+      from: 'DepEd Bayugan (No-reply) <noreply@eprime.sortbrite.com>',
       to: [item.email],
       subject: 'PRIME-HRM Registration Approved',
       react: RegisteredTemplate({ firstname: item.firstname, middlename: item.middlename, lastname: item.lastname }) as React.ReactElement
