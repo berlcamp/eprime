@@ -8,16 +8,13 @@ module.exports = {
     'standard-with-typescript',
     'next/core-web-vitals'
   ],
-  overrides: [
-  ],
+  overrides: [],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
-    project: ['./tsconfig.json'], // Specify it only for TypeScript files
+    project: ['./tsconfig.json'] // Specify it only for TypeScript files
   },
-  plugins: [
-    'react'
-  ],
+  plugins: ['react'],
   settings: {
     react: {
       version: '18'
@@ -29,11 +26,16 @@ module.exports = {
     '@typescript-eslint/strict-boolean-expressions': 'off',
     '@typescript-eslint/promise-function-async': 'off',
     'react-hooks/exhaustive-deps': 'off',
+    'multiline-ternary': 'off',
+    '@typescript-eslint/space-before-function-paren': ['off'],
     '@typescript-eslint/no-confusing-void-expression': 'off',
-    "@typescript-eslint/no-misused-promises": [2, {
-      "checksVoidReturn": {
-        "attributes": false
+    '@typescript-eslint/no-misused-promises': [
+      2,
+      {
+        checksVoidReturn: {
+          attributes: false
+        }
       }
-    }]
+    ]
   }
 }
