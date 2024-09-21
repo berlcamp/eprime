@@ -306,7 +306,7 @@ const Page: React.FC = () => {
               </tbody>
             </table>
             {!loading && isDataEmpty && (
-              <div className="app__norecordsfound">No records found</div>
+              <div className="app__norecordsfound">No records found.</div>
             )}
           </div>
 
