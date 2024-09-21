@@ -27,6 +27,8 @@ module.exports = {
     '@typescript-eslint/promise-function-async': 'off',
     'react-hooks/exhaustive-deps': 'off',
     'multiline-ternary': 'off',
+    '@typescript-eslint/member-delimiter-style': 'off',
+    '@typescript-eslint/indent': 'off',
     '@typescript-eslint/space-before-function-paren': ['off'],
     '@typescript-eslint/no-confusing-void-expression': 'off',
     '@typescript-eslint/no-misused-promises': [

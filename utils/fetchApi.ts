@@ -1,18 +1,36 @@
-import { createBrowserClient } from '@supabase/ssr'
 import { fullTextQuery } from '@/utils/text-helper'
+import { createBrowserClient } from '@supabase/ssr'
 import { format } from 'date-fns'
 
 // types
-import type { AssignmentTypes, DesignationTypes, excludedItemsTypes, Employee, CtoTypes, FlowListTypes, FollowersTypes, ItemTypes } from '@/types'
+import type {
+  AssignmentTypes,
+  CtoTypes,
+  DesignationTypes,
+  Employee,
+  excludedItemsTypes,
+  FlowListTypes,
+  FollowersTypes,
+  ItemTypes
+} from '@/types'
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
-export async function fetchDistricts (filterKeyword: string, perPageCount: number, rangeFrom: number) {
+export async function fetchDistricts(
+  filterKeyword: string,
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_districts')
-      .select('*,hrm_users:head_user_id(firstname,middlename,lastname)', { count: 'exact' })
+      .select('*,hrm_users:head_user_id(firstname,middlename,lastname)', {
+        count: 'exact'
+      })
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Full text search
@@ -44,11 +62,17 @@ export async function fetchDistricts (filterKeyword: string, perPageCount: numbe
   }
 }
 
-export async function fetchOffices (filterKeyword: string, perPageCount: number, rangeFrom: number) {
+export async function fetchOffices(
+  filterKeyword: string,
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_offices')
-      .select('*,hrm_users:head_user_id(firstname,middlename,lastname)', { count: 'exact' })
+      .select('*,hrm_users:head_user_id(firstname,middlename,lastname)', {
+        count: 'exact'
+      })
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Full text search
@@ -80,7 +104,11 @@ export async function fetchOffices (filterKeyword: string, perPageCount: number,
   }
 }
 
-export async function fetchPositions (filterKeyword: string, perPageCount: number, rangeFrom: number) {
+export async function fetchPositions(
+  filterKeyword: string,
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_positions')
@@ -117,11 +145,22 @@ export async function fetchPositions (filterKeyword: string, perPageCount: numbe
   }
 }
 
-export async function fetchSchools (filters: { filterKeyword?: string, filterType?: string, filterDistrictId?: string }, perPageCount: number, rangeFrom: number) {
+export async function fetchSchools(
+  filters: {
+    filterKeyword?: string
+    filterType?: string
+    filterDistrictId?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_schools')
-      .select('*,hrm_users:head_user_id(id,firstname,middlename,lastname),hrm_districts(name)', { count: 'exact' })
+      .select(
+        '*,hrm_users:head_user_id(id,firstname,middlename,lastname),hrm_districts(name)',
+        { count: 'exact' }
+      )
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Full text search
@@ -163,11 +202,23 @@ export async function fetchSchools (filters: { filterKeyword?: string, filterTyp
   }
 }
 
-export async function fetchEmployees (filters: { filterKeyword?: string, filterSchool?: string, filterOffice?: string, filterSetupStatus?: string }, perPageCount: number, rangeFrom: number) {
+export async function fetchEmployees(
+  filters: {
+    filterKeyword?: string
+    filterSchool?: string
+    filterOffice?: string
+    filterSetupStatus?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_users')
-      .select('*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))', { count: 'exact' })
+      .select(
+        '*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))',
+        { count: 'exact' }
+      )
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Search match
@@ -195,7 +246,9 @@ export async function fetchEmployees (filters: { filterKeyword?: string, filterS
         query = query.neq('salary_step', '')
       }
       if (filters.filterSetupStatus === 'Incomplete') {
-        query = query.or('salary_grade.eq.\'\',salary_step.eq.\'\',position_id.is.null')
+        query = query.or(
+          "salary_grade.eq.'',salary_step.eq.'',position_id.is.null"
+        )
       }
     }
 
@@ -224,20 +277,38 @@ export async function fetchEmployees (filters: { filterKeyword?: string, filterS
   }
 }
 
-export async function fetchPersonnel (filters: { filterKeyword?: string }, schoolIds: string[], officeIds: string[], perPageCount: number, rangeFrom: number) {
+export async function fetchPersonnel(
+  filters: { filterKeyword?: string },
+  schoolIds: string[],
+  officeIds: string[],
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_users')
-      .select('*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))', { count: 'exact' })
+      .select(
+        '*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))',
+        { count: 'exact' }
+      )
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
-    if (schoolIds.length > 0) {
-      console.log('schoolIds', schoolIds)
-      query = query.in('school_id', schoolIds)
-    }
+    // if (schoolIds.length > 0) {
+    //   query = query.in('school_id', schoolIds)
+    // }
 
-    if (officeIds.length > 0) {
-      console.log('officeIds', officeIds)
+    // if (officeIds.length > 0) {
+    //   query = query.in('office_id', officeIds)
+    // }
+
+    if (schoolIds.length > 0 && officeIds.length > 0) {
+      let q1 = schoolIds.map((id) => `school_id.eq.${id}`).join(',')
+      let q2 = officeIds.map((id) => `office_id.eq.${id}`).join(',')
+      let combinedQuery = [q1, q2].filter(Boolean).join(',')
+      query = query.or(combinedQuery)
+    } else if (schoolIds.length > 0) {
+      query = query.in('school_id', schoolIds)
+    } else if (officeIds.length > 0) {
       query = query.in('office_id', officeIds)
     }
 
@@ -260,6 +331,8 @@ export async function fetchPersonnel (filters: { filterKeyword?: string }, schoo
 
     const { data: userData, error, count } = await query
 
+    console.log('user data', userData)
+
     if (error) {
       throw new Error(error.message)
     }
@@ -273,17 +346,33 @@ export async function fetchPersonnel (filters: { filterKeyword?: string }, schoo
   }
 }
 
-export async function fetchAssignments (filters: { filterKeyword?: string, filterSchool?: string, filterOffice?: string, filterStatus?: string }, perPageCount: number, rangeFrom: number) {
+export async function fetchAssignments(
+  filters: {
+    filterKeyword?: string
+    filterSchool?: string
+    filterOffice?: string
+    filterStatus?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_assignments')
-      .select('*, hrm_users:hrm_user_id(firstname,middlename,lastname,avatar_url),hrm_schools:school_id(name),hrm_offices:office_id(name),hrm_positions:position_id(name)', { count: 'exact' })
+      .select(
+        '*, hrm_users:hrm_user_id(firstname,middlename,lastname,avatar_url),hrm_schools:school_id(name),hrm_offices:office_id(name),hrm_positions:position_id(name)',
+        { count: 'exact' }
+      )
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Search match
     if (filters.filterKeyword && filters.filterKeyword !== '') {
       // Search on hrm_users table first
-      const users = await fetchEmployees({ filterKeyword: filters.filterKeyword }, 300, 0)
+      const users = await fetchEmployees(
+        { filterKeyword: filters.filterKeyword },
+        300,
+        0
+      )
 
       const userIds: string[] = []
       users.data.forEach((item) => {
@@ -295,7 +384,9 @@ export async function fetchAssignments (filters: { filterKeyword?: string, filte
         userIdsOrStatement = `hrm_user_id.in.(${userIds.join(',')}),` // append this to main query below
       }
 
-      query = query.or(`${userIdsOrStatement}reference_code.eq.${filters.filterKeyword}`)
+      query = query.or(
+        `${userIdsOrStatement}reference_code.eq.${filters.filterKeyword}`
+      )
     }
 
     // filter school
@@ -338,11 +429,24 @@ export async function fetchAssignments (filters: { filterKeyword?: string, filte
   }
 }
 
-export async function fetchItems (filters: { filterKeyword?: string, filterSchool?: string, filterPosition?: string, filterStatus?: string, filterUser?: string }, perPageCount: number, rangeFrom: number) {
+export async function fetchItems(
+  filters: {
+    filterKeyword?: string
+    filterSchool?: string
+    filterPosition?: string
+    filterStatus?: string
+    filterUser?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_items')
-      .select('*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_school:school_id(name),implementing_unit:implementing_unit_id(name),hrm_position:position_id(name)', { count: 'exact' })
+      .select(
+        '*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_school:school_id(name),implementing_unit:implementing_unit_id(name),hrm_position:position_id(name)',
+        { count: 'exact' }
+      )
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Item Number
@@ -401,11 +505,19 @@ export async function fetchItems (filters: { filterKeyword?: string, filterSchoo
   }
 }
 
-export async function fetchPromotions (filters: { filterPosition?: string, filterUser?: string }, filterUrl: string | null, perPageCount: number, rangeFrom: number) {
+export async function fetchPromotions(
+  filters: { filterPosition?: string; filterUser?: string },
+  filterUrl: string | null,
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_promotions')
-      .select('*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_item:item_id(item_number,hrm_position:position_id(name))', { count: 'exact' })
+      .select(
+        '*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_item:item_id(item_number,hrm_position:position_id(name))',
+        { count: 'exact' }
+      )
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // filter position
@@ -448,11 +560,18 @@ export async function fetchPromotions (filters: { filterPosition?: string, filte
   }
 }
 
-export async function fetchMyPromotions (userId: string, perPageCount: number, rangeFrom: number) {
+export async function fetchMyPromotions(
+  userId: string,
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_promotions')
-      .select('*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_item:item_id(item_number,hrm_position:position_id(name))', { count: 'exact' })
+      .select(
+        '*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_item:item_id(item_number,hrm_position:position_id(name))',
+        { count: 'exact' }
+      )
       .eq('user_id', userId)
 
     // Per Page from context
@@ -478,17 +597,33 @@ export async function fetchMyPromotions (userId: string, perPageCount: number, r
   }
 }
 
-export async function fetchDesignations (filters: { filterKeyword?: string, filterSchool?: string, filterOffice?: string, filterStatus?: string }, perPageCount: number, rangeFrom: number) {
+export async function fetchDesignations(
+  filters: {
+    filterKeyword?: string
+    filterSchool?: string
+    filterOffice?: string
+    filterStatus?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_designations')
-      .select('*, hrm_users:hrm_user_id(firstname,middlename,lastname,avatar_url,position_type),hrm_schools:school_id(name),hrm_offices:office_id(name),hrm_positions:position_id(name)', { count: 'exact' })
+      .select(
+        '*, hrm_users:hrm_user_id(firstname,middlename,lastname,avatar_url,position_type),hrm_schools:school_id(name),hrm_offices:office_id(name),hrm_positions:position_id(name)',
+        { count: 'exact' }
+      )
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Search match
     if (filters.filterKeyword && filters.filterKeyword !== '') {
       // Search on hrm_users table first
-      const users = await fetchEmployees({ filterKeyword: filters.filterKeyword }, 300, 0)
+      const users = await fetchEmployees(
+        { filterKeyword: filters.filterKeyword },
+        300,
+        0
+      )
 
       const userIds: string[] = []
       users.data.forEach((item) => {
@@ -500,7 +635,9 @@ export async function fetchDesignations (filters: { filterKeyword?: string, filt
         userIdsOrStatement = `hrm_user_id.in.(${userIds.join(',')}),` // append this to main query below
       }
 
-      query = query.or(`${userIdsOrStatement}reference_code.eq.${filters.filterKeyword}`)
+      query = query.or(
+        `${userIdsOrStatement}reference_code.eq.${filters.filterKeyword}`
+      )
     }
 
     // filter school
@@ -543,7 +680,15 @@ export async function fetchDesignations (filters: { filterKeyword?: string, filt
   }
 }
 
-export async function fetchRegistrations (filters: { filterKeyword?: string, filterSchool?: string, filterOffice?: string }, perPageCount: number, rangeFrom: number) {
+export async function fetchRegistrations(
+  filters: {
+    filterKeyword?: string
+    filterSchool?: string
+    filterOffice?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_registrations')
@@ -553,7 +698,9 @@ export async function fetchRegistrations (filters: { filterKeyword?: string, fil
 
     // Search match
     if (filters.filterKeyword && filters.filterKeyword !== '') {
-      query = query.or(`firstname.ilike.%${filters.filterKeyword}%,middlename.ilike.%${filters.filterKeyword}%,lastname.ilike.%${filters.filterKeyword}%`)
+      query = query.or(
+        `firstname.ilike.%${filters.filterKeyword}%,middlename.ilike.%${filters.filterKeyword}%,lastname.ilike.%${filters.filterKeyword}%`
+      )
     }
 
     // filter school
@@ -591,7 +738,10 @@ export async function fetchRegistrations (filters: { filterKeyword?: string, fil
   }
 }
 
-export async function searchActiveEmployees (searchTerm: string, excludedItems: excludedItemsTypes[]) {
+export async function searchActiveEmployees(
+  searchTerm: string,
+  excludedItems: excludedItemsTypes[]
+) {
   let query = supabase
     .from('hrm_users')
     .select()
@@ -599,10 +749,12 @@ export async function searchActiveEmployees (searchTerm: string, excludedItems: 
     .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
   // Search match
-  query = query.or(`firstname.ilike.%${searchTerm}%,middlename.ilike.%${searchTerm}%,lastname.ilike.%${searchTerm}%`)
+  query = query.or(
+    `firstname.ilike.%${searchTerm}%,middlename.ilike.%${searchTerm}%,lastname.ilike.%${searchTerm}%`
+  )
 
   // Excluded already selected items
-  excludedItems.forEach(item => {
+  excludedItems.forEach((item) => {
     query = query.neq('id', item.id)
   })
 
@@ -616,7 +768,12 @@ export async function searchActiveEmployees (searchTerm: string, excludedItems: 
   return data ?? []
 }
 
-export async function fetchCtos (filters: { filterKeyword?: string, filterStatus?: string }, filterUrl: string | null, perPageCount: number, rangeFrom: number) {
+export async function fetchCtos(
+  filters: { filterKeyword?: string; filterStatus?: string },
+  filterUrl: string | null,
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_ctos')
@@ -668,11 +825,18 @@ export async function fetchCtos (filters: { filterKeyword?: string, filterStatus
   }
 }
 
-export async function fetchMyCtos (filters: { filterKeyword?: string, userId: string }, perPageCount: number, rangeFrom: number) {
+export async function fetchMyCtos(
+  filters: { filterKeyword?: string; userId: string },
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_cto_users')
-      .select('*, hrm_ctos:cto_id(*), hrm_users:hrm_user_id(firstname,middlename,lastname)', { count: 'exact' })
+      .select(
+        '*, hrm_ctos:cto_id(*), hrm_users:hrm_user_id(firstname,middlename,lastname)',
+        { count: 'exact' }
+      )
       .eq('hrm_user_id', filters.userId)
 
     // Search match
@@ -703,11 +867,17 @@ export async function fetchMyCtos (filters: { filterKeyword?: string, userId: st
   }
 }
 
-export async function fetchServiceRecords (userId: string, perPageCount: number, rangeFrom: number) {
+export async function fetchServiceRecords(
+  userId: string,
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_service_records')
-      .select('*,hrm_user:created_by(id,firstname,middlename,lastname)', { count: 'exact' })
+      .select('*,hrm_user:created_by(id,firstname,middlename,lastname)', {
+        count: 'exact'
+      })
       .eq('user_id', userId)
 
     // Per Page from context
@@ -732,7 +902,12 @@ export async function fetchServiceRecords (userId: string, perPageCount: number,
   }
 }
 
-export async function fetchServiceCredits (filters: { filterKeyword?: string }, filterUrl: string | null, perPageCount: number, rangeFrom: number) {
+export async function fetchServiceCredits(
+  filters: { filterKeyword?: string },
+  filterUrl: string | null,
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_service_credits')
@@ -774,11 +949,18 @@ export async function fetchServiceCredits (filters: { filterKeyword?: string }, 
   }
 }
 
-export async function fetchMyServiceCredits (filters: { filterKeyword?: string, userId: string }, perPageCount: number, rangeFrom: number) {
+export async function fetchMyServiceCredits(
+  filters: { filterKeyword?: string; userId: string },
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_service_credit_users')
-      .select('*, hrm_service_credits:service_credit_id(*), hrm_users:hrm_user_id(firstname,middlename,lastname)', { count: 'exact' })
+      .select(
+        '*, hrm_service_credits:service_credit_id(*), hrm_users:hrm_user_id(firstname,middlename,lastname)',
+        { count: 'exact' }
+      )
       .eq('hrm_user_id', filters.userId)
 
     // Search match
@@ -809,11 +991,18 @@ export async function fetchMyServiceCredits (filters: { filterKeyword?: string, 
   }
 }
 
-export async function fetchMyLeaveRequests (filters: { filterKeyword?: string, filterStatus?: string }, perPageCount: number, rangeFrom: number) {
+export async function fetchMyLeaveRequests(
+  filters: { filterKeyword?: string; filterStatus?: string },
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_leave_requests')
-      .select('*, requester:requester_id(*), recommending:recommending_id(id,firstname,middlename,lastname), hr:hr_id(id,firstname,middlename,lastname), approver:approver_id(id,firstname,middlename,lastname)', { count: 'exact' })
+      .select(
+        '*, requester:requester_id(*), recommending:recommending_id(id,firstname,middlename,lastname), hr:hr_id(id,firstname,middlename,lastname), approver:approver_id(id,firstname,middlename,lastname)',
+        { count: 'exact' }
+      )
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Search match
@@ -844,23 +1033,24 @@ export async function fetchMyLeaveRequests (filters: { filterKeyword?: string, f
   }
 }
 
-export async function logError (transaction: string, table: string, data: string, error: string) {
-  await supabase
-    .from('error_logs')
-    .insert({
-      system: 'hrm',
-      transaction,
-      table,
-      data,
-      error
-    })
+export async function logError(
+  transaction: string,
+  table: string,
+  data: string,
+  error: string
+) {
+  await supabase.from('error_logs').insert({
+    system: 'hrm',
+    transaction,
+    table,
+    data,
+    error
+  })
 }
 
-export async function fetchErrorLogs (perPageCount: number, rangeFrom: number) {
+export async function fetchErrorLogs(perPageCount: number, rangeFrom: number) {
   try {
-    let query = supabase
-      .from('error_logs')
-      .select('*', { count: 'exact' })
+    let query = supabase.from('error_logs').select('*', { count: 'exact' })
 
     // Per Page from context
     const from = rangeFrom
@@ -892,7 +1082,13 @@ export interface DocumentFilterTypes {
   filterRequester?: string
 }
 
-export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: string | null, userId: string, perPageCount: number, rangeFrom: number) {
+export async function fetchDocuments(
+  filters: DocumentFilterTypes,
+  filterUrl: string | null,
+  userId: string,
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     // Get Department ID within Tracker Flow
     const { data: trackerFlow } = await supabase
@@ -907,11 +1103,17 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
 
     let query = supabase
       .from('hrm_request_trackers')
-      .select('*, hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,avatar_url,position_type),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)', { count: 'exact' })
+      .select(
+        '*, hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,avatar_url,position_type),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+        { count: 'exact' }
+      )
       .in('id', trackerIds)
 
     // Full text search
-    if (typeof filters.filterKeyword !== 'undefined' && filters.filterKeyword.trim() !== '') {
+    if (
+      typeof filters.filterKeyword !== 'undefined' &&
+      filters.filterKeyword.trim() !== ''
+    ) {
       // query = query.or(`agency.ilike.%${filters.filterKeyword}%,particulars.ilike.%${filters.filterKeyword}%,name.ilike.%${filters.filterKeyword}%,routing_slip_no.ilike.%${filters.filterKeyword}%,amount.ilike.%${filters.filterKeyword}%`)
       query = query.eq('reference_code', filters.filterKeyword.trim())
       // fulltext search from trackersearch posgres function
@@ -919,16 +1121,25 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
     }
 
     // Filter type
-    if (typeof filters.filterType !== 'undefined' && filters.filterType !== '') {
+    if (
+      typeof filters.filterType !== 'undefined' &&
+      filters.filterType !== ''
+    ) {
       query = query.eq('type', filters.filterType)
     }
 
-    if (typeof filters.filterStatus !== 'undefined' && filters.filterStatus !== '') {
+    if (
+      typeof filters.filterStatus !== 'undefined' &&
+      filters.filterStatus !== ''
+    ) {
       query = query.eq('current_status', filters.filterStatus)
     }
 
     // Filter Requester
-    if (typeof filters.filterRequester !== 'undefined' && filters.filterRequester !== '') {
+    if (
+      typeof filters.filterRequester !== 'undefined' &&
+      filters.filterRequester !== ''
+    ) {
       query = query.eq('created_by', filters.filterRequester)
     }
 
@@ -941,7 +1152,7 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
         .eq('user_id', userId)
 
       if (data) {
-        data.forEach(d => {
+        data.forEach((d) => {
           docIds.push(d.tracker_id)
         })
 
@@ -983,11 +1194,19 @@ export async function fetchDocuments (filters: DocumentFilterTypes, filterUrl: s
   }
 }
 
-export async function fetchLeaveCards (userId: string, type: string, perPageCount: number, rangeFrom: number) {
+export async function fetchLeaveCards(
+  userId: string,
+  type: string,
+  perPageCount: number,
+  rangeFrom: number
+) {
   try {
     let query = supabase
       .from('hrm_leave_cards')
-      .select('*, hrm_user:user_id(id,firstname,lastname,middlename,avatar_url)', { count: 'exact' })
+      .select(
+        '*, hrm_user:user_id(id,firstname,lastname,middlename,avatar_url)',
+        { count: 'exact' }
+      )
       .eq('user_id', userId)
       .order('id', { ascending: false })
 
@@ -1017,7 +1236,7 @@ export async function fetchLeaveCards (userId: string, type: string, perPageCoun
   }
 }
 
-export async function handleConvertEmployeeToNonTeaching (userId: string) {
+export async function handleConvertEmployeeToNonTeaching(userId: string) {
   // convert employee to non-teaching
   const { error } = await supabase
     .from('hrm_users')
@@ -1025,7 +1244,12 @@ export async function handleConvertEmployeeToNonTeaching (userId: string) {
     .eq('id', userId)
 
   if (error) {
-    void logError('Update employee to non-teaching', 'hrm_users', '', error.message)
+    void logError(
+      'Update employee to non-teaching',
+      'hrm_users',
+      '',
+      error.message
+    )
   }
 
   // Count Service Credits balance if teaching
@@ -1038,33 +1262,38 @@ export async function handleConvertEmployeeToNonTeaching (userId: string) {
     const vlsl = (30 * Number(scBalance)) / 69
 
     // insert the result into leave cards table
-    const newData = [{
-      type: 'Sick Leave',
-      balance: (vlsl / 2).toFixed(3),
-      user_id: userId,
-      remarks: 'Converted Service Credit to VL/SL',
-      particulars: 'Sick Leave Adjustment'
-    },
-    {
-      type: 'Vacation Leave',
-      balance: (vlsl / 2).toFixed(3),
-      user_id: userId,
-      particulars: 'Vacation Leave Adjustment',
-      remarks: 'Converted Service Credit to VL/SL'
-    }]
+    const newData = [
+      {
+        type: 'Sick Leave',
+        balance: (vlsl / 2).toFixed(3),
+        user_id: userId,
+        remarks: 'Converted Service Credit to VL/SL',
+        particulars: 'Sick Leave Adjustment'
+      },
+      {
+        type: 'Vacation Leave',
+        balance: (vlsl / 2).toFixed(3),
+        user_id: userId,
+        particulars: 'Vacation Leave Adjustment',
+        remarks: 'Converted Service Credit to VL/SL'
+      }
+    ]
 
-    const { error } = await supabase
-      .from('hrm_leave_cards')
-      .insert(newData)
+    const { error } = await supabase.from('hrm_leave_cards').insert(newData)
 
     if (error) {
-      void logError('Create Leave Card Adjustment from convertion formula', 'hrm_leave_cards', JSON.stringify(newData), error.message)
+      void logError(
+        'Create Leave Card Adjustment from convertion formula',
+        'hrm_leave_cards',
+        JSON.stringify(newData),
+        error.message
+      )
       throw new Error(error.message)
     }
   }
 }
 
-export async function handleConvertEmployeeToTeaching (userId: string) {
+export async function handleConvertEmployeeToTeaching(userId: string) {
   // convert employee to non-teaching
   const { error } = await supabase
     .from('hrm_users')
@@ -1078,8 +1307,8 @@ export async function handleConvertEmployeeToTeaching (userId: string) {
   // Count VL and SL balance if non-teaching
   const result = await fetchLeaveCards(userId, '', 500, 0)
   if (result.count && result.count > 0) {
-    const slList = result.data.filter(item => item.type === 'Sick Leave')
-    const vlList = result.data.filter(item => item.type === 'Vacation Leave')
+    const slList = result.data.filter((item) => item.type === 'Sick Leave')
+    const vlList = result.data.filter((item) => item.type === 'Vacation Leave')
 
     // first index of array should be the latest and updated balance
     const sl = slList.length > 0 ? slList[0].balance : 0
@@ -1097,12 +1326,15 @@ export async function handleConvertEmployeeToTeaching (userId: string) {
       particulars: 'Service Credit Adjustment'
     }
 
-    const { error } = await supabase
-      .from('hrm_leave_cards')
-      .insert(newData)
+    const { error } = await supabase.from('hrm_leave_cards').insert(newData)
 
     if (error) {
-      void logError('Create Leave Card Adjustment from convertion formula', 'hrm_leave_cards', JSON.stringify(newData), error.message)
+      void logError(
+        'Create Leave Card Adjustment from convertion formula',
+        'hrm_leave_cards',
+        JSON.stringify(newData),
+        error.message
+      )
       throw new Error(error.message)
     }
   }
