@@ -153,7 +153,7 @@ const Page: React.FC = () => {
           <li>
             <div className="flex items-center text-gray-500 items-centers space-x-1 px-2">
               <UsersIcon className="w-4 h-4" />
-              <span>Personnels</span>
+              <span>Personnel</span>
             </div>
           </li>
         </ul>
@@ -162,7 +162,7 @@ const Page: React.FC = () => {
       <div className="app__main">
         <div>
           <div className="app__title">
-            <Title title="Personnels" />
+            <Title title="Personnel" />
           </div>
 
           {/* Filters */}
@@ -306,7 +306,7 @@ const Page: React.FC = () => {
               </tbody>
             </table>
             {!loading && isDataEmpty && (
-              <div className="app__norecordsfound">No records found...</div>
+              <div className="app__norecordsfound">No records found</div>
             )}
           </div>
 

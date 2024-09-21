@@ -109,7 +109,7 @@ const MainMenu = () => {
                     <UserIcon className="w-8 h-8" />
                   </div>
                   <div>
-                    <div className="app__menu_item_label">Personnels</div>
+                    <div className="app__menu_item_label">Personnel</div>
                     <div className="app__menu_item_label_description">
                       School/Office Personnels under your supervision
                     </div>
@@ -123,7 +123,7 @@ const MainMenu = () => {
                   <DocumentDuplicateIcon className="w-8 h-8" />
                 </div>
                 <div>
-                  <div className="app__menu_item_label">Requests Tracker</div>
+                  <div className="app__menu_item_label">Request Tracker</div>
                   <div className="app__menu_item_label_description">
                     Leave, Travel Authority, Pass slip, Undertime Permit,
                     Locator Slip.

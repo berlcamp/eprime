@@ -89,7 +89,7 @@ export async function fetchOffices(
     query = query.range(from, to)
 
     // Order By
-    query = query.order('id', { ascending: false })
+    query = query.order('name', { ascending: true })
 
     const { data, error, count } = await query
 
@@ -130,7 +130,7 @@ export async function fetchPositions(
     query = query.range(from, to)
 
     // Order By
-    query = query.order('id', { ascending: false })
+    query = query.order('name', { ascending: true })
 
     const { data, error, count } = await query
 
@@ -187,7 +187,7 @@ export async function fetchSchools(
     query = query.range(from, to)
 
     // Order By
-    query = query.order('id', { ascending: false })
+    query = query.order('name', { ascending: true })
 
     const { data, error, count } = await query
 
