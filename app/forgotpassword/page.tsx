@@ -25,7 +25,7 @@ export default function ForgotPassword() {
 
     // Send a password reset email
     const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `https://eprime.sortbrite.com/reset-password` // Redirect URL after reset
+      redirectTo: 'https://eprime.sortbrite.com/reset-password' // Redirect URL after reset
     })
 
     if (error) {
