@@ -1,16 +1,15 @@
+import { FilterProvider } from '@/context/FilterContext'
+import SupabaseProvider from '@/context/SupabaseProvider'
+import { Providers } from '@/GlobalRedux/provider'
+import SupabaseListener from '@/utils/supabase-listener'
+import { createServerClient } from '@/utils/supabase-server'
+import { Toaster } from 'react-hot-toast'
 import 'server-only'
 import './globals.css'
-import SupabaseListener from '@/utils/supabase-listener'
-import SupabaseProvider from '@/context/SupabaseProvider'
-import { createServerClient } from '@/utils/supabase-server'
-import { FilterProvider } from '@/context/FilterContext'
-import { Providers } from '@/GlobalRedux/provider'
-import { Toaster } from 'react-hot-toast'
-import { LandingPage } from '@/components'
 
-import type { Metadata } from 'next'
 import type { Employee, Office, SchoolTypes, UserAccessTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'PRIME-HRM',
@@ -20,7 +19,11 @@ export const metadata: Metadata = {
 // do not cache this layout
 export const revalidate = 0
 
-export default async function RootLayout ({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children
+}: {
+  children: React.ReactNode
+}) {
   const supabase = createServerClient()
 
   const {
@@ -40,7 +43,12 @@ export default async function RootLayout ({ children }: { children: React.ReactN
         .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
       if (error) {
-        void logError('root layout system access', 'hrm_system_access', '', error.message)
+        void logError(
+          'root layout system access',
+          'hrm_system_access',
+          '',
+          error.message
+        )
         throw new Error(error.message)
       }
 
@@ -62,7 +70,12 @@ export default async function RootLayout ({ children }: { children: React.ReactN
         .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
       if (error3) {
-        void logError('root layout hrm schools', 'hrm_schools', '', error3.message)
+        void logError(
+          'root layout hrm schools',
+          'hrm_schools',
+          '',
+          error3.message
+        )
         throw new Error(error3.message)
       }
 
@@ -73,7 +86,12 @@ export default async function RootLayout ({ children }: { children: React.ReactN
         .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
       if (error4) {
-        void logError('root layout hrm offices', 'hrm_schools', '', error4.message)
+        void logError(
+          'root layout hrm offices',
+          'hrm_schools',
+          '',
+          error4.message
+        )
         throw new Error(error4.message)
       }
 
@@ -89,20 +107,24 @@ export default async function RootLayout ({ children }: { children: React.ReactN
   return (
     <html lang="en">
       <body className={`relative ${session ? 'bg-white' : 'bg-gray-100'}`}>
-
-        <SupabaseProvider systemAccess={sysAccess} session={session} systemUsers={sysUsers} systemSchools={sysSchools} systemOffices={sysOffices}>
-            <SupabaseListener serverAccessToken={session?.access_token} />
-              {!session && <LandingPage/> }
-              {
-                session &&
-                  <Providers>
-                    <FilterProvider>
-                      <Toaster/>
-                      {children}
-                    </FilterProvider>
-                  </Providers>
-              }
-          </SupabaseProvider>
+        <SupabaseProvider
+          systemAccess={sysAccess}
+          session={session}
+          systemUsers={sysUsers}
+          systemSchools={sysSchools}
+          systemOffices={sysOffices}
+        >
+          <SupabaseListener serverAccessToken={session?.access_token} />
+          {!session && <>{children}</>}
+          {session && (
+            <Providers>
+              <FilterProvider>
+                <Toaster />
+                {children}
+              </FilterProvider>
+            </Providers>
+          )}
+        </SupabaseProvider>
       </body>
     </html>
   )

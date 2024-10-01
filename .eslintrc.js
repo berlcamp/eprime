@@ -31,6 +31,8 @@ module.exports = {
     '@typescript-eslint/indent': 'off',
     '@typescript-eslint/space-before-function-paren': ['off'],
     '@typescript-eslint/no-confusing-void-expression': 'off',
+    '@typescript-eslint/restrict-template-expressions': 'off',
+    'no-unneeded-ternary': 'off',
     '@typescript-eslint/no-misused-promises': [
       2,
       {
