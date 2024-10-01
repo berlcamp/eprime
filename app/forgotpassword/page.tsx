@@ -21,7 +21,7 @@ export default function ForgotPassword() {
 
   const handlePasswordChange = async (data: UpdatePasswordTypes) => {
     setLoading(true)
-    setMessage('')
+    setMessage('') //
 
     // Send a password reset email
     const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
