@@ -204,6 +204,7 @@ export async function fetchSchools(
 
 export async function fetchEmployees(
   filters: {
+    filterUser?: string
     filterKeyword?: string
     filterSchool?: string
     filterOffice?: string
@@ -226,6 +227,11 @@ export async function fetchEmployees(
       // query = query.or(`firstname.ilike.%${filters.filterKeyword}%,middlename.ilike.%${filters.filterKeyword}%,lastname.ilike.%${filters.filterKeyword}%`)
       const searchQuery: string = fullTextQuery(filters.filterKeyword)
       query = query.textSearch('fts', searchQuery)
+    }
+
+    // filter user
+    if (filters.filterUser && filters.filterUser !== '') {
+      query = query.eq('id', filters.filterUser)
     }
 
     // filter school

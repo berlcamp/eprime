@@ -10,7 +10,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 
-const RecordsSideBar = () => {
+const RspSidebar = () => {
   const currentRoute = usePathname()
   const [ctoCount, setCtoCount] = useState('')
   const [scCount, setScCount] = useState('')
@@ -261,4 +261,4 @@ const RecordsSideBar = () => {
   )
 }
 
-export default RecordsSideBar
+export default RspSidebar

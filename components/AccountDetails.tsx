@@ -1,22 +1,41 @@
 'use client'
-import React, { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import OneColLayoutLoading from './Loading/OneColLayoutLoading'
-import { fetchDistricts, fetchLeaveCards, fetchOffices, fetchPositions, fetchSchools, handleConvertEmployeeToNonTeaching, handleConvertEmployeeToTeaching, logError } from '@/utils/fetchApi'
-import uuid from 'react-uuid'
-import Avatar from 'react-avatar'
+import {
+  fetchDistricts,
+  fetchItems,
+  fetchLeaveCards,
+  fetchOffices,
+  fetchPositions,
+  fetchSchools,
+  handleConvertEmployeeToNonTeaching,
+  handleConvertEmployeeToTeaching,
+  logError
+} from '@/utils/fetchApi'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import Avatar from 'react-avatar'
+import { useForm } from 'react-hook-form'
+import uuid from 'react-uuid'
+import OneColLayoutLoading from './Loading/OneColLayoutLoading'
 
 // Redux imports
-import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
+import { useDispatch, useSelector } from 'react-redux'
 
 // Types
-import type { PositionTypes, SchoolTypes, DistrictTypes, Office, Employee } from '@/types'
+import type {
+  DistrictTypes,
+  Employee,
+  ItemTypes,
+  Office,
+  PositionTypes,
+  SchoolTypes
+} from '@/types'
+import Link from 'next/link'
 import CustomButton from './CustomButton'
+import PlantillaDetails from './PlantillaDetails'
 
 interface ModalProps {
   hideModal: () => void
@@ -51,6 +70,9 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   const [districts, setDistricts] = useState<DistrictTypes[] | null>(null)
   const [offices, setOffices] = useState<Office[] | []>([])
 
+  const [showItemModal, setShowItemModal] = useState(false)
+  const [item, setItem] = useState<ItemTypes | null>(null)
+
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const dispatch = useDispatch()
@@ -60,7 +82,12 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   // Check access from employee_accounts settings or Super Admins
   const isAdmin = hasAccess('employee_accounts')
 
-  const { register, formState: { errors }, reset, handleSubmit } = useForm<Employee>({
+  const {
+    register,
+    formState: { errors },
+    reset,
+    handleSubmit
+  } = useForm<Employee>({
     mode: 'onSubmit'
   })
 
@@ -75,9 +102,12 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
 
     let newData
 
-    const district = formdata.assignment === 'school' ? Number(formdata.district_id) : null
-    const school = formdata.assignment === 'school' ? Number(formdata.school_id) : null
-    const office = formdata.assignment === 'office' ? Number(formdata.office_id) : null
+    const district =
+      formdata.assignment === 'school' ? Number(formdata.district_id) : null
+    const school =
+      formdata.assignment === 'school' ? Number(formdata.school_id) : null
+    const office =
+      formdata.assignment === 'office' ? Number(formdata.office_id) : null
 
     if (isAdmin) {
       newData = {
@@ -93,8 +123,12 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         salary_grade: formdata.salary_grade,
         salary_step: formdata.salary_step,
         position_type: formdata.position_type,
-        date_of_last_promotion: formdata.date_of_last_promotion ? new Date(formdata.date_of_last_promotion) : null, // use the string data before storing the redux to avoid error
-        joining_date: formdata.joining_date ? new Date(formdata.joining_date) : null // use the string data before storing the redux to avoid error
+        date_of_last_promotion: formdata.date_of_last_promotion
+          ? new Date(formdata.date_of_last_promotion)
+          : null, // use the string data before storing the redux to avoid error
+        joining_date: formdata.joining_date
+          ? new Date(formdata.joining_date)
+          : null // use the string data before storing the redux to avoid error
       }
     } else {
       newData = {
@@ -116,8 +150,16 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         .eq('id', id)
 
       if (error) {
-        void logError('Update account details', 'hrm_assignments', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Update account details',
+          'hrm_assignments',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
@@ -126,8 +168,15 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         console.log('redux updated')
         const items = [...globallist]
         const updatedDropdownData = getUpdatedDropdownData(formdata)
-        const updatedData = { ...newData, birthday: formdata.birthday, joining_date: formdata.joining_date, date_of_last_promotion: formdata.date_of_last_promotion, id, ...updatedDropdownData }
-        const foundIndex = items.findIndex(x => x.id === updatedData.id)
+        const updatedData = {
+          ...newData,
+          birthday: formdata.birthday,
+          joining_date: formdata.joining_date,
+          date_of_last_promotion: formdata.date_of_last_promotion,
+          id,
+          ...updatedDropdownData
+        }
+        const foundIndex = items.findIndex((x) => x.id === updatedData.id)
         items[foundIndex] = { ...items[foundIndex], ...updatedData }
         dispatch(updateList(items))
       }
@@ -158,19 +207,21 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
     let json = {}
 
     // Positions
-    const pos = positions.filter(x => x.id.toString() === formdata.position_id.toString())
+    const pos = positions.filter(
+      (x) => x.id.toString() === formdata.position_id.toString()
+    )
     if (pos.length > 0) {
       json = { ...json, hrm_positions: { id: pos[0].id, name: pos[0].name } }
     }
 
     // schools
-    const sch = schools?.filter(x => x.id.toString() === formdata.school_id)
+    const sch = schools?.filter((x) => x.id.toString() === formdata.school_id)
     if (sch.length > 0) {
       json = { ...json, hrm_schools: { id: sch[0].id, name: sch[0].name } }
     }
 
     // offices
-    const off = offices?.filter(x => x.id.toString() === formdata.office_id)
+    const off = offices?.filter((x) => x.id.toString() === formdata.office_id)
     if (off.length > 0) {
       json = { ...json, hrm_offices: { id: off[0].id, name: off[0].name } }
     }
@@ -212,14 +263,15 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         setSelectedPosition(data.position_id ?? '')
 
         // Update school list dropdown
-        if (data.assignment === 'school') void handleDistrictChange(data.district_id)
+        if (data.assignment === 'school')
+          void handleDistrictChange(data.district_id)
 
         reset({
           firstname: data ? data.firstname : '',
           middlename: data ? data.middlename : '',
           lastname: data ? data.lastname : '',
           assignment: data ? data.assignment : '',
-          birthday: (data?.birthday) ? data.birthday : '',
+          birthday: data?.birthday ? data.birthday : '',
           district_id: data ? data.district_id : '',
           school_id: data ? data.school_id : '',
           office_id: data ? data.office_id : '',
@@ -227,8 +279,10 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
           position_type: data ? data.position_type : '',
           salary_grade: data ? data.salary_grade : '',
           salary_step: data ? data.salary_step : '',
-          joining_date: (data?.joining_date) ? data.joining_date : '',
-          date_of_last_promotion: (data?.date_of_last_promotion) ? data.date_of_last_promotion : ''
+          joining_date: data?.joining_date ? data.joining_date : '',
+          date_of_last_promotion: data?.date_of_last_promotion
+            ? data.date_of_last_promotion
+            : ''
         })
       } catch (e) {
         console.error('fetch error: ', e)
@@ -252,13 +306,20 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
       setOffices(result.data.length > 0 ? result.data : [])
     }
 
+    const fetchItem = async () => {
+      const result = await fetchItems({ filterUser: id }, 9, 0)
+      if (result.data.length > 0) {
+        setItem(result.data[0])
+      }
+    }
     void fetchDistrictsData()
     void fetchOfficesData()
 
     void fetchAccountDetails()
     void fetchPositionsData()
+    void fetchItem()
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, reset])
 
   const handleChangePositionType = async (type: string) => {
@@ -269,7 +330,9 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
     // Count Service Credits balance if teaching
     if (type === 'Non-teaching' && userData.position_type !== 'Non-teaching') {
       if (result.count && result.count > 0) {
-        const scList = result.data.filter(item => item.type === 'Service Credit')
+        const scList = result.data.filter(
+          (item) => item.type === 'Service Credit'
+        )
 
         // first index of array should be the latest and updated balance
         const sc = scList.length > 0 ? scList[0].balance : 0
@@ -287,8 +350,10 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
     // Count VL/SL balance if non-teaching
     if (type === 'Teaching' && userData.position_type !== 'Teaching') {
       if (result.count && result.count > 0) {
-        const vlList = result.data.filter(item => item.type === 'Vacation Leave')
-        const slList = result.data.filter(item => item.type === 'Sick Leave')
+        const vlList = result.data.filter(
+          (item) => item.type === 'Vacation Leave'
+        )
+        const slList = result.data.filter((item) => item.type === 'Sick Leave')
 
         // first index of array should be the latest and updated balance
         const sl = slList.length > 0 ? slList[0].balance : 0
@@ -312,11 +377,19 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
 
   const salaryGradeOptions = []
   for (let i = 1; i <= 33; i++) {
-    salaryGradeOptions.push(<option key={i} value={i}>{i}</option>)
+    salaryGradeOptions.push(
+      <option key={i} value={i}>
+        {i}
+      </option>
+    )
   }
   const salaryStepOptions = []
   for (let i = 1; i <= 8; i++) {
-    salaryStepOptions.push(<option key={i} value={i}>{i}</option>)
+    salaryStepOptions.push(
+      <option key={i} value={i}>
+        {i}
+      </option>
+    )
   }
 
   return (
@@ -325,303 +398,479 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
-              <h5 className="app__modal_header_text">
-                Account Details
-              </h5>
+              <h5 className="app__modal_header_text">Account Details</h5>
               <CustomButton
-                containerStyles='app__btn_gray'
-                title='Close'
+                containerStyles="app__btn_gray"
+                title="Close"
                 isDisabled={saving}
-                btnType='button'
+                btnType="button"
                 handleClick={hideModal}
               />
             </div>
 
             {/* Modal Content */}
-            <div className='app__modal_body'>
-              { loading && <OneColLayoutLoading rows={3}/> }
-              {
-                !loading &&
-                  <form onSubmit={handleSubmit(onSubmit)} className="">
-                    <div className='flex flex-col lg:flex-row w-full items-start justify-between text-xs dark:text-gray-400'>
-                      {/* Begin First Column */}
-                      <div className='w-full px-4'>
-
-                        <div className='text-center'>
-                          {
-                            (avatarUrl && avatarUrl !== '')
-                              ? <div className='mx-auto relative rounded-full overflow-hidden h-16 w-16 border border-gray-300'>
-                                  <Image src={avatarUrl} layout="fill" objectFit="cover" alt="profile image" className="rounded"/>
-                                </div>
-                              : <Avatar round={false} size="60" name={userData?.firstname} />
-                          }
-                        </div>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>First Name:</div>
-                            <div>
-                              <input
-                                {...register('firstname', { required: true })}
-                                type="text"
-                                className='app__input_standard'/>
-                              {errors.firstname && <div className='app__error_message'>First Name is required</div>}
-                            </div>
+            <div className="app__modal_body">
+              {loading && <OneColLayoutLoading rows={3} />}
+              {!loading && (
+                <form onSubmit={handleSubmit(onSubmit)} className="">
+                  <div className="flex flex-col lg:flex-row w-full items-start justify-between text-xs dark:text-gray-400">
+                    {/* Begin First Column */}
+                    <div className="w-full px-4">
+                      <div className="text-center">
+                        {avatarUrl && avatarUrl !== '' ? (
+                          <div className="mx-auto relative rounded-full overflow-hidden h-16 w-16 border border-gray-300">
+                            <Image
+                              src={avatarUrl}
+                              layout="fill"
+                              objectFit="cover"
+                              alt="profile image"
+                              className="rounded"
+                            />
+                          </div>
+                        ) : (
+                          <Avatar
+                            round={false}
+                            size="60"
+                            name={userData?.firstname}
+                          />
+                        )}
+                      </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">First Name:</div>
+                          <div>
+                            <input
+                              {...register('firstname', { required: true })}
+                              type="text"
+                              className="app__input_standard"
+                            />
+                            {errors.firstname && (
+                              <div className="app__error_message">
+                                First Name is required
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Middle Name:</div>
-                            <div>
-                              <input
-                                {...register('middlename')}
-                                type="text"
-                                className='app__input_standard'/>
-                            </div>
+                      </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Middle Name:
+                          </div>
+                          <div>
+                            <input
+                              {...register('middlename')}
+                              type="text"
+                              className="app__input_standard"
+                            />
                           </div>
                         </div>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Last Name:</div>
-                            <div>
-                              <input
-                                {...register('lastname', { required: true })}
-                                type="text"
-                                className='app__input_standard'/>
-                              {errors.lastname && <div className='app__error_message'>Last Name is required</div>}
-                            </div>
+                      </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">Last Name:</div>
+                          <div>
+                            <input
+                              {...register('lastname', { required: true })}
+                              type="text"
+                              className="app__input_standard"
+                            />
+                            {errors.lastname && (
+                              <div className="app__error_message">
+                                Last Name is required
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Birthday:</div>
-                            <div>
-                              <input
-                                {...register('birthday')}
-                                type="date"
-                                className='app__input_standard'/>
-                            </div>
+                      </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">Birthday:</div>
+                          <div>
+                            <input
+                              {...register('birthday')}
+                              type="date"
+                              className="app__input_standard"
+                            />
                           </div>
                         </div>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Original assignment</div>
+                      </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Original assignment
+                          </div>
+                          <div>
+                            <select
+                              {...register('assignment', { required: true })}
+                              value={assignment}
+                              onChange={(e) => setAssignment(e.target.value)}
+                              className="app__select_standard"
+                            >
+                              <option value="">Choose</option>
+                              <option value="school">School</option>
+                              <option value="office">Division Office</option>
+                            </select>
+                            {errors.assignment && (
+                              <div className="app__error_message">
+                                Assignment is required
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {assignment === 'school' && (
+                        <>
+                          <div className="app__form_field_container">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Choose district
+                              </div>
+                              <div>
+                                <select
+                                  {...register('district_id', {
+                                    required: true
+                                  })}
+                                  onChange={async (e) =>
+                                    await handleDistrictChange(e.target.value)
+                                  }
+                                  value={selectedDistrict}
+                                  className="app__select_standard"
+                                >
+                                  <option value="">Choose</option>
+                                  {districts?.map((item) => (
+                                    <option key={uuid()} value={item.id}>
+                                      {item.name}
+                                    </option>
+                                  ))}
+                                </select>
+                                {errors.district_id && (
+                                  <div className="app__error_message">
+                                    District is required
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {loadingSchools && (
+                        <div className="">
+                          <OneColLayoutLoading rows={1} />
+                        </div>
+                      )}
+                      {assignment === 'school' && !loadingSchools && (
+                        <>
+                          <div className="app__form_field_container">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Choose School
+                              </div>
+                              <div>
+                                <select
+                                  {...register('school_id', { required: true })}
+                                  value={selectedSchool}
+                                  onChange={(e) =>
+                                    setSelectedSchool(e.target.value)
+                                  }
+                                  className="app__select_standard"
+                                >
+                                  <option value="">Choose</option>
+                                  {schools.map((item) => (
+                                    <option key={uuid()} value={item.id}>
+                                      {item.name}
+                                    </option>
+                                  ))}
+                                </select>
+                                {errors.school_id && (
+                                  <div className="app__error_message">
+                                    School is required
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {assignment === 'office' && (
+                        <div className="app__form_field_container">
+                          <div className="w-full">
+                            <div className="app__label_standard">
+                              Choose office
+                            </div>
                             <div>
                               <select
-                                {...register('assignment', { required: true })}
-                                value={assignment}
-                                onChange={e => setAssignment(e.target.value)}
-                                className='app__select_standard'>
-                                  <option value=''>Choose</option>
-                                  <option value='school'>School</option>
-                                  <option value='office'>Division Office</option>
+                                {...register('office_id', { required: true })}
+                                value={selectedOffice}
+                                onChange={(e) =>
+                                  setSelectedOffice(e.target.value)
+                                }
+                                className="app__select_standard"
+                              >
+                                <option value="">Choose</option>
+                                {offices.map((item) => (
+                                  <option key={uuid()} value={item.id}>
+                                    {item.name}
+                                  </option>
+                                ))}
                               </select>
-                              {errors.assignment && <div className='app__error_message'>Assignment is required</div>}
+                              {errors.office_id && (
+                                <div className="app__error_message">
+                                  Office is required
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
-                        {
-                          assignment === 'school' &&
-                            <>
-                              <div className='app__form_field_container'>
-                                <div className='w-full'>
-                                  <div className='app__label_standard'>Choose district</div>
-                                  <div>
-                                    <select
-                                      {...register('district_id', { required: true })}
-                                      onChange={async e => await handleDistrictChange(e.target.value)}
-                                      value={selectedDistrict}
-                                      className='app__select_standard'>
-                                        <option value=''>Choose</option>
-                                        {
-                                          districts?.map(item => (
-                                            <option key={uuid()} value={item.id}>{item.name}</option>
-                                          ))
-                                        }
-                                    </select>
-                                    {errors.district_id && <div className='app__error_message'>District is required</div>}
-                                  </div>
-                                </div>
-                              </div>
-                            </>
-                        }
-                        {
-                          loadingSchools &&
-                            <div className=''>
-                              <OneColLayoutLoading rows={1}/>
+                      )}
+                    </div>
+                    {/* End First Column */}
+                    {/* Begin Second Column */}
+                    <div className="w-full px-4">
+                      <div className="text-base text-center font-medium text-gray-600">
+                        EDITABLE ONLY BY HR
+                      </div>
+                      <div className="flex items-center">
+                        <div className="flex-grow bg-gray-300 h-px"></div>
+                        <div className="mx-4 my-4 text-gray-500 text-sm">
+                          Position Settings
+                        </div>
+                        <div className="flex-grow bg-gray-300 h-px"></div>
+                      </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Current Position:
+                          </div>
+                          {!isAdmin ? (
+                            <div className="app__label_value">
+                              {userData ? userData.hrm_positions?.name : ''}
                             </div>
-                        }
-                        {
-                          (assignment === 'school' && !loadingSchools) &&
-                            <>
-                              <div className='app__form_field_container'>
-                                <div className='w-full'>
-                                  <div className='app__label_standard'>Choose School</div>
-                                  <div>
-                                    <select
-                                      {...register('school_id', { required: true })}
-                                      value={selectedSchool}
-                                      onChange={e => setSelectedSchool(e.target.value)}
-                                      className='app__select_standard'>
-                                        <option value=''>Choose</option>
-                                        {
-                                          schools.map(item => (
-                                            <option key={uuid()} value={item.id}>{item.name}</option>
-                                          ))
-                                        }
-                                    </select>
-                                    {errors.school_id && <div className='app__error_message'>School is required</div>}
-                                  </div>
+                          ) : (
+                            <div>
+                              <select
+                                {...register('position_id', { required: true })}
+                                value={selectedPosition}
+                                onChange={(e) =>
+                                  setSelectedPosition(e.target.value)
+                                }
+                                className="app__input_standard"
+                              >
+                                <option value="">Choose Position</option>
+                                {positions.map((position: PositionTypes) => (
+                                  <option key={uuid()} value={position.id}>
+                                    {position.name}
+                                  </option>
+                                ))}
+                              </select>
+                              {errors.position_id && (
+                                <div className="app__error_message">
+                                  Current Position is required
                                 </div>
-                              </div>
-                            </>
-                        }
-                        {
-                          assignment === 'office' &&
-                            <div className='app__form_field_container'>
-                              <div className='w-full'>
-                                <div className='app__label_standard'>Choose office</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Current Position Type:
+                          </div>
+                          {!isAdmin ? (
+                            <div className="app__label_value">
+                              {userData ? userData.position_type : ''}
+                            </div>
+                          ) : (
+                            <div>
+                              <select
+                                {...register('position_type', {
+                                  required: true
+                                })}
+                                onChange={(e) =>
+                                  handleChangePositionType(e.target.value)
+                                }
+                                className="app__input_standard"
+                              >
+                                <option value="">Choose Type</option>
+                                <option value="Teaching">Teaching</option>
+                                <option value="Non-teaching">
+                                  Non-teaching
+                                </option>
+                              </select>
+                              {errors.position_type && (
+                                <div className="app__error_message">
+                                  Position Type is required
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          <div className="text-gray-600 italic mt-1">
+                            (Changing position type will convert either VL/SL to
+                            Service Credit or Service Credit to VL/SL)
+                          </div>
+                        </div>
+                        {positionTypeChange === 'Non-teaching' && (
+                          <div className="ml-4 text-xs text-gray-700">
+                            <span className="text-green-700 font-bold">
+                              {Number(scBalance).toFixed(3)}
+                            </span>{' '}
+                            Service Credits will be converted to{' '}
+                            <span className="text-green-700 font-bold">
+                              {(vlslBalance / 2).toFixed(3)}
+                            </span>{' '}
+                            VL and{' '}
+                            <span className="text-green-700 font-bold">
+                              {(vlslBalance / 2).toFixed(3)}
+                            </span>{' '}
+                            SL
+                          </div>
+                        )}
+                        {positionTypeChange === 'Teaching' && (
+                          <div className="ml-4 text-xs text-gray-700">
+                            <span className="text-green-700 font-bold">
+                              {Number(vlBalance).toFixed(3)}
+                            </span>{' '}
+                            VL and{' '}
+                            <span className="text-green-700 font-bold">
+                              {Number(slBalance).toFixed(3)}
+                            </span>{' '}
+                            SL will be converted to{' '}
+                            {Number(scBalance).toFixed(3)} Service Credit
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center">
+                        <div className="flex-grow bg-gray-300 h-px"></div>
+                        <div className="mx-4 my-4 text-gray-500 text-sm">
+                          NOSI/NOSA Settings
+                        </div>
+                        <div className="flex-grow bg-gray-300 h-px"></div>
+                      </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Current Salary Grade:
+                          </div>
+                          {!isAdmin ? (
+                            <div className="app__label_value">
+                              {userData ? userData.salary_grade : ''}
+                            </div>
+                          ) : (
+                            <div>
+                              <select
+                                {...register('salary_grade')}
+                                className="app__input_standard"
+                              >
+                                <option value="">Choose Salary Grade</option>
+                                {salaryGradeOptions}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Current Salary Grade (Step):
+                          </div>
+                          {!isAdmin ? (
+                            <div className="app__label_value">
+                              {userData ? userData.salary_step : ''}
+                            </div>
+                          ) : (
+                            <div>
+                              <select
+                                {...register('salary_step')}
+                                className="app__input_standard"
+                              >
+                                <option value="">
+                                  Choose Salary Grade (Step)
+                                </option>
+                                {salaryStepOptions}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {isAdmin && (
+                        <>
+                          <div className="flex items-center">
+                            <div className="flex-grow bg-gray-300 h-px"></div>
+                            <div className="mx-4 my-4 text-gray-500 text-sm">
+                              Plantilla
+                            </div>
+                            <div className="flex-grow bg-gray-300 h-px"></div>
+                          </div>
+                          <div className="app__form_field_container">
+                            <div className="w-full">
+                              {item ? (
+                                <CustomButton
+                                  containerStyles="app__btn_blue"
+                                  title="View Plantilla"
+                                  isDisabled={saving}
+                                  btnType="button"
+                                  handleClick={() => setShowItemModal(true)}
+                                />
+                              ) : (
                                 <div>
-                                  <select
-                                    {...register('office_id', { required: true })}
-                                    value={selectedOffice}
-                                    onChange={e => setSelectedOffice(e.target.value)}
-                                    className='app__select_standard'>
-                                      <option value=''>Choose</option>
-                                      {
-                                        offices.map(item => (
-                                          <option key={uuid()} value={item.id}>{item.name}</option>
-                                        ))
-                                      }
-                                  </select>
-                                  {errors.office_id && <div className='app__error_message'>Office is required</div>}
+                                  Employee currently do not have plantilla yet.
+                                  Go to{' '}
+                                  <Link
+                                    href="/items"
+                                    className="font-bold text-blue-700"
+                                  >
+                                    Plantilla Items
+                                  </Link>{' '}
+                                  to create plantilla for this emplyee.
                                 </div>
-                              </div>
+                              )}
                             </div>
-                        }
-                      </div>
-                      {/* End First Column */}
-                      {/* Begin Second Column */}
-                      <div className='w-full px-4'>
-                        <div className='text-base text-center font-medium text-gray-600'>EDITABLE ONLY BY HR</div>
-                        <div className="flex items-center">
-                          <div className="flex-grow bg-gray-300 h-px"></div>
-                          <div className="mx-4 my-4 text-gray-500 text-sm">Position Settings</div>
-                          <div className="flex-grow bg-gray-300 h-px"></div>
-                        </div>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Current Position:</div>
-                            {
-                              !isAdmin
-                                ? <div className='app__label_value'>{userData ? userData.hrm_positions?.name : ''}</div>
-                                : <div>
-                                    <select
-                                      {...register('position_id', { required: true })}
-                                      value={selectedPosition}
-                                      onChange={e => setSelectedPosition(e.target.value)}
-                                      className='app__input_standard'>
-                                        <option value=''>Choose Position</option>
-                                        {
-                                          positions.map((position: PositionTypes) => <option key={uuid()} value={position.id}>{position.name}</option>)
-                                        }
-                                    </select>
-                                    {errors.position_id && <div className='app__error_message'>Current Position is required</div>}
-                                  </div>
-                            }
                           </div>
-                        </div>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Current Position Type:</div>
-                            {
-                              !isAdmin
-                                ? <div className='app__label_value'>{userData ? userData.position_type : ''}</div>
-                                : <div>
-                                    <select
-                                      {...register('position_type', { required: true })}
-                                      onChange={e => handleChangePositionType(e.target.value)}
-                                      className='app__input_standard'>
-                                        <option value=''>Choose Type</option>
-                                        <option value='Teaching'>Teaching</option>
-                                        <option value='Non-teaching'>Non-teaching</option>
-                                    </select>
-                                    {errors.position_type && <div className='app__error_message'>Position Type is required</div>}
-                                  </div>
-                            }
-                            <div className='text-gray-600 italic mt-1'>(Changing position type will convert either VL/SL to Service Credit or Service Credit to VL/SL)</div>
-                          </div>
-                          {positionTypeChange === 'Non-teaching' && <div className='ml-4 text-xs text-gray-700'><span className='text-green-700 font-bold'>{Number(scBalance).toFixed(3)}</span> Service Credits will be converted to <span className='text-green-700 font-bold'>{(vlslBalance / 2).toFixed(3)}</span> VL and <span className='text-green-700 font-bold'>{(vlslBalance / 2).toFixed(3)}</span> SL</div>}
-                          {positionTypeChange === 'Teaching' && <div className='ml-4 text-xs text-gray-700'><span className='text-green-700 font-bold'>{Number(vlBalance).toFixed(3)}</span> VL and <span className='text-green-700 font-bold'>{Number(slBalance).toFixed(3)}</span> SL will be converted to {Number(scBalance).toFixed(3)} Service Credit</div>}
-                        </div>
-                        <div className="flex items-center">
-                          <div className="flex-grow bg-gray-300 h-px"></div>
-                          <div className="mx-4 my-4 text-gray-500 text-sm">NOSI/NOSA Settings</div>
-                          <div className="flex-grow bg-gray-300 h-px"></div>
-                        </div>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Current Salary Grade:</div>
-                            {
-                              !isAdmin
-                                ? <div className='app__label_value'>{userData ? userData.salary_grade : ''}</div>
-                                : <div>
-                                    <select
-                                      {...register('salary_grade')}
-                                      className='app__input_standard'>
-                                        <option value=''>Choose Salary Grade</option>
-                                        {salaryGradeOptions}
-                                    </select>
-                                  </div>
-                            }
-                          </div>
-                        </div>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Current Salary Grade (Step):</div>
-                            {
-                              !isAdmin
-                                ? <div className='app__label_value'>{userData ? userData.salary_step : ''}</div>
-                                : <div>
-                                    <select
-                                      {...register('salary_step')}
-                                      className='app__input_standard'>
-                                        <option value=''>Choose Salary Grade (Step)</option>
-                                        {salaryStepOptions}
-                                    </select>
-                                  </div>
-                            }
-                          </div>
-                        </div>
-                      </div>
-                      {/* End Second Column */}
+                        </>
+                      )}
                     </div>
-                    <hr className='my-6 mx-4'/>
-                    <div className='w-full px-4'>
-                      <div className='app__label_standard'>
-                        <label className='flex items-center space-x-1'>
-                          <input
-                            {...register('confirmed', { required: true })}
-                            type='checkbox'
-                            className=''/>
-                          <span className='font-normal text-xs'>By checking this box, you acknowledge that all information is accurate and up-to-date.</span>
-                        </label>
-                        {errors.confirmed && <div className='app__error_message'>Confirmation is required</div>}
-                      </div>
+                    {/* End Second Column */}
+                  </div>
+                  <hr className="my-6 mx-4" />
+                  <div className="w-full px-4">
+                    <div className="app__label_standard">
+                      <label className="flex items-center space-x-1">
+                        <input
+                          {...register('confirmed', { required: true })}
+                          type="checkbox"
+                          className=""
+                        />
+                        <span className="font-normal text-xs">
+                          By checking this box, you acknowledge that all
+                          information is accurate and up-to-date.
+                        </span>
+                      </label>
+                      {errors.confirmed && (
+                        <div className="app__error_message">
+                          Confirmation is required
+                        </div>
+                      )}
                     </div>
-                    <div className="app__modal_footer">
-                          <button
-                            type="submit"
-                            className="app__btn_green_sm"
-                          >
-                            {saving ? 'Saving..' : 'Save'}
-                          </button>
-                    </div>
-                  </form>
-              }
+                  </div>
+                  <div className="app__modal_footer">
+                    <button type="submit" className="app__btn_green_sm">
+                      {saving ? 'Saving..' : 'Save'}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>
       </div>
+      {/* Item Modal */}
+      {item && showItemModal && (
+        <PlantillaDetails
+          editData={item}
+          hideModal={() => setShowItemModal(false)}
+        />
+      )}
     </>
   )
 }

@@ -13,6 +13,7 @@ import Promotions from '@/components/Promotions/Promotions'
 import ServiceCredits from '@/components/ServiceCredits/ServiceCredits'
 import ServiceRecords from '@/components/ServiceRecords/page'
 import UserRequests from '@/components/Tracker/UserRequests'
+import { superAdmins } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { DesignationTypes, Employee } from '@/types'
 import { generateReferenceCode } from '@/utils/text-helper'
@@ -370,18 +371,21 @@ export default function Page({ params }: { params: { id: string } }) {
                     </span>
                   </Link>
                 </li>
-                <li>
-                  <Link
-                    href={`/profile/${userId}?page=loginsettings`}
-                    className={`app__profile_menu_link ${
-                      page === 'loginsettings' ? 'bg-gray-700' : ''
-                    }`}
-                  >
-                    <span className="flex-1 ml-3 whitespace-nowrap">
-                      Login Settings
-                    </span>
-                  </Link>
-                </li>
+                {(superAdmins.includes(session.user.email) ||
+                  userId === session.user.id) && (
+                  <li>
+                    <Link
+                      href={`/profile/${userId}?page=loginsettings`}
+                      className={`app__profile_menu_link ${
+                        page === 'loginsettings' ? 'bg-gray-700' : ''
+                      }`}
+                    >
+                      <span className="flex-1 ml-3 whitespace-nowrap">
+                        Login Settings
+                      </span>
+                    </Link>
+                  </li>
+                )}
               </ul>
             </div>
           </>
@@ -425,9 +429,12 @@ export default function Page({ params }: { params: { id: string } }) {
             )}
             {page && page === 'promotions' && <Promotions userId={userId} />}
             {page && page === 'pdf' && <Pdf userId={userId} />}
-            {page && page === 'loginsettings' && userId === session.user.id && (
-              <LoginSettings />
-            )}
+            {page &&
+              page === 'loginsettings' &&
+              (superAdmins.includes(session.user.email) ||
+                userId === session.user.id) && (
+                <LoginSettings userId={userId} />
+              )}
           </div>
         )}
       </div>

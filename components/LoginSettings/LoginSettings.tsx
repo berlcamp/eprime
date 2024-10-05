@@ -1,6 +1,8 @@
 'use client'
 
+import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import axios from 'axios'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import Title from '../Title'
@@ -9,7 +11,7 @@ interface UpdatePasswordTypes {
   newPassword: string
   confirmPassword: string
 }
-export default function LoginSettings() {
+export default function LoginSettings({ userId }: { userId: string }) {
   const {
     register,
     reset,
@@ -19,12 +21,15 @@ export default function LoginSettings() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
-  const { supabase } = useSupabase()
+  const { setToast } = useFilter()
+  const { supabase, session } = useSupabase()
 
   const handlePasswordChange = async (data: {
     newPassword: string
     confirmPassword: string
   }) => {
+    if (loading) return
+
     setLoading(true)
     setMessage('')
 
@@ -34,18 +39,39 @@ export default function LoginSettings() {
       return
     }
 
-    const { error } = await supabase.auth.updateUser({
-      password: data.newPassword
-    })
-
-    if (error) {
-      setMessage(`Error: ${error.message}`)
-    } else {
-      setMessage('Password updated successfully')
-      reset({
-        newPassword: '',
-        confirmPassword: ''
+    if (userId === session.user.id) {
+      const { error } = await supabase.auth.updateUser({
+        password: data.newPassword
       })
+      if (error) {
+        console.error(error)
+        setMessage(`Error: ${error.message}`)
+      } else {
+        setToast('success', 'Password successfully changed')
+        setMessage('Password updated successfully')
+        reset({
+          newPassword: '',
+          confirmPassword: ''
+        })
+      }
+    } else {
+      axios
+        .post('/api/updatepass', {
+          user_id: userId,
+          new_password: data.newPassword
+        })
+        .then(function (response) {
+          setToast('success', 'Password successfully changed')
+          setMessage('Password updated successfully')
+          reset({
+            newPassword: '',
+            confirmPassword: ''
+          })
+        })
+        .catch(function (error) {
+          console.error(error)
+          setMessage(`Error: ${error.message}`)
+        })
     }
 
     setLoading(false)
@@ -102,7 +128,11 @@ export default function LoginSettings() {
               <p className="text-sm mt-2 text-red-500">{message}</p>
             )}
 
-            <button type="submit" className="app__btn_green" disabled={loading}>
+            <button
+              type="submit"
+              className="app__btn_green mt-4"
+              disabled={loading}
+            >
               {loading ? 'Changing...' : 'Change Password'}
             </button>
           </form>

@@ -33,6 +33,11 @@ module.exports = {
     '@typescript-eslint/no-confusing-void-expression': 'off',
     '@typescript-eslint/restrict-template-expressions': 'off',
     'no-unneeded-ternary': 'off',
+    '@typescript-eslint/naming-convention': 'off',
+    'react/no-unescaped-entities': 'off',
+    'react/display-name': 'off',
+    curly: 'off',
+    '@typescript-eslint/consistent-type-imports': 'off',
     '@typescript-eslint/no-misused-promises': [
       2,
       {
