@@ -86,7 +86,7 @@ export const PrintLeaveForm = React.forwardRef<
             </td>
           </tr>
           <tr className="border-2 border-black">
-            <td className="py-4">
+            <td className="py-2">
               <div className="text-xs">
                 3. DATE OF FILING:{' '}
                 <span className="underline underline-offset-2 font-bold">

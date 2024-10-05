@@ -17,6 +17,7 @@ interface FormRowTypes {
   cpd_units: string
   type: string
   sponsor: string
+  status: string
 }
 
 interface WorkExperienceTypes {
@@ -26,7 +27,7 @@ interface WorkExperienceTypes {
 
 export default function Trainings({ userId }: { userId: string }) {
   const { supabase, session } = useSupabase()
-  const { setToast } = useFilter()
+  const { setToast, hasAccess } = useFilter()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -60,7 +61,8 @@ export default function Trainings({ userId }: { userId: string }) {
         hours: formdata.hours,
         cpd_units: formdata.cpd_units,
         type: formdata.type,
-        sponsor: formdata.sponsor
+        sponsor: formdata.sponsor,
+        status: 'Pending Approval'
       },
       ...trainingsArray
     ])
@@ -125,6 +127,57 @@ export default function Trainings({ userId }: { userId: string }) {
     const updatedData = trainingsArray.filter((e) => e.nanoid !== item.nanoid)
     setTrainingsArray(updatedData)
   }
+  const HandleApproveItem = async (item: FormRowTypes) => {
+    if (saving) return
+
+    // Function to update object and add a new key-value pair
+    const updateObjectInArray = (
+      array: FormRowTypes[],
+      nanoid: string,
+      newKey: string,
+      newValue: string
+    ) => {
+      return array.map((obj) =>
+        obj.nanoid === nanoid
+          ? { ...obj, [newKey]: newValue } // Add new key-value to the object
+          : obj
+      )
+    }
+
+    const updatedTrainingArray = updateObjectInArray(
+      trainingsArray,
+      item.nanoid,
+      'status',
+      'Approved'
+    )
+    setTrainingsArray(updatedTrainingArray)
+
+    setSaving(true)
+
+    // Upsert the database to database
+    const newData = {
+      user_id: userId,
+      trainings: updatedTrainingArray
+    }
+
+    const { error } = await supabase
+      .from('hrm_pds')
+      .upsert(newData, { onConflict: 'user_id' })
+
+    if (error) {
+      void logError(
+        'Update L and D Trainings PDS',
+        'hrm_pds',
+        JSON.stringify(newData),
+        error.message
+      )
+      setToast('error', 'Saving failed, please reload the page and try again.')
+    } else {
+      setToast('success', 'Successfully saved.')
+    }
+
+    setSaving(false)
+  }
 
   useEffect(() => {
     void fetchData()
@@ -149,6 +202,7 @@ export default function Trainings({ userId }: { userId: string }) {
                 <table className="app__table mb-4">
                   <thead className="app__thead">
                     <tr>
+                      <th className="app__th"></th>
                       <th className="app__th">
                         Title of L&D Intervention/Training Programs
                       </th>
@@ -163,7 +217,29 @@ export default function Trainings({ userId }: { userId: string }) {
                   <tbody>
                     {trainingsArray.map((item, index) => (
                       <tr key={index} className="app__tr">
-                        <td className="app__td">{item.title}</td>
+                        <td className="app__td">
+                          {hasAccess('ld_training_approver') &&
+                            item.status !== 'Approved' && (
+                              <CustomButton
+                                containerStyles="app__btn_blue"
+                                title="Approve"
+                                btnType="button"
+                                handleClick={() => HandleApproveItem(item)}
+                              />
+                            )}
+                        </td>
+                        <td className="app__td">
+                          <div>{item.title}</div>
+                          {item.status === 'Approved' ? (
+                            <span className="text-green-600 font-medium">
+                              Approved
+                            </span>
+                          ) : (
+                            <span className="text-orange-600 font-medium">
+                              Pending Approval
+                            </span>
+                          )}
+                        </td>
                         <td className="app__td">
                           {format(new Date(item.from), 'MMM d, yyyy')} -{' '}
                           {format(new Date(item.to), 'MMM d, yyyy')}

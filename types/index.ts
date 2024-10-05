@@ -1,4 +1,4 @@
-import type { ReactNode, MouseEventHandler } from 'react'
+import type { MouseEventHandler, ReactNode } from 'react'
 
 export interface SelectUserNamesProps {
   settingsData: any[]
@@ -113,6 +113,7 @@ export interface Employee {
   hrm_designations: DesignationTypes[]
   hrm_leave_cards: LeaveCardTypes[]
   hrm_positions?: PositionTypes
+  hrm_item?: ItemTypes
   joining_date: string
   birthday: string
   date_of_last_promotion: string

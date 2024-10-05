@@ -83,11 +83,7 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
     }
 
     try {
-      const {
-        count,
-        data: existingUser,
-        error: hrmUsersError
-      } = await supabase
+      const { count, error: hrmUsersError } = await supabase
         .from('hrm_registrations')
         .select('*', { count: 'exact' })
         .eq('email', formdata.email)
