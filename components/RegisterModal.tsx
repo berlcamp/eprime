@@ -64,6 +64,8 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
   const handleSignup = async (formdata: FormValues) => {
     if (loading) return
 
+    setError('')
+
     if (formdata.password !== formdata.confirm_password) {
       setError('Passwords do not match')
       return
@@ -72,7 +74,7 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
     setLoading(true)
 
     // Check if the email domain is allowed
-    const allowedDomains = ['deped.gov.ph']
+    const allowedDomains = ['deped.gov.ph', 'gmail.com']
     const emailDomain = formdata.email.split('@')[1]
     if (!allowedDomains.includes(emailDomain)) {
       setError('We only allow DepEd email address')
@@ -90,20 +92,16 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
         .select('*', { count: 'exact' })
         .eq('email', formdata.email)
 
+      const { count: hrmUserCount } = await supabase
+        .from('hrm_users')
+        .select('email', { count: 'exact' })
+        .eq('email', formdata.email)
+
       if (hrmUsersError) throw new Error(hrmUsersError.message)
 
-      if (count > 0) {
-        if (existingUser[0].status === 'Active') {
-          setError('This email already registered')
-          throw new Error('This email already registered.')
-        } else {
-          setError(
-            'This email already registered and is subject for verification from admin'
-          )
-          throw new Error(
-            'This email already registered and is subject for verification from admin.'
-          )
-        }
+      if (count > 0 || hrmUserCount > 0) {
+        setError('This email already registered')
+        throw new Error('This email already registered.')
       } else {
         const district =
           formdata.assignment === 'school' ? Number(formdata.district_id) : null
@@ -254,17 +252,13 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
               </button>
             </div>
 
+            {error && <div className="app__error_message mx-4">{error}</div>}
+
             {!complete && (
               <form
                 onSubmit={handleSubmit(onSubmit)}
                 className="app__modal_body"
               >
-                {error &&
-                  error !== 'This email already exist.' &&
-                  error !==
-                    'This email already registered and is subject for verification from admin.' && (
-                    <div className="app__error_message pb-4">{error}</div>
-                  )}
                 <div className="app__form_field_container">
                   <div className="w-full">
                     <div className="app__label_standard">First Name</div>
