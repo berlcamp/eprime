@@ -176,6 +176,18 @@ export interface AssignmentTypes {
   service_record_status: string
 }
 
+export interface SalaryGradeTypes {
+  id: string
+  grade: string
+  step: string
+  salary: string
+  logs: {
+    date: string // Represents the date and time as a string in the given format
+    user_name: string // Represents the name of the user
+    message: string // Represents the update message
+  }[]
+}
+
 export interface ItemTypes {
   id: string
   item_number: string

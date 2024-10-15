@@ -511,6 +511,36 @@ export async function fetchItems(
   }
 }
 
+export async function fetchSalaryGrades(
+  perPageCount: number,
+  rangeFrom: number
+) {
+  try {
+    let query = supabase.from('hrm_salaries').select('*', { count: 'exact' })
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch salaries error', error)
+    return { data: [], count: 0 }
+  }
+}
+
 export async function fetchPromotions(
   filters: { filterPosition?: string; filterUser?: string },
   filterUrl: string | null,
@@ -1110,7 +1140,7 @@ export async function fetchDocuments(
     let query = supabase
       .from('hrm_request_trackers')
       .select(
-        '*, hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,avatar_url,position_type,hrm_positions:position_id(name)),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+        '*, hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
         { count: 'exact' }
       )
       .in('id', trackerIds)

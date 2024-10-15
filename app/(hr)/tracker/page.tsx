@@ -363,11 +363,10 @@ const Page: React.FC = () => {
           {showStickiesModal && (
             <StickiesModal hideModal={() => setShowStickiesModal(false)} />
           )}
-          <div className="">
-            {selectedItem && (
-              <PrintLeaveForm selectedItem={selectedItem} ref={componentRef} />
-            )}
-          </div>
+          {/* Print Container */}
+          {selectedItem && (
+            <PrintLeaveForm selectedItem={selectedItem} ref={componentRef} />
+          )}
         </div>
       </div>
     </>

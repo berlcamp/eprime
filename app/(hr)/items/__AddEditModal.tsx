@@ -23,8 +23,8 @@ interface ModalProps {
   editData: ItemTypes | null
 }
 
-const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
-  const { setToast, hasAccess } = useFilter()
+const AddEditModal = ({ hideModal, editData }: ModalProps) => {
+  const { setToast } = useFilter()
   const { supabase, session } = useSupabase()
   const [saving, setSaving] = useState(false)
 
@@ -41,9 +41,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
 
   const [schools, setSchools] = useState<SchoolTypes[] | []>([])
   const [positions, setPositions] = useState<PositionTypes[] | []>([])
-
-  // Check access from employee_accounts settings or Super Admins
-  const isHr = hasAccess('records')
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -62,6 +59,8 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
   const onSubmit = async (formdata: ItemTypes) => {
     if (saving) return
 
+    setSaving(true)
+
     if (editData) {
       void handleUpdate(formdata)
     } else {
@@ -70,17 +69,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleCreate = async (formdata: ItemTypes) => {
-    // if selected item holder already has an item
-    if (user) {
-      const userExists = await checkExistingHolder(user.id)
-      if (userExists) {
-        setToast('error', 'This employee already has an existing item.')
-        return
-      }
-    }
-
-    setSaving(true)
-
     const newData = {
       user_id: user ? user.id : null,
       position_id: formdata.position_id,
@@ -131,31 +119,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
         throw new Error(error.message)
       }
 
-      if (user) {
-        const { error2 } = await supabase
-          .from('hrm_users')
-          .update({
-            item_id: data[0].id,
-            joining_date: formdata.date_of_original_appointment,
-            date_of_last_promotion: formdata.date_of_last_promotion
-          })
-          .eq('id', user.id)
-
-        if (error2) {
-          void logError(
-            'Update user item id',
-            'hrm_users',
-            JSON.stringify(newData),
-            error2.message
-          )
-          setToast(
-            'error',
-            'Saving failed, please reload the page and try again.'
-          )
-          throw new Error(error2.message)
-        }
-      }
-
       // Append new data in redux
       const hrmPosition = positions.find(
         (p) => p.id.toString() === formdata.position_id
@@ -201,17 +164,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
 
   const handleUpdate = async (formdata: ItemTypes) => {
     if (!editData) return
-
-    // if selected item holder already has an item
-    if (user) {
-      const userExists = await checkExistingHolder(user.id)
-      if (userExists) {
-        setToast('error', 'This employee already has an existing item.')
-        return
-      }
-    }
-
-    setSaving(true)
 
     const newData = {
       user_id: user ? user.id : null,
@@ -323,21 +275,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const checkExistingHolder = async (userId: string): Promise<boolean> => {
-    const { data, error } = await supabase
-      .from('hrm_items')
-      .select('user_id')
-      .eq('user_id', userId)
-      .single() // Use .single() to fetch one record, as user_id is likely unique
-
-    if (error) {
-      console.error('Error checking user:', error.message)
-      return false
-    }
-
-    return data !== null
-  }
-
   const handleSelectedUsers = (selectedUsers: namesType[]) => {
     if (selectedUsers.length > 0) {
       setUser(selectedUsers[0])
@@ -353,8 +290,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
   const handleConfirmedRemove = async () => {
     if (!editData) return
 
-    if (!editData.hrm_user) return
-
     if (saving) return
 
     setSaving(true)
@@ -362,8 +297,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     const newData = {
       user_id: null,
       vacancy_type: 'Natural Vacancy',
-      date_of_last_promotion: null,
-      date_of_original_appointment: null,
       reason_for_removal: reason
     }
 
@@ -385,28 +318,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
           'Saving failed, please reload the page and try again.'
         )
         throw new Error(error.message)
-      }
-
-      // remove item_id from hrm_user
-      const { error: error2 } = await supabase
-        .from('hrm_users')
-        .update({
-          item_id: null
-        })
-        .eq('id', editData.hrm_user.id)
-
-      if (error2) {
-        void logError(
-          'Remove item_id on hrm_users',
-          'hrm_users',
-          '',
-          error2.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error2.message)
       }
 
       // Update data in redux
@@ -494,7 +405,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                 handleClick={hideModal}
               />
             </div>
-            {editData?.hrm_user && isHr && (
+            {editData?.hrm_user && (
               <div className="flex space-x-2 items-center justify-between border-b p-4 bg-orange-50">
                 <div className="w-full">
                   <div className="space-y-1">
@@ -527,62 +438,44 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                   <div className="app__form_field_container">
                     <div className="w-full">
                       <div className="app__label_standard">Item Number</div>
-                      {!isHr ? (
-                        <div className="app__label_value">
-                          {editData ? editData.item_number : ''}
-                        </div>
-                      ) : (
-                        <div>
-                          <input
-                            {...register('item_number', { required: true })}
-                            type="text"
-                            placeholder="Item No."
-                            className="app__input_standard"
-                          />
-                          {errors.item_number && (
-                            <div className="app__error_message">
-                              Item Number is required
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      <div>
+                        <input
+                          {...register('item_number', { required: true })}
+                          type="text"
+                          placeholder="Item No."
+                          className="app__input_standard"
+                        />
+                        {errors.item_number && (
+                          <div className="app__error_message">
+                            Item Number is required
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="app__form_field_container">
                     <div className="w-full">
                       <div className="app__label_standard">Position</div>
-                      {!isHr ? (
-                        <div className="app__label_value">
-                          {
-                            positions?.filter(
-                              (p) => p.id === editData?.position_id
-                            )[0]?.name
-                          }
-                        </div>
-                      ) : (
-                        <div>
-                          <select
-                            {...register('position_id', { required: true })}
-                            value={selectedPosition}
-                            onChange={(e) =>
-                              setSelectedPosition(e.target.value)
-                            }
-                            className="app__select_standard"
-                          >
-                            <option value="">Choose Position</option>
-                            {positions.map((position: PositionTypes, index) => (
-                              <option key={index} value={position.id}>
-                                {position.name}
-                              </option>
-                            ))}
-                          </select>
-                          {errors.position_id && (
-                            <div className="app__error_message">
-                              Position is required
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      <div>
+                        <select
+                          {...register('position_id', { required: true })}
+                          value={selectedPosition}
+                          onChange={(e) => setSelectedPosition(e.target.value)}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose Position</option>
+                          {positions.map((position: PositionTypes, index) => (
+                            <option key={index} value={position.id}>
+                              {position.name}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.position_id && (
+                          <div className="app__error_message">
+                            Position is required
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="app__form_field_container">
@@ -608,33 +501,23 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                       <div className="app__label_standard">
                         Implementing Unit (IUs)
                       </div>
-                      {!isHr ? (
-                        <div className="app__label_value">
-                          {
-                            schools?.filter(
-                              (p) => p.id === editData?.school_id
-                            )[0]?.name
+                      <div>
+                        <select
+                          {...register('implementing_unit_id')}
+                          value={selectedImplementingUnit}
+                          onChange={(e) =>
+                            setSelectedImplementingUnit(e.target.value)
                           }
-                        </div>
-                      ) : (
-                        <div>
-                          <select
-                            {...register('implementing_unit_id')}
-                            value={selectedImplementingUnit}
-                            onChange={(e) =>
-                              setSelectedImplementingUnit(e.target.value)
-                            }
-                            className="app__input_standard"
-                          >
-                            <option value="">Division</option>
-                            {schools.map((school, index) => (
-                              <option key={index} value={school.id}>
-                                {school.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
+                          className="app__input_standard"
+                        >
+                          <option value="">Division</option>
+                          {schools.map((school, index) => (
+                            <option key={index} value={school.id}>
+                              {school.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -752,7 +635,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                             />
                             {errors.date_of_last_promotion && (
                               <div className="app__error_message">
-                                Date of Promotion is required
+                                Date of last Promotion is required
                               </div>
                             )}
                           </div>
@@ -771,7 +654,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                               type="date"
                               className="app__input_standard"
                             />
-                            {errors.date_of_original_appointment && (
+                            {errors.date_of_last_promotion && (
                               <div className="app__error_message">
                                 Date of Original Appointment is required
                               </div>
@@ -936,4 +819,4 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
   )
 }
 
-export default PlantillaDetails
+export default AddEditModal

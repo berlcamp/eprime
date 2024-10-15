@@ -122,13 +122,14 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         position_id: formdata.position_id ? formdata.position_id : null,
         salary_grade: formdata.salary_grade,
         salary_step: formdata.salary_step,
-        position_type: formdata.position_type,
-        date_of_last_promotion: formdata.date_of_last_promotion
-          ? new Date(formdata.date_of_last_promotion)
-          : null, // use the string data before storing the redux to avoid error
-        joining_date: formdata.joining_date
-          ? new Date(formdata.joining_date)
-          : null // use the string data before storing the redux to avoid error
+        position_type: formdata.position_type
+        // joining date and date of last promotion has been remove as it is manage on plantilla item
+        // date_of_last_promotion: formdata.date_of_last_promotion
+        //   ? new Date(formdata.date_of_last_promotion)
+        //   : null, // use the string data before storing the redux to avoid error
+        // joining_date: formdata.joining_date
+        //   ? new Date(formdata.joining_date)
+        //   : null // use the string data before storing the redux to avoid error
       }
     } else {
       newData = {
@@ -171,8 +172,6 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         const updatedData = {
           ...newData,
           birthday: formdata.birthday,
-          joining_date: formdata.joining_date,
-          date_of_last_promotion: formdata.date_of_last_promotion,
           id,
           ...updatedDropdownData
         }
@@ -278,11 +277,12 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
           position_id: data ? data.position_id : '',
           position_type: data ? data.position_type : '',
           salary_grade: data ? data.salary_grade : '',
-          salary_step: data ? data.salary_step : '',
-          joining_date: data?.joining_date ? data.joining_date : '',
-          date_of_last_promotion: data?.date_of_last_promotion
-            ? data.date_of_last_promotion
-            : ''
+          salary_step: data ? data.salary_step : ''
+          // joining date and date of last promotion has been remove as it is manage on plantilla item
+          // joining_date: data?.joining_date ? data.joining_date : '',
+          // date_of_last_promotion: data?.date_of_last_promotion
+          //   ? data.date_of_last_promotion
+          //   : ''
         })
       } catch (e) {
         console.error('fetch error: ', e)
@@ -694,6 +694,9 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                               >
                                 <option value="">Choose Type</option>
                                 <option value="Teaching">Teaching</option>
+                                <option value="Teaching-Related">
+                                  Teaching-Related
+                                </option>
                                 <option value="Non-teaching">
                                   Non-teaching
                                 </option>
@@ -793,6 +796,47 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           )}
                         </div>
                       </div>
+                      {/* // joining date and date of last promotion has been remove as it is manage on plantilla item */}
+                      {/* <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Joining Date:
+                          </div>
+                          {!isAdmin ? (
+                            <div className="app__label_value">
+                              {userData ? userData.joining_date : ''}
+                            </div>
+                          ) : (
+                            <div>
+                              <input
+                                {...register('joining_date')}
+                                type="date"
+                                className="app__input_standard"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Date of Last Promotion:
+                          </div>
+                          {!isAdmin ? (
+                            <div className="app__label_value">
+                              {userData ? userData.date_of_last_promotion : ''}
+                            </div>
+                          ) : (
+                            <div>
+                              <input
+                                {...register('date_of_last_promotion')}
+                                type="date"
+                                className="app__input_standard"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div> */}
                       {isAdmin && (
                         <>
                           <div className="flex items-center">

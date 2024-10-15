@@ -1,4 +1,4 @@
-export function fullTextQuery (string: string): string {
+export function fullTextQuery(string: string): string {
   // const isStringAllNumbers = (str: string) => {
   //   return /^\d+$/.test(str)
   // }
@@ -10,7 +10,7 @@ export function fullTextQuery (string: string): string {
   const searchSplit = string.split(' ')
 
   const keywordArray: any[] = []
-  searchSplit.forEach(item => {
+  searchSplit.forEach((item) => {
     if (item !== '') keywordArray.push(`'${item}'`)
   })
   const searchQuery = keywordArray.join(' & ')
@@ -18,18 +18,25 @@ export function fullTextQuery (string: string): string {
   return searchQuery
 }
 
-export function capitalizeWords (inputString: string) {
+export function capitalizeWords(inputString: string) {
   return inputString
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 }
 
-export function getAvatar (userId: string) {
+export function getAvatar(userId: string) {
   //
 }
 
-export function generateReferenceCode () {
+export function formatToPesos(amount: number): string {
+  return new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP'
+  }).format(amount)
+}
+
+export function generateReferenceCode() {
   let result = ''
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   const charactersLength = characters.length

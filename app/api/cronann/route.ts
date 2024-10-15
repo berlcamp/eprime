@@ -1,9 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
-import { format } from 'date-fns'
 import { logError } from '@/utils/fetchApi'
+import { createClient } from '@supabase/supabase-js'
+import { format } from 'date-fns'
+import { NextResponse } from 'next/server'
 
-export async function GET () {
+export async function GET() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const serviceRoleKey = process.env.NEXT_PUBLIC_SERVICE_ROLE_KEY ?? ''
 
@@ -19,7 +19,7 @@ export async function GET () {
   try {
     /*
      * Automated CTO Expiration
-    */
+     */
     const { error } = await supabase
       .from('hrm_ctos')
       .update({ status: 'Expired' })
@@ -44,31 +44,88 @@ export async function GET () {
 
     /*
      * Auto update employee's date_of_last_designation and position_type based from effectivity date of designation
-    */
+     */
 
     /*
-     * Automated Leave Card Adjustments System
-    */
-
-    // Get all employees from database and join the related leave card table
-
-    // Filter only those who has position type and joining date
-
-    // Loop the filtered employees
-
-    //  // Get the latest record from leave card table to get the latest VL/SL balance
-
-    //  // Get the last date of auto increment and add 1 month and add to insert array
-
-    //  // if not present, add to insert array if (latest joining_date or date_of_last_promotion or date_of_last_designation) less than or equal to today's date)
-
-    //  // Insert array = [{ user_id, particulars, type, credits earned, balance }, ...]
-
-    // Insert the insert array to leave card table in the database
+     * Automated NOSI Generation
+     */
+    await generateNosi(supabase)
 
     return NextResponse.json('Cron completed')
   } catch (error) {
     console.log('Error: ', error)
     return NextResponse.json(error)
+  }
+}
+
+// NOSI generation logic
+async function generateNosi(supabase: any) {
+  try {
+    // Fetch all active employees
+    const { data: employees, error } = await supabase
+      .from('hrm_users')
+      .select(
+        'id, date_of_last_promotion, status, joining_date, absent_days_without_pay, item_id'
+      )
+      .not('item_id', 'is', null)
+      .eq('Atatus', 'active')
+
+    if (error) throw new Error(`Error fetching employees: ${error.message}`)
+
+    const today = new Date()
+
+    // Loop through each employee to check if NOSI should be generated
+    for (const employee of employees) {
+      const {
+        id,
+        date_of_last_promotion,
+        joining_date,
+        absent_days_without_pay
+      } = employee
+
+      // Calculate the latest relevant date (promotion or joining)
+      let referenceDate = new Date(joining_date)
+      if (
+        date_of_last_promotion &&
+        new Date(date_of_last_promotion) > new Date(joining_date)
+      ) {
+        referenceDate = new Date(date_of_last_promotion)
+      }
+
+      // Add 3 years to the reference date
+      const nosiDate = new Date(referenceDate)
+      nosiDate.setFullYear(nosiDate.getFullYear() + 3)
+
+      // Ensure absent_days_without_pay is a number
+      const absentDaysWithoutPay = Number(absent_days_without_pay)
+
+      // Add extra days if absent_days_without_pay > 90
+      if (absentDaysWithoutPay > 90) {
+        nosiDate.setDate(nosiDate.getDate() + absentDaysWithoutPay)
+      }
+
+      // Check if the current date has reached or passed the calculated NOSI date
+      if (today >= nosiDate) {
+        // Generate the NOSI record
+        const { error: nosiError } = await supabase.from('hrm_nosi').insert({
+          user_id: id
+        })
+
+        if (nosiError) {
+          void logError('Cron Job', 'hrm_nosi', id, nosiError.message)
+          continue // Move to next employee if error
+        }
+
+        console.log(`NOSI generated for user ${id}`)
+
+        // Reset absent_days_without_pay to 0
+        await supabase
+          .from('hrm_users')
+          .update({ absent_days_without_pay: 0 })
+          .eq('id', id)
+      }
+    }
+  } catch (error) {
+    console.error('Error generating NOSI: ', error)
   }
 }
