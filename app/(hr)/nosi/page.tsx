@@ -2,6 +2,7 @@
 
 import {
   CustomButton,
+  DeleteModal,
   PerPage,
   RecordsSideBar,
   ShowMore,
@@ -15,32 +16,45 @@ import {
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchItems } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
+import {
+  ChevronDownIcon,
+  PencilSquareIcon,
+  TrashIcon
+} from '@heroicons/react/20/solid'
 import React, { Fragment, useEffect, useState } from 'react'
 import Filters from './Filters'
 
 // Types
-import type { ItemTypes } from '@/types'
+import type { NosiTypes, SignatoriesTypes } from '@/types'
 
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import PlantillaDetails from '@/components/PlantillaDetails'
+import { fetchNosi } from '@/utils/fetchApi'
+import { formatToPesos } from '@/utils/text-helper'
+import { PrinterIcon } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useReactToPrint } from 'react-to-print'
+import AddEditModal from './AddEditModal'
+import { PrintNosi } from './PrintNosi'
+import SignatoriesModal from './SignatoriesModal'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showSignatoriesModal, setShowSignatoriesModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  const [list, setList] = useState<ItemTypes[]>([])
-  const [filterPosition, setFilterPosition] = useState<string>('')
-  const [filterSchool, setFilterSchool] = useState<string>('')
+  const [signatories, setSignatories] = useState<SignatoriesTypes | null>(null)
+  const [selectedId, setSelectedId] = useState<string>('')
+  const [selectedItem, setSelectedItem] = useState<NosiTypes | null>(null)
+
+  const [list, setList] = useState<NosiTypes[]>([])
   const [filterUser, setFilterUser] = useState<string>('')
 
   const [perPageCount, setPerPageCount] = useState<number>(10)
-  const [editData, setEditData] = useState<ItemTypes | null>(null)
+  const [editData, setEditData] = useState<NosiTypes | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -50,15 +64,17 @@ const Page: React.FC = () => {
   const { session } = useSupabase()
   const { hasAccess } = useFilter()
 
+  const componentRef = React.useRef(null)
+  const printFn = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: 'NOSI'
+  })
+
   const fetchData = async () => {
     setLoading(true)
 
     try {
-      const result = await fetchItems(
-        { filterSchool, filterPosition, filterUser },
-        perPageCount,
-        0
-      )
+      const result = await fetchNosi({ filterUser }, perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -81,11 +97,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchItems(
-        { filterSchool, filterPosition, filterUser },
-        perPageCount,
-        list.length
-      )
+      const result = await fetchNosi({ filterUser }, perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -110,9 +122,31 @@ const Page: React.FC = () => {
     setEditData(null)
   }
 
-  const handleEdit = (item: ItemTypes) => {
+  const handleEdit = (item: NosiTypes) => {
     setShowAddModal(true)
     setEditData(item)
+  }
+
+  const handleDelete = (id: string) => {
+    setSelectedId(id)
+    setShowDeleteModal(true)
+  }
+
+  const handleInitiatePrint = (item: NosiTypes) => {
+    setSelectedItem(item)
+    setShowSignatoriesModal(true)
+  }
+
+  const handlePrint = (item: NosiTypes, signatories: SignatoriesTypes) => {
+    setSelectedItem(null) // Temporarily set selectedItem to null to unmount the content
+    setSignatories(null) // Temporarily set selectedItem to null to unmount the content
+    setTimeout(() => {
+      setSelectedItem(item) // Set the new item after a short delay
+      setSignatories(signatories) // Set the new item after a short delay
+      setTimeout(() => {
+        printFn() // Trigger the print function after re-rendering the new content
+      }, 100) // Adjust this delay if needed
+    }, 100) // This delay ensures the unmounting and re-rendering are separated
   }
 
   // Update list whenever list in redux updates
@@ -125,7 +159,7 @@ const Page: React.FC = () => {
     setList([])
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPageCount, filterUser, filterPosition, filterSchool])
+  }, [perPageCount, filterUser])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -142,10 +176,10 @@ const Page: React.FC = () => {
       <div className="app__main">
         <div>
           <div className="app__title">
-            <Title title="Plantilla Items" />
+            <Title title="NOSI" />
             <CustomButton
               containerStyles="app__btn_green"
-              title="Create New Item"
+              title="Create New NOSI"
               btnType="button"
               handleClick={handleAdd}
             />
@@ -153,11 +187,7 @@ const Page: React.FC = () => {
 
           {/* Filters */}
           <div className="app__filters">
-            <Filters
-              setFilterSchool={setFilterSchool}
-              setFilterPosition={setFilterPosition}
-              setFilterUser={setFilterUser}
-            />
+            <Filters setFilterUser={setFilterUser} />
           </div>
 
           {/* Per Page */}
@@ -173,21 +203,15 @@ const Page: React.FC = () => {
             <table className="app__table">
               <thead className="app__thead">
                 <tr>
-                  <th className="hidden md:table-cell app__th pl-4"></th>
-                  <th className="hidden md:table-cell app__th">Item Number</th>
-                  <th className="hidden md:table-cell app__th">
-                    Employee Name
-                  </th>
-                  <th className="hidden md:table-cell app__th">Type</th>
-                  <th className="hidden md:table-cell app__th">Position</th>
-                  <th className="hidden md:table-cell app__th">
-                    Implementing Unit
-                  </th>
+                  <th className="app__th pl-4"></th>
+                  <th className="app__th">Employee Name</th>
+                  <th className="app__th">Original Salary</th>
+                  <th className="app__th">Adjusted Salary</th>
                 </tr>
               </thead>
               <tbody>
                 {!isDataEmpty &&
-                  list.map((item: ItemTypes, index) => (
+                  list.map((item: NosiTypes, index) => (
                     <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td">
                         <Menu as="div" className="app__menu_container">
@@ -213,11 +237,29 @@ const Page: React.FC = () => {
                               <div className="py-1">
                                 <Menu.Item>
                                   <div
+                                    onClick={() => handleInitiatePrint(item)}
+                                    className="app__dropdown_item"
+                                  >
+                                    <PrinterIcon className="w-4 h-4" />
+                                    <span>Print NOSI</span>
+                                  </div>
+                                </Menu.Item>
+                                <Menu.Item>
+                                  <div
                                     onClick={() => handleEdit(item)}
                                     className="app__dropdown_item"
                                   >
                                     <PencilSquareIcon className="w-4 h-4" />
                                     <span>Edit</span>
+                                  </div>
+                                </Menu.Item>
+                                <Menu.Item>
+                                  <div
+                                    onClick={() => handleDelete(item.id)}
+                                    className="app__dropdown_item"
+                                  >
+                                    <TrashIcon className="w-4 h-4" />
+                                    <span>Delete</span>
                                   </div>
                                 </Menu.Item>
                               </div>
@@ -226,73 +268,43 @@ const Page: React.FC = () => {
                         </Menu>
                       </td>
                       <th className="app__th_firstcol">
-                        <div className="font-medium">{item.item_number}</div>
-                        {/* Mobile View */}
-                        <div>
-                          <div className="md:hidden app__td_mobile">
-                            <div>
-                              {item.hrm_user && (
-                                <UserBlock user={item.hrm_user} />
-                              )}
-                            </div>
-                            <div>
-                              <span className="app_td_mobile_label">
-                                Position:
-                              </span>{' '}
-                              {item.hrm_position && (
-                                <span>{item.hrm_position.name}</span>
-                              )}
-                            </div>
-                            <div>
-                              <span className="app_td_mobile_label">
-                                Implementing Unit:
-                              </span>
-                              <span>{item.implementing_unit?.name}</span>
-                            </div>
-                            <div>
-                              {!item.hrm_user && (
-                                <div>
-                                  {item.vacancy_type
-                                    ? item.vacancy_type
-                                    : 'New'}
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              {!item.hrm_user && (
-                                <span className="app__status_container_green">
-                                  Vacant
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        {/* End - Mobile View */}
-                      </th>
-                      <td className="hidden md:table-cell app__td">
                         {item.hrm_user && <UserBlock user={item.hrm_user} />}
-                        {!item.hrm_user && (
-                          <span className="app__status_container_green">
-                            Vacant
+                      </th>
+                      <td className="app__td">
+                        <div className="">
+                          As of {item.as_of_date}: SG{' '}
+                          <span className="font-bold text-sm">
+                            {item.previous_grade}
                           </span>
-                        )}
+                          , Step{' '}
+                          <span className="font-bold text-sm">
+                            {item.previous_step}
+                          </span>
+                          , Salary{' '}
+                          <span className="font-bold text-sm">
+                            {formatToPesos(Number(item.previous_amount))}
+                          </span>
+                        </div>
                       </td>
-                      <td className="hidden md:table-cell app__td">
-                        {!item.hrm_user && (
-                          <div>
-                            {item.vacancy_type ? item.vacancy_type : 'New'}
-                          </div>
-                        )}
-                      </td>
-                      <td className="hidden md:table-cell app__td">
-                        <span>{item.hrm_position.name}</span>
-                      </td>
-                      <td className="hidden md:table-cell app__td">
-                        {item.implementing_unit?.name}
+                      <td className="app__td">
+                        <div className="">
+                          Effective {item.effective_date}: SG{' '}
+                          <span className="font-bold text-sm">
+                            {item.new_grade}
+                          </span>
+                          , Step{' '}
+                          <span className="font-bold text-sm">
+                            {item.new_step}
+                          </span>
+                          , Salary{' '}
+                          <span className="font-bold text-sm">
+                            {formatToPesos(Number(item.new_amount))}
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ))}
-                {loading && <TableRowLoading cols={6} rows={2} />}
+                {loading && <TableRowLoading cols={4} rows={2} />}
               </tbody>
             </table>
             {!loading && isDataEmpty && (
@@ -309,9 +321,34 @@ const Page: React.FC = () => {
 
       {/* Add/Edit Modal */}
       {showAddModal && (
-        <PlantillaDetails
+        <AddEditModal
           editData={editData}
           hideModal={() => setShowAddModal(false)}
+        />
+      )}
+      {/* Signatories Modal */}
+      {selectedItem && showSignatoriesModal && (
+        <SignatoriesModal
+          hideModal={() => setShowSignatoriesModal(false)}
+          modalData={(signatories) => {
+            void handlePrint(selectedItem, signatories)
+          }}
+        />
+      )}
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <DeleteModal
+          id={selectedId}
+          table="hrm_nosi"
+          hideModal={() => setShowDeleteModal(false)}
+        />
+      )}
+      {/* Print Container */}
+      {selectedItem && signatories && (
+        <PrintNosi
+          selectedItem={selectedItem}
+          signatories={signatories}
+          ref={componentRef}
         />
       )}
     </>

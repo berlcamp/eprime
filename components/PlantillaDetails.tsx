@@ -6,16 +6,28 @@ import {
 } from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchPositions, fetchSchools, logError } from '@/utils/fetchApi'
+import {
+  fetchImplementingUnits,
+  fetchPositions,
+  fetchSchools,
+  logError
+} from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 // Types
-import type { ItemTypes, PositionTypes, SchoolTypes, namesType } from '@/types'
+import type {
+  ImplementingUnitTypes,
+  ItemTypes,
+  PositionTypes,
+  SchoolTypes,
+  namesType
+} from '@/types'
 
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { format } from 'date-fns'
 import { useDispatch, useSelector } from 'react-redux'
 
 interface ModalProps {
@@ -41,6 +53,9 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
 
   const [schools, setSchools] = useState<SchoolTypes[] | []>([])
   const [positions, setPositions] = useState<PositionTypes[] | []>([])
+  const [implementingUnits, setImplementingUnits] = useState<
+    ImplementingUnitTypes[] | []
+  >([])
 
   // Check access from employee_accounts settings or Super Admins
   const isHr = hasAccess('records')
@@ -85,15 +100,12 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       user_id: user ? user.id : null,
       position_id: formdata.position_id,
       item_number: formdata.item_number,
-      implementing_unit_id:
-        formdata.implementing_unit_id !== ''
-          ? formdata.implementing_unit_id
-          : null,
+      implementing_unit_id: formdata.implementing_unit_id,
       school_id: formdata.school_id ? formdata.school_id : null,
       salary_grade: formdata.salary_grade,
       vice: formdata.vice,
       sex: formdata.sex,
-      birthday: new Date(formdata.birthday),
+      birthday: format(new Date(formdata.birthday), 'MM/dd/yyyy'),
       eligibility: formdata.eligibility,
       date_of_last_promotion: new Date(formdata.date_of_last_promotion),
       date_of_original_appointment: new Date(
@@ -160,16 +172,13 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       const hrmPosition = positions.find(
         (p) => p.id.toString() === formdata.position_id
       )
-      const hrmImplementingUnit = schools.find(
+      const hrmImplementingUnit = implementingUnits.find(
         (p) => p.id.toString() === formdata.implementing_unit_id
       )
-      const hrmSchool = schools.find(
-        (p) => p.id.toString() === formdata.school_id
-      )
+
       const updatedData = {
         ...newData,
         implementing_unit: hrmImplementingUnit,
-        hrm_school: hrmSchool,
         hrm_position: hrmPosition,
         hrm_user: user ?? null,
         id: data[0].id
@@ -202,30 +211,17 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
   const handleUpdate = async (formdata: ItemTypes) => {
     if (!editData) return
 
-    // if selected item holder already has an item
-    if (user) {
-      const userExists = await checkExistingHolder(user.id)
-      if (userExists) {
-        setToast('error', 'This employee already has an existing item.')
-        return
-      }
-    }
-
     setSaving(true)
 
     const newData = {
-      user_id: user ? user.id : null,
       position_id: formdata.position_id,
       item_number: formdata.item_number,
-      implementing_unit_id:
-        formdata.implementing_unit_id !== ''
-          ? formdata.implementing_unit_id
-          : null,
+      implementing_unit_id: formdata.implementing_unit_id,
       school_id: formdata.school_id !== '' ? formdata.school_id : null,
       salary_grade: formdata.salary_grade,
       vice: formdata.vice,
       sex: formdata.sex,
-      birthday: formdata.birthday,
+      birthday: format(new Date(formdata.birthday), 'MM/dd/yyyy'),
       eligibility: formdata.eligibility,
       date_of_last_promotion: formdata.date_of_last_promotion,
       date_of_original_appointment: formdata.date_of_original_appointment,
@@ -289,17 +285,13 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       const hrmPosition = positions.find(
         (p) => p.id.toString() === formdata.position_id?.toString()
       )
-      const hrmImplementingUnit = schools.find(
+      const hrmImplementingUnit = implementingUnits.find(
         (p) => p.id.toString() === formdata.implementing_unit_id?.toString()
-      )
-      const hrmSchool = schools.find(
-        (p) => p.id.toString() === formdata.school_id?.toString()
       )
       const items = [...globallist]
       const updatedData = {
         ...newData,
-        implementing_uni: hrmImplementingUnit,
-        hrm_school: hrmSchool,
+        implementing_unit: hrmImplementingUnit,
         hrm_position: hrmPosition,
         hrm_user: user ?? null,
         id: editData.id
@@ -475,6 +467,11 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       setSchools(result.data.length > 0 ? result.data : [])
     }
 
+    const fetchIus = async () => {
+      const result = await fetchImplementingUnits('', 3000, 0)
+      setImplementingUnits(result.data.length > 0 ? result.data : [])
+    }
+    void fetchIus()
     void fetchPositionsData()
     void fetchSchoolsData()
   }, [editData, reset])
@@ -611,28 +608,35 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                       {!isHr ? (
                         <div className="app__label_value">
                           {
-                            schools?.filter(
-                              (p) => p.id === editData?.school_id
+                            implementingUnits.filter(
+                              (p) => p.id === editData?.implementing_unit_id
                             )[0]?.name
                           }
                         </div>
                       ) : (
                         <div>
                           <select
-                            {...register('implementing_unit_id')}
+                            {...register('implementing_unit_id', {
+                              required: true
+                            })}
                             value={selectedImplementingUnit}
                             onChange={(e) =>
                               setSelectedImplementingUnit(e.target.value)
                             }
                             className="app__input_standard"
                           >
-                            <option value="">Division</option>
-                            {schools.map((school, index) => (
-                              <option key={index} value={school.id}>
-                                {school.name}
+                            <option value="">Choose</option>
+                            {implementingUnits.map((iu, index) => (
+                              <option key={index} value={iu.id}>
+                                {iu.name}
                               </option>
                             ))}
                           </select>
+                          {errors.implementing_unit_id && (
+                            <div className="app__error_message">
+                              Implementing Unit (IUs) is required
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

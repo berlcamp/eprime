@@ -65,6 +65,20 @@ const SettingsSideBar = () => {
         </li>
         <li>
           <Link
+            href="/settings/implementingunits"
+            className={`app__menu_link ${
+              currentRoute === '/settings/implementingunits'
+                ? 'app_menu_link_active'
+                : ''
+            }`}
+          >
+            <span className="flex-1 ml-3 whitespace-nowrap">
+              Plantilla Implementing Units
+            </span>
+          </Link>
+        </li>
+        <li>
+          <Link
             href="/settings/salaries"
             className={`app__menu_link ${
               currentRoute === '/settings/salaries'

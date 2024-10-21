@@ -45,14 +45,14 @@ export interface DistrictTypes {
   id: string
   name: string
   head_user_id: string
-  hrm_users?: namesType
+  hrm_users?: Employee
 }
 
 export interface Office {
   id: string
   name: string
   head_user_id: string
-  hrm_users?: namesType
+  hrm_users?: Employee
 }
 
 export interface SchoolTypes {
@@ -64,7 +64,7 @@ export interface SchoolTypes {
   school_id: string
   district_id: string
   head_user_id: string
-  hrm_users?: namesType
+  hrm_users?: Employee
 }
 
 export interface PositionTypes {
@@ -73,6 +73,22 @@ export interface PositionTypes {
   type: string
   salary_grade: string
   org_id: string
+}
+
+export interface ImplementingUnitTypes {
+  id: string
+  name: string
+}
+
+export interface SignatoriesTypes {
+  truly_yours?: string
+  truly_yours_position?: string
+  recommending_1?: string
+  recommending_1_position?: string
+  recommending_2?: string
+  recommending_2_position?: string
+  approval?: string
+  approval_position?: string
 }
 
 export interface NotificationTypes {
@@ -216,6 +232,42 @@ export interface ItemTypes {
   umid_no: string
   confirmed: string
   vacancy_type: string
+}
+
+export interface NosiTypes {
+  id: string
+  user_id: string
+  hrm_user: Employee
+  as_of_date: string
+  effective_date: string
+  previous_amount: string
+  previous_grade: string
+  previous_step: string
+  new_amount: string
+  new_grade: string
+  new_step: string
+  confirmed: string
+  date: string
+  reason: string
+  other_reason: string
+}
+
+export interface NosaTypes {
+  id: string
+  user_id: string
+  hrm_user: Employee
+  as_of_date: string
+  effective_date: string
+  previous_amount: string
+  previous_grade: string
+  previous_step: string
+  new_amount: string
+  new_grade: string
+  new_step: string
+  confirmed: string
+  date: string
+  reason: string
+  other_reason: string
 }
 
 export interface PromotionTypes {

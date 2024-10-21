@@ -74,7 +74,7 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
     setLoading(true)
 
     // Check if the email domain is allowed
-    const allowedDomains = ['deped.gov.ph', 'gmail.com']
+    const allowedDomains = ['deped.gov.ph']
     const emailDomain = formdata.email.split('@')[1]
     if (!allowedDomains.includes(emailDomain)) {
       setError('We only allow DepEd email address')

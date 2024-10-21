@@ -246,12 +246,22 @@ const RecordsSideBar = () => {
             </li>
             <li>
               <Link
-                href="#"
+                href="/nosi"
                 className={`app__menu_link ${
-                  currentRoute === '/nosinosa' ? 'app_menu_link_active' : ''
+                  currentRoute === '/nosi' ? 'app_menu_link_active' : ''
                 }`}
               >
-                <span className="flex-1 ml-3 whitespace-nowrap">NOSI/NOSA</span>
+                <span className="flex-1 ml-3 whitespace-nowrap">NOSI</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/nosa"
+                className={`app__menu_link ${
+                  currentRoute === '/nosa' ? 'app_menu_link_active' : ''
+                }`}
+              >
+                <span className="flex-1 ml-3 whitespace-nowrap">NOSA</span>
               </Link>
             </li>
           </ul>

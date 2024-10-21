@@ -1,35 +1,15 @@
 import { CustomButton, UserBlock } from '@/components'
-import { fetchImplementingUnits, fetchPositions } from '@/utils/fetchApi'
-import { TagIcon, UserIcon, XMarkIcon } from '@heroicons/react/20/solid'
-import React, { useEffect, useState } from 'react'
+import { UserIcon, XMarkIcon } from '@heroicons/react/20/solid'
+import React, { useState } from 'react'
 
 import { useSupabase } from '@/context/SupabaseProvider'
-import type {
-  Employee,
-  ImplementingUnitTypes,
-  PositionTypes,
-  namesType
-} from '@/types'
+import type { Employee, namesType } from '@/types'
 
 interface FilterTypes {
-  setFilterSchool: (type: string) => void
-  setFilterPosition: (type: string) => void
   setFilterUser: (employee: string) => void
 }
 
-const Filters = ({
-  setFilterSchool,
-  setFilterUser,
-  setFilterPosition
-}: FilterTypes) => {
-  const [selectedSchool, setSelectedSchool] = useState('')
-  const [selectedPosition, setSelectedPosition] = useState('')
-
-  const [positions, setPositions] = useState<PositionTypes[]>([])
-  const [implementingUnits, setImplementingUnits] = useState<
-    ImplementingUnitTypes[] | []
-  >([])
-
+const Filters = ({ setFilterUser }: FilterTypes) => {
   const { systemUsers }: { systemUsers: Employee[] } = useSupabase()
 
   // Search employee
@@ -39,41 +19,23 @@ const Filters = ({
   const [selectedUserId, setSelectedUserId] = useState('')
 
   const handleApply = () => {
-    if (
-      selectedSchool !== '' &&
-      selectedPosition !== '' &&
-      selectedUserId === ''
-    )
-      return
+    if (selectedUserId === '') return
 
     // pass filter values to parent
-    setFilterSchool(selectedSchool)
     setFilterUser(selectedUserId)
-    setFilterPosition(selectedPosition)
   }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (
-      selectedSchool !== '' &&
-      selectedPosition !== '' &&
-      selectedUserId === ''
-    )
-      return
+    if (selectedUserId === '') return
 
     // pass filter values to parent
-    setFilterSchool(selectedSchool)
     setFilterUser(selectedUserId)
-    setFilterPosition(selectedPosition)
   }
 
   // clear all filters
   const handleClear = () => {
-    setFilterSchool('')
-    setSelectedSchool('')
-    setFilterPosition('')
-    setSelectedPosition('')
     setFilterUser('')
     setSelectedUserId('')
     setSelectedItems([])
@@ -114,22 +76,6 @@ const Filters = ({
     setSelectedUserId('')
   }
   // End - Search employees
-
-  // Featch data
-  useEffect(() => {
-    const fetchPositionsData = async () => {
-      const result = await fetchPositions('', 3000, 0)
-      setPositions(result.data.length > 0 ? result.data : [])
-    }
-
-    const fetchIus = async () => {
-      const result = await fetchImplementingUnits('', 3000, 0)
-      setImplementingUnits(result.data.length > 0 ? result.data : [])
-    }
-    void fetchIus()
-
-    void fetchPositionsData()
-  }, [])
 
   return (
     <div className="">
@@ -181,36 +127,6 @@ const Filters = ({
                   )}
                 </div>
               )}
-            </div>
-            <div className="app__filter_container">
-              <TagIcon className="w-4 h-4 mr-1" />
-              <select
-                value={selectedSchool}
-                onChange={(e) => setSelectedSchool(e.target.value)}
-                className="app__filter_select"
-              >
-                <option value="">Implementing Unit</option>
-                {implementingUnits.map((item, index) => (
-                  <option key={index} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="app__filter_container">
-              <TagIcon className="w-4 h-4 mr-1" />
-              <select
-                value={selectedPosition}
-                onChange={(e) => setSelectedPosition(e.target.value)}
-                className="app__filter_select"
-              >
-                <option value="">Choose Position</option>
-                {positions.map((item, index) => (
-                  <option key={index} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
         </form>

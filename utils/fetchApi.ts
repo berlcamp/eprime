@@ -145,6 +145,47 @@ export async function fetchPositions(
   }
 }
 
+export async function fetchImplementingUnits(
+  filterKeyword: string,
+  perPageCount: number,
+  rangeFrom: number
+) {
+  try {
+    let query = supabase
+      .from('hrm_implementing_units')
+      .select('*', { count: 'exact' })
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    // Full text search
+    if (filterKeyword !== '') {
+      query = query.or(`name.ilike.%${filterKeyword}%`)
+      // const searchQuery: string = fullTextQuery(filterKeyword)
+      // query = query.textSearch('name', searchQuery)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('name', { ascending: true })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch error', error)
+    return { data: [], count: 0 }
+  }
+}
+
 export async function fetchSchools(
   filters: {
     filterKeyword?: string
@@ -507,6 +548,90 @@ export async function fetchItems(
     return { data, count }
   } catch (error) {
     console.error('fetch items error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchNosi(
+  filters: {
+    filterUser?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
+  try {
+    let query = supabase
+      .from('hrm_nosi')
+      .select(
+        '*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url,hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name),hrm_item:item_id(item_number))',
+        { count: 'exact' }
+      )
+
+    // filter user
+    if (filters.filterUser && filters.filterUser !== '') {
+      query = query.eq('user_id', filters.filterUser)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+    return { data, count }
+  } catch (error) {
+    console.error('fetch nosi error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchNosa(
+  filters: {
+    filterUser?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
+  try {
+    let query = supabase
+      .from('hrm_nosa')
+      .select(
+        '*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url,hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name),hrm_item:item_id(item_number))',
+        { count: 'exact' }
+      )
+
+    // filter user
+    if (filters.filterUser && filters.filterUser !== '') {
+      query = query.eq('user_id', filters.filterUser)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+    return { data, count }
+  } catch (error) {
+    console.error('fetch nosa error', error)
     return { data: [], count: 0 }
   }
 }

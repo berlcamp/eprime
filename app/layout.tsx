@@ -56,7 +56,6 @@ export default async function RootLayout({
         .from('hrm_users')
         .select()
         .eq('status', 'Active')
-        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
       if (error2) {
         void logError('root layout hrm users', 'hrm_users', '', error2.message)
