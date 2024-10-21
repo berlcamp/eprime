@@ -41,7 +41,7 @@ export const PrintNosa = React.forwardRef<
             <tr>
               <td colSpan={2} className="text-center">
                 <div className="mt-4 text-2xl mb-4 font-bold">
-                  Notice of Step Increment Due to Length of Service
+                  Notice of Salary Adjustment
                 </div>
               </td>
             </tr>

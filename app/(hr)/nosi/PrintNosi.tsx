@@ -41,14 +41,14 @@ export const PrintNosi = React.forwardRef<
             <tr>
               <td colSpan={2} className="text-center">
                 <div className="mt-4 text-2xl mb-4 font-bold">
-                  Notice of Salary Adjustment
+                  Notice of Step Increment Due to Length of Service
                 </div>
               </td>
             </tr>
             <tr>
               <td colSpan={2} className="text-xs">
                 <div className="text-right mt-10">
-                  Date: {format(new Date(), 'MMMM dd, yyyy')}
+                  {format(new Date(), 'MMMM dd, yyyy')}
                 </div>
                 <div className="mt-10">
                   <div className="font-bold uppercase">
@@ -56,13 +56,16 @@ export const PrintNosi = React.forwardRef<
                     {selectedItem.hrm_user.firstname}{' '}
                     {selectedItem.hrm_user.middlename}
                   </div>
+                  <div className="hrm_user">
+                    {selectedItem.hrm_user.hrm_positions?.name}
+                  </div>
                   <div className="uppercase">
                     {selectedItem.hrm_user.hrm_schools?.name}{' '}
                     {selectedItem.hrm_user.hrm_offices?.name}
                   </div>
                 </div>
 
-                <div className="mt-10">Dear Sir/Ma'am:</div>
+                <div className="mt-10">Sir/Ma'am:</div>
 
                 <div className="indent-10 mt-10">
                   Pursuant to Civil Service Commision and Department of Budget
