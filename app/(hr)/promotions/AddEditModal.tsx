@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 // Types
-import type { ItemTypes, PromotionTypes, namesType } from '@/types'
+import type { Employee, ItemTypes, PromotionTypes } from '@/types'
 
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
@@ -23,7 +23,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const { supabase } = useSupabase()
   const [saving, setSaving] = useState(false)
 
-  const [user, setUser] = useState<namesType | null>(null)
+  const [user, setUser] = useState<Employee | null>(null)
 
   const [selectedItem, setSelectedItem] = useState('')
 
@@ -194,7 +194,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+  const handleSelectedUsers = (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
       setUser(selectedUsers[0])
     } else {

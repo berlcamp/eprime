@@ -168,7 +168,7 @@ const Filters = ({
 
                   {searchResults.length > 0 && (
                     <div className="app__search_user_results_container">
-                      {searchResults.map((user: namesType, index) => (
+                      {searchResults.map((user: Employee, index) => (
                         <div
                           key={index}
                           onClick={() => handleSelected(user)}

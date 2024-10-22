@@ -6,6 +6,8 @@ import Cto from '@/components/Cto/Cto'
 import LeaveCard from '@/components/LeaveCard/LeaveCard'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import LoginSettings from '@/components/LoginSettings/LoginSettings'
+import Nosa from '@/components/Nosa/Nosa'
+import Nosi from '@/components/Nosi/Nosi'
 import Pdf from '@/components/Pdf/Pdf'
 import Pds from '@/components/Pds/Pds'
 import ProfileDashboard from '@/components/ProfileDashboard'
@@ -349,6 +351,26 @@ export default function Page({ params }: { params: { id: string } }) {
                 </li>
                 <li>
                   <Link
+                    href={`/profile/${userId}?page=nosi`}
+                    className={`app__profile_menu_link ${
+                      page === 'nosi' ? 'bg-gray-700' : ''
+                    }`}
+                  >
+                    <span className="flex-1 ml-3 whitespace-nowrap">NOSI</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href={`/profile/${userId}?page=nosa`}
+                    className={`app__profile_menu_link ${
+                      page === 'nosa' ? 'bg-gray-700' : ''
+                    }`}
+                  >
+                    <span className="flex-1 ml-3 whitespace-nowrap">NOSA</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href={`/profile/${userId}?page=promotions`}
                     className={`app__profile_menu_link ${
                       page === 'promotions' ? 'bg-gray-700' : ''
@@ -420,6 +442,8 @@ export default function Page({ params }: { params: { id: string } }) {
             {page && page === 'requests' && (
               <UserRequests forDashboard={false} userId={userId} />
             )}
+            {page && page === 'nosi' && <Nosi userId={userId} />}
+            {page && page === 'nosa' && <Nosa userId={userId} />}
             {page && page === 'ctos' && <Cto userId={userId} />}
             {page && page === 'servicecredits' && (
               <ServiceCredits userId={userId} />

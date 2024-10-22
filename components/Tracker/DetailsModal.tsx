@@ -1,24 +1,41 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 'use client'
-import { format } from 'date-fns'
-import Remarks from './Remarks/Remarks'
-import { useSupabase } from '@/context/SupabaseProvider'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useSupabase } from '@/context/SupabaseProvider'
 import { PaperClipIcon } from '@heroicons/react/24/solid'
+import { format } from 'date-fns'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { type FileWithPath, useDropzone } from 'react-dropzone'
+import Remarks from './Remarks/Remarks'
 
-import type { DocumentTypes, AttachmentTypes, FollowersTypes, Employee, namesType } from '@/types'
-import { ConfirmModal, CustomButton, SearchUserInput, StatusFlow, UserBlock } from '@/components'
-import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { recount } from '@/GlobalRedux/Features/recountSlice'
+import {
+  ConfirmModal,
+  CustomButton,
+  SearchUserInput,
+  StatusFlow,
+  UserBlock
+} from '@/components'
 import { useFilter } from '@/context/FilterContext'
-import { BellAlertIcon, BellSlashIcon, StarIcon, XMarkIcon } from '@heroicons/react/20/solid'
-import AddStickyModal from './AddStickyModal'
+import type {
+  AttachmentTypes,
+  DocumentTypes,
+  Employee,
+  FollowersTypes,
+  namesType
+} from '@/types'
 import { fetchLeaveCards, logError } from '@/utils/fetchApi'
+import {
+  BellAlertIcon,
+  BellSlashIcon,
+  StarIcon,
+  XMarkIcon
+} from '@heroicons/react/20/solid'
+import { useDispatch, useSelector } from 'react-redux'
 import { Tooltip } from 'react-tooltip'
+import AddStickyModal from './AddStickyModal'
 import CreditsCertification from './CreditsCertification'
 
 interface ModalProps {
@@ -26,7 +43,7 @@ interface ModalProps {
   documentData: DocumentTypes
 }
 
-function Attachment ({ id, file }: { id: string, file: string }) {
+function Attachment({ id, file }: { id: string; file: string }) {
   const [downloading, setDownloading] = useState(false)
 
   const { supabase } = useSupabase()
@@ -36,8 +53,7 @@ function Attachment ({ id, file }: { id: string, file: string }) {
 
     setDownloading(true)
 
-    const { data, error } = await supabase
-      .storage
+    const { data, error } = await supabase.storage
       .from('hrm_documents')
       .download(`requests/${id}/${file}`)
 
@@ -58,10 +74,12 @@ function Attachment ({ id, file }: { id: string, file: string }) {
   return (
     <div
       onClick={() => handleDownloadFile(file)}
-      className={`flex space-x-2 items-center ${downloading ? '' : 'cursor-pointer'}`}>
-      <PaperClipIcon
-        className='w-4 h-4 text-blue-700 '/>
-      <span className='text-blue-700 font-medium text-[10px]'>
+      className={`flex space-x-2 items-center ${
+        downloading ? '' : 'cursor-pointer'
+      }`}
+    >
+      <PaperClipIcon className="w-4 h-4 text-blue-700 " />
+      <span className="text-blue-700 font-medium text-[10px]">
         {file}
         {downloading ? ' downloading...' : ''}
       </span>
@@ -69,7 +87,10 @@ function Attachment ({ id, file }: { id: string, file: string }) {
   )
 }
 
-export default function DetailsModal ({ hideModal, documentData: originalData }: ModalProps) {
+export default function DetailsModal({
+  hideModal,
+  documentData: originalData
+}: ModalProps) {
   const [documentData, setDocumentData] = useState<DocumentTypes>(originalData)
   const [attachments, setAttachments] = useState<AttachmentTypes[] | []>([])
   const [loadingReplies, setLoadingReplies] = useState(false)
@@ -95,7 +116,9 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
 
   const wrapperRef = useRef<HTMLDivElement>(null)
 
-  const user: Employee = systemUsers.find((user: Employee) => user.id === session.user.id)
+  const user: Employee = systemUsers.find(
+    (user: Employee) => user.id === session.user.id
+  )
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -103,12 +126,10 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
 
   const handleFollow = async () => {
     try {
-      const { error } = await supabase
-        .from('hrm_tracker_followers')
-        .insert({
-          tracker_id: documentData.id,
-          user_id: user.id
-        })
+      const { error } = await supabase.from('hrm_tracker_followers').insert({
+        tracker_id: documentData.id,
+        user_id: user.id
+      })
       if (error) throw new Error(error.message)
 
       setToast('success', 'Successfully Followed.')
@@ -163,18 +184,22 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       }
 
       // Remove the duplicated IDs
-      const uniqueIds = userIds.reduce((accumulator: string[], currentValue: string) => {
-        if (!accumulator.includes(currentValue)) {
-          accumulator.push(currentValue)
-        }
-        return accumulator
-      }, [])
+      const uniqueIds = userIds.reduce(
+        (accumulator: string[], currentValue: string) => {
+          if (!accumulator.includes(currentValue)) {
+            accumulator.push(currentValue)
+          }
+          return accumulator
+        },
+        []
+      )
 
       const notificationData: any[] = []
 
-      const message = actionType === 'Forwarded'
-        ? `The ${document.type} Request #${document.reference_code} has been forwarded to you for verification/approval.`
-        : `The status of ${document.type} request #${document.reference_code} has been changed to ${actionType}.`
+      const message =
+        actionType === 'Forwarded'
+          ? `The ${document.type} Request #${document.reference_code} has been forwarded to you for verification/approval.`
+          : `The status of ${document.type} request #${document.reference_code} has been changed to ${actionType}.`
 
       uniqueIds.forEach((userId) => {
         notificationData.push({
@@ -211,7 +236,9 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       setConfirmMessage('Are you sure you want to Approve this?')
     }
     if (action === 'For Reverification') {
-      setConfirmMessage('Are you sure you want to change this to "For Reverification?"')
+      setConfirmMessage(
+        'Are you sure you want to change this to "For Reverification?"'
+      )
     }
     if (action === 'Disapprove') {
       setConfirmMessage('Are you sure you want to Disapprove this?')
@@ -279,30 +306,44 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
         .eq('id', documentData.id)
 
       if (error) {
-        void logError('Forward Request', 'hrm_request_trackers', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Forward Request',
+          'hrm_request_trackers',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
-      const { error: error2 } = await supabase
-        .from('hrm_tracker_flow')
-        .insert({
-          tracker_id: documentData.id,
-          user_id: user.id,
-          receiver_id: selectedUser.id,
-          status: 'Forwarded'
-        })
+      const { error: error2 } = await supabase.from('hrm_tracker_flow').insert({
+        tracker_id: documentData.id,
+        user_id: user.id,
+        receiver_id: selectedUser.id,
+        status: 'Forwarded'
+      })
 
       if (error2) {
-        void logError('Forward Request Flow', 'hrm_tracker_flow', '', error2.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Forward Request Flow',
+          'hrm_tracker_flow',
+          '',
+          error2.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error2.message)
       }
 
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
       setDocumentData(items[foundIndex]) // update ui with new data
@@ -339,8 +380,16 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
         .eq('id', documentData.id)
 
       if (error) {
-        void logError('Approval', 'hrm_request_trackers', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Approval',
+          'hrm_request_trackers',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
@@ -366,19 +415,37 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
           .eq('id', documentData.id)
 
         if (error2) {
-          void logError('Approval Flow Logs', 'hrm_tracker_flow', '', error2.message)
+          void logError(
+            'Approval Flow Logs',
+            'hrm_tracker_flow',
+            '',
+            error2.message
+          )
         }
       }
 
       // Add entry to employees leave card if type of request is Leave
       if (documentData.type === 'Leave') {
-        const result = await fetchLeaveCards(documentData.created_by, '', 300, 0) // fetch all
+        const result = await fetchLeaveCards(
+          documentData.created_by,
+          '',
+          300,
+          0
+        ) // fetch all
 
         if (result.data) {
-          const slList = result.data.filter(item => item.type === 'Sick Leave')
-          const vlList = result.data.filter(item => item.type === 'Vacation Leave')
-          const scList = result.data.filter(item => item.type === 'Service Credit')
-          const cocList = result.data.filter(item => item.type === 'Compensatory Overtime Credit')
+          const slList = result.data.filter(
+            (item) => item.type === 'Sick Leave'
+          )
+          const vlList = result.data.filter(
+            (item) => item.type === 'Vacation Leave'
+          )
+          const scList = result.data.filter(
+            (item) => item.type === 'Service Credit'
+          )
+          const cocList = result.data.filter(
+            (item) => item.type === 'Compensatory Overtime Credit'
+          )
 
           // first index of array should be the latest and updated balance
           const slBalance = slList.length > 0 ? Number(slList[0].balance) : 0
@@ -388,52 +455,72 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
 
           // insert array
           const leaveCardData = []
-          if (documentData.leave_credit_use_coc && cocBalance > Number(documentData.leave_credit_use_coc)) {
+          if (
+            documentData.leave_credit_use_coc &&
+            cocBalance > Number(documentData.leave_credit_use_coc)
+          ) {
             leaveCardData.push({
               adjustment_date: new Date(),
               particulars: 'Compensatory Overtime Credit Adjustment',
               remarks: 'Credit used from Leave Request',
               credits_used: documentData.leave_credit_use_coc,
-              balance: (cocBalance - Number(documentData.leave_credit_use_coc)).toFixed(3),
+              balance: (
+                cocBalance - Number(documentData.leave_credit_use_coc)
+              ).toFixed(3),
               type: 'Compensatory Overtime Credit',
               tracker_id: documentData.id,
               user_id: documentData.created_by
             })
           }
 
-          if (documentData.leave_credit_use_sc && scBalance > Number(documentData.leave_credit_use_sc)) {
+          if (
+            documentData.leave_credit_use_sc &&
+            scBalance > Number(documentData.leave_credit_use_sc)
+          ) {
             leaveCardData.push({
               adjustment_date: new Date(),
               particulars: 'Service Credit Adjustment',
               remarks: 'Credit used from Leave Request',
               credits_used: documentData.leave_credit_use_sc,
-              balance: (scBalance - Number(documentData.leave_credit_use_sc)).toFixed(3),
+              balance: (
+                scBalance - Number(documentData.leave_credit_use_sc)
+              ).toFixed(3),
               type: 'Service Credit',
               tracker_id: documentData.id,
               user_id: documentData.created_by
             })
           }
 
-          if (documentData.leave_credit_use_vl && vlBalance > Number(documentData.leave_credit_use_vl)) {
+          if (
+            documentData.leave_credit_use_vl &&
+            vlBalance > Number(documentData.leave_credit_use_vl)
+          ) {
             leaveCardData.push({
               adjustment_date: new Date(),
               particulars: 'Vacation Leave Adjustment',
               remarks: 'Credit used from Leave Request',
               credits_used: documentData.leave_credit_use_vl,
-              balance: (vlBalance - Number(documentData.leave_credit_use_vl)).toFixed(3),
+              balance: (
+                vlBalance - Number(documentData.leave_credit_use_vl)
+              ).toFixed(3),
               type: 'Vacation Leave',
               tracker_id: documentData.id,
               user_id: documentData.created_by
             })
           }
 
-          if (documentData.leave_credit_use_sl && slBalance > Number(documentData.leave_credit_use_sl)) {
+          if (
+            documentData.leave_credit_use_sl &&
+            slBalance > Number(documentData.leave_credit_use_sl)
+          ) {
             leaveCardData.push({
               adjustment_date: new Date(),
               particulars: 'Sick Leave Adjustment',
               remarks: 'Credit used from Leave Request',
               credits_used: documentData.leave_credit_use_sl,
-              balance: (slBalance - Number(documentData.leave_credit_use_sl)).toFixed(3),
+              balance: (
+                slBalance - Number(documentData.leave_credit_use_sl)
+              ).toFixed(3),
               type: 'Sick Leave',
               tracker_id: documentData.id,
               user_id: documentData.created_by
@@ -446,7 +533,12 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
             .insert(leaveCardData)
 
           if (error) {
-            void logError('Leave request - leave card adjustment', 'hrm_leave_cards', JSON.stringify(leaveCardData), error.message)
+            void logError(
+              'Leave request - leave card adjustment',
+              'hrm_leave_cards',
+              JSON.stringify(leaveCardData),
+              error.message
+            )
             throw new Error(error.message)
           }
         }
@@ -456,7 +548,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
       setDocumentData(items[foundIndex]) // update ui with new data
@@ -493,8 +585,16 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
         .eq('id', documentData.id)
 
       if (error) {
-        void logError('For Reverification', 'hrm_request_trackers', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'For Reverification',
+          'hrm_request_trackers',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
@@ -520,14 +620,19 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
           .eq('id', documentData.id)
 
         if (error2) {
-          void logError('Approval Flow Logs', 'hrm_tracker_flow', '', error2.message)
+          void logError(
+            'Approval Flow Logs',
+            'hrm_tracker_flow',
+            '',
+            error2.message
+          )
         }
       }
 
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
       setDocumentData(items[foundIndex]) // update ui with new data
@@ -564,8 +669,16 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
         .eq('id', documentData.id)
 
       if (error) {
-        void logError('Approval Recommended', 'hrm_request_trackers', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Approval Recommended',
+          'hrm_request_trackers',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
@@ -591,14 +704,19 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
           .eq('id', documentData.id)
 
         if (error2) {
-          void logError('Approval Recommended Flow Logs', 'hrm_tracker_flow', '', error2.message)
+          void logError(
+            'Approval Recommended Flow Logs',
+            'hrm_tracker_flow',
+            '',
+            error2.message
+          )
         }
       }
 
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
       setDocumentData(items[foundIndex]) // update ui with new data
@@ -635,8 +753,16 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
         .eq('id', documentData.id)
 
       if (error) {
-        void logError('Cancel Request', 'hrm_request_trackers', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Cancel Request',
+          'hrm_request_trackers',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
@@ -662,14 +788,19 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
           .eq('id', documentData.id)
 
         if (error2) {
-          void logError('Cancel Request Flow Logs', 'hrm_tracker_flow', '', error2.message)
+          void logError(
+            'Cancel Request Flow Logs',
+            'hrm_tracker_flow',
+            '',
+            error2.message
+          )
         }
       }
 
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
       setDocumentData(items[foundIndex]) // update ui with new data
@@ -700,29 +831,38 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
         .eq('id', documentData.id)
 
       if (error) {
-        void logError('Disapproved', 'hrm_request_trackers', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Disapproved',
+          'hrm_request_trackers',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
-      const { error: error2 } = await supabase
-        .from('hrm_tracker_flow')
-        .insert({
-          tracker_id: documentData.id,
-          user_id: session.user.id,
-          status: 'Disapproved'
-        })
+      const { error: error2 } = await supabase.from('hrm_tracker_flow').insert({
+        tracker_id: documentData.id,
+        user_id: session.user.id,
+        status: 'Disapproved'
+      })
 
       if (error2) {
         void logError('Disapproved', 'hrm_tracker_flow', '', error2.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error2.message)
       }
 
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
       setDocumentData(items[foundIndex]) // update ui with new data
@@ -746,14 +886,14 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
   const fetchAttachments = async () => {
     setLoadingReplies(true)
 
-    const { data, error }: { data: AttachmentTypes[] | [], error: unknown } = await supabase
-      .storage
-      .from('hrm_documents')
-      .list(`requests/${documentData.id}`, {
-        limit: 100,
-        offset: 0,
-        sortBy: { column: 'name', order: 'asc' }
-      })
+    const { data, error }: { data: AttachmentTypes[] | []; error: unknown } =
+      await supabase.storage
+        .from('hrm_documents')
+        .list(`requests/${documentData.id}`, {
+          limit: 100,
+          offset: 0,
+          sortBy: { column: 'name', order: 'asc' }
+        })
 
     if (error) console.error(error)
     setLoadingReplies(false)
@@ -762,11 +902,13 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
   }
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
-    setSelectedImages(acceptedFiles.map(file => (
-      Object.assign(file, {
-        filename: file.name
-      })
-    )))
+    setSelectedImages(
+      acceptedFiles.map((file) =>
+        Object.assign(file, {
+          filename: file.name
+        })
+      )
+    )
   }, [])
 
   const maxSize = 5242880 // 5 MB in bytes
@@ -810,16 +952,22 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
   }
 
   const deleteFile = (file: FileWithPath) => {
-    const files = selectedImages.filter((f: FileWithPath) => f.path !== file.path)
+    const files = selectedImages.filter(
+      (f: FileWithPath) => f.path !== file.path
+    )
     setSelectedImages(files)
   }
 
   const selectedFiles = selectedImages?.map((file: any, index: number) => (
-    <div key={index} className="flex space-x-1 py-px items-center justify-start relative align-top">
+    <div
+      key={index}
+      className="flex space-x-1 py-px items-center justify-start relative align-top"
+    >
       <XMarkIcon
         onClick={() => deleteFile(file)}
-        className='cursor-pointer w-5 h-5 text-red-400'/>
-      <span className='text-xs'>{file.filename}</span>
+        className="cursor-pointer w-5 h-5 text-red-400"
+      />
+      <span className="text-xs">{file.filename}</span>
     </div>
   ))
 
@@ -828,7 +976,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     setSelectedItem(item)
   }
 
-  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+  const handleSelectedUsers = (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
       setSelectedUser(selectedUsers[0])
     } else {
@@ -873,7 +1021,7 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
 
     void checkedFollowStatus()
     void checkedIfStickyStatus()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -887,492 +1035,730 @@ export default function DetailsModal ({ hideModal, documentData: originalData }:
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wrapperRef])
 
   return (
-      <div ref={wrapperRef} className="app__modal_wrapper">
-        <div className="app__modal_wrapper2_large">
-          <div className="app__modal_wrapper3">
-            <div className="app__modal_header">
-              <h5 className="app__modal_header_text flex-1">Request Details</h5>
-              <div className='flex space-x-4 items-center justify-end'>
-                {
-                  !hideStickyButton &&
-                    <>
-                      <StarIcon onClick={() => handleAddToStickies(documentData)} className='cursor-pointer outline-none w-6 h-6 text-yellow-500' data-tooltip-id="add-sticky-tooltip" data-tooltip-content="Add to Stickies"/>
-                      <Tooltip id="add-sticky-tooltip" place='bottom-end'/>
-                    </>
-                }
-                {
-                  !hideFollowButton
-                    ? <>
-                        <BellSlashIcon onClick={handleFollow} className='w-6 h-6 text-blue-700 cursor-pointer outline-none' data-tooltip-id="follow-tooltip" data-tooltip-content="Follow/Unfollow"/>
-                        <Tooltip id="follow-tooltip" place='bottom-end'/>
-                      </>
-                    : <>
-                        <BellAlertIcon onClick={handleUnfollow} className='w-6 h-6 text-blue-700 cursor-pointer outline-none' data-tooltip-id="follow-tooltip" data-tooltip-content="Follow/Unfollow"/>
-                        <Tooltip id="follow-tooltip" place='bottom-end'/>
-                      </>
-                }
-                <CustomButton
-                  containerStyles='app__btn_gray'
-                  title='Close'
-                  btnType='button'
-                  handleClick={hideModal}
-                />
-              </div>
+    <div ref={wrapperRef} className="app__modal_wrapper">
+      <div className="app__modal_wrapper2_large">
+        <div className="app__modal_wrapper3">
+          <div className="app__modal_header">
+            <h5 className="app__modal_header_text flex-1">Request Details</h5>
+            <div className="flex space-x-4 items-center justify-end">
+              {!hideStickyButton && (
+                <>
+                  <StarIcon
+                    onClick={() => handleAddToStickies(documentData)}
+                    className="cursor-pointer outline-none w-6 h-6 text-yellow-500"
+                    data-tooltip-id="add-sticky-tooltip"
+                    data-tooltip-content="Add to Stickies"
+                  />
+                  <Tooltip id="add-sticky-tooltip" place="bottom-end" />
+                </>
+              )}
+              {!hideFollowButton ? (
+                <>
+                  <BellSlashIcon
+                    onClick={handleFollow}
+                    className="w-6 h-6 text-blue-700 cursor-pointer outline-none"
+                    data-tooltip-id="follow-tooltip"
+                    data-tooltip-content="Follow/Unfollow"
+                  />
+                  <Tooltip id="follow-tooltip" place="bottom-end" />
+                </>
+              ) : (
+                <>
+                  <BellAlertIcon
+                    onClick={handleUnfollow}
+                    className="w-6 h-6 text-blue-700 cursor-pointer outline-none"
+                    data-tooltip-id="follow-tooltip"
+                    data-tooltip-content="Follow/Unfollow"
+                  />
+                  <Tooltip id="follow-tooltip" place="bottom-end" />
+                </>
+              )}
+              <CustomButton
+                containerStyles="app__btn_gray"
+                title="Close"
+                btnType="button"
+                handleClick={hideModal}
+              />
             </div>
-            <div className="flex space-x-2 items-center justify-between border-b p-4 bg-orange-50">
-              <div className='w-full'>
-                {/* Cancel Request */}
-                {
-                  (documentData.created_by === session.user.id && documentData.current_status !== 'Approved' && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled') &&
-                    <div className='mb-6'>
-                      <div className='space-x-2'>
-                        <CustomButton
-                          containerStyles='app__btn_blue'
-                          title={saving ? 'Saving...' : 'Cancel This Request'}
-                          btnType='button'
-                          handleClick={() => HandleConfirm('Cancel')}
-                        />
-                      </div>
-                      <div className='text-[10px] mt-1 text-gray-600'>Requests can only be cancelled by the requester, by clicking this button, your request process will be terminated.</div>
+          </div>
+          <div className="flex space-x-2 items-center justify-between border-b p-4 bg-orange-50">
+            <div className="w-full">
+              {/* Cancel Request */}
+              {documentData.created_by === session.user.id &&
+                documentData.current_status !== 'Approved' &&
+                documentData.current_status !== 'Disapproved' &&
+                documentData.current_status !== 'Cancelled' && (
+                  <div className="mb-6">
+                    <div className="space-x-2">
+                      <CustomButton
+                        containerStyles="app__btn_blue"
+                        title={saving ? 'Saving...' : 'Cancel This Request'}
+                        btnType="button"
+                        handleClick={() => HandleConfirm('Cancel')}
+                      />
                     </div>
-                }
-                {/* Recommending Approval */}
-                {
-                  (
-                    (documentData.current_approver_id !== session.user.id && documentData.receiver_id === session.user.id && documentData.current_status !== 'Approved' && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled') &&
-                    !(hasAccess('sds') || hasAccess('asds'))
-                  ) &&
-                    <div className='mb-6'>
-                      <div className='space-x-2'>
-                        <CustomButton
-                          containerStyles='app__btn_green'
-                          title={saving ? 'Saving...' : 'Recommend Approval'}
-                          btnType='button'
-                          handleClick={() => HandleConfirm('Recommend Approval')}
-                        />
-                        <CustomButton
-                          containerStyles='app__btn_red'
-                          title={saving ? 'Saving...' : 'Disapprove'}
-                          btnType='button'
-                          handleClick={() => HandleConfirm('Disapprove')}
-                        />
-                      </div>
-                      <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Approve&apos;, you are authorizing and granting permission to the requester to proceed with the specified request.</div>
+                    <div className="text-[10px] mt-1 text-gray-600">
+                      Requests can only be cancelled by the requester, by
+                      clicking this button, your request process will be
+                      terminated.
                     </div>
-                }
-                {/* Final Approval */}
-                {
-                  (
-                    (documentData.receiver_id === session.user.id && documentData.current_status === 'Approval Recommended') &&
-                    (hasAccess('sds') || hasAccess('asds'))
-                  ) &&
-                    <div className='mb-6'>
-                      <div className='space-x-2'>
-                        <CustomButton
-                          containerStyles='app__btn_green'
-                          title={saving ? 'Saving...' : 'Approve'}
-                          btnType='button'
-                          handleClick={() => HandleConfirm('Approve')}
-                        />
-                        <CustomButton
-                          containerStyles='app__btn_orange'
-                          title='For Reverification'
-                          btnType='button'
-                          handleClick={() => HandleConfirm('For Reverification')}
-                        />
-                        <CustomButton
-                          containerStyles='app__btn_red'
-                          title={saving ? 'Saving...' : 'Disapprove'}
-                          btnType='button'
-                          handleClick={() => HandleConfirm('Disapprove')}
-                        />
-                      </div>
-                      <div className='text-[10px] mt-1 text-gray-600'>By clicking &apos;Approve&apos;, you are authorizing and granting permission to the requester to proceed with the specified request.</div>
-                    </div>
-                }
-                {/* Forward */}
-                {
-                  (documentData.receiver_id === session.user.id && documentData.current_status !== 'Disapproved' && documentData.current_status !== 'Cancelled' && documentData.current_status !== 'Approved') &&
-                    <div className="">
-                      <div className='font-medium text-sm text-gray-700'>Forward this request to:</div>
-                      <div className="flex w-full space-x-2">
-                        <SearchUserInput
-                          isMultiple={false}
-                          excludedIds={[session.user.id]}
-                          classNames='w-1/2'
-                          handleSelectedUsers={handleSelectedUsers}/>
-                        <CustomButton
-                          containerStyles='app__btn_green'
-                          title={saving ? 'Saving...' : 'Forward'}
-                          btnType='button'
-                          handleClick={() => HandleConfirm('Forward')}
-                        />
-                      </div>
-                    </div>
-                }
-              </div>
-            </div>
-            <div className="modal-body relative overflow-x-scroll">
-              {/* Document Details */}
-              <div className='py-2'>
-                <div className='flex flex-col lg:flex-row w-full items-start justify-between space-x-2 text-xs dark:text-gray-400'>
-                  {/* First Column */}
-                  <div className='px-4 w-full'>
-                    <table className='w-full'>
-                      <thead><tr><th className='w-40'></th><th></th></tr></thead>
-                      <tbody>
-                        <tr>
-                          <td className='px-2 py-2 font-light text-right'>Request Type:</td>
-                          <td className='text-sm font-medium'>{documentData.type}</td>
-                        </tr>
-                        <tr>
-                          <td className='px-2 py-2 font-light text-right'>Current Status:</td>
-                          <td>
-                            {documentData.current_status === 'For Verification' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium text-sm'>{documentData.current_status}</span>}
-                            {documentData.current_status === 'Approval Recommended' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium text-sm'>{documentData.current_status}</span>}
-                            {documentData.current_status === 'Cancelled' && <span className='text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium text-sm'>{documentData.current_status}</span>}
-                            {documentData.current_status === 'Approved' && <span className='text-green-900 px-1 bg-green-300 border border-green-700 font-medium text-sm'>{documentData.current_status}</span>}
-                            {documentData.current_status === 'Disapproved' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium text-sm'>{documentData.current_status}</span>}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className='px-2 py-2 font-light text-right'>Reference Code:</td>
-                          <td>
-                            <span className='font-medium text-sm'>{documentData.reference_code}</span>
-                          </td>
-                        </tr>
-                        {/* Leave Requests Fields */}
-                        {
-                          documentData.type === 'Leave' &&
-                            <>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Leave Type:</td>
-                                <td className='text-sm font-medium'>{documentData.leave_type}</td>
-                              </tr>
-                              {
-                                (documentData.leave_days && documentData.leave_to && documentData.leave_days.trim() !== '' && documentData.leave_to.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Number of working days applied for:</td>
-                                    <td className='text-sm font-medium'>{documentData.leave_days}</td>
-                                  </tr>
-                              }
-                              {
-                                (documentData.leave_from && documentData.leave_to && documentData.leave_from.trim() !== '' && documentData.leave_to.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Inclusive Dates:</td>
-                                    <td className='text-sm font-medium'>{format(new Date(documentData.leave_from), 'MMMM dd, yyyy')} to {format(new Date(documentData.leave_to), 'MMMM dd, yyyy')}</td>
-                                  </tr>
-                              }
-                              {
-                                (documentData.leave_location && documentData.leave_location.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Location:</td>
-                                    <td className='text-sm font-medium'>{documentData.leave_location} {documentData.leave_specify_location}</td>
-                                  </tr>
-                              }
-                              {
-                                (documentData.leave_hospitalization && documentData.leave_hospitalization.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Hospitalization:</td>
-                                    <td className='text-sm font-medium'>{documentData.leave_hospitalization} - {documentData.leave_illness}</td>
-                                  </tr>
-                              }
-                              {
-                                (documentData.leave_women_illness && documentData.leave_women_illness.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Illness:</td>
-                                    <td className='text-sm font-medium'>{documentData.leave_women_illness}</td>
-                                  </tr>
-                              }
-                              {
-                                (documentData.leave_study_purpose && documentData.leave_study_purpose.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Study Purpose:</td>
-                                    <td className='text-sm font-medium'>{documentData.leave_study_purpose}</td>
-                                  </tr>
-                              }
-                              {
-                                (documentData.leave_other_purpose && documentData.leave_other_purpose.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Other Purpose:</td>
-                                    <td className='text-sm font-medium'>{documentData.leave_other_purpose}</td>
-                                  </tr>
-                              }
-                              {
-                                (documentData.leave_commutation && documentData.leave_commutation.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Commutation:</td>
-                                    <td className='text-sm font-medium'>{documentData.leave_commutation}</td>
-                                  </tr>
-                              }
-                            </>
-                        }
-                        {/* End - Leave Requests Fields */}
-
-                        {/* Locator Slip Fields */}
-                        {
-                          documentData.type === 'Locator Slip' &&
-                            <>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Travel Type:</td>
-                                <td className='text-sm font-medium'>{documentData.locator_slip_type}</td>
-                              </tr>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Purpose:</td>
-                                <td className='text-sm font-medium'>{documentData.locator_slip_purpose}</td>
-                              </tr>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Date:</td>
-                                <td className='text-sm font-medium'>{format(new Date(documentData.locator_slip_date), 'MMMM dd, yyyy')}</td>
-                              </tr>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Time:</td>
-                                <td className='text-sm font-medium'>{documentData.locator_slip_time}</td>
-                              </tr>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Destination:</td>
-                                <td className='text-sm font-medium'>{documentData.locator_slip_destination}</td>
-                              </tr>
-                            </>
-                        }
-                        {/* End - Locator Slip Fields */}
-
-                        {/* Service Record Print Request Fields */}
-                        {
-                          documentData.type === 'Service Record Print Request' &&
-                            <>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Purpose:</td>
-                                <td className='text-sm font-medium'>{documentData.service_record_print_request_purpose}</td>
-                              </tr>
-                            </>
-                        }
-                        {/* End - Locator Slip Fields */}
-
-                        {/* Service Undertime Permit Fields */}
-                        {
-                          documentData.type === 'Undertime Permit' &&
-                            <>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Time to leave the office:</td>
-                                <td className='text-sm font-medium'>{documentData.undertime_permit_time}</td>
-                              </tr>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Reason:</td>
-                                <td className='text-sm font-medium'>{documentData.undertime_permit_reason}</td>
-                              </tr>
-                            </>
-                        }
-                        {/* End - Undertime Permit Fields */}
-
-                        {/* Pass Slip Fields */}
-                        {
-                          documentData.type === 'Pass Slip' &&
-                            <>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Request Permission To:</td>
-                                <td className='text-sm font-medium'>{documentData.pass_slip_type}</td>
-                              </tr>
-                              {
-                                (documentData.pass_slip_intended_time_departure && documentData.pass_slip_intended_time_departure.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Intended Time of Departure:</td>
-                                    <td className='text-sm font-medium'>{documentData.pass_slip_intended_time_departure}</td>
-                                  </tr>
-                              }
-                              {
-                                (documentData.pass_slip_intended_time_arrival && documentData.pass_slip_intended_time_arrival.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Intended Time of Departure:</td>
-                                    <td className='text-sm font-medium'>{documentData.pass_slip_intended_time_arrival}</td>
-                                  </tr>
-                              }
-                              {
-                                (documentData.pass_slip_fixed_time_from && documentData.pass_slip_fixed_time_from.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>From:</td>
-                                    <td className='text-sm font-medium'>{documentData.pass_slip_fixed_time_from}</td>
-                                  </tr>
-                              }
-                              {
-                                (documentData.pass_slip_fixed_time_to && documentData.pass_slip_fixed_time_to.trim() !== '') &&
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>To:</td>
-                                    <td className='text-sm font-medium'>{documentData.pass_slip_fixed_time_to}</td>
-                                  </tr>
-                              }
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Purpose:</td>
-                                <td className='text-sm font-medium'>{documentData.pass_slip_purpose}</td>
-                              </tr>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Reason:</td>
-                                <td className='text-sm font-medium'>{documentData.pass_slip_reason}</td>
-                              </tr>
-                            </>
-                        }
-                        {/* End - Pass Slip Fields */}
-
-                        {/* Travel Authority Fields */}
-                        {
-                          documentData.type === 'Travel Authority' &&
-                            <>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Travel Type:</td>
-                                <td className='text-sm font-medium'>{documentData.travel_type}</td>
-                              </tr>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Purpose:</td>
-                                <td className='text-sm font-medium'>{documentData.travel_purpose}</td>
-                              </tr>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Inclusive Date (From):</td>
-                                <td className='text-sm font-medium'>{format(new Date(documentData.travel_from), 'MMMM dd, yyyy')}</td>
-                              </tr>
-                              <tr>
-                                <td className='px-2 py-2 font-light text-right'>Inclusive Date (To):</td>
-                                <td className='text-sm font-medium'>{format(new Date(documentData.travel_to), 'MMMM dd, yyyy')}</td>
-                              </tr>
-                              {
-                                documentData.travel_type === 'Official Travel' &&
-                                  <>
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Fund Source:</td>
-                                    <td className='text-sm font-medium'>{documentData.travel_fund_source}</td>
-                                  </tr>
-                                  <tr>
-                                    <td className='px-2 py-2 font-light text-right'>Host of Activity:</td>
-                                    <td className='text-sm font-medium'>{documentData.travel_host}</td>
-                                  </tr>
-                                  </>
-                              }
-                            </>
-                        }
-                        {/* End - Travel Authority Fields */}
-                      </tbody>
-                    </table>
                   </div>
-                  {/* Second Column */}
-                  <div className='px-2 w-full'>
-                    <table className='w-full'>
-                      <thead><tr><th className='w-40'></th><th></th></tr></thead>
-                      <tbody>
-                        <tr>
-                          <td className='px-2 font-light text-right align-top'>Requester:</td>
-                          <td className='font-medium align-top'>
-                            <div className='text-gray-500 text-[10px]'>{format(new Date(documentData.created_at), 'dd MMM yyyy h:mm a')}</div>
-                            <UserBlock user={documentData.creator}/>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className='px-2 pt-2 font-light text-right align-top'>Attachments:</td>
-                          <td className='pt-2'>
-                            <div>
+                )}
+              {/* Recommending Approval */}
+              {documentData.current_approver_id !== session.user.id &&
+                documentData.receiver_id === session.user.id &&
+                documentData.current_status !== 'Approved' &&
+                documentData.current_status !== 'Disapproved' &&
+                documentData.current_status !== 'Cancelled' &&
+                !(hasAccess('sds') || hasAccess('asds')) && (
+                  <div className="mb-6">
+                    <div className="space-x-2">
+                      <CustomButton
+                        containerStyles="app__btn_green"
+                        title={saving ? 'Saving...' : 'Recommend Approval'}
+                        btnType="button"
+                        handleClick={() => HandleConfirm('Recommend Approval')}
+                      />
+                      <CustomButton
+                        containerStyles="app__btn_red"
+                        title={saving ? 'Saving...' : 'Disapprove'}
+                        btnType="button"
+                        handleClick={() => HandleConfirm('Disapprove')}
+                      />
+                    </div>
+                    <div className="text-[10px] mt-1 text-gray-600">
+                      By clicking &apos;Approve&apos;, you are authorizing and
+                      granting permission to the requester to proceed with the
+                      specified request.
+                    </div>
+                  </div>
+                )}
+              {/* Final Approval */}
+              {documentData.receiver_id === session.user.id &&
+                documentData.current_status === 'Approval Recommended' &&
+                (hasAccess('sds') || hasAccess('asds')) && (
+                  <div className="mb-6">
+                    <div className="space-x-2">
+                      <CustomButton
+                        containerStyles="app__btn_green"
+                        title={saving ? 'Saving...' : 'Approve'}
+                        btnType="button"
+                        handleClick={() => HandleConfirm('Approve')}
+                      />
+                      <CustomButton
+                        containerStyles="app__btn_orange"
+                        title="For Reverification"
+                        btnType="button"
+                        handleClick={() => HandleConfirm('For Reverification')}
+                      />
+                      <CustomButton
+                        containerStyles="app__btn_red"
+                        title={saving ? 'Saving...' : 'Disapprove'}
+                        btnType="button"
+                        handleClick={() => HandleConfirm('Disapprove')}
+                      />
+                    </div>
+                    <div className="text-[10px] mt-1 text-gray-600">
+                      By clicking &apos;Approve&apos;, you are authorizing and
+                      granting permission to the requester to proceed with the
+                      specified request.
+                    </div>
+                  </div>
+                )}
+              {/* Forward */}
+              {documentData.receiver_id === session.user.id &&
+                documentData.current_status !== 'Disapproved' &&
+                documentData.current_status !== 'Cancelled' &&
+                documentData.current_status !== 'Approved' && (
+                  <div className="">
+                    <div className="font-medium text-sm text-gray-700">
+                      Forward this request to:
+                    </div>
+                    <div className="flex w-full space-x-2">
+                      <SearchUserInput
+                        isMultiple={false}
+                        excludedIds={[session.user.id]}
+                        classNames="w-1/2"
+                        handleSelectedUsers={handleSelectedUsers}
+                      />
+                      <CustomButton
+                        containerStyles="app__btn_green"
+                        title={saving ? 'Saving...' : 'Forward'}
+                        btnType="button"
+                        handleClick={() => HandleConfirm('Forward')}
+                      />
+                    </div>
+                  </div>
+                )}
+            </div>
+          </div>
+          <div className="modal-body relative overflow-x-scroll">
+            {/* Document Details */}
+            <div className="py-2">
+              <div className="flex flex-col lg:flex-row w-full items-start justify-between space-x-2 text-xs dark:text-gray-400">
+                {/* First Column */}
+                <div className="px-4 w-full">
+                  <table className="w-full">
+                    <thead>
+                      <tr>
+                        <th className="w-40"></th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="px-2 py-2 font-light text-right">
+                          Request Type:
+                        </td>
+                        <td className="text-sm font-medium">
+                          {documentData.type}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-2 py-2 font-light text-right">
+                          Current Status:
+                        </td>
+                        <td>
+                          {documentData.current_status ===
+                            'For Verification' && (
+                            <span className="text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium text-sm">
+                              {documentData.current_status}
+                            </span>
+                          )}
+                          {documentData.current_status ===
+                            'Approval Recommended' && (
+                            <span className="text-green-700 px-1 bg-green-100 border border-green-500 font-medium text-sm">
+                              {documentData.current_status}
+                            </span>
+                          )}
+                          {documentData.current_status === 'Cancelled' && (
+                            <span className="text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium text-sm">
+                              {documentData.current_status}
+                            </span>
+                          )}
+                          {documentData.current_status === 'Approved' && (
+                            <span className="text-green-900 px-1 bg-green-300 border border-green-700 font-medium text-sm">
+                              {documentData.current_status}
+                            </span>
+                          )}
+                          {documentData.current_status === 'Disapproved' && (
+                            <span className="text-red-700 px-1 bg-red-100 border border-red-500 font-medium text-sm">
+                              {documentData.current_status}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-2 py-2 font-light text-right">
+                          Reference Code:
+                        </td>
+                        <td>
+                          <span className="font-medium text-sm">
+                            {documentData.reference_code}
+                          </span>
+                        </td>
+                      </tr>
+                      {/* Leave Requests Fields */}
+                      {documentData.type === 'Leave' && (
+                        <>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Leave Type:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.leave_type}
+                            </td>
+                          </tr>
+                          {documentData.leave_days &&
+                            documentData.leave_to &&
+                            documentData.leave_days.trim() !== '' &&
+                            documentData.leave_to.trim() !== '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Number of working days applied for:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.leave_days}
+                                </td>
+                              </tr>
+                            )}
+                          {documentData.leave_from &&
+                            documentData.leave_to &&
+                            documentData.leave_from.trim() !== '' &&
+                            documentData.leave_to.trim() !== '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Inclusive Dates:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {format(
+                                    new Date(documentData.leave_from),
+                                    'MMMM dd, yyyy'
+                                  )}{' '}
+                                  to{' '}
+                                  {format(
+                                    new Date(documentData.leave_to),
+                                    'MMMM dd, yyyy'
+                                  )}
+                                </td>
+                              </tr>
+                            )}
+                          {documentData.leave_location &&
+                            documentData.leave_location.trim() !== '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Location:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.leave_location}{' '}
+                                  {documentData.leave_specify_location}
+                                </td>
+                              </tr>
+                            )}
+                          {documentData.leave_hospitalization &&
+                            documentData.leave_hospitalization.trim() !==
+                              '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Hospitalization:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.leave_hospitalization} -{' '}
+                                  {documentData.leave_illness}
+                                </td>
+                              </tr>
+                            )}
+                          {documentData.leave_women_illness &&
+                            documentData.leave_women_illness.trim() !== '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Illness:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.leave_women_illness}
+                                </td>
+                              </tr>
+                            )}
+                          {documentData.leave_study_purpose &&
+                            documentData.leave_study_purpose.trim() !== '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Study Purpose:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.leave_study_purpose}
+                                </td>
+                              </tr>
+                            )}
+                          {documentData.leave_other_purpose &&
+                            documentData.leave_other_purpose.trim() !== '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Other Purpose:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.leave_other_purpose}
+                                </td>
+                              </tr>
+                            )}
+                          {documentData.leave_commutation &&
+                            documentData.leave_commutation.trim() !== '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Commutation:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.leave_commutation}
+                                </td>
+                              </tr>
+                            )}
+                        </>
+                      )}
+                      {/* End - Leave Requests Fields */}
+
+                      {/* Locator Slip Fields */}
+                      {documentData.type === 'Locator Slip' && (
+                        <>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Travel Type:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.locator_slip_type}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Purpose:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.locator_slip_purpose}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Date:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {format(
+                                new Date(documentData.locator_slip_date),
+                                'MMMM dd, yyyy'
+                              )}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Time:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.locator_slip_time}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Destination:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.locator_slip_destination}
+                            </td>
+                          </tr>
+                        </>
+                      )}
+                      {/* End - Locator Slip Fields */}
+
+                      {/* Service Record Print Request Fields */}
+                      {documentData.type === 'Service Record Print Request' && (
+                        <>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Purpose:
+                            </td>
+                            <td className="text-sm font-medium">
                               {
-                                attachments?.length === 0 && <span>No attachments</span>
+                                documentData.service_record_print_request_purpose
                               }
-                            {
-                              attachments?.map((file, index) => (
-                                <div key={index} className='flex items-center space-x-2 justify-start'>
-                                  <Attachment file={file.name} id={documentData.id} />
-                                </div>
-                              ))
-                            }
-                            </div>
-                            <div className="hidden flex-auto overflow-y-auto relative mt-4">
-                              <div className='grid grid-cols-1 gap-4'>
-                                <div className='w-full'>
-                                  <div {...getRootProps()} className='cursor-pointer border-dashed border-2 bg-gray-100 text-gray-600 px-4 py-10'>
-                                    <input {...getInputProps()} />
-                                    <p className='text-xs'>Drag and drop some files here, or click to select files</p>
-                                  </div>
+                            </td>
+                          </tr>
+                        </>
+                      )}
+                      {/* End - Locator Slip Fields */}
+
+                      {/* Service Undertime Permit Fields */}
+                      {documentData.type === 'Undertime Permit' && (
+                        <>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Time to leave the office:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.undertime_permit_time}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Reason:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.undertime_permit_reason}
+                            </td>
+                          </tr>
+                        </>
+                      )}
+                      {/* End - Undertime Permit Fields */}
+
+                      {/* Pass Slip Fields */}
+                      {documentData.type === 'Pass Slip' && (
+                        <>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Request Permission To:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.pass_slip_type}
+                            </td>
+                          </tr>
+                          {documentData.pass_slip_intended_time_departure &&
+                            documentData.pass_slip_intended_time_departure.trim() !==
+                              '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Intended Time of Departure:
+                                </td>
+                                <td className="text-sm font-medium">
                                   {
-                                    (fileRejections.length === 0 && selectedImages.length > 0) &&
-                                      <div className='py-4'>
-                                        <div className='text-xs font-medium mb-2'>Files to upload:</div>
-                                        {selectedFiles}
-                                      </div>
+                                    documentData.pass_slip_intended_time_departure
                                   }
-                                  {
-                                    fileRejections.length > 0 &&
-                                      <div className='py-4'>
-                                          <p className='text-red-500 text-xs'>
-                                            File rejected. Please make sure its an image, PDF, DOC, or Excel file and less than 5MB.
-                                          </p>
-                                      </div>
-                                  }
-                                </div>
+                                </td>
+                              </tr>
+                            )}
+                          {documentData.pass_slip_intended_time_arrival &&
+                            documentData.pass_slip_intended_time_arrival.trim() !==
+                              '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Intended Time of Departure:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.pass_slip_intended_time_arrival}
+                                </td>
+                              </tr>
+                            )}
+                          {documentData.pass_slip_fixed_time_from &&
+                            documentData.pass_slip_fixed_time_from.trim() !==
+                              '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  From:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.pass_slip_fixed_time_from}
+                                </td>
+                              </tr>
+                            )}
+                          {documentData.pass_slip_fixed_time_to &&
+                            documentData.pass_slip_fixed_time_to.trim() !==
+                              '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  To:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.pass_slip_fixed_time_to}
+                                </td>
+                              </tr>
+                            )}
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Purpose:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.pass_slip_purpose}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Reason:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.pass_slip_reason}
+                            </td>
+                          </tr>
+                        </>
+                      )}
+                      {/* End - Pass Slip Fields */}
+
+                      {/* Travel Authority Fields */}
+                      {documentData.type === 'Travel Authority' && (
+                        <>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Travel Type:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.travel_type}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Purpose:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.travel_purpose}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Inclusive Date (From):
+                            </td>
+                            <td className="text-sm font-medium">
+                              {format(
+                                new Date(documentData.travel_from),
+                                'MMMM dd, yyyy'
+                              )}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Inclusive Date (To):
+                            </td>
+                            <td className="text-sm font-medium">
+                              {format(
+                                new Date(documentData.travel_to),
+                                'MMMM dd, yyyy'
+                              )}
+                            </td>
+                          </tr>
+                          {documentData.travel_type === 'Official Travel' && (
+                            <>
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Fund Source:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.travel_fund_source}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Host of Activity:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.travel_host}
+                                </td>
+                              </tr>
+                            </>
+                          )}
+                        </>
+                      )}
+                      {/* End - Travel Authority Fields */}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Second Column */}
+                <div className="px-2 w-full">
+                  <table className="w-full">
+                    <thead>
+                      <tr>
+                        <th className="w-40"></th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="px-2 font-light text-right align-top">
+                          Requester:
+                        </td>
+                        <td className="font-medium align-top">
+                          <div className="text-gray-500 text-[10px]">
+                            {format(
+                              new Date(documentData.created_at),
+                              'dd MMM yyyy h:mm a'
+                            )}
+                          </div>
+                          <UserBlock user={documentData.creator} />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-2 pt-2 font-light text-right align-top">
+                          Attachments:
+                        </td>
+                        <td className="pt-2">
+                          <div>
+                            {attachments?.length === 0 && (
+                              <span>No attachments</span>
+                            )}
+                            {attachments?.map((file, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center space-x-2 justify-start"
+                              >
+                                <Attachment
+                                  file={file.name}
+                                  id={documentData.id}
+                                />
                               </div>
-                              {
-                                (selectedFiles.length > 0 && fileRejections.length === 0) &&
-                                  <CustomButton
-                                    containerStyles='app__btn_green'
-                                    title={uploading ? 'Uploading...' : 'Upload'}
-                                    btnType='button'
-                                    handleClick={handleUploadFiles}
-                                  />
-                              }
+                            ))}
+                          </div>
+                          <div className="hidden flex-auto overflow-y-auto relative mt-4">
+                            <div className="grid grid-cols-1 gap-4">
+                              <div className="w-full">
+                                <div
+                                  {...getRootProps()}
+                                  className="cursor-pointer border-dashed border-2 bg-gray-100 text-gray-600 px-4 py-10"
+                                >
+                                  <input {...getInputProps()} />
+                                  <p className="text-xs">
+                                    Drag and drop some files here, or click to
+                                    select files
+                                  </p>
+                                </div>
+                                {fileRejections.length === 0 &&
+                                  selectedImages.length > 0 && (
+                                    <div className="py-4">
+                                      <div className="text-xs font-medium mb-2">
+                                        Files to upload:
+                                      </div>
+                                      {selectedFiles}
+                                    </div>
+                                  )}
+                                {fileRejections.length > 0 && (
+                                  <div className="py-4">
+                                    <p className="text-red-500 text-xs">
+                                      File rejected. Please make sure its an
+                                      image, PDF, DOC, or Excel file and less
+                                      than 5MB.
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    {/* Certification of leave credits */}
-                    {
-                      (documentData.type === 'Leave') &&
-                        <CreditsCertification documentData={documentData}/>
-                    }
-                  </div>
+                            {selectedFiles.length > 0 &&
+                              fileRejections.length === 0 && (
+                                <CustomButton
+                                  containerStyles="app__btn_green"
+                                  title={uploading ? 'Uploading...' : 'Upload'}
+                                  btnType="button"
+                                  handleClick={handleUploadFiles}
+                                />
+                              )}
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  {/* Certification of leave credits */}
+                  {documentData.type === 'Leave' && (
+                    <CreditsCertification documentData={documentData} />
+                  )}
                 </div>
               </div>
-              <hr/>
-              <div className='py-2 md:flex'>
-                <div className='md:w-1/2'>
-                  <div className='mx-2 mt-4 px-4 py-4 text-gray-600 bg-gray-100'>
-                    <div className='mb-6 px-4'>
-                      <span className='font-bold text-xs'>Tracker:</span>
-                    </div>
-                    <StatusFlow updateStatusFlow={updateStatusFlow} documentId={documentData.id.toString()}/>
+            </div>
+            <hr />
+            <div className="py-2 md:flex">
+              <div className="md:w-1/2">
+                <div className="mx-2 mt-4 px-4 py-4 text-gray-600 bg-gray-100">
+                  <div className="mb-6 px-4">
+                    <span className="font-bold text-xs">Tracker:</span>
                   </div>
-                </div>
-                <div className='flex-1'>
-                  {
-                    loadingReplies
-                      ? <TwoColTableLoading/>
-                      : <Remarks
-                          document={documentData}/>
-                  }
+                  <StatusFlow
+                    updateStatusFlow={updateStatusFlow}
+                    documentId={documentData.id.toString()}
+                  />
                 </div>
               </div>
-
+              <div className="flex-1">
+                {loadingReplies ? (
+                  <TwoColTableLoading />
+                ) : (
+                  <Remarks document={documentData} />
+                )}
+              </div>
             </div>
           </div>
         </div>
-        {/* Action Confirmation Modal */}
-        {
-          showConfirmModal !== '' && (
-            <ConfirmModal
-              header='Confirmation'
-              btnText='Confirm'
-              message={confirmMessage}
-              onConfirm={HandleOnConfirm}
-              onCancel={handleOnCancel}
-            />
-          )
-        }
-        {/* Add to Sticky Modal */}
-        {
-            showAddStickyModal && (
-              <AddStickyModal
-                item={selectedItem}
-                hideAddStickButton={() => setHideStickyButton(true)}
-                hideModal={() => setShowAddStickyModal(false)}/>
-            )
-          }
       </div>
+      {/* Action Confirmation Modal */}
+      {showConfirmModal !== '' && (
+        <ConfirmModal
+          header="Confirmation"
+          btnText="Confirm"
+          message={confirmMessage}
+          onConfirm={HandleOnConfirm}
+          onCancel={handleOnCancel}
+        />
+      )}
+      {/* Add to Sticky Modal */}
+      {showAddStickyModal && (
+        <AddStickyModal
+          item={selectedItem}
+          hideAddStickButton={() => setHideStickyButton(true)}
+          hideModal={() => setShowAddStickyModal(false)}
+        />
+      )}
+    </div>
   )
 }

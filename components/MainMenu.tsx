@@ -172,7 +172,7 @@ const MainMenu = () => {
               <hr />
             </div>
             <div className="text-gray-700 text-lg font-semibold">PRIME</div>
-            <Link href="#">
+            <Link href="/ranking">
               <div className="app__menu_item">
                 <div className="pt-1">
                   <UsersIcon className="w-8 h-8" />

@@ -2,7 +2,7 @@
 import { ConfirmModal, UserBlock } from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import type { Employee, UserAccessTypes, namesType } from '@/types'
+import type { Employee, UserAccessTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import { XMarkIcon } from '@heroicons/react/24/solid'
 import { useRouter } from 'next/navigation'
@@ -16,15 +16,25 @@ interface ChooseUsersProps {
   users: UserAccessTypes[]
 }
 
-export default function ChooseUsers ({ multiple, type, users, title }: ChooseUsersProps) {
+export default function ChooseUsers({
+  multiple,
+  type,
+  users,
+  title
+}: ChooseUsersProps) {
   const [searchManager, setSearchManager] = useState('')
   const [selectedId, setSelectedId] = useState('')
-  const [searchManagersResults, setSearchManagersResults] = useState<namesType[] | []>([])
-  const [selectedManagers, setSelectedManagers] = useState<UserAccessTypes[] | []>([])
+  const [searchManagersResults, setSearchManagersResults] = useState<
+    Employee[] | []
+  >([])
+  const [selectedManagers, setSelectedManagers] = useState<
+    UserAccessTypes[] | []
+  >([])
 
   const [showConfirmRemoveModal, setShowConfirmRemoveModal] = useState(false)
 
-  const { systemUsers, supabase }: { systemUsers: Employee[], supabase: any } = useSupabase()
+  const { systemUsers, supabase }: { systemUsers: Employee[]; supabase: any } =
+    useSupabase()
   const { setToast } = useFilter()
 
   const router = useRouter()
@@ -40,19 +50,25 @@ export default function ChooseUsers ({ multiple, type, users, title }: ChooseUse
     }
 
     // Search user
-    const searchWords = (e.target.value).split(' ')
-    const results = systemUsers.filter(user => {
+    const searchWords = e.target.value.split(' ')
+    const results = systemUsers.filter((user) => {
       // exclude already selected users
-      if (selectedManagers.some(obj => obj.user_id.toString() === user.id.toString())) return false
+      if (
+        selectedManagers.some(
+          (obj) => obj.user_id.toString() === user.id.toString()
+        )
+      )
+        return false
 
-      const fullName = `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
-      return searchWords.every(word => fullName.includes(word))
+      const fullName =
+        `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
+      return searchWords.every((word) => fullName.includes(word))
     })
 
     setSearchManagersResults(results)
   }
 
-  const handleSelected = async (item: namesType) => {
+  const handleSelected = async (item: Employee) => {
     // Update database
     try {
       if (!multiple) {
@@ -63,8 +79,16 @@ export default function ChooseUsers ({ multiple, type, users, title }: ChooseUse
           .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
           .eq('type', type)
         if (error) {
-          void logError('Remove user access', 'hrm_system_access', '', error.message)
-          setToast('error', 'Error saving, please reload the page and try again.')
+          void logError(
+            'Remove user access',
+            'hrm_system_access',
+            '',
+            error.message
+          )
+          setToast(
+            'error',
+            'Error saving, please reload the page and try again.'
+          )
         }
       }
 
@@ -78,7 +102,12 @@ export default function ChooseUsers ({ multiple, type, users, title }: ChooseUse
         .insert(insertData)
 
       if (error2) {
-        void logError('Add user access', 'hrm_system_access', JSON.stringify(insertData), error2.message)
+        void logError(
+          'Add user access',
+          'hrm_system_access',
+          JSON.stringify(insertData),
+          error2.message
+        )
         setToast('error', 'Error saving, please reload the page and try again.')
       } else {
         // setSelectedManagers
@@ -124,10 +153,17 @@ export default function ChooseUsers ({ multiple, type, users, title }: ChooseUse
       .eq('type', type)
 
     if (error) {
-      void logError('remove user access', 'hrm_system_access', '', error.message)
+      void logError(
+        'remove user access',
+        'hrm_system_access',
+        '',
+        error.message
+      )
       setToast('error', 'Error saving, please reload the page and try again.')
     } else {
-      const updatedItems = selectedManagers?.filter((item: UserAccessTypes) => item.user_id.toString() !== selectedId)
+      const updatedItems = selectedManagers?.filter(
+        (item: UserAccessTypes) => item.user_id.toString() !== selectedId
+      )
       setSelectedManagers(updatedItems)
       setSelectedId('')
       setToast('success', 'Successfully saved')
@@ -137,64 +173,63 @@ export default function ChooseUsers ({ multiple, type, users, title }: ChooseUse
   }
 
   useEffect(() => {
-    const managers = users.filter(user => user.type === type)
+    const managers = users.filter((user) => user.type === type)
     setSelectedManagers(managers)
   }, [])
 
   return (
-    <div className='app__form_field_container'>
-      <div className='w-full'>
-        <div className='app__label_standard'>{title}:</div>
-        <div className='bg-white p-1 border border-gray-300 rounded-sm'>
-          <div className='space-x-2'>
-          {
-            selectedManagers.map((item: UserAccessTypes) => (
-                <div key={uuid()} className='mb-1 inline-flex'>
-                  <span className='inline-flex items-center text-sm  border border-gray-400 rounded-sm px-1 bg-gray-300'>
-                    {item.hrm_user.firstname} {item.hrm_user.middlename} {item.hrm_user.lastname}
-                    <XMarkIcon onClick={() => handleRemoveSelected(item.user_id)} className='w-4 h-4 ml-2 cursor-pointer'/>
-                  </span>
-                </div>
-            ))
-          }
+    <div className="app__form_field_container">
+      <div className="w-full">
+        <div className="app__label_standard">{title}:</div>
+        <div className="bg-white p-1 border border-gray-300 rounded-sm">
+          <div className="space-x-2">
+            {selectedManagers.map((item: UserAccessTypes) => (
+              <div key={uuid()} className="mb-1 inline-flex">
+                <span className="inline-flex items-center text-sm  border border-gray-400 rounded-sm px-1 bg-gray-300">
+                  {item.hrm_user.firstname} {item.hrm_user.middlename}{' '}
+                  {item.hrm_user.lastname}
+                  <XMarkIcon
+                    onClick={() => handleRemoveSelected(item.user_id)}
+                    className="w-4 h-4 ml-2 cursor-pointer"
+                  />
+                </span>
+              </div>
+            ))}
           </div>
-          <div className='relative'>
+          <div className="relative">
             <input
               type="text"
-              placeholder='Search User'
+              placeholder="Search User"
               value={searchManager}
               onChange={async (e) => await handleSearchUser(e)}
-              className='app__input_noborder'/>
+              className="app__input_noborder"
+            />
 
-              {
-                searchManagersResults.length > 0 &&
-                  <div className='app__search_user_results_container'>
-                    {
-                      searchManagersResults.map((item: namesType, index) => (
-                        <div
-                          key={index}
-                          onClick={async () => await handleSelected(item)}
-                          className='app__search_user_results'>
-                            <UserBlock user={item}/>
-                        </div>
-                      ))
-                    }
+            {searchManagersResults.length > 0 && (
+              <div className="app__search_user_results_container">
+                {searchManagersResults.map((item: Employee, index) => (
+                  <div
+                    key={index}
+                    onClick={async () => await handleSelected(item)}
+                    className="app__search_user_results"
+                  >
+                    <UserBlock user={item} />
                   </div>
-              }
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
-      {
-        showConfirmRemoveModal && (
-          <ConfirmModal
-            header='Confirmation'
-            btnText='Confirm'
-            message="Are you sure you want to remove access for this user?"
-            onConfirm={handleConfirmedRemove}
-            onCancel={() => setShowConfirmRemoveModal(false)}
-          />
-        )
-      }
+      {showConfirmRemoveModal && (
+        <ConfirmModal
+          header="Confirmation"
+          btnText="Confirm"
+          message="Are you sure you want to remove access for this user?"
+          onConfirm={handleConfirmedRemove}
+          onCancel={() => setShowConfirmRemoveModal(false)}
+        />
+      )}
     </div>
   )
 }

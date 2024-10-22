@@ -1,20 +1,38 @@
-import React, { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import {
+  CustomButton,
+  OneColLayoutLoading,
+  SearchUserInput,
+  UserBlock
+} from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchDistricts, fetchLeaveCards, fetchOffices, fetchSchools, handleConvertEmployeeToNonTeaching, logError } from '@/utils/fetchApi'
-import { CustomButton, OneColLayoutLoading, SearchUserInput, UserBlock } from '@/components'
+import {
+  fetchDistricts,
+  fetchLeaveCards,
+  fetchOffices,
+  fetchSchools,
+  handleConvertEmployeeToNonTeaching,
+  logError
+} from '@/utils/fetchApi'
 import { generateReferenceCode } from '@/utils/text-helper'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
 
 // Types
-import type { DesignationTypes, DistrictTypes, Office, SchoolTypes, namesType } from '@/types'
+import type {
+  DesignationTypes,
+  DistrictTypes,
+  Employee,
+  Office,
+  SchoolTypes
+} from '@/types'
 
 // Redux imports
-import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { XCircleIcon } from '@heroicons/react/24/solid'
 import { format } from 'date-fns'
+import { useDispatch, useSelector } from 'react-redux'
 
 interface ModalProps {
   hideModal: () => void
@@ -31,10 +49,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const [scBalance, setScBalance] = useState(0)
 
   // Search employee
-  const [user, setUser] = useState<namesType | null>(null)
+  const [user, setUser] = useState<Employee | null>(null)
 
   const [errorMessage, setErrorMessage] = useState<string | ''>('')
-  const [dataValidationErrors, setDataValidationErrors] = useState<string[] | []>([])
+  const [dataValidationErrors, setDataValidationErrors] = useState<
+    string[] | []
+  >([])
 
   const [loadingSchools, setLoadingSchools] = useState(false)
   const [assignment, setAssignment] = useState('')
@@ -55,7 +75,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { register, formState: { errors }, reset, handleSubmit } = useForm<DesignationTypes>({
+  const {
+    register,
+    formState: { errors },
+    reset,
+    handleSubmit
+  } = useForm<DesignationTypes>({
     mode: 'onSubmit'
   })
 
@@ -83,9 +108,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const handleCreate = async (formdata: DesignationTypes) => {
     if (!user) return
 
-    let district = formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
-    let school = formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
-    let office = formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
+    let district =
+      formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
+    let school =
+      formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
+    let office =
+      formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
 
     // set these to null to prevent error
     if (formdata.type === 'Function only') {
@@ -119,8 +147,16 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .select()
 
       if (error) {
-        void logError('Create designation', 'hrm_designations', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Create designation',
+          'hrm_designations',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
@@ -138,14 +174,25 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // Append new data in redux
       const updatedDropdownData = getUpdatedDropdownData(formdata)
-      const updatedData = { ...newData, from: formdata.from, hrm_users: user, ...updatedDropdownData, id: newId }
+      const updatedData = {
+        ...newData,
+        from: formdata.from,
+        hrm_users: user,
+        ...updatedDropdownData,
+        id: newId
+      }
       dispatch(updateList([updatedData, ...globallist]))
 
       // pop up the success message
       setToast('success', 'Successfully saved.')
 
       // Updating showing text in redux
-      dispatch(updateResultCounter({ showing: Number(resultsCounter.showing) + 1, results: Number(resultsCounter.results) + 1 }))
+      dispatch(
+        updateResultCounter({
+          showing: Number(resultsCounter.showing) + 1,
+          results: Number(resultsCounter.results) + 1
+        })
+      )
 
       setSaving(false)
 
@@ -162,9 +209,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const handleUpdate = async (formdata: DesignationTypes) => {
     if (!editData) return
 
-    let district = formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
-    let school = formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
-    let office = formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
+    let district =
+      formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
+    let school =
+      formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
+    let office =
+      formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
     let areaAssigned: string | null = formdata.area_assigned
 
     // set these to null to prevent error
@@ -194,16 +244,29 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .eq('id', editData.id)
 
       if (error) {
-        void logError('Update designation', 'hrm_designations', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Update designation',
+          'hrm_designations',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
       // Update data in redux
       const items = [...globallist]
       const updatedDropdownData = getUpdatedDropdownData(formdata)
-      const updatedData = { ...newData, from: formdata.from, id: editData.id, ...updatedDropdownData }
-      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      const updatedData = {
+        ...newData,
+        from: formdata.from,
+        id: editData.id,
+        ...updatedDropdownData
+      }
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
 
@@ -222,17 +285,24 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleAddToServiceRecord = async (formdata: DesignationTypes, newId: string) => {
+  const handleAddToServiceRecord = async (
+    formdata: DesignationTypes,
+    newId: string
+  ) => {
     if (!user) return
 
     console.log('formdata', formdata)
 
     let station = ''
     if (formdata.area_assigned === 'school') {
-      const hrmSchool = schools.find(p => p.id.toString() === formdata.school_id?.toString())
+      const hrmSchool = schools.find(
+        (p) => p.id.toString() === formdata.school_id?.toString()
+      )
       station = hrmSchool ? hrmSchool.name : ''
     } else {
-      const hrmOffice = offices.find(p => p.id.toString() === formdata.office_id?.toString())
+      const hrmOffice = offices.find(
+        (p) => p.id.toString() === formdata.office_id?.toString()
+      )
       station = hrmOffice ? hrmOffice.name : ''
     }
 
@@ -260,8 +330,16 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .insert(newData)
 
       if (error) {
-        void logError('Create service record from assignments', 'hrm_service_records', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Create service record from assignments',
+          'hrm_service_records',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
     } catch (e) {
@@ -273,19 +351,21 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     let json = {}
     if (formdata.area_assigned === 'school') {
       // Districts
-      const dis = districts.filter(x => x.id.toString() === formdata.district_id)
+      const dis = districts.filter(
+        (x) => x.id.toString() === formdata.district_id
+      )
       if (dis.length > 0) {
         json = { ...json, hrm_districts: { id: dis[0].id, name: dis[0].name } }
       }
 
       // Schools
-      const sch = schools.filter(x => x.id.toString() === formdata.school_id)
+      const sch = schools.filter((x) => x.id.toString() === formdata.school_id)
       if (sch.length > 0) {
         json = { ...json, hrm_schools: { id: sch[0].id, name: sch[0].name } }
       }
     } else {
       // offices
-      const off = offices?.filter(x => x.id.toString() === formdata.office_id)
+      const off = offices?.filter((x) => x.id.toString() === formdata.office_id)
       if (off.length > 0) {
         json = { ...json, hrm_offices: { id: off[0].id, name: off[0].name } }
       }
@@ -297,7 +377,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const validateEmployee = async (formdata: DesignationTypes) => {
     let query = supabase
       .from('hrm_designations')
-      .select('*, hrm_users:hrm_user_id(firstname,middlename,lastname),hrm_schools:school_id(name),hrm_offices:office_id(name)')
+      .select(
+        '*, hrm_users:hrm_user_id(firstname,middlename,lastname),hrm_schools:school_id(name),hrm_offices:office_id(name)'
+      )
 
     if (editData) {
       query = query.neq('id', editData.id)
@@ -306,7 +388,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       query = query.eq('hrm_user_id', user?.id)
     }
 
-    const { data, error }: { data: DesignationTypes[], error: any } = await query
+    const { data, error }: { data: DesignationTypes[]; error: any } =
+      await query
 
     if (error) console.error(error)
 
@@ -325,7 +408,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       }
 
       if (item.status === 'Active') {
-        validationErrors.push(`This employee currently have an active designation (Ref Code: ${item.reference_code}) as ${item.designation} ${station}. You cannot create new designation until the active designation is revoked.`)
+        validationErrors.push(
+          `This employee currently have an active designation (Ref Code: ${item.reference_code}) as ${item.designation} ${station}. You cannot create new designation until the active designation is revoked.`
+        )
       }
     })
 
@@ -338,7 +423,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+  const handleSelectedUsers = (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
       if (selectedUsers[0].position_type === 'Teaching') {
         setIsTeaching(true)
@@ -390,7 +475,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       setSelectedOffice(editData.office_id ?? '')
 
       // Update school list dropdown
-      if (editData.area_assigned === 'school') void handleDistrictChange(editData.district_id)
+      if (editData.area_assigned === 'school')
+        void handleDistrictChange(editData.district_id)
     }
 
     reset({
@@ -418,284 +504,378 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }, [editData, reset])
 
   return (
-  <>
-    <div className="app__modal_wrapper">
-      <div className="app__modal_wrapper2">
-        <div className="app__modal_wrapper3">
-          <div className="app__modal_header">
-            <h5 className="app__modal_header_text">
-              Designation Details
-            </h5>
-            <CustomButton
-                containerStyles='app__btn_gray'
-                title='Close'
-                btnType='button'
+    <>
+      <div className="app__modal_wrapper">
+        <div className="app__modal_wrapper2">
+          <div className="app__modal_wrapper3">
+            <div className="app__modal_header">
+              <h5 className="app__modal_header_text">Designation Details</h5>
+              <CustomButton
+                containerStyles="app__btn_gray"
+                title="Close"
+                btnType="button"
                 handleClick={hideModal}
               />
-          </div>
+            </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-
-                {
-                  (dataValidationErrors.length > 0 || errorMessage) &&
-                    <div className='mb-6'>
-                      <div className='font-semebold text-sm font-bold'>Please check the following errors below:</div>
-                      {
-                        dataValidationErrors.map((error, index) => (
-                          <div key={index} className='text-xs text-red-500 mt-2 flex space-x-2'><XCircleIcon className='w-5 h-5'/> <span>{error}</span></div>
-                        ))
-                      }
-                      {errorMessage && <div className='text-xs text-red-500 mt-2 flex space-x-2'><XCircleIcon className='w-5 h-5'/> <span>{errorMessage}</span></div>}
+            <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  {(dataValidationErrors.length > 0 || errorMessage) && (
+                    <div className="mb-6">
+                      <div className="font-semebold text-sm font-bold">
+                        Please check the following errors below:
+                      </div>
+                      {dataValidationErrors.map((error, index) => (
+                        <div
+                          key={index}
+                          className="text-xs text-red-500 mt-2 flex space-x-2"
+                        >
+                          <XCircleIcon className="w-5 h-5" />{' '}
+                          <span>{error}</span>
+                        </div>
+                      ))}
+                      {errorMessage && (
+                        <div className="text-xs text-red-500 mt-2 flex space-x-2">
+                          <XCircleIcon className="w-5 h-5" />{' '}
+                          <span>{errorMessage}</span>
+                        </div>
+                      )}
                     </div>
-                }
+                  )}
 
-                <div className='app__label_standard'>Employee Name:</div>
-                {
-                  editData
-                    ? <div className='app__label_value'><UserBlock user={editData.hrm_users}/></div>
-                    : <SearchUserInput
-                        isMultiple={false}
-                        handleSelectedUsers={handleSelectedUsers}/>
-                }
-              </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>Designation</div>
-                <div>
-                  <input
-                    {...register('designation', { required: true })}
-                    type='text'
-                    className='app__input_standard'/>
-                  {errors.designation && <div className='app__error_message'>Designation is required</div>}
+                  <div className="app__label_standard">Employee Name:</div>
+                  {editData ? (
+                    <div className="app__label_value">
+                      <UserBlock user={editData.hrm_users} />
+                    </div>
+                  ) : (
+                    <SearchUserInput
+                      isMultiple={false}
+                      handleSelectedUsers={handleSelectedUsers}
+                    />
+                  )}
                 </div>
               </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>Type</div>
-                <div>
-                  <select
-                    {...register('type', { required: true })}
-                    value={type}
-                    onChange={e => setType(e.target.value)}
-                    className='app__select_standard'>
-                      <option value=''>Choose</option>
-                      <option value='Function only'>Function only</option>
-                      <option value='Function with Station'>Function with Station</option>
-                  </select>
-                  {errors.type && <div className='app__error_message'>Type is required</div>}
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Designation</div>
+                  <div>
+                    <input
+                      {...register('designation', { required: true })}
+                      type="text"
+                      className="app__input_standard"
+                    />
+                    {errors.designation && (
+                      <div className="app__error_message">
+                        Designation is required
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            {
-              type === 'Function with Station' &&
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Station</div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Type</div>
+                  <div>
+                    <select
+                      {...register('type', { required: true })}
+                      value={type}
+                      onChange={(e) => setType(e.target.value)}
+                      className="app__select_standard"
+                    >
+                      <option value="">Choose</option>
+                      <option value="Function only">Function only</option>
+                      <option value="Function with Station">
+                        Function with Station
+                      </option>
+                    </select>
+                    {errors.type && (
+                      <div className="app__error_message">Type is required</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {type === 'Function with Station' && (
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">Station</div>
                     <div>
                       <select
                         {...register('area_assigned', { required: true })}
                         value={assignment}
-                        onChange={e => setAssignment(e.target.value)}
-                        className='app__select_standard'>
-                          <option value=''>Choose</option>
-                          <option value='school'>School</option>
-                          <option value='office'>Division Office</option>
+                        onChange={(e) => setAssignment(e.target.value)}
+                        className="app__select_standard"
+                      >
+                        <option value="">Choose</option>
+                        <option value="school">School</option>
+                        <option value="office">Division Office</option>
                       </select>
-                      {errors.area_assigned && <div className='app__error_message'>Station is required</div>}
+                      {errors.area_assigned && (
+                        <div className="app__error_message">
+                          Station is required
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-            }
-            {
-              (assignment === 'school' && type === 'Function with Station') &&
+              )}
+              {assignment === 'school' && type === 'Function with Station' && (
                 <>
-                  <div className='app__form_field_container'>
-                    <div className='w-full'>
-                      <div className='app__label_standard'>Choose district</div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Choose district</div>
                       <div>
                         <select
                           {...register('district_id', { required: true })}
-                          onChange={async e => await handleDistrictChange(e.target.value)}
+                          onChange={async (e) =>
+                            await handleDistrictChange(e.target.value)
+                          }
                           value={selectedDistrict}
-                          className='app__select_standard'>
-                            <option value=''>Choose</option>
-                            {
-                              districts.map((item, index) => (
-                                <option key={index} value={item.id}>{item.name}</option>
-                              ))
-                            }
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose</option>
+                          {districts.map((item, index) => (
+                            <option key={index} value={item.id}>
+                              {item.name}
+                            </option>
+                          ))}
                         </select>
-                        {errors.district_id && <div className='app__error_message'>District is required</div>}
+                        {errors.district_id && (
+                          <div className="app__error_message">
+                            District is required
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                 </>
-            }
-            {
-              loadingSchools &&
-                <div className=''>
-                  <OneColLayoutLoading rows={1}/>
+              )}
+              {loadingSchools && (
+                <div className="">
+                  <OneColLayoutLoading rows={1} />
                 </div>
-            }
-            {
-              (assignment === 'school' && type === 'Function with Station' && !loadingSchools) &&
-                <>
-                  <div className='app__form_field_container'>
-                    <div className='w-full'>
-                      <div className='app__label_standard'>Choose School</div>
-                      <div>
-                        <select
-                          {...register('school_id', { required: true })}
-                          value={selectedSchool}
-                          onChange={e => setSelectedSchool(e.target.value)}
-                          className='app__select_standard'>
-                            <option value=''>Choose</option>
-                            {
-                              schools.map((item, index) => (
-                                <option key={index} value={item.id}>{item.name}</option>
-                              ))
-                            }
-                        </select>
-                        {errors.school_id && <div className='app__error_message'>School is required</div>}
+              )}
+              {assignment === 'school' &&
+                type === 'Function with Station' &&
+                !loadingSchools && (
+                  <>
+                    <div className="app__form_field_container">
+                      <div className="w-full">
+                        <div className="app__label_standard">Choose School</div>
+                        <div>
+                          <select
+                            {...register('school_id', { required: true })}
+                            value={selectedSchool}
+                            onChange={(e) => setSelectedSchool(e.target.value)}
+                            className="app__select_standard"
+                          >
+                            <option value="">Choose</option>
+                            {schools.map((item, index) => (
+                              <option key={index} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                          {errors.school_id && (
+                            <div className="app__error_message">
+                              School is required
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </>
-            }
-            {
-              (assignment === 'office' && type === 'Function with Station') &&
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Choose office</div>
+                  </>
+                )}
+              {assignment === 'office' && type === 'Function with Station' && (
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">Choose office</div>
                     <div>
                       <select
                         {...register('office_id', { required: true })}
                         value={selectedOffice}
-                        onChange={e => setSelectedOffice(e.target.value)}
-                        className='app__select_standard'>
-                          <option value=''>Choose</option>
-                          {
-                            offices.map((item, index) => (
-                              <option key={index} value={item.id}>{item.name}</option>
-                            ))
-                          }
+                        onChange={(e) => setSelectedOffice(e.target.value)}
+                        className="app__select_standard"
+                      >
+                        <option value="">Choose</option>
+                        {offices.map((item, index) => (
+                          <option key={index} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
                       </select>
-                      {errors.office_id && <div className='app__error_message'>Office is required</div>}
+                      {errors.office_id && (
+                        <div className="app__error_message">
+                          Office is required
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-            }
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>Start Date</div>
-                <div>
-                  {
-                    !editData
-                      ? <>
-                          <input
-                            {...register('from', { required: true })}
-                            type='date'
-                            className='app__select_standard'/>
-                          {errors.from && <div className='app__error_message'>Start Date is required</div>}
-                        </>
-                      : <div className='app__label_value'>{format(new Date(editData.from), 'MMMM dd, yyyy')}</div>
-                  }
-                </div>
-              </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>
-                  <label className='flex items-center space-x-1'>
-                    {
-                      !editData
-                        ? <>
-                            <input
-                              onChange={() => setIsServiceRecordChecked(!isServiceRecordChecked)}
-                              checked={isServiceRecordChecked}
-                              type='checkbox'
-                              className=''/>
-                            <span>Include this to Employee&apos;s Service Record</span>
-                          </>
-                        : <span className='text-xs italic font-normal text-gray-600'>{editData.add_to_service_record ? <span>(Included on Employee&apos;s Service Record)</span> : ''}</span>
-                    }
-                  </label>
-                </div>
-              </div>
-            </div>
-            {
-              (!editData && isTeaching) &&
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>
-                      <label className='flex items-center space-x-1'>
+              )}
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Start Date</div>
+                  <div>
+                    {!editData ? (
+                      <>
                         <input
-                          onChange={() => setIsLeaveCardChecked(!isLeaveCardChecked)}
+                          {...register('from', { required: true })}
+                          type="date"
+                          className="app__select_standard"
+                        />
+                        {errors.from && (
+                          <div className="app__error_message">
+                            Start Date is required
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="app__label_value">
+                        {format(new Date(editData.from), 'MMMM dd, yyyy')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">
+                    <label className="flex items-center space-x-1">
+                      {!editData ? (
+                        <>
+                          <input
+                            onChange={() =>
+                              setIsServiceRecordChecked(!isServiceRecordChecked)
+                            }
+                            checked={isServiceRecordChecked}
+                            type="checkbox"
+                            className=""
+                          />
+                          <span>
+                            Include this to Employee&apos;s Service Record
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-xs italic font-normal text-gray-600">
+                          {editData.add_to_service_record ? (
+                            <span>
+                              (Included on Employee&apos;s Service Record)
+                            </span>
+                          ) : (
+                            ''
+                          )}
+                        </span>
+                      )}
+                    </label>
+                  </div>
+                </div>
+              </div>
+              {!editData && isTeaching && (
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">
+                      <label className="flex items-center space-x-1">
+                        <input
+                          onChange={() =>
+                            setIsLeaveCardChecked(!isLeaveCardChecked)
+                          }
                           checked={isLeaveCardChecked}
-                          type='checkbox'
-                          className=''/>
-                        <span>Convert employee&apos;s Service Credits to SL/VL</span>
+                          type="checkbox"
+                          className=""
+                        />
+                        <span>
+                          Convert employee&apos;s Service Credits to SL/VL
+                        </span>
                       </label>
                     </div>
-                    {isLeaveCardChecked && <div className='ml-4 text-xs text-gray-700'><span className='text-green-700 font-bold'>{Number(scBalance).toFixed(3)}</span> Service Credits will be converted to <span className='text-green-700 font-bold'>{(vlslBalance / 2).toFixed(3)}</span> VL and <span className='text-green-700 font-bold'>{(vlslBalance / 2).toFixed(3)}</span> SL</div>}
+                    {isLeaveCardChecked && (
+                      <div className="ml-4 text-xs text-gray-700">
+                        <span className="text-green-700 font-bold">
+                          {Number(scBalance).toFixed(3)}
+                        </span>{' '}
+                        Service Credits will be converted to{' '}
+                        <span className="text-green-700 font-bold">
+                          {(vlslBalance / 2).toFixed(3)}
+                        </span>{' '}
+                        VL and{' '}
+                        <span className="text-green-700 font-bold">
+                          {(vlslBalance / 2).toFixed(3)}
+                        </span>{' '}
+                        SL
+                      </div>
+                    )}
                   </div>
                 </div>
-            }
-            {
-              (!editData && isServiceRecordChecked) &&
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Status</div>
+              )}
+              {!editData && isServiceRecordChecked && (
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">Status</div>
                     <div>
                       <select
-                        {...register('service_record_status', { required: true })}
-                        className='app__select_standard'>
-                          <option value=''>Choose</option>
-                          <option value="Casual">Casual</option>
-                          <option value="Contractual">Contractual</option>
-                          <option value="Permanent">Permanent</option>
-                          <option value="Provisionary">Provisionary</option>
-                          <option value="Provisional">Provisional</option>
-                          <option value="Permanent">Permanent</option>
-                          <option value="School Board">School Board</option>
-                          <option value="Substitute">Substitute</option>
-                          <option value="Temporary">Temporary</option>
+                        {...register('service_record_status', {
+                          required: true
+                        })}
+                        className="app__select_standard"
+                      >
+                        <option value="">Choose</option>
+                        <option value="Casual">Casual</option>
+                        <option value="Contractual">Contractual</option>
+                        <option value="Permanent">Permanent</option>
+                        <option value="Provisionary">Provisionary</option>
+                        <option value="Provisional">Provisional</option>
+                        <option value="Permanent">Permanent</option>
+                        <option value="School Board">School Board</option>
+                        <option value="Substitute">Substitute</option>
+                        <option value="Temporary">Temporary</option>
                       </select>
-                      {errors.service_record_status && <div className='app__error_message'>Status is required</div>}
+                      {errors.service_record_status && (
+                        <div className="app__error_message">
+                          Status is required
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-            }
-            <hr className='my-6'/>
-            <div className='app__form_field_container'>
-              <div className='app__label_standard'>
-                <label className='flex items-center space-x-1'>
-                  <input
-                    {...register('confirmed', { required: true })}
-                    type='checkbox'
-                    className=''/>
-                  <span className='font-normal text-xs'>After submitting, it will make adjustments on emloyee&apos; leave card and service record. By checking this box, you acknowledge that all information is accurate.</span>
-                </label>
-                {errors.confirmed && <div className='app__error_message'>Confirmation is required</div>}
+              )}
+              <hr className="my-6" />
+              <div className="app__form_field_container">
+                <div className="app__label_standard">
+                  <label className="flex items-center space-x-1">
+                    <input
+                      {...register('confirmed', { required: true })}
+                      type="checkbox"
+                      className=""
+                    />
+                    <span className="font-normal text-xs">
+                      After submitting, it will make adjustments on
+                      emloyee&apos; leave card and service record. By checking
+                      this box, you acknowledge that all information is
+                      accurate.
+                    </span>
+                  </label>
+                  {errors.confirmed && (
+                    <div className="app__error_message">
+                      Confirmation is required
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="app__modal_footer">
-                  <CustomButton
-                    btnType='submit'
-                    isDisabled={saving}
-                    title={saving ? 'Saving...' : 'Save'}
-                    containerStyles="app__btn_green"
-                  />
-            </div>
-          </form>
+              <div className="app__modal_footer">
+                <CustomButton
+                  btnType="submit"
+                  isDisabled={saving}
+                  title={saving ? 'Saving...' : 'Save'}
+                  containerStyles="app__btn_green"
+                />
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
-  </>
+    </>
   )
 }
 

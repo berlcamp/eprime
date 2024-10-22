@@ -1,20 +1,20 @@
-import React, { Fragment, useState, useEffect } from 'react'
-import { Listbox, Transition } from '@headlessui/react'
-import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
-import { useForm } from 'react-hook-form'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import uuid from 'react-uuid'
 import { fetchDistricts, logError } from '@/utils/fetchApi'
+import { Listbox, Transition } from '@headlessui/react'
+import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
+import { Fragment, useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import uuid from 'react-uuid'
 
 // Types
-import type { DistrictTypes, SchoolTypes, namesType } from '@/types'
+import type { DistrictTypes, Employee, SchoolTypes, namesType } from '@/types'
 
 // Redux imports
-import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { SearchUserInput } from '@/components'
+import { useDispatch, useSelector } from 'react-redux'
 
 const classList = [
   'IP School',
@@ -43,18 +43,29 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const [errorMessage, setErrorMessage] = useState<string | ''>('')
 
   // search user
-  const [user, setUser] = useState<namesType | null>(editData ? (editData.hrm_users ? editData.hrm_users : null) : null)
+  const [user, setUser] = useState<namesType | null>(
+    editData ? (editData.hrm_users ? editData.hrm_users : null) : null
+  )
 
-  const [districtId, setDistrictId] = useState(editData ? (editData.district_id ? editData.district_id : '') : '')
+  const [districtId, setDistrictId] = useState(
+    editData ? (editData.district_id ? editData.district_id : '') : ''
+  )
   const [districts, setDistricts] = useState<DistrictTypes[] | null>(null)
-  const [selectedClass, setSelectedClass] = useState<never[] | []>(editData ? (editData.school_class ? editData.school_class : []) : [])
+  const [selectedClass, setSelectedClass] = useState<never[] | []>(
+    editData ? (editData.school_class ? editData.school_class : []) : []
+  )
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { register, formState: { errors }, reset, handleSubmit } = useForm<SchoolForm>({
+  const {
+    register,
+    formState: { errors },
+    reset,
+    handleSubmit
+  } = useForm<SchoolForm>({
     mode: 'onSubmit'
   })
 
@@ -78,7 +89,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const handleCreate = async (formdata: SchoolForm) => {
     if (!user) return
 
-    const selectedDistrict = districts?.filter(d => d.id.toString() === formdata.district_id)
+    const selectedDistrict = districts?.filter(
+      (d) => d.id.toString() === formdata.district_id
+    )
 
     const newData = {
       name: formdata.name,
@@ -100,15 +113,30 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .select()
 
       if (error) {
-        void logError('Add school', 'hrm_schools', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Add school',
+          'hrm_schools',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
       newId = data[0].id // newly created ID use this on 'finally' block
 
       // Append new data in redux
-      const updatedData = { ...newData, id: newId, hrm_users: user, hrm_districts: { name: selectedDistrict ? selectedDistrict[0].name : '' } }
+      const updatedData = {
+        ...newData,
+        id: newId,
+        hrm_users: user,
+        hrm_districts: {
+          name: selectedDistrict ? selectedDistrict[0].name : ''
+        }
+      }
 
       dispatch(updateList([updatedData, ...globallist]))
 
@@ -116,7 +144,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       setToast('success', 'Successfully saved.')
 
       // Updating showing text in redux
-      dispatch(updateResultCounter({ showing: Number(resultsCounter.showing) + 1, results: Number(resultsCounter.results) + 1 }))
+      dispatch(
+        updateResultCounter({
+          showing: Number(resultsCounter.showing) + 1,
+          results: Number(resultsCounter.results) + 1
+        })
+      )
 
       setSaving(false)
 
@@ -135,7 +168,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     if (!user) return
 
-    const selectedDistrict = districts?.filter(d => d.id.toString() === formdata.district_id.toString())
+    const selectedDistrict = districts?.filter(
+      (d) => d.id.toString() === formdata.district_id.toString()
+    )
 
     const newData = {
       name: formdata.name,
@@ -155,15 +190,30 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         .eq('id', editData.id)
 
       if (error) {
-        void logError('Update school', 'hrm_schools', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Update school',
+          'hrm_schools',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
       // Update data in redux
       const items = [...globallist]
-      const updatedData = { ...newData, hrm_users: user, id: editData.id, hrm_districts: { name: selectedDistrict ? selectedDistrict[0].name : '' } }
-      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      const updatedData = {
+        ...newData,
+        hrm_users: user,
+        id: editData.id,
+        hrm_districts: {
+          name: selectedDistrict ? selectedDistrict[0].name : ''
+        }
+      }
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
 
@@ -182,7 +232,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+  const handleSelectedUsers = (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
       setUser(selectedUsers[0])
     } else {
@@ -201,7 +251,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     })
 
     // Reset dynamic dropdowns
-    setDistrictId(editData ? (editData.district_id ? editData.district_id : '') : '')
+    setDistrictId(
+      editData ? (editData.district_id ? editData.district_id : '') : ''
+    )
   }, [editData, reset])
 
   useEffect(() => {
@@ -220,60 +272,88 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         <div className="app__modal_wrapper2">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
-              <h5 className="app__modal_header_text">
-                School Details
-              </h5>
-              <button disabled={saving} onClick={hideModal} type="button" className="app__modal_header_btn">&times;</button>
+              <h5 className="app__modal_header_text">School Details</h5>
+              <button
+                disabled={saving}
+                onClick={hideModal}
+                type="button"
+                className="app__modal_header_btn"
+              >
+                &times;
+              </button>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
-              <div className='app__form_field_container'>
-                <div className='w-full'>
-                  <div className='app__label_standard'>Type:</div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Type:</div>
                   <div>
                     <select
                       {...register('type', { required: true })}
-                      className='app__select_standard'>
-                        <option value=''>Choose Type</option>
-                        <option value='Elementary'>Elementary</option>
-                        <option value='Complete Secondary'>Complete Secondary</option>
-                        <option value='Secondary - Junior Highschool Only'>Secondary - Junior Highschool Only</option>
-                        <option value='Secondary - Senior Highschool Only'>Secondary - Senior Highschool Only</option>
-                        <option value='SPED Centers'>SPED Centers</option>
-                        <option value='Integrated School'>Integrated School</option>
+                      className="app__select_standard"
+                    >
+                      <option value="">Choose Type</option>
+                      <option value="Elementary">Elementary</option>
+                      <option value="Complete Secondary">
+                        Complete Secondary
+                      </option>
+                      <option value="Secondary - Junior Highschool Only">
+                        Secondary - Junior Highschool Only
+                      </option>
+                      <option value="Secondary - Senior Highschool Only">
+                        Secondary - Senior Highschool Only
+                      </option>
+                      <option value="SPED Centers">SPED Centers</option>
+                      <option value="Integrated School">
+                        Integrated School
+                      </option>
                     </select>
-                    {errors.type && <div className='app__error_message'>Type is required</div>}
+                    {errors.type && (
+                      <div className="app__error_message">Type is required</div>
+                    )}
                   </div>
                 </div>
               </div>
-              <div className='app__form_field_container'>
-                <div className='w-full'>
-                  <div className='app__label_standard'>Size:</div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Size:</div>
                   <div>
                     <select
                       {...register('size', { required: true })}
-                      className='app__select_standard'>
-                        <option value=''>Choose Size</option>
-                        <option value='Very Small'>Very Small</option>
-                        <option value='Small'>Small</option>
-                        <option value='Medium'>Medium</option>
-                        <option value='Large'>Large</option>
-                        <option value='Very Large'>Very Large</option>
+                      className="app__select_standard"
+                    >
+                      <option value="">Choose Size</option>
+                      <option value="Very Small">Very Small</option>
+                      <option value="Small">Small</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Large">Large</option>
+                      <option value="Very Large">Very Large</option>
                     </select>
-                    {errors.size && <div className='app__error_message'>Size is required</div>}
+                    {errors.size && (
+                      <div className="app__error_message">Size is required</div>
+                    )}
                   </div>
                 </div>
               </div>
-              <div className='app__form_field_container'>
-                <div className='w-full'>
-                  <div className='app__label_standard'>Curriculum Implemented:</div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">
+                    Curriculum Implemented:
+                  </div>
                   <div>
                     <div className="w-full">
-                      <Listbox value={selectedClass} onChange={setSelectedClass} multiple>
+                      <Listbox
+                        value={selectedClass}
+                        onChange={setSelectedClass}
+                        multiple
+                      >
                         <div className="relative">
                           <Listbox.Button className="app__listbox_field">
                             <span className="block truncate text-xs">
-                              &nbsp;{selectedClass.map((item: string) => item).join(', ')}
+                              &nbsp;
+                              {selectedClass
+                                .map((item: string) => item)
+                                .join(', ')}
                             </span>
                             <span className="app__listbox_icon">
                               <ChevronDownIcon
@@ -294,7 +374,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                                   key={itemIdx}
                                   className={({ active }) =>
                                     `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                                      active ? 'bg-amber-50 text-amber-900' : 'text-gray-900'
+                                      active
+                                        ? 'bg-amber-50 text-amber-900'
+                                        : 'text-gray-900'
                                     }`
                                   }
                                   value={item}
@@ -303,20 +385,21 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                                     <>
                                       <span
                                         className={`block truncate text-xs ${
-                                          selected ? 'font-medium' : 'font-normal'
+                                          selected
+                                            ? 'font-medium'
+                                            : 'font-normal'
                                         }`}
                                       >
                                         {item}
                                       </span>
-                                      {
-                                        selected
-                                          ? (
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
-                                              <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                                            </span>
-                                            )
-                                          : null
-                                      }
+                                      {selected ? (
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                                          <CheckIcon
+                                            className="h-5 w-5"
+                                            aria-hidden="true"
+                                          />
+                                        </span>
+                                      ) : null}
                                     </>
                                   )}
                                 </Listbox.Option>
@@ -329,67 +412,88 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                   </div>
                 </div>
               </div>
-              <div className='app__form_field_container'>
-                <div className='w-full'>
-                  <div className='app__label_standard'>School Name:</div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">School Name:</div>
                   <div>
                     <input
                       {...register('name', { required: true })}
                       type="text"
-                      className='app__input_standard'/>
-                    {errors.name && <div className='app__error_message'>School Name is required</div>}
+                      className="app__input_standard"
+                    />
+                    {errors.name && (
+                      <div className="app__error_message">
+                        School Name is required
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-              <div className='app__form_field_container'>
-                <div className='w-full'>
-                  <div className='app__label_standard'>School ID:</div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">School ID:</div>
                   <div>
                     <input
                       {...register('school_id', { required: true })}
                       type="text"
-                      className='app__input_standard'/>
-                    {errors.school_id && <div className='app__error_message'>School Name is required</div>}
+                      className="app__input_standard"
+                    />
+                    {errors.school_id && (
+                      <div className="app__error_message">
+                        School Name is required
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-              <div className='app__form_field_container'>
-                <div className='w-full'>
-                  <div className='app__label_standard'>School Head:</div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">School Head:</div>
                   <SearchUserInput
                     isMultiple={false}
-                    selectedUsers={editData ? (editData.hrm_users ? [editData.hrm_users] : []) : []}
-                    handleSelectedUsers={handleSelectedUsers}/>
-                  {errorMessage && <div className='app__error_message'>{errorMessage}</div>}
+                    selectedUsers={
+                      editData
+                        ? editData.hrm_users
+                          ? [editData.hrm_users]
+                          : []
+                        : []
+                    }
+                    handleSelectedUsers={handleSelectedUsers}
+                  />
+                  {errorMessage && (
+                    <div className="app__error_message">{errorMessage}</div>
+                  )}
                 </div>
               </div>
-              <div className='app__form_field_container'>
-                <div className='w-full'>
-                  <div className='app__label_standard'>District:</div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">District:</div>
                   <div>
                     <select
                       {...register('district_id', { required: true })}
                       value={districtId}
-                      onChange={e => setDistrictId(e.target.value)}
-                      className='app__select_standard'>
-                        <option value=''>Choose District</option>
-                        {
-                          districts?.map(item => (
-                            <option key={uuid()} value={item.id}>{item.name}</option>
-                          ))
-                        }
+                      onChange={(e) => setDistrictId(e.target.value)}
+                      className="app__select_standard"
+                    >
+                      <option value="">Choose District</option>
+                      {districts?.map((item) => (
+                        <option key={uuid()} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
                     </select>
-                    {errors.district_id && <div className='app__error_message'>District is required</div>}
+                    {errors.district_id && (
+                      <div className="app__error_message">
+                        District is required
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
               <div className="app__modal_footer">
-                    <button
-                      type="submit"
-                      className="app__btn_green_sm"
-                    >
-                      {saving ? 'Saving...' : 'Save'}
-                    </button>
+                <button type="submit" className="app__btn_green_sm">
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
               </div>
             </form>
           </div>

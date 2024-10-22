@@ -68,7 +68,7 @@ async function generateNosi(supabase: any) {
         'id, date_of_last_promotion, status, joining_date, absent_days_without_pay, item_id'
       )
       .not('item_id', 'is', null)
-      .eq('Atatus', 'active')
+      .eq('status', 'active')
 
     if (error) throw new Error(`Error fetching employees: ${error.message}`)
 

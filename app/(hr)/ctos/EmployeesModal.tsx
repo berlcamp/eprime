@@ -1,20 +1,30 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { Fragment, useEffect, useState } from 'react'
-import { Menu, Transition } from '@headlessui/react'
+import {
+  ConfirmModal,
+  CustomButton,
+  SearchUserInput,
+  TableRowLoading,
+  UserBlock
+} from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { CustomButton, ConfirmModal, TableRowLoading, UserBlock, SearchUserInput } from '@/components'
+import { Menu, Transition } from '@headlessui/react'
+import {
+  ArrowPathIcon,
+  ChevronDownIcon,
+  TrashIcon
+} from '@heroicons/react/20/solid'
+import { Fragment, useEffect, useState } from 'react'
 import uuid from 'react-uuid'
-import { ArrowPathIcon, ChevronDownIcon, TrashIcon } from '@heroicons/react/20/solid'
 import AttachmentsModal from './AttachmentsModal'
 
 // Redux imports
-import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
+import { useDispatch, useSelector } from 'react-redux'
 
 // Types
-import type { CtoTypes, CtoUserTypes, namesType } from '@/types'
+import type { CtoTypes, CtoUserTypes, Employee } from '@/types'
 import { fetchLeaveCards, logError } from '@/utils/fetchApi'
 
 interface ModalProps {
@@ -26,7 +36,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
   const { setToast, hasAccess } = useFilter()
   const { supabase } = useSupabase()
 
-  const [user, setUser] = useState<namesType | null>(null)
+  const [user, setUser] = useState<Employee | null>(null)
   const [clear, setClear] = useState(false)
 
   const [saving, setSaving] = useState(false)
@@ -93,16 +103,15 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       dispatch(updateList(items))
 
       // insert to notifications
-      const { error2 } = await supabase
-        .from('hrm_notifications')
-        .insert({
-          message: 'You are added to a <b>CTO</b>, please upload supporting documents.',
-          url: `/profile/${user.id}?page=ctos&id=${data[0].id}`,
-          type: 'cto',
-          user_id: user.id,
-          cto_user_id: data[0].id,
-          reference_table: 'hrm_cto_users'
-        })
+      const { error2 } = await supabase.from('hrm_notifications').insert({
+        message:
+          'You are added to a <b>CTO</b>, please upload supporting documents.',
+        url: `/profile/${user.id}?page=ctos&id=${data[0].id}`,
+        type: 'cto',
+        user_id: user.id,
+        cto_user_id: data[0].id,
+        reference_table: 'hrm_cto_users'
+      })
 
       if (error2) {
         throw new Error(error2.message)
@@ -152,22 +161,25 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       if (error) throw new Error(error.message)
 
       // insert to notifications
-      const { error2 } = await supabase
-        .from('hrm_notifications')
-        .insert({
-          message: 'Your <b>CTO</b> has been approved.',
-          url: `/myctos/${refCode}`,
-          type: 'cto',
-          user_id: selectedRow.hrm_user_id,
-          cto_id: ctoData.id,
-          reference_table: 'hrm_ctos'
-        })
+      const { error2 } = await supabase.from('hrm_notifications').insert({
+        message: 'Your <b>CTO</b> has been approved.',
+        url: `/myctos/${refCode}`,
+        type: 'cto',
+        user_id: selectedRow.hrm_user_id,
+        cto_id: ctoData.id,
+        reference_table: 'hrm_ctos'
+      })
 
       if (error2) throw new Error(error2.message)
 
       let coc = selectedRow.coc
       // Get the previous COC balance from leave cards
-      const result = await fetchLeaveCards(selectedRow.hrm_user_id, 'Compensatory Overtime Credit', 10, 0)
+      const result = await fetchLeaveCards(
+        selectedRow.hrm_user_id,
+        'Compensatory Overtime Credit',
+        10,
+        0
+      )
       if (result.count && result.count > 0) {
         // first index of array should be the latest and updated balance
         coc = coc + Number(result.data[0].balance)
@@ -189,13 +201,21 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
         .select()
 
       if (error3) {
-        void logError('Earned Compensatory Overtime Credit on CTO approval', 'hrm_leave_cards', JSON.stringify(newData), error3.message)
-        setToast('error', 'Error updating leave card, please adjust the employees leave card manually.')
+        void logError(
+          'Earned Compensatory Overtime Credit on CTO approval',
+          'hrm_leave_cards',
+          JSON.stringify(newData),
+          error3.message
+        )
+        setToast(
+          'error',
+          'Error updating leave card, please adjust the employees leave card manually.'
+        )
         throw new Error(error3.message)
       }
 
       // Update list
-      const updatedData = list.map(item => {
+      const updatedData = list.map((item) => {
         if (item.id === selectedRow?.id) {
           return { ...item, is_approved: true }
         }
@@ -222,7 +242,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       if (error) throw new Error(error.message)
 
       // Update list
-      const updatedData = list.filter(item => item.id !== selectedId)
+      const updatedData = list.filter((item) => item.id !== selectedId)
       setList(updatedData)
 
       // Update hrm_cto_users data in redux
@@ -236,11 +256,17 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       dispatch(updateList(items))
 
       // delete the files on supabase storage
-      const { data: files, error: error3 } = await supabase.storage.from('hrm').list(`ctos/${selectedId}`)
+      const { data: files, error: error3 } = await supabase.storage
+        .from('hrm')
+        .list(`ctos/${selectedId}`)
       if (error3) throw new Error(error3.message)
       if (files.length > 0) {
-        const filesToRemove = files.map((x: { name: string }) => `ctos/${selectedId}/${x.name}`)
-        const { error: error4 } = await supabase.storage.from('hrm').remove(filesToRemove)
+        const filesToRemove = files.map(
+          (x: { name: string }) => `ctos/${selectedId}/${x.name}`
+        )
+        const { error: error4 } = await supabase.storage
+          .from('hrm')
+          .remove(filesToRemove)
         if (error4) throw new Error(error4.message)
       }
 
@@ -253,7 +279,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
     setShowDeleteModal(false)
   }
 
-  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+  const handleSelectedUsers = (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
       setUser(selectedUsers[0])
     } else {
@@ -294,42 +320,42 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
   return (
-  <>
-    <div className="app__modal_wrapper">
-      <div className="app__modal_wrapper2_large">
-        <div className="app__modal_wrapper3">
-          <div className="app__modal_header">
-            <h5 className="app__modal_header_text">
-              Manage CTO Employees
-            </h5>
-            <CustomButton
-                containerStyles='app__btn_gray'
-                title='Close'
+    <>
+      <div className="app__modal_wrapper">
+        <div className="app__modal_wrapper2_large">
+          <div className="app__modal_wrapper3">
+            <div className="app__modal_header">
+              <h5 className="app__modal_header_text">Manage CTO Employees</h5>
+              <CustomButton
+                containerStyles="app__btn_gray"
+                title="Close"
                 isDisabled={saving}
-                btnType='button'
+                btnType="button"
                 handleClick={hideModal}
               />
-          </div>
+            </div>
 
-          {
-            ctoData.status !== 'Expired' &&
+            {ctoData.status !== 'Expired' && (
               <div className="mx-4 my-4">
-                <div className='w-full'>
-                  <div className='app__form_field_container'>
-                    <div className='w-full'>
-                      <div className='app__label_standard'>Add Employee:</div>
+                <div className="w-full">
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Add Employee:</div>
                       <SearchUserInput
                         isMultiple={false}
                         nonTeachingOnly={true}
                         clear={clear}
-                        excludedIds={list.map(obj => obj.hrm_user_id)}
-                        handleSelectedUsers={handleSelectedUsers}/>
-                      {errorMessage && <div className='app__error_message'>{errorMessage}</div>}
+                        excludedIds={list.map((obj) => obj.hrm_user_id)}
+                        handleSelectedUsers={handleSelectedUsers}
+                      />
+                      {errorMessage && (
+                        <div className="app__error_message">{errorMessage}</div>
+                      )}
                     </div>
                   </div>
                   <div className="app__modal_footer_left">
                     <CustomButton
-                      btnType='button'
+                      btnType="button"
                       handleClick={handleAddEmployee}
                       isDisabled={saving}
                       title={saving ? 'Saving...' : 'Add'}
@@ -338,53 +364,51 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                   </div>
                 </div>
               </div>
-          }
-          <div className="app__modal_body">
-            {/* Main Content */}
-            <div className='pb-5'>
-              <div className='app__warning_text2'><span className='app__warning_title'>Note:</span> Approved employees can no longer be deleted.</div>
-              <div className='flex justify-end'>
-                <CustomButton
-                  btnType='button'
-                  handleClick={fetchData}
-                  isDisabled={loading}
-                  title='Refresh'
-                  containerStyles="app__btn_normal mb-2 flex space-x-1"
-                  rightIcon={<ArrowPathIcon className='w-4 h-4'/>}
-                />
-              </div>
-              <table className="app__table">
-                <thead className="app__thead">
+            )}
+            <div className="app__modal_body">
+              {/* Main Content */}
+              <div className="pb-5">
+                <div className="app__warning_text2">
+                  <span className="app__warning_title">Note:</span> Approved
+                  employees can no longer be deleted.
+                </div>
+                <div className="flex justify-end">
+                  <CustomButton
+                    btnType="button"
+                    handleClick={fetchData}
+                    isDisabled={loading}
+                    title="Refresh"
+                    containerStyles="app__btn_normal mb-2 flex space-x-1"
+                    rightIcon={<ArrowPathIcon className="w-4 h-4" />}
+                  />
+                </div>
+                <table className="app__table">
+                  <thead className="app__thead">
                     <tr>
-                        <th className="hidden md:table-cell app__th pl-4"></th>
-                        <th className="hidden md:table-cell app__th">
-                            Employees
-                        </th>
-                        <th className="hidden md:table-cell app__th">
-                            Status
-                        </th>
-                        <th className="hidden md:table-cell app__th">
-                            Attachments
-                        </th>
-                        <th className="hidden md:table-cell app__th">
-
-                        </th>
+                      <th className="hidden md:table-cell app__th pl-4"></th>
+                      <th className="hidden md:table-cell app__th">
+                        Employees
+                      </th>
+                      <th className="hidden md:table-cell app__th">Status</th>
+                      <th className="hidden md:table-cell app__th">
+                        Attachments
+                      </th>
+                      <th className="hidden md:table-cell app__th"></th>
                     </tr>
-                </thead>
-                <tbody>
-                  {
-                    !isDataEmpty && list.map((item: CtoUserTypes) => (
-                      <tr
-                        key={uuid()}
-                        className="app__tr">
-                        <td
-                          className="w-6 pl-4 app__td">
-                          {
-                            !item.is_approved &&
+                  </thead>
+                  <tbody>
+                    {!isDataEmpty &&
+                      list.map((item: CtoUserTypes) => (
+                        <tr key={uuid()} className="app__tr">
+                          <td className="w-6 pl-4 app__td">
+                            {!item.is_approved && (
                               <Menu as="div" className="app__menu_container">
                                 <div>
                                   <Menu.Button className="app__dropdown_btn">
-                                    <ChevronDownIcon className="h-5 w-5" aria-hidden="true" />
+                                    <ChevronDownIcon
+                                      className="h-5 w-5"
+                                      aria-hidden="true"
+                                    />
                                   </Menu.Button>
                                 </div>
 
@@ -401,126 +425,128 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                                     <div className="py-1">
                                       <Menu.Item>
                                         <div
-                                            onClick={ () => handleDelete(item.id) }
-                                            className='app__dropdown_item'>
-                                            <TrashIcon className='w-4 h-4'/>
-                                            <span>Remove</span>
-                                          </div>
+                                          onClick={() => handleDelete(item.id)}
+                                          className="app__dropdown_item"
+                                        >
+                                          <TrashIcon className="w-4 h-4" />
+                                          <span>Remove</span>
+                                        </div>
                                       </Menu.Item>
                                     </div>
                                   </Menu.Items>
                                 </Transition>
                               </Menu>
-                          }
-                        </td>
-                        <th
-                          className="app__th_firstcol">
-                          <div className='hidden md:inline-block font-medium'>
-                            <UserBlock user={item.hrm_users}/>
-                          </div>
-                          {/* Mobile View */}
-                          <div>
-                            <div className="md:hidden app__td_mobile">
-                              <UserBlock user={item.hrm_users}/>
-                              <div>
-                                {
-                                  item.is_approved
-                                    ? <span className='app__status_container_green'>Approved</span>
-                                    : <span className='app__status_container_orange'>For Approval</span>
-                                }
-                              </div>
-                              <div>
-                                <CustomButton
-                                  btnType='button'
-                                  title='View Attachments'
-                                  handleClick={() => handleViewAttachments(item.id)}
-                                  containerStyles="app__btn_normal"
-                                />
+                            )}
+                          </td>
+                          <th className="app__th_firstcol">
+                            <div className="hidden md:inline-block font-medium">
+                              <UserBlock user={item.hrm_users} />
+                            </div>
+                            {/* Mobile View */}
+                            <div>
+                              <div className="md:hidden app__td_mobile">
+                                <UserBlock user={item.hrm_users} />
+                                <div>
+                                  {item.is_approved ? (
+                                    <span className="app__status_container_green">
+                                      Approved
+                                    </span>
+                                  ) : (
+                                    <span className="app__status_container_orange">
+                                      For Approval
+                                    </span>
+                                  )}
+                                </div>
+                                <div>
+                                  <CustomButton
+                                    btnType="button"
+                                    title="View Attachments"
+                                    handleClick={() =>
+                                      handleViewAttachments(item.id)
+                                    }
+                                    containerStyles="app__btn_normal"
+                                  />
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          {/* End - Mobile View */}
-
-                        </th>
-                        <td
-                          className="hidden md:table-cell app__td">
-                          {
-                            item.is_approved
-                              ? <span className='app__status_container_green'>Approved</span>
-                              : <span className='app__status_container_orange'>Pending Approval</span>
-                          }
-                        </td>
-                        <td
-                          className="hidden md:table-cell app__td">
-                          <div>
-                            <CustomButton
-                              btnType='button'
-                              title='View Attachments'
-                              handleClick={() => handleViewAttachments(item.id)}
-                              containerStyles="app__btn_normal"
-                            />
-                          </div>
-                        </td>
-                        <td
-                          className="hidden md:table-cell app__td">
-                            {
-                              (ctoData.status !== 'Expired' && !item.is_approved && hasAccess('cto_sc_approver')) &&
+                            {/* End - Mobile View */}
+                          </th>
+                          <td className="hidden md:table-cell app__td">
+                            {item.is_approved ? (
+                              <span className="app__status_container_green">
+                                Approved
+                              </span>
+                            ) : (
+                              <span className="app__status_container_orange">
+                                Pending Approval
+                              </span>
+                            )}
+                          </td>
+                          <td className="hidden md:table-cell app__td">
+                            <div>
+                              <CustomButton
+                                btnType="button"
+                                title="View Attachments"
+                                handleClick={() =>
+                                  handleViewAttachments(item.id)
+                                }
+                                containerStyles="app__btn_normal"
+                              />
+                            </div>
+                          </td>
+                          <td className="hidden md:table-cell app__td">
+                            {ctoData.status !== 'Expired' &&
+                              !item.is_approved &&
+                              hasAccess('cto_sc_approver') && (
                                 <CustomButton
-                                  btnType='button'
-                                  title='Approve'
+                                  btnType="button"
+                                  title="Approve"
                                   handleClick={() => handleApprove(item)}
                                   containerStyles="app__btn_green"
                                 />
-                            }
-                        </td>
-                      </tr>
-                    ))
-                  }
-                  { loading && <TableRowLoading cols={5} rows={2}/> }
-                </tbody>
-              </table>
-              {
-                (!loading && isDataEmpty) &&
-                  <div className='app__norecordsfound'>No records found.</div>
-              }
+                              )}
+                          </td>
+                        </tr>
+                      ))}
+                    {loading && <TableRowLoading cols={5} rows={2} />}
+                  </tbody>
+                </table>
+                {!loading && isDataEmpty && (
+                  <div className="app__norecordsfound">No records found.</div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    {/* Delete Modal */}
-    {
-      showDeleteModal && (
+      {/* Delete Modal */}
+      {showDeleteModal && (
         <ConfirmModal
-          header='Confirm Delete'
-          btnText='Confirm'
+          header="Confirm Delete"
+          btnText="Confirm"
           message="This action cannot be undone. Are you sure you want to remove this employee from this CTO?"
           onConfirm={handleDeleteConfirmed}
           onCancel={() => setShowDeleteModal(false)}
         />
-      )
-    }
-    {/* Confirm Approve Modal */}
-    {
-      showApproveModal && (
+      )}
+      {/* Confirm Approve Modal */}
+      {showApproveModal && (
         <ConfirmModal
-          header='Confirm Approve'
-          btnText='Confirm'
+          header="Confirm Approve"
+          btnText="Confirm"
           message="This action cannot be undone. Are you sure you want to approve this employee?"
           onConfirm={handleApproveConfirmed}
           onCancel={() => setShowApproveModal(false)}
         />
-      )
-    }
-    {/* Attachments Modal */}
-    {
-      showAttachmentsModal && (
+      )}
+      {/* Attachments Modal */}
+      {showAttachmentsModal && (
         <AttachmentsModal
           id={selectedId}
-          hideModal={() => setShowAttachmentsModal(false)}/>
-      )
-    }
-  </>
+          hideModal={() => setShowAttachmentsModal(false)}
+        />
+      )}
+    </>
   )
 }
 

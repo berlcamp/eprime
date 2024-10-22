@@ -552,6 +552,56 @@ export async function fetchItems(
   }
 }
 
+export async function fetchRankings(
+  filters: {
+    filterPosition?: string
+    filterStatus?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
+  try {
+    let query = supabase
+      .from('hrm_rankings')
+      .select(
+        '*, chairman:chairman_id(id,firstname,middlename,lastname,avatar_url),position:position_id(name)',
+        { count: 'exact' }
+      )
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    // filter position
+    if (filters.filterPosition && filters.filterPosition !== '') {
+      query = query.eq('position_id', filters.filterPosition)
+    }
+
+    // filter status
+    if (filters.filterStatus && filters.filterStatus !== '') {
+      query = query.eq('status', filters.filterStatus)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch items error', error)
+    return { data: [], count: 0 }
+  }
+}
+
 export async function fetchNosi(
   filters: {
     filterUser?: string
@@ -1365,7 +1415,7 @@ export async function fetchLeaveCards(
     let query = supabase
       .from('hrm_leave_cards')
       .select(
-        '*, hrm_user:user_id(id,firstname,lastname,middlename,avatar_url)',
+        '*, hrm_user:user_id(id,firstname,lastname,middlename,avatar_url),updater:updated_by(id,firstname,lastname,middlename,avatar_url)',
         { count: 'exact' }
       )
       .eq('user_id', userId)

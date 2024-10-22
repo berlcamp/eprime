@@ -17,6 +17,7 @@ import { useForm } from 'react-hook-form'
 
 // Types
 import type {
+  Employee,
   ImplementingUnitTypes,
   ItemTypes,
   PositionTypes,
@@ -330,7 +331,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     return data !== null
   }
 
-  const handleSelectedUsers = (selectedUsers: namesType[]) => {
+  const handleSelectedUsers = (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
       setUser(selectedUsers[0])
     } else {

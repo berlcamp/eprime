@@ -90,6 +90,12 @@ const Page: React.FC = () => {
                   title="Who can approve CTOs and Service Credits"
                 />
                 <ChooseUsers
+                  multiple={true}
+                  type="rsp_manager"
+                  users={users}
+                  title="Who can manage RSP"
+                />
+                <ChooseUsers
                   multiple={false}
                   type="sds"
                   users={users}

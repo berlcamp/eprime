@@ -11,7 +11,7 @@ export interface SelectUserNamesProps {
 export interface UserAccessTypes {
   user_id: string
   type: string
-  hrm_user: namesType
+  hrm_user: Employee
 }
 
 export interface searchUser {
@@ -154,6 +154,7 @@ export interface LeaveCardTypes {
   updated_by: string
   created_at: string
   adjustment_date: string
+  updater?: Employee
 }
 
 export interface AccountDetailsForm {
@@ -334,7 +335,7 @@ export interface CtoUserTypes {
   id: string
   hrm_user_id: string
   hrm_ctos?: CtoTypes
-  hrm_users: namesType
+  hrm_users: Employee
   cto_id: string
   is_approved: boolean
   expiration: string
@@ -369,7 +370,7 @@ export interface ServiceCreditUserTypes {
   id: string
   hrm_user_id: string
   hrm_service_credits?: ServiceCreditTypes
-  hrm_users: namesType
+  hrm_users: Employee
   service_credit_id: string
   is_approved: boolean
   service_credits: number
@@ -690,5 +691,20 @@ export interface PdsFamilyBackgroundTypes {
   mother_firstname: string
   mother_middlename: string
   mother_lastname: string
+  confirmed: string
+}
+
+export interface RankingTypes {
+  id: string
+  type: string
+  position_id: string
+  position: PositionTypes
+  chairman_id: string
+  chairman: Employee
+  department: string
+  description: string
+  status: string
+  display_on_portal: string
+  display_on_portal_until: string
   confirmed: string
 }
