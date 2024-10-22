@@ -1318,7 +1318,14 @@ export async function fetchDocuments(
         '*, hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
         { count: 'exact' }
       )
-      .in('id', trackerIds)
+
+    // Exclude kean and berl
+    if (
+      userId !== '1a8173ad-f4c5-4869-a587-7466a1d6e951' &&
+      userId !== '1761de66-1104-492d-aa95-b8f4521eaef1'
+    ) {
+      query = query.in('id', trackerIds)
+    }
 
     // Full text search
     if (

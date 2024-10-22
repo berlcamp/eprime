@@ -42,6 +42,12 @@ export default function LeaveCard({ userId }: PageProps) {
   const [rlBalance, setRlBalance] = useState('')
   const [mlBalance, setMlBalance] = useState('')
   const [slbwBalance, setSlbwBalance] = useState('')
+  const [mflBalance, setMflBalance] = useState('')
+  const [soloPBalance, setSoloPBalance] = useState('')
+  const [studyLBalance, setStudyLBalance] = useState('')
+  const [vawcBalance, setVawcBalance] = useState('')
+  const [selBalance, setSelBalance] = useState('')
+  const [alBalance, setAlBalance] = useState('')
 
   const [showAdjustmentForm, setShowAdjustmentForm] = useState(false)
 
@@ -206,6 +212,16 @@ export default function LeaveCard({ userId }: PageProps) {
       const cocList = list.filter(
         (item) => item.type === 'Compensatory Overtime Credit'
       )
+      const mflList = list.filter(
+        (item) => item.type === 'Mandatory/Force Leave'
+      )
+      const soloPList = list.filter((item) => item.type === 'Solo Parent Leave')
+      const studyLList = list.filter((item) => item.type === 'Study Leave')
+      const selList = list.filter(
+        (item) => item.type === 'Special Emergency (Calamity) Leave'
+      )
+      const vawcList = list.filter((item) => item.type === '10-Day VAWC Leave')
+      const alList = list.filter((item) => item.type === 'Adoption Leave')
 
       // first index of array should be the latest and updated balance
       const slBalance = slList.length > 0 ? slList[0].balance : ''
@@ -217,6 +233,12 @@ export default function LeaveCard({ userId }: PageProps) {
       const rlBalance = rlList.length > 0 ? rlList[0].balance : ''
       const mlBalance = mlList.length > 0 ? mlList[0].balance : ''
       const slbwBalance = slbwList.length > 0 ? slbwList[0].balance : ''
+      const mflBalance = mflList.length > 0 ? mflList[0].balance : ''
+      const soloPBalance = soloPList.length > 0 ? soloPList[0].balance : ''
+      const studyLBalance = studyLList.length > 0 ? studyLList[0].balance : ''
+      const vawcBalance = vawcList.length > 0 ? vawcList[0].balance : ''
+      const selBalance = selList.length > 0 ? selList[0].balance : ''
+      const alBalance = alList.length > 0 ? alList[0].balance : ''
 
       setSlBalance(slBalance)
       setVlBalance(vlBalance)
@@ -227,6 +249,12 @@ export default function LeaveCard({ userId }: PageProps) {
       setRlBalance(rlBalance)
       setMlBalance(mlBalance)
       setSlbwBalance(slbwBalance)
+      setMflBalance(mflBalance)
+      setSoloPBalance(soloPBalance)
+      setStudyLBalance(studyLBalance)
+      setVawcBalance(vawcBalance)
+      setSelBalance(selBalance)
+      setAlBalance(alBalance)
     }
   }, [user, list])
 
@@ -258,6 +286,22 @@ export default function LeaveCard({ userId }: PageProps) {
                     <option value="">Choose Type</option>
                     <option value="Service Credit">
                       Service Credit Adjustment
+                    </option>
+                    <option value="Mandatory/Force Leave">
+                      Mandatory/Force Leave Adjustment
+                    </option>
+                    <option value="Solo Parent Leave">
+                      Solo Parent Leave Adjustment
+                    </option>
+                    <option value="Study Leave">Study Leave Adjustment</option>
+                    <option value="Special Emergency (Calamity) Leave">
+                      Special Emergency (Calamity) Leave Adjustment
+                    </option>
+                    <option value="10-Day VAWC Leave">
+                      10-Day VAWC Leave Adjustment
+                    </option>
+                    <option value="Adoption Leave">
+                      Adoption Leave Adjustment
                     </option>
                     <option value="Paternity Leave">
                       Paternity Leave Adjustment
@@ -400,7 +444,7 @@ export default function LeaveCard({ userId }: PageProps) {
 
               {plBalance !== '' && (
                 <span className="border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm">
-                  PL:&nbsp;{plBalance}
+                  Paternity Leave:&nbsp;{plBalance}
                 </span>
               )}
               {splBalance !== '' && (
@@ -410,17 +454,47 @@ export default function LeaveCard({ userId }: PageProps) {
               )}
               {rlBalance !== '' && (
                 <span className="border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm">
-                  RL:&nbsp;{rlBalance}
+                  Rehabilitation Leave:&nbsp;{rlBalance}
                 </span>
               )}
               {mlBalance !== '' && (
                 <span className="border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm">
-                  ML:&nbsp;{mlBalance}
+                  Maternity Leave:&nbsp;{mlBalance}
                 </span>
               )}
               {slbwBalance !== '' && (
                 <span className="border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm">
                   SLBW:&nbsp;{slbwBalance}
+                </span>
+              )}
+              {mflBalance !== '' && (
+                <span className="border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm">
+                  Mandatory/Force Leave:&nbsp;{mflBalance}
+                </span>
+              )}
+              {soloPBalance !== '' && (
+                <span className="border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm">
+                  Solo Parent Leave:&nbsp;{soloPBalance}
+                </span>
+              )}
+              {studyLBalance !== '' && (
+                <span className="border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm">
+                  Study Leave:&nbsp;{studyLBalance}
+                </span>
+              )}
+              {selBalance !== '' && (
+                <span className="border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm">
+                  Special Emergency Leave:&nbsp;{selBalance}
+                </span>
+              )}
+              {vawcBalance !== '' && (
+                <span className="border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm">
+                  VAWC Leave:&nbsp;{vawcBalance}
+                </span>
+              )}
+              {alBalance !== '' && (
+                <span className="border border-green-500 px-1 py-px font-semibold bg-green-200 text-gray-700 text-sm">
+                  Adoption Leave:&nbsp;{alBalance}
                 </span>
               )}
             </>
