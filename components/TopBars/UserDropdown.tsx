@@ -15,11 +15,7 @@ import type { Employee } from '@/types'
 import Link from 'next/link'
 import { GrDocumentUser } from 'react-icons/gr'
 
-interface propTypes {
-  darkMode?: boolean
-}
-
-const UserDropdown = ({ darkMode }: propTypes) => {
+const UserDropdown = () => {
   const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false)
 
   const { supabase, session, systemUsers } = useSupabase()

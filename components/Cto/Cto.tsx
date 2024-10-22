@@ -1,21 +1,27 @@
 'use client'
 
-import { fetchLeaveCards, fetchMyCtos } from '@/utils/fetchApi'
-import React, { useEffect, useState } from 'react'
-import { PerPage, TableRowLoading, ShowMore, Title, CustomButton } from '@/components'
-import UploadModal from './UploadModal'
+import {
+  CustomButton,
+  PerPage,
+  ShowMore,
+  TableRowLoading,
+  Title
+} from '@/components'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { fetchMyCtos } from '@/utils/fetchApi'
 import { format } from 'date-fns'
+import { useEffect, useState } from 'react'
+import UploadModal from './UploadModal'
 
 // Types
 import type { CtoUserTypes } from '@/types'
 
 // Redux imports
-import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { useDispatch, useSelector } from 'react-redux'
 
-export default function Cto ({ userId }: { userId: string }) {
+export default function Cto({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(false)
 
   const [list, setList] = useState<CtoUserTypes[]>([])
@@ -24,9 +30,6 @@ export default function Cto ({ userId }: { userId: string }) {
   const [showUploadModal, setShowUploadModal] = useState(false)
 
   const [perPageCount, setPerPageCount] = useState<number>(10)
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [cocBalance, setCocBalance] = useState(0)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -44,7 +47,12 @@ export default function Cto ({ userId }: { userId: string }) {
       dispatch(updateList(result.data))
 
       // Updating showing text in redux
-      dispatch(updateResultCounter({ showing: result.data.length, results: result.count ? result.count : 0 }))
+      dispatch(
+        updateResultCounter({
+          showing: result.data.length,
+          results: result.count ? result.count : 0
+        })
+      )
     } catch (e) {
       console.error(e)
     } finally {
@@ -64,7 +72,12 @@ export default function Cto ({ userId }: { userId: string }) {
       dispatch(updateList(newList))
 
       // Updating showing text in redux
-      dispatch(updateResultCounter({ showing: newList.length, results: result.count ? result.count : 0 }))
+      dispatch(
+        updateResultCounter({
+          showing: newList.length,
+          results: result.count ? result.count : 0
+        })
+      )
     } catch (e) {
       console.error(e)
     } finally {
@@ -87,174 +100,207 @@ export default function Cto ({ userId }: { userId: string }) {
     setList([])
     void fetchData()
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perPageCount])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
-  useEffect(() => {
-    void (async () => {
-      const result = await fetchLeaveCards(session.user.id, 'Compensatory Overtime Credit', 10, 0)
-      if (result.count && result.count > 0) {
-        // first index of array should be the latest and updated balance
-        const coc = result.data[0].balance
-        setCocBalance(coc)
-      }
-    })()
-  }, [])
-
   return (
     <>
-    <div>
-        <div className='app__title'>
-          <Title title='CTOs'/>
+      <div>
+        <div className="app__title">
+          <Title title="CTOs" />
         </div>
 
-        <div className='app__warning_text'><span className='app__warning_title'>Note:</span> Employee need to provide supporting documents as basis for CTO approval.</div>
+        <div className="app__warning_text">
+          <span className="app__warning_title">Note:</span> Employee need to
+          provide supporting documents as basis for CTO approval.
+        </div>
 
         {/* Per Page */}
         <PerPage
           showingCount={resultsCounter.showing}
           resultsCount={resultsCounter.results}
           perPageCount={perPageCount}
-          setPerPageCount={setPerPageCount}/>
+          setPerPageCount={setPerPageCount}
+        />
 
         {/* Main Content */}
         <div>
           <table className="app__table">
             <thead className="app__thead">
-                <tr>
-                    <th className="hidden md:table-cell text-gray-700 pl-4">
-                        Reference Code
-                    </th>
-                    <th className="hidden md:table-cell app__th">
-                        COC
-                    </th>
-                    <th className="hidden md:table-cell app__th">
-                        Approval Status
-                    </th>
-                    <th className="hidden md:table-cell app__th">
-                        Particulars
-                    </th>
-                    <th className="hidden md:table-cell app__th">
-                        Duration
-                    </th>
-                    <th className="hidden md:table-cell app__th">
-                        Expiration
-                    </th>
-                    <th className="hidden md:table-cell app__th">
-                    </th>
-                    <th className="hidden md:table-cell app__th">
-                        Expiration Status
-                    </th>
-                </tr>
+              <tr>
+                <th className="hidden md:table-cell text-gray-700 pl-4">
+                  Reference Code
+                </th>
+                <th className="hidden md:table-cell app__th">COC</th>
+                <th className="hidden md:table-cell app__th">
+                  Approval Status
+                </th>
+                <th className="hidden md:table-cell app__th">Particulars</th>
+                <th className="hidden md:table-cell app__th">Duration</th>
+                <th className="hidden md:table-cell app__th">Expiration</th>
+                <th className="hidden md:table-cell app__th"></th>
+                <th className="hidden md:table-cell app__th">
+                  Expiration Status
+                </th>
+              </tr>
             </thead>
             <tbody>
-              {
-                !isDataEmpty && list.map((item: CtoUserTypes, index) => (
-                  <tr
-                    key={index}
-                    className="app__tr">
-                    <th
-                      className="pl-4">
-                      <div className='hidden md:inline-block font-medium'>{item.hrm_ctos?.reference_code}</div>
+              {!isDataEmpty &&
+                list.map((item: CtoUserTypes, index) => (
+                  <tr key={index} className="app__tr">
+                    <th className="pl-4">
+                      <div className="hidden md:inline-block font-medium">
+                        {item.hrm_ctos?.reference_code}
+                      </div>
                       {/* Mobile View */}
                       <div>
                         <div className="md:hidden app__td_mobile">
-                          <div><span className='app_td_mobile_label'>Reference Code:</span> {item.hrm_ctos?.reference_code}</div>
-                          <div><span className='app_td_mobile_label'>Particulars:</span> {item.hrm_ctos?.particulars}</div>
-                          <div><span className='app_td_mobile_label'>COC:</span> {item.coc}</div>
-                          <div><span className='app_td_mobile_label'>Duration: </span>{item.hrm_ctos ? format(new Date(item.hrm_ctos.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.hrm_ctos.to), 'MMM d, yyyy') : ''}</div>
-                          <div><span className='app_td_mobile_label'>Expiration: </span>{item.expiration && format(new Date(item.expiration), 'MMM d, yyyy')}</div>
-                          <div><span className='app_td_mobile_label'>Expiration Status: </span>
-                            {
-                              item.hrm_ctos?.status === 'Expired'
-                                ? <span className='app__status_container_red'>Expired</span>
-                                : <span className='app__status_container_green'>Active</span>
-                            }
+                          <div>
+                            <span className="app_td_mobile_label">
+                              Reference Code:
+                            </span>{' '}
+                            {item.hrm_ctos?.reference_code}
+                          </div>
+                          <div>
+                            <span className="app_td_mobile_label">
+                              Particulars:
+                            </span>{' '}
+                            {item.hrm_ctos?.particulars}
+                          </div>
+                          <div>
+                            <span className="app_td_mobile_label">COC:</span>{' '}
+                            {item.coc}
+                          </div>
+                          <div>
+                            <span className="app_td_mobile_label">
+                              Duration:{' '}
+                            </span>
+                            {item.hrm_ctos
+                              ? format(
+                                  new Date(item.hrm_ctos.from),
+                                  'MMM d, yyyy'
+                                ) +
+                                ' - ' +
+                                format(
+                                  new Date(item.hrm_ctos.to),
+                                  'MMM d, yyyy'
+                                )
+                              : ''}
+                          </div>
+                          <div>
+                            <span className="app_td_mobile_label">
+                              Expiration:{' '}
+                            </span>
+                            {item.expiration &&
+                              format(new Date(item.expiration), 'MMM d, yyyy')}
+                          </div>
+                          <div>
+                            <span className="app_td_mobile_label">
+                              Expiration Status:{' '}
+                            </span>
+                            {item.hrm_ctos?.status === 'Expired' ? (
+                              <span className="app__status_container_red">
+                                Expired
+                              </span>
+                            ) : (
+                              <span className="app__status_container_green">
+                                Active
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
                       {/* End - Mobile View */}
-
                     </th>
-                    <td
-                      className="hidden md:table-cell app__td">
-                      <div className='font-semibold'>{item.coc}</div>
+                    <td className="hidden md:table-cell app__td">
+                      <div className="font-semibold">{item.coc}</div>
                     </td>
-                    <td
-                      className="hidden md:table-cell app__td">
-                      {
-                        item.hrm_ctos?.status === 'Expired'
-                          ? <span className='app__status_container_red'>Expired</span>
-                          : <>
-                              {
-                                item.is_approved
-                                  ? <span className='app__status_container_green'>Approved</span>
-                                  : <span className='app__status_container_orange'>Pending&nbsp;Approval</span>
-                              }
-                            </>
-                      }
+                    <td className="hidden md:table-cell app__td">
+                      {item.hrm_ctos?.status === 'Expired' ? (
+                        <span className="app__status_container_red">
+                          Expired
+                        </span>
+                      ) : (
+                        <>
+                          {item.is_approved ? (
+                            <span className="app__status_container_green">
+                              Approved
+                            </span>
+                          ) : (
+                            <span className="app__status_container_orange">
+                              Pending&nbsp;Approval
+                            </span>
+                          )}
+                        </>
+                      )}
                     </td>
-                    <td
-                      className="hidden md:table-cell app__td">
-                      <div className=''>{item.hrm_ctos?.particulars}</div>
+                    <td className="hidden md:table-cell app__td">
+                      <div className="">{item.hrm_ctos?.particulars}</div>
                     </td>
-                    <td
-                      className="hidden md:table-cell app__td">
-                      <div>{item.hrm_ctos ? format(new Date(item.hrm_ctos?.from), 'MMM d, yyyy') + ' - ' + format(new Date(item.hrm_ctos?.to), 'MMM d, yyyy') : ''}</div>
+                    <td className="hidden md:table-cell app__td">
+                      <div>
+                        {item.hrm_ctos
+                          ? format(
+                              new Date(item.hrm_ctos?.from),
+                              'MMM d, yyyy'
+                            ) +
+                            ' - ' +
+                            format(new Date(item.hrm_ctos?.to), 'MMM d, yyyy')
+                          : ''}
+                      </div>
                     </td>
-                    <td
-                      className="hidden md:table-cell app__td">
-                      <div>{item.expiration && format(new Date(item.expiration), 'MMM d, yyyy')}</div>
+                    <td className="hidden md:table-cell app__td">
+                      <div>
+                        {item.expiration &&
+                          format(new Date(item.expiration), 'MMM d, yyyy')}
+                      </div>
                     </td>
-                    <td
-                      className="hidden md:table-cell app__td">
-                        {
-                          (item.hrm_ctos?.status !== 'Expired' && userId === session.user.id) &&
-                            <CustomButton
-                              btnType='button'
-                              title='Supporting&nbsp;Documents'
-                              handleClick={() => handleEdit(item)}
-                              containerStyles="app__btn_green"
-                            />
-                        }
+                    <td className="hidden md:table-cell app__td">
+                      {item.hrm_ctos?.status !== 'Expired' &&
+                        userId === session.user.id && (
+                          <CustomButton
+                            btnType="button"
+                            title="Supporting&nbsp;Documents"
+                            handleClick={() => handleEdit(item)}
+                            containerStyles="app__btn_green"
+                          />
+                        )}
                     </td>
-                    <td
-                      className="hidden md:table-cell app__td">
-                        {
-                          item.hrm_ctos?.status === 'Expired'
-                            ? <span className='app__status_container_red'>Expired</span>
-                            : <span className='app__status_container_green'>Active</span>
-                        }
+                    <td className="hidden md:table-cell app__td">
+                      {item.hrm_ctos?.status === 'Expired' ? (
+                        <span className="app__status_container_red">
+                          Expired
+                        </span>
+                      ) : (
+                        <span className="app__status_container_green">
+                          Active
+                        </span>
+                      )}
                     </td>
                   </tr>
-                ))
-              }
-              { loading && <TableRowLoading cols={8} rows={2}/> }
+                ))}
+              {loading && <TableRowLoading cols={8} rows={2} />}
             </tbody>
           </table>
-          {
-            (!loading && isDataEmpty) &&
-              <div className='app__norecordsfound'>No records found.</div>
-          }
+          {!loading && isDataEmpty && (
+            <div className="app__norecordsfound">No records found.</div>
+          )}
         </div>
 
         {/* Show More */}
-        {
-          (resultsCounter.results > resultsCounter.showing && !loading) &&
-            <ShowMore
-              handleShowMore={handleShowMore}/>
-        }
-    </div>
-    {/* Upload Modal */}
-    {
-      showUploadModal && (
+        {resultsCounter.results > resultsCounter.showing && !loading && (
+          <ShowMore handleShowMore={handleShowMore} />
+        )}
+      </div>
+      {/* Upload Modal */}
+      {showUploadModal && (
         <UploadModal
           editData={editData}
-          hideModal={() => setShowUploadModal(false)}/>
-      )
-    }
-  </>
+          hideModal={() => setShowUploadModal(false)}
+        />
+      )}
+    </>
   )
 }

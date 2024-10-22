@@ -79,7 +79,7 @@ export default function WorkExperience({ userId }: { userId: string }) {
     setShowAddRow(false)
   }
 
-  const onSubmit = async (formdata: WorkExperienceTypes) => {
+  const onSubmit = async () => {
     if (saving) return
 
     setSaving(true)

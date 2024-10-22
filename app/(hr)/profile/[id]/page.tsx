@@ -236,19 +236,21 @@ export default function Page({ params }: { params: { id: string } }) {
                           <div className="text-center mt-2 capitalize text-xs text-gray-300">
                             Current Designation:
                           </div>
-                          {designation.type === 'Function only' ? (
-                            <div>{designation.designation}</div>
-                          ) : designation.area_assigned === 'office' ? (
-                            <div>
-                              {designation.designation} -{' '}
-                              {designation.hrm_offices?.name}
-                            </div>
-                          ) : (
-                            <div>
-                              {designation.designation} -{' '}
-                              {designation.hrm_schools?.name}
-                            </div>
-                          )}
+                          <div className="text-center capitalize text-xs text-gray-400">
+                            {designation.type === 'Function only' ? (
+                              <div>{designation.designation}</div>
+                            ) : designation.area_assigned === 'office' ? (
+                              <div>
+                                {designation.designation} -{' '}
+                                {designation.hrm_offices?.name}
+                              </div>
+                            ) : (
+                              <div>
+                                {designation.designation} -{' '}
+                                {designation.hrm_schools?.name}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )
                   )}

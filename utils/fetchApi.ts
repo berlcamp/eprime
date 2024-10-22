@@ -349,9 +349,9 @@ export async function fetchPersonnel(
     // }
 
     if (schoolIds.length > 0 && officeIds.length > 0) {
-      let q1 = schoolIds.map((id) => `school_id.eq.${id}`).join(',')
-      let q2 = officeIds.map((id) => `office_id.eq.${id}`).join(',')
-      let combinedQuery = [q1, q2].filter(Boolean).join(',')
+      const q1 = schoolIds.map((id) => `school_id.eq.${id}`).join(',')
+      const q2 = officeIds.map((id) => `office_id.eq.${id}`).join(',')
+      const combinedQuery = [q1, q2].filter(Boolean).join(',')
       query = query.or(combinedQuery)
     } else if (schoolIds.length > 0) {
       query = query.in('school_id', schoolIds)

@@ -13,7 +13,6 @@ import { fetchSalaryGrades } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
 import React, { Fragment, useEffect, useState } from 'react'
-import uuid from 'react-uuid'
 import AddEditModal from './AddEditModal'
 
 // Types
@@ -140,7 +139,7 @@ const Page: React.FC = () => {
               <tbody>
                 {!isDataEmpty &&
                   list.map((item, index) => (
-                    <tr key={uuid()} className="app__tr">
+                    <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td">
                         <Menu as="div" className="app__menu_container">
                           <div>

@@ -11,7 +11,6 @@ import {
   Unauthorized
 } from '@/components'
 import { useFilter } from '@/context/FilterContext'
-import { useSupabase } from '@/context/SupabaseProvider'
 import { fetchRankings } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
@@ -44,7 +43,6 @@ const Page: React.FC = () => {
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { session } = useSupabase()
   const { hasAccess } = useFilter()
 
   const fetchData = async () => {

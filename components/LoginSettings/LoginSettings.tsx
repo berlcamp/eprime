@@ -60,7 +60,7 @@ export default function LoginSettings({ userId }: { userId: string }) {
           user_id: userId,
           new_password: data.newPassword
         })
-        .then(function (response) {
+        .then(function () {
           setToast('success', 'Password successfully changed')
           setMessage('Password updated successfully')
           reset({

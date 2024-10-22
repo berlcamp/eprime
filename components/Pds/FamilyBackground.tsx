@@ -1,32 +1,41 @@
-import React, { useEffect, useState } from 'react'
-import TwoColTableLoading from '../Loading/TwoColTableLoading'
+import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { useForm } from 'react-hook-form'
 import type { PdsFamilyBackgroundTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
-import { useFilter } from '@/context/FilterContext'
-import CustomButton from '../CustomButton'
 import { format } from 'date-fns'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import CustomButton from '../CustomButton'
+import TwoColTableLoading from '../Loading/TwoColTableLoading'
 
 interface childrenArrayTypes {
   child_name: string
   child_birthday: string
 }
 
-export default function FamilyBackground ({ userId }: { userId: string }) {
+export default function FamilyBackground({ userId }: { userId: string }) {
   const { supabase, session } = useSupabase()
   const { setToast } = useFilter()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  const [childrenArray, setChildrenArray] = useState<childrenArrayTypes[] | []>([])
+  const [childrenArray, setChildrenArray] = useState<childrenArrayTypes[] | []>(
+    []
+  )
   const [showAddChildForm, setShowAddChildForm] = useState(false)
   const [childName, setChildName] = useState('')
   const [childBirthday, setChildBirthday] = useState('')
 
-  const [userData, setUserData] = useState<PdsFamilyBackgroundTypes | null>(null)
+  const [userData, setUserData] = useState<PdsFamilyBackgroundTypes | null>(
+    null
+  )
 
-  const { register, formState: { errors }, reset, handleSubmit } = useForm<PdsFamilyBackgroundTypes>({
+  const {
+    register,
+    formState: { errors },
+    reset,
+    handleSubmit
+  } = useForm<PdsFamilyBackgroundTypes>({
     mode: 'onSubmit'
   })
 
@@ -61,7 +70,12 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
       .upsert(newData, { onConflict: 'user_id' })
 
     if (error) {
-      void logError('Update Pds Family Background', 'hrm_pds', JSON.stringify(newData), error.message)
+      void logError(
+        'Update Pds Family Background',
+        'hrm_pds',
+        JSON.stringify(newData),
+        error.message
+      )
       setToast('error', 'Saving failed, please reload the page and try again.')
     } else {
       setToast('success', 'Successfully saved.')
@@ -115,7 +129,10 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
   const handleAddChild = () => {
     if (childName.trim() === '' || childBirthday.trim() === '') return
 
-    setChildrenArray([{ child_name: childName, child_birthday: childBirthday }, ...childrenArray])
+    setChildrenArray([
+      { child_name: childName, child_birthday: childBirthday },
+      ...childrenArray
+    ])
 
     setChildName('')
     setChildBirthday('')
@@ -123,7 +140,9 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
   }
 
   const HandleRemoveChild = (child: childrenArrayTypes) => {
-    const updatedChildren = childrenArray.filter(item => child.child_name !== item.child_name)
+    const updatedChildren = childrenArray.filter(
+      (item) => child.child_name !== item.child_name
+    )
     setChildrenArray(updatedChildren)
   }
 
@@ -132,377 +151,440 @@ export default function FamilyBackground ({ userId }: { userId: string }) {
   }, [])
 
   return (
-    <div className='w-full'>
-      { loading && <TwoColTableLoading/> }
-      {
-        !loading &&
-          <form onSubmit={handleSubmit(onSubmit)} className="w-full">
-            <div className='flex flex-col lg:flex-row w-full items-start justify-between text-xs dark:text-gray-400'>
-              {/* Begin First Column */}
-              <div className='w-full px-4'>
-                <div className="flex items-center">
-                  <div className="flex-grow bg-gray-300 h-px"></div>
-                  <div className="mx-4 my-4 text-gray-500 text-sm">Spouse Information</div>
-                  <div className="flex-grow bg-gray-300 h-px"></div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Spouse First Name:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.spouse_firstname}</div>
-                        : <div>
-                            <input
-                              {...register('spouse_firstname')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Spouse Middle Name:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.spouse_middlename}</div>
-                        : <div>
-                            <input
-                              {...register('spouse_middlename')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Spouse Last Name:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.spouse_lastname}</div>
-                        : <div>
-                            <input
-                              {...register('spouse_lastname')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Spouse Name Ext:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.spouse_ext}</div>
-                        : <div>
-                            <input
-                              {...register('spouse_ext')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Spouse Occupation:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.spouse_occupation}</div>
-                        : <div>
-                            <input
-                              {...register('spouse_occupation')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Spouse Employeer/Business Name:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.spouse_employer}</div>
-                        : <div>
-                            <input
-                              {...register('spouse_employer')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Business Address:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.spouse_business_address}</div>
-                        : <div>
-                            <input
-                              {...register('spouse_business_address')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Telephone No:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.spouse_business_telephone}</div>
-                        : <div>
-                            <input
-                              {...register('spouse_business_telephone')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-              </div>
-              {/* End First Column */}
-              {/* Begin Second Column */}
-              <div className='w-full px-4'>
-                <div className="flex items-center">
-                  <div className="flex-grow bg-gray-300 h-px"></div>
-                  <div className="mx-4 my-4 text-gray-500 text-sm">Father Information</div>
-                  <div className="flex-grow bg-gray-300 h-px"></div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Father First Name:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.father_firstname}</div>
-                        : <div>
-                            <input
-                              {...register('father_firstname')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Father Middle Name:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.father_middlename}</div>
-                        : <div>
-                            <input
-                              {...register('father_middlename')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Father Last Name:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.father_lastname}</div>
-                        : <div>
-                            <input
-                              {...register('father_lastname')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Father Name Ext:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.father_ext}</div>
-                        : <div>
-                            <input
-                              {...register('father_ext')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <div className="flex-grow bg-gray-300 h-px"></div>
-                  <div className="mx-4 my-4 text-gray-500 text-sm">Mother Information</div>
-                  <div className="flex-grow bg-gray-300 h-px"></div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Mother First Name:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.mother_firstname}</div>
-                        : <div>
-                            <input
-                              {...register('mother_firstname')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Mother Middle Name:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.mother_middlename}</div>
-                        : <div>
-                            <input
-                              {...register('mother_middlename')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Mother Last Name:</div>
-                    {
-                      userId !== session.user.id
-                        ? <div className='app__label_value'>{userData?.mother_lastname}</div>
-                        : <div>
-                            <input
-                              {...register('mother_lastname')}
-                              type="text"
-                              className='app__input_standard'/>
-                          </div>
-                    }
-                  </div>
-                </div>
-              </div>
-              {/* End Second Column */}
-            </div>
-            <hr className='my-6 mx-4'/>
-            <div className='w-full px-4'>
+    <div className="w-full">
+      {loading && <TwoColTableLoading />}
+      {!loading && (
+        <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+          <div className="flex flex-col lg:flex-row w-full items-start justify-between text-xs dark:text-gray-400">
+            {/* Begin First Column */}
+            <div className="w-full px-4">
               <div className="flex items-center">
                 <div className="flex-grow bg-gray-300 h-px"></div>
-                <div className="mx-4 my-4 text-gray-500 text-sm">Children</div>
+                <div className="mx-4 my-4 text-gray-500 text-sm">
+                  Spouse Information
+                </div>
                 <div className="flex-grow bg-gray-300 h-px"></div>
               </div>
-              <div className='w-full'>
-                {
-                  childrenArray.length > 0 &&
-                    <table className='app__table mb-4'>
-                      <thead className='app__thead'>
-                        <tr>
-                          <th className='app__th'>Child Name</th>
-                          <th className='app__th'>Date of Birth</th>
-                          <th className='app__th'></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                      {
-                        childrenArray.map((child, index) => (
-                          <tr key={index} className='app__tr'>
-                            <td className='app__td'>{child.child_name}</td>
-                            <td className='app__td'>{format(new Date(child.child_birthday), 'MMMM dd, yyyy')}</td>
-                            <td className='app__td'>
-                              {
-                                userId === session.user.id &&
-                                  <CustomButton
-                                    containerStyles='app__btn_red'
-                                    title='Remove'
-                                    btnType='button'
-                                    handleClick={() => HandleRemoveChild(child)}
-                                    />
-                              }
-                            </td>
-                          </tr>
-                        ))
-                      }
-                      </tbody>
-                    </table>
-                }
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Spouse First Name:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.spouse_firstname}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('spouse_firstname')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Spouse Middle Name:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.spouse_middlename}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('spouse_middlename')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Spouse Last Name:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.spouse_lastname}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('spouse_lastname')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Spouse Name Ext:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.spouse_ext}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('spouse_ext')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Spouse Occupation:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.spouse_occupation}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('spouse_occupation')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">
+                    Spouse Employeer/Business Name:
+                  </div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.spouse_employer}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('spouse_employer')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Business Address:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.spouse_business_address}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('spouse_business_address')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Telephone No:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.spouse_business_telephone}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('spouse_business_telephone')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            {
-              userId === session.user.id &&
-                <>
-                  <div className='app__pds_add_row_container'>
+            {/* End First Column */}
+            {/* Begin Second Column */}
+            <div className="w-full px-4">
+              <div className="flex items-center">
+                <div className="flex-grow bg-gray-300 h-px"></div>
+                <div className="mx-4 my-4 text-gray-500 text-sm">
+                  Father Information
+                </div>
+                <div className="flex-grow bg-gray-300 h-px"></div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Father First Name:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.father_firstname}
+                    </div>
+                  ) : (
                     <div>
-                      {
-                        !showAddChildForm
-                          ? <CustomButton
-                              containerStyles='app__btn_blue'
-                              title='Add Child'
-                              btnType='button'
-                              handleClick={() => setShowAddChildForm(true)}
-                              />
-                          : <div className='w-2/3 space-y-4'>
-                              <div className='mb-2 w-full'>
-                                <div className='app__label_standard'>Child Fullname:</div>
-                                <input
-                                  type='text'
-                                  value={childName}
-                                  onChange={e => setChildName(e.target.value)}
-                                  className='app__input_standard'/>
-                              </div>
-                              <div className='mb-2 w-full'>
-                                <div className='app__label_standard'>Date of Birth:</div>
-                                <input
-                                  type='date'
-                                  value={childBirthday}
-                                  onChange={e => setChildBirthday(e.target.value)}
-                                  className='app__input_standard'/>
-                              </div>
-                              <div className='mb-2 w-full space-x-2'>
-                                <CustomButton
-                                  containerStyles='app__btn_green'
-                                  title='Add'
-                                  btnType='button'
-                                  handleClick={handleAddChild}
-                                  />
-                                <CustomButton
-                                  containerStyles='app__btn_gray'
-                                  title='Cancel'
-                                  btnType='button'
-                                  handleClick={() => setShowAddChildForm(false)}
-                                  />
-                              </div>
-                            </div>
-                      }
+                      <input
+                        {...register('father_firstname')}
+                        type="text"
+                        className="app__input_standard"
+                      />
                     </div>
-                  </div>
-                  <hr className='my-6 mx-4'/>
-                  <div className='w-full px-4'>
-                    <div className='app__label_standard'>
-                      <label className='flex items-center space-x-1'>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Father Middle Name:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.father_middlename}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('father_middlename')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Father Last Name:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.father_lastname}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('father_lastname')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Father Name Ext:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.father_ext}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('father_ext')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center">
+                <div className="flex-grow bg-gray-300 h-px"></div>
+                <div className="mx-4 my-4 text-gray-500 text-sm">
+                  Mother Information
+                </div>
+                <div className="flex-grow bg-gray-300 h-px"></div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Mother First Name:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.mother_firstname}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('mother_firstname')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Mother Middle Name:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.mother_middlename}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('mother_middlename')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Mother Last Name:</div>
+                  {userId !== session.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.mother_lastname}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('mother_lastname')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            {/* End Second Column */}
+          </div>
+          <hr className="my-6 mx-4" />
+          <div className="w-full px-4">
+            <div className="flex items-center">
+              <div className="flex-grow bg-gray-300 h-px"></div>
+              <div className="mx-4 my-4 text-gray-500 text-sm">Children</div>
+              <div className="flex-grow bg-gray-300 h-px"></div>
+            </div>
+            <div className="w-full">
+              {childrenArray.length > 0 && (
+                <table className="app__table mb-4">
+                  <thead className="app__thead">
+                    <tr>
+                      <th className="app__th">Child Name</th>
+                      <th className="app__th">Date of Birth</th>
+                      <th className="app__th"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {childrenArray.map((child, index) => (
+                      <tr key={index} className="app__tr">
+                        <td className="app__td">{child.child_name}</td>
+                        <td className="app__td">
+                          {format(
+                            new Date(child.child_birthday),
+                            'MMMM dd, yyyy'
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id && (
+                            <CustomButton
+                              containerStyles="app__btn_red"
+                              title="Remove"
+                              btnType="button"
+                              handleClick={() => HandleRemoveChild(child)}
+                            />
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+          {userId === session.user.id && (
+            <>
+              <div className="app__pds_add_row_container">
+                <div>
+                  {!showAddChildForm ? (
+                    <CustomButton
+                      containerStyles="app__btn_blue"
+                      title="Add Child"
+                      btnType="button"
+                      handleClick={() => setShowAddChildForm(true)}
+                    />
+                  ) : (
+                    <div className="w-2/3 space-y-4">
+                      <div className="mb-2 w-full">
+                        <div className="app__label_standard">
+                          Child Fullname:
+                        </div>
                         <input
-                          {...register('confirmed', { required: true })}
-                          type='checkbox'
-                          className=''/>
-                        <span className='font-normal text-xs'>By checking this box, you acknowledge that all information is accurate and up-to-date.</span>
-                      </label>
-                      {errors.confirmed && <div className='app__error_message'>Confirmation is required</div>}
+                          type="text"
+                          value={childName}
+                          onChange={(e) => setChildName(e.target.value)}
+                          className="app__input_standard"
+                        />
+                      </div>
+                      <div className="mb-2 w-full">
+                        <div className="app__label_standard">
+                          Date of Birth:
+                        </div>
+                        <input
+                          type="date"
+                          value={childBirthday}
+                          onChange={(e) => setChildBirthday(e.target.value)}
+                          className="app__input_standard"
+                        />
+                      </div>
+                      <div className="mb-2 w-full space-x-2">
+                        <CustomButton
+                          containerStyles="app__btn_green"
+                          title="Add"
+                          btnType="button"
+                          handleClick={handleAddChild}
+                        />
+                        <CustomButton
+                          containerStyles="app__btn_gray"
+                          title="Cancel"
+                          btnType="button"
+                          handleClick={() => setShowAddChildForm(false)}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="app__modal_footer_left mx-4 mt-4">
-                        <button
-                          type="submit"
-                          className="app__btn_green_sm"
-                        >
-                          {saving ? 'Saving..' : 'Save Changes'}
-                        </button>
-                  </div>
-                </>
-            }
-          </form>
-      }
+                  )}
+                </div>
+              </div>
+              <hr className="my-6 mx-4" />
+              <div className="w-full px-4">
+                <div className="app__label_standard">
+                  <label className="flex items-center space-x-1">
+                    <input
+                      {...register('confirmed', { required: true })}
+                      type="checkbox"
+                      className=""
+                    />
+                    <span className="font-normal text-xs">
+                      By checking this box, you acknowledge that all information
+                      is accurate and up-to-date.
+                    </span>
+                  </label>
+                  {errors.confirmed && (
+                    <div className="app__error_message">
+                      Confirmation is required
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__modal_footer_left mx-4 mt-4">
+                <button type="submit" className="app__btn_green_sm">
+                  {saving ? 'Saving..' : 'Save Changes'}
+                </button>
+              </div>
+            </>
+          )}
+        </form>
+      )}
     </div>
   )
 }

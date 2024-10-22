@@ -6,21 +6,25 @@ module.exports = {
   extends: [
     'plugin:react/recommended',
     'standard-with-typescript',
-    'next/core-web-vitals'
+    'next/core-web-vitals',
+    'plugin:@typescript-eslint/recommended'
   ],
   overrides: [],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
-    project: ['./tsconfig.json'] // Specify it only for TypeScript files
+    project: './tsconfig.json' // Specify it only for TypeScript files
   },
-  plugins: ['react'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint'],
   settings: {
     react: {
       version: '18'
     }
   },
   rules: {
+    '@typescript-eslint/no-unused-vars': ['error'],
+    '@typescript-eslint/no-explicit-any': 'off',
     'react/prop-types': 0,
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/strict-boolean-expressions': 'off',

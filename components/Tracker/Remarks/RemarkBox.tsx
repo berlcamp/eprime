@@ -2,22 +2,22 @@
 'use client'
 import { Menu, Transition } from '@headlessui/react'
 import { EyeIcon } from '@heroicons/react/24/solid'
-import React, { Fragment, useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 // Redux imports
-import { useSelector, useDispatch } from 'react-redux'
 import { updateRemarksList } from '@/GlobalRedux/Features/remarksSlice'
+import { CustomButton } from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import type { Employee, DocumentTypes, FollowersTypes } from '@/types'
+import type { DocumentTypes, Employee, FollowersTypes } from '@/types'
 import { PaperClipIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import { useDropzone, type FileWithPath } from 'react-dropzone'
-import { CustomButton } from '@/components'
+import { useDispatch, useSelector } from 'react-redux'
 
 interface ModalProps {
   document: DocumentTypes
 }
 
-export default function RemarkBox ({ document }: ModalProps) {
+export default function RemarkBox({ document }: ModalProps) {
   const { supabase, session, systemUsers } = useSupabase()
   const { setToast } = useFilter()
   const [selectedImages, setSelectedImages] = useState<any>([])
@@ -27,17 +27,21 @@ export default function RemarkBox ({ document }: ModalProps) {
   const globalremarks = useSelector((state: any) => state.remarks.value)
   const dispatch = useDispatch()
 
-  const user: Employee = systemUsers.find((u: { id: string }) => u.id === session.user.id)
+  const user: Employee = systemUsers.find(
+    (u: { id: string }) => u.id === session.user.id
+  )
 
   const [replyType, setReplyType] = useState('Public')
   const [remarks, setRemarks] = useState('')
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
-    setSelectedImages(acceptedFiles.map(file => (
-      Object.assign(file, {
-        filename: file.name
-      })
-    )))
+    setSelectedImages(
+      acceptedFiles.map((file) =>
+        Object.assign(file, {
+          filename: file.name
+        })
+      )
+    )
   }, [])
 
   const maxSize = 5242880 // 5 MB in bytes
@@ -103,7 +107,13 @@ export default function RemarkBox ({ document }: ModalProps) {
       )
 
       // Append new remarks to remarks redux
-      const updatedData = { id: data[0].id, hrm_remarks_comments: [], hrm_users: user, created_at: data[0].created_at, ...newData }
+      const updatedData = {
+        id: data[0].id,
+        hrm_remarks_comments: [],
+        hrm_users: user,
+        created_at: data[0].created_at,
+        ...newData
+      }
       dispatch(updateRemarksList([updatedData, ...globalremarks]))
 
       setRemarks('')
@@ -125,7 +135,7 @@ export default function RemarkBox ({ document }: ModalProps) {
     if (fileRejections.length > 0) {
       setSelectedImages([])
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileRejections])
 
   const handleNotify = async () => {
@@ -147,12 +157,15 @@ export default function RemarkBox ({ document }: ModalProps) {
       userIds.push(document.created_by)
 
       // Remove the duplicated IDs
-      const uniqueIds = userIds.reduce((accumulator: string[], currentValue: string) => {
-        if (!accumulator.includes(currentValue)) {
-          accumulator.push(currentValue)
-        }
-        return accumulator
-      }, [])
+      const uniqueIds = userIds.reduce(
+        (accumulator: string[], currentValue: string) => {
+          if (!accumulator.includes(currentValue)) {
+            accumulator.push(currentValue)
+          }
+          return accumulator
+        },
+        []
+      )
 
       const notificationData: any[] = []
 
@@ -183,35 +196,41 @@ export default function RemarkBox ({ document }: ModalProps) {
   }
 
   const deleteFile = (file: FileWithPath) => {
-    const files = selectedImages.filter((f: FileWithPath) => f.path !== file.path)
+    const files = selectedImages.filter(
+      (f: FileWithPath) => f.path !== file.path
+    )
     setSelectedImages(files)
   }
 
   const selectedFiles = selectedImages?.map((file: any, index: number) => (
-    <div key={index} className="flex space-x-1 py-px items-center justify-start relative align-top">
+    <div
+      key={index}
+      className="flex space-x-1 py-px items-center justify-start relative align-top"
+    >
       <XMarkIcon
         onClick={() => deleteFile(file)}
-        className='cursor-pointer w-5 h-5 text-red-400'/>
-      <span className='text-xs text-blue-700'>{file.filename}</span>
+        className="cursor-pointer w-5 h-5 text-red-400"
+      />
+      <span className="text-xs text-blue-700">{file.filename}</span>
     </div>
   ))
 
   return (
-    <div className='w-full flex-col space-y-2 px-4 mb-5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400'>
+    <div className="w-full flex-col space-y-2 px-4 mb-5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400">
       <textarea
-        onChange={e => setRemarks(e.target.value)}
+        onChange={(e) => setRemarks(e.target.value)}
         value={remarks}
         disabled={saving}
-        placeholder='Write your remarks here..'
-        className='w-full h-20 border resize-none focus:ring-0 focus:outline-none p-2 text-sm text-gray-700 dark:bg-gray-900 dark:text-gray-300'></textarea>
-      <div className='flex items-start'>
-
+        placeholder="Write your remarks here.."
+        className="w-full h-20 border resize-none focus:ring-0 focus:outline-none p-2 text-sm text-gray-700 dark:bg-gray-900 dark:text-gray-300"
+      ></textarea>
+      <div className="flex items-start">
         {/* Public/Private */}
-        <div className='flex items-center px-2'>
+        <div className="flex items-center px-2">
           <Menu as="div" className="relative inline-block text-left mr-2">
             <Menu.Button className="text-gray-500  focus:ring-0 focus:outline-none text-xs text-left inline-flex items-center">
-              <EyeIcon className="w-4 h-4 mr-1"/>
-              { replyType }
+              <EyeIcon className="w-4 h-4 mr-1" />
+              {replyType}
             </Menu.Button>
             <Transition
               as={Fragment}
@@ -226,18 +245,18 @@ export default function RemarkBox ({ document }: ModalProps) {
                 <div className="py-1">
                   <Menu.Item>
                     <div
-                        onClick={e => setReplyType('Public')}
-                        className='flex items-center space-x-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900 px-4 py-2 text-xs cursor-pointer'
-                      >
-                        <span>Public</span>
+                      onClick={() => setReplyType('Public')}
+                      className="flex items-center space-x-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900 px-4 py-2 text-xs cursor-pointer"
+                    >
+                      <span>Public</span>
                     </div>
                   </Menu.Item>
                   <Menu.Item>
                     <div
-                        onClick={e => setReplyType('Private Note')}
-                        className='flex items-center space-x-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900 px-4 py-2 text-xs cursor-pointer'
-                      >
-                        <span>Private Note</span>
+                      onClick={() => setReplyType('Private Note')}
+                      className="flex items-center space-x-2 hover:bg-gray-100 text-gray-700 hover:text-gray-900 px-4 py-2 text-xs cursor-pointer"
+                    >
+                      <span>Private Note</span>
                     </div>
                   </Menu.Item>
                 </div>
@@ -248,39 +267,40 @@ export default function RemarkBox ({ document }: ModalProps) {
         {/* End - Public/Private */}
 
         {/* Attachment */}
-        {
-          (replyType === 'Public' && !saving) &&
-            <div>
-              <div {...getRootProps()} className='cursor-pointer flex items-center text-xs text-gray-500'>
-                <input {...getInputProps()} />
-                <PaperClipIcon className='w-4 h-4 text-gray-600'/>
-                <div>Attach files</div>
-              </div>
+        {replyType === 'Public' && !saving && (
+          <div>
+            <div
+              {...getRootProps()}
+              className="cursor-pointer flex items-center text-xs text-gray-500"
+            >
+              <input {...getInputProps()} />
+              <PaperClipIcon className="w-4 h-4 text-gray-600" />
+              <div>Attach files</div>
             </div>
-        }
+          </div>
+        )}
 
-        <span className='flex-1'>&nbsp;</span>
+        <span className="flex-1">&nbsp;</span>
 
         <CustomButton
-          containerStyles='app__btn_green'
+          containerStyles="app__btn_green"
           title={saving ? 'Saving...' : 'Submit'}
           isDisabled={saving}
-          btnType='button'
+          btnType="button"
           handleClick={handleSubmit}
         />
       </div>
-      {
-        saving
-          ? <div className='text-xs font-medium mb-2'>Uploading...</div>
-          : (
-              (fileRejections.length === 0 && selectedImages.length > 0) &&
-                <div className='py-2'>
-                  <div className='text-xs font-medium mb-2'>Files to upload:</div>
-                  {selectedFiles}
-                </div>
-            )
-      }
-
+      {saving ? (
+        <div className="text-xs font-medium mb-2">Uploading...</div>
+      ) : (
+        fileRejections.length === 0 &&
+        selectedImages.length > 0 && (
+          <div className="py-2">
+            <div className="text-xs font-medium mb-2">Files to upload:</div>
+            {selectedFiles}
+          </div>
+        )
+      )}
     </div>
   )
 }

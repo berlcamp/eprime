@@ -52,7 +52,7 @@ const Filters = ({
     setFilterRequester(selectedRequesterId)
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = () => {
     if (
       keyword.trim() === '' &&
       status.trim() === '' &&
@@ -112,7 +112,7 @@ const Filters = ({
     setSearchResults(results)
   }
 
-  const handleSelected = (item: namesType, multiple = false) => {
+  const handleSelected = (item: namesType) => {
     setSelectedRequesterId(item.id)
     setSelectedItems([item])
 

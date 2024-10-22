@@ -94,7 +94,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     setSaving(true)
 
-    const hasErrors: boolean = await validateEmployee(formdata)
+    const hasErrors: boolean = await validateEmployee()
 
     if (!hasErrors) {
       if (editData) {
@@ -374,7 +374,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     return json
   }
 
-  const validateEmployee = async (formdata: DesignationTypes) => {
+  const validateEmployee = async () => {
     let query = supabase
       .from('hrm_designations')
       .select(

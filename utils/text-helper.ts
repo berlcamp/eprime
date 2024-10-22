@@ -25,10 +25,6 @@ export function capitalizeWords(inputString: string) {
     .join(' ')
 }
 
-export function getAvatar(userId: string) {
-  //
-}
-
 export function formatToPesos(amount: number): string {
   return new Intl.NumberFormat('en-PH', {
     style: 'currency',
