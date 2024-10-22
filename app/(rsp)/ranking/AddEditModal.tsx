@@ -280,6 +280,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       {...register('status', { required: true })}
                       className="app__select_standard"
                     >
+                      <option value="">Choose</option>
                       <option value="Open">Open</option>
                       <option value="Closed">Closed</option>
                     </select>

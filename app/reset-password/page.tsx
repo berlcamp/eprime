@@ -1,4 +1,5 @@
 'use client'
+import Footer from '@/components/Footer'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -112,9 +113,7 @@ export default function ForgotPassword() {
             )}
           </div>
         </div>
-        <div className="mt-auto bg-gray-800 p-4 text-white fixed bottom-0 w-full">
-          <div className="text-white text-center text-xs">&copy; ePRIME</div>
-        </div>
+        <Footer />
       </div>
     </>
   )

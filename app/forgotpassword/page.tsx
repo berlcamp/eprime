@@ -1,5 +1,6 @@
 'use client'
 import { TopBarDark } from '@/components'
+import Footer from '@/components/Footer'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -88,9 +89,7 @@ export default function ForgotPassword() {
             )}
           </div>
         </div>
-        <div className="mt-auto bg-gray-800 p-4 text-white fixed bottom-0 w-full">
-          <div className="text-white text-center text-xs">&copy; ePRIME</div>
-        </div>
+        <Footer />
       </div>
     </>
   )

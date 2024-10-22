@@ -1,4 +1,5 @@
 import { Announcements, Jobs, TopBarDark } from '@/components'
+import Footer from '@/components/Footer'
 import TrackerBox from '@/components/TrackerBox'
 import { createServerClient } from '@/utils/supabase-server'
 
@@ -25,11 +26,7 @@ export default async function Page() {
         {/* <div className=''>
           <OrganizationalStructure/>
         </div> */}
-        <div className="mt-auto bg-gray-800 p-4 text-white fixed bottom-0 w-full">
-          <div className="text-white text-center text-xs">
-            &copy; PRIME-HRM v2.0
-          </div>
-        </div>
+        <Footer />
       </div>
     </>
   )

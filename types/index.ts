@@ -708,3 +708,13 @@ export interface RankingTypes {
   display_on_portal_until: string
   confirmed: string
 }
+export interface ApplicationTypes {
+  id: string
+  type: string
+  lastname: string
+  firstname: string
+  middlename: string
+  ranking_id: string
+  item_number: string
+  confirmed: string
+}
