@@ -715,7 +715,7 @@ export interface RankingQualifications {
   ranking_id: string
   name: string
 }
-export interface ApplicationTypes {
+export interface ApplicantTypes {
   id: string
   type: string
   lastname: string
@@ -744,4 +744,11 @@ export interface AnnouncementTypes {
   id: string
   title: string
   description: string
+}
+
+export interface RankingCriteriaTypes {
+  id: string
+  name: string
+  points: string
+  ranking_id: string
 }

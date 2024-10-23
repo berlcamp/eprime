@@ -2,7 +2,7 @@
 import { OneColLayoutLoading, TopBarDark } from '@/components'
 import Footer from '@/components/Footer'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { ApplicationTypes, RankingTypes } from '@/types'
+import { ApplicantTypes, RankingTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import {
   generateRandomAlphaNumber,
@@ -32,7 +32,7 @@ const Page: React.FC = () => {
   >([])
 
   const [applicantDetails, setApplicantDetails] =
-    useState<ApplicationTypes | null>(null)
+    useState<ApplicantTypes | null>(null)
   const [refCode, setRefCode] = useState('')
   const [inputValue, setInputValue] = useState('')
   const [ranking, setRanking] = useState<RankingTypes | null>(null)
@@ -47,14 +47,14 @@ const Page: React.FC = () => {
     watch,
     setValue,
     handleSubmit
-  } = useForm<ApplicationTypes>({
+  } = useForm<ApplicantTypes>({
     mode: 'onSubmit'
   })
 
   const watchedType = watch('type')
   const email = watch('email')
 
-  const onSubmit = async (formdata: ApplicationTypes) => {
+  const onSubmit = async (formdata: ApplicantTypes) => {
     if (saving) return
 
     setSaving(true)
@@ -62,7 +62,7 @@ const Page: React.FC = () => {
     void handleCreate(formdata)
   }
 
-  const handleCreate = async (formdata: ApplicationTypes) => {
+  const handleCreate = async (formdata: ApplicantTypes) => {
     const randomCode = generateRandomAlphaNumber(5)
     setRefCode(randomCode)
 
@@ -214,7 +214,6 @@ const Page: React.FC = () => {
         },
         {}
       )
-      console.log('groupedDocuments', groupedDocuments)
       setExistingQualification(groupedDocuments)
     } else {
       setIsCodeFound(false)
@@ -595,7 +594,7 @@ const Page: React.FC = () => {
                       </div>
                       <div className="app__modal_footer">
                         <button type="submit" className="app__btn_green_sm">
-                          {saving ? 'Saving..' : 'Save'}
+                          {saving ? 'Saving..' : 'Submit'}
                         </button>
                       </div>
                     </>

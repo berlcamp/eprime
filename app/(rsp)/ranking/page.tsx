@@ -25,11 +25,17 @@ import type { RankingTypes } from '@/types'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { TableIcon, User2Icon } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
+import RankingApplicants from './RankingApplicants'
+import RankingCriterias from './RankingCriterias'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showApplicantsModal, setShowApplicantsModal] = useState(false)
+  const [showCriteriasModal, setShowCriteriasModal] = useState(false)
+  const [selectedId, setSelectedId] = useState('')
   const [refetch, setRefetch] = useState(false)
 
   const [list, setList] = useState<RankingTypes[]>([])
@@ -55,7 +61,7 @@ const Page: React.FC = () => {
         perPageCount,
         0
       )
-      console.log(result.data)
+
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -110,6 +116,15 @@ const Page: React.FC = () => {
   const handleEdit = (item: RankingTypes) => {
     setShowAddModal(true)
     setEditData(item)
+  }
+  const handleViewApplicants = (id: string) => {
+    setShowApplicantsModal(true)
+    setSelectedId(id)
+  }
+
+  const handleViewCriterias = (id: string) => {
+    setShowCriteriasModal(true)
+    setSelectedId(id)
   }
 
   // Update list whenever list in redux updates
@@ -206,11 +221,31 @@ const Page: React.FC = () => {
                               <div className="py-1">
                                 <Menu.Item>
                                   <div
+                                    onClick={() => handleViewCriterias(item.id)}
+                                    className="app__dropdown_item"
+                                  >
+                                    <TableIcon className="w-4 h-4" />
+                                    <span>View Criterias</span>
+                                  </div>
+                                </Menu.Item>
+                                <Menu.Item>
+                                  <div
+                                    onClick={() =>
+                                      handleViewApplicants(item.id)
+                                    }
+                                    className="app__dropdown_item"
+                                  >
+                                    <User2Icon className="w-4 h-4" />
+                                    <span>View Applicants</span>
+                                  </div>
+                                </Menu.Item>
+                                <Menu.Item>
+                                  <div
                                     onClick={() => handleEdit(item)}
                                     className="app__dropdown_item"
                                   >
                                     <PencilSquareIcon className="w-4 h-4" />
-                                    <span>Edit</span>
+                                    <span>Edit Details</span>
                                   </div>
                                 </Menu.Item>
                               </div>
@@ -295,6 +330,20 @@ const Page: React.FC = () => {
           refetch={() => setRefetch(!refetch)}
           editData={editData}
           hideModal={() => setShowAddModal(false)}
+        />
+      )}
+      {/* Show Applicants Modal */}
+      {showApplicantsModal && (
+        <RankingApplicants
+          rankingId={selectedId}
+          hideModal={() => setShowApplicantsModal(false)}
+        />
+      )}
+      {/* Show Criterias Modal */}
+      {showCriteriasModal && (
+        <RankingCriterias
+          rankingId={selectedId}
+          hideModal={() => setShowCriteriasModal(false)}
         />
       )}
     </>

@@ -1,0 +1,264 @@
+import { ConfirmModal, CustomButton } from '@/components'
+import { useFilter } from '@/context/FilterContext'
+import { useSupabase } from '@/context/SupabaseProvider'
+import { RankingCriteriaTypes } from '@/types'
+import { logError } from '@/utils/fetchApi'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+
+interface ModalProps {
+  hideModal: () => void
+  rankingId: string
+}
+
+const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [list, setList] = useState<RankingCriteriaTypes[] | []>([])
+  const [totalPoints, setTotalPoints] = useState(0)
+  const [selectedId, setSelectedId] = useState('')
+
+  const { supabase } = useSupabase()
+  const { setToast } = useFilter()
+
+  const {
+    register,
+    formState: { errors },
+    reset,
+    setError,
+    clearErrors,
+    handleSubmit
+  } = useForm<RankingCriteriaTypes>({
+    mode: 'onSubmit'
+  })
+
+  const onSubmit = async (formdata: RankingCriteriaTypes) => {
+    if (saving) return
+
+    if (Number(formdata.points) + totalPoints > 100) {
+      setError('points', {
+        type: 'manual',
+        message: 'Total points cannot exceed 100!'
+      })
+      return
+    }
+
+    clearErrors('points')
+
+    setSaving(true)
+
+    const newData = {
+      name: formdata.name,
+      points: formdata.points,
+      ranking_id: rankingId
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('hrm_ranking_criterias')
+        .insert(newData)
+        .select()
+
+      if (error) {
+        void logError(
+          'Create New Ranking Criteria',
+          'hrm_ranking_criterias',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(error.message)
+      }
+
+      const updatedData = {
+        ...newData,
+        id: data[0].id
+      }
+      setList([updatedData, ...list])
+
+      setSaving(false)
+
+      // reset all form fields
+      reset()
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = (id: string) => {
+    setSelectedId(id)
+    setShowDeleteModal(true)
+  }
+
+  const handleDeleteConfirmed = async () => {
+    try {
+      const { error } = await supabase
+        .from('hrm_ranking_criterias')
+        .delete()
+        .eq('id', selectedId)
+
+      if (error) {
+        void logError(
+          'Delete Ranking Criteria',
+          'hrm_ranking_criterias',
+          '',
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(error.message)
+      }
+
+      const updatedList = list.filter((i) => i.id !== selectedId)
+      setList(updatedList)
+
+      // pop up the success message
+      setToast('success', 'Successfully Deleted!')
+    } catch (e) {
+      console.error(e)
+    }
+
+    setShowDeleteModal(false)
+  }
+
+  // useEffect to calculate total points when the list changes
+  useEffect(() => {
+    let total = 0 // Initialize total as 0
+
+    list.forEach((item) => {
+      const points = Number(item.points) // Convert points to number
+      total += isNaN(points) ? 0 : points // Add points if valid, otherwise add 0
+    })
+
+    setTotalPoints(total)
+  }, [list])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data } = await supabase
+        .from('hrm_ranking_criterias')
+        .select()
+        .eq('ranking_id', rankingId)
+      setList(data)
+    }
+
+    void fetchData()
+  }, [])
+
+  return (
+    <>
+      <div className="app__modal_wrapper">
+        <div className="app__modal_wrapper2">
+          <div className="app__modal_wrapper3">
+            <div className="app__modal_header">
+              <h5 className="app__modal_header_text">Ranking Criterias</h5>
+              <CustomButton
+                containerStyles="app__btn_gray"
+                title="Close"
+                btnType="button"
+                handleClick={hideModal}
+              />
+            </div>
+
+            <div className="app__modal_body">
+              <div>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                  <div className="app__label_standard">Add Criteria</div>
+                  <div className="flex items-start justify-start space-x-2 mb-4">
+                    <div>
+                      <input
+                        {...register('name', { required: true })}
+                        placeholder="Criteria Name"
+                        className="app__input_standard"
+                      />
+                      {errors.name && (
+                        <div className="app__error_message">
+                          Name is required
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        {...register('points', {
+                          required: 'Points is required'
+                        })}
+                        type="number"
+                        placeholder="Points"
+                        className="app__input_standard"
+                      />
+                      {errors.points && (
+                        <div className="app__error_message">
+                          {errors.points.message}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <button type="submit" className="app__btn_green_sm">
+                        {saving ? 'Saving..' : 'Add'}
+                      </button>
+                    </div>
+                    <div>
+                      <span className="text-gray-700 text-sm">
+                        Total Points:
+                      </span>{' '}
+                      <span className="text-gray-700 font-bold">
+                        {totalPoints}
+                      </span>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <table className="app__table">
+                <thead className="app__thead">
+                  <tr>
+                    <th className="app__th">Criteria</th>
+                    <th className="app__th">Points</th>
+                    <th className="app__th"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {list.length > 0 &&
+                    list.map((item, index) => (
+                      <tr key={index} className="app__tr">
+                        <th className="app__th_firstcol">
+                          <div className="font-medium">{item.name}</div>
+                        </th>
+                        <td className="app__td">{item.points}</td>
+                        <td className="app__td">
+                          <CustomButton
+                            containerStyles="app__btn_red_xs"
+                            title="Remove"
+                            btnType="button"
+                            handleClick={() => handleDelete(item.id)}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <ConfirmModal
+          header="Confirm Delete"
+          btnText="Confirm"
+          message="This action cannot be undone. Are you sure you want to remove this Criteria?"
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setShowDeleteModal(false)}
+        />
+      )}
+    </>
+  )
+}
+
+export default RankingCriterias
