@@ -552,6 +552,37 @@ export async function fetchItems(
   }
 }
 
+export async function fetchAnnoucements(
+  perPageCount: number,
+  rangeFrom: number
+) {
+  try {
+    let query = supabase
+      .from('hrm_announcements')
+      .select('*', { count: 'exact' })
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+    return { data, count }
+  } catch (error) {
+    console.error('fetch announcements error', error)
+    return { data: [], count: 0 }
+  }
+}
+
 export async function fetchRankings(
   filters: {
     filterPosition?: string
@@ -564,7 +595,7 @@ export async function fetchRankings(
     let query = supabase
       .from('hrm_rankings')
       .select(
-        '*, chairman:chairman_id(id,firstname,middlename,lastname,avatar_url),position:position_id(name)',
+        '*, chairman:chairman_id(id,firstname,middlename,lastname,avatar_url),position:position_id(name), qualifications:hrm_ranking_qualifications(*)',
         { count: 'exact' }
       )
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)

@@ -3,7 +3,7 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { fetchPositions, logError } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useFieldArray, useForm } from 'react-hook-form'
 
 // Types
 import type { Employee, PositionTypes, RankingTypes, namesType } from '@/types'
@@ -16,9 +16,10 @@ import { useDispatch, useSelector } from 'react-redux'
 interface ModalProps {
   hideModal: () => void
   editData: RankingTypes | null
+  refetch: () => void
 }
 
-const AddEditModal = ({ hideModal, editData }: ModalProps) => {
+const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
   const { setToast } = useFilter()
   const { supabase } = useSupabase()
   const [saving, setSaving] = useState(false)
@@ -37,9 +38,20 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     register,
     formState: { errors },
     reset,
+    control,
+    setValue,
     handleSubmit
   } = useForm<RankingTypes>({
-    mode: 'onSubmit'
+    mode: 'onSubmit',
+    defaultValues: {
+      qualifications: [{ name: '' }],
+      chairman_id: ''
+    }
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'qualifications'
   })
 
   const onSubmit = async (formdata: RankingTypes) => {
@@ -86,6 +98,18 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         throw new Error(error.message)
       }
 
+      // Insert qualifications to db
+      const insertPromises = formdata.qualifications.map(
+        async (qualification) => {
+          return supabase.from('hrm_ranking_qualifications').insert({
+            ranking_id: data[0].id,
+            name: qualification.name
+          })
+        }
+      )
+
+      await Promise.all(insertPromises)
+
       // Append new data in redux
       const hrmPosition = positions.find(
         (p) => p.id.toString() === formdata.position_id
@@ -113,6 +137,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // hide the modal
       hideModal()
+
+      // refetch the data of ranking in order to update the qualifications list
+      refetch()
 
       // reset all form fields
       reset()
@@ -154,6 +181,75 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         throw new Error(error.message)
       }
 
+      // Fetch existing qualifications from the database for this ranking
+      const { data: existingQualifications, error: fetchError } = await supabase
+        .from('hrm_ranking_qualifications')
+        .select('id')
+        .eq('ranking_id', editData.id)
+
+      if (fetchError) {
+        throw fetchError
+      }
+
+      const existingQualificationIds = existingQualifications.map(
+        (q: { id: any }) => q.id
+      )
+
+      // Separate qualifications into ones that need to be updated or inserted
+      const qualificationsToUpdate = formdata.qualifications.filter((q) => q.id) // Has an ID, update existing
+      const qualificationsToInsert = formdata.qualifications.filter(
+        (q) => !q.id
+      ) // No ID, new entry
+
+      // Update existing qualifications
+      for (const qual of qualificationsToUpdate) {
+        const { error: updateQualError } = await supabase
+          .from('hrm_ranking_qualifications')
+          .update({
+            name: qual.name
+          })
+          .eq('id', qual.id)
+
+        if (updateQualError) {
+          throw updateQualError
+        }
+      }
+
+      // Insert new qualifications
+      if (qualificationsToInsert.length > 0) {
+        const newQualifications = qualificationsToInsert.map((qual) => ({
+          ranking_id: editData.id,
+          name: qual.name
+        }))
+
+        const { error: insertError } = await supabase
+          .from('hrm_ranking_qualifications')
+          .insert(newQualifications)
+
+        if (insertError) {
+          throw insertError
+        }
+      }
+
+      // Remove qualifications that are no longer in the form
+      const formQualificationIds = formdata.qualifications
+        .map((q) => q.id)
+        .filter((id) => id) // Get ids from form
+      const qualificationsToDelete = existingQualificationIds.filter(
+        (id: string | undefined) => !formQualificationIds.includes(id)
+      ) // IDs not present in the form
+
+      if (qualificationsToDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('hrm_ranking_qualifications')
+          .delete()
+          .in('id', qualificationsToDelete) // Remove them from the database
+
+        if (deleteError) {
+          throw deleteError
+        }
+      }
+
       // Update data in redux
       const hrmPosition = positions.find(
         (p) => p.id.toString() === formdata.position_id?.toString()
@@ -177,6 +273,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       // hide the modal
       hideModal()
 
+      // refetch the data of ranking in order to update the qualifications list
+      refetch()
+
       // reset all form fields
       reset()
     } catch (e) {
@@ -187,21 +286,34 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const handleSelectedUsers = (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
       setUser(selectedUsers[0])
+      setValue('chairman_id', selectedUsers[0].id)
     } else {
       setUser(null)
+      setValue('chairman_id', '')
     }
+  }
+
+  const handleAddQualification = () => {
+    append({ name: '' }) // Add a blank qualification
   }
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
   useEffect(() => {
     reset({
+      chairman_id: editData ? editData.chairman_id : '',
       position_id: editData ? editData.position_id : '',
       type: editData ? editData.type : '',
       department: editData ? editData.department : '',
       description: editData ? editData.description : '',
       status: editData ? editData.status : '',
       display_on_portal: editData ? editData.display_on_portal : '',
-      display_on_portal_until: editData ? editData.display_on_portal_until : ''
+      display_on_portal_until: editData ? editData.display_on_portal_until : '',
+      qualifications: editData
+        ? editData.qualifications.map((qual) => ({
+            id: qual.id, // Preserve the qualification id
+            name: qual.name
+          }))
+        : [{ name: '' }]
     })
   }, [editData, positions, reset])
 
@@ -217,7 +329,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   return (
     <>
       <div className="app__modal_wrapper">
-        <div className="app__modal_wrapper2">
+        <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
               <h5 className="app__modal_header_text">Ranking Details</h5>
@@ -231,144 +343,209 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
-              <div className="app__form_field_container">
-                <div className="w-full">
-                  <div className="app__label_standard">Type</div>
-                  <div>
-                    <select
-                      {...register('type', { required: true })}
-                      className="app__select_standard"
-                    >
-                      <option value="">Choose Type</option>
-                      <option value="CAR-RQA">CAR-RQA</option>
-                      <option value="CAR">CAR</option>
-                    </select>
-                    {errors.type && (
-                      <div className="app__error_message">Type is required</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="app__form_field_container">
-                <div className="w-full">
-                  <div className="app__label_standard">Position</div>
-                  <div>
-                    <select
-                      {...register('position_id', { required: true })}
-                      className="app__select_standard"
-                    >
-                      <option value="">Choose Position</option>
-                      {positions.map((position: PositionTypes, index) => (
-                        <option key={index} value={position.id}>
-                          {position.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.position_id && (
-                      <div className="app__error_message">
-                        Position is required
+              <div className="flex flex-col lg:flex-row w-full items-start justify-between text-xs dark:text-gray-400">
+                {/* Begin First Column */}
+                <div className="w-full px-2">
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Type</div>
+                      <div>
+                        <select
+                          {...register('type', { required: true })}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose Type</option>
+                          <option value="CAR-RQA">CAR-RQA</option>
+                          <option value="CAR">CAR</option>
+                        </select>
+                        {errors.type && (
+                          <div className="app__error_message">
+                            Type is required
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="app__form_field_container">
-                <div className="w-full">
-                  <div className="app__label_standard">Status</div>
-                  <div>
-                    <select
-                      {...register('status', { required: true })}
-                      className="app__select_standard"
-                    >
-                      <option value="">Choose</option>
-                      <option value="Open">Open</option>
-                      <option value="Closed">Closed</option>
-                    </select>
-                    {errors.status && (
-                      <div className="app__error_message">
-                        Status is required
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Position</div>
+                      <div>
+                        <select
+                          {...register('position_id', { required: true })}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose Position</option>
+                          {positions.map((position: PositionTypes, index) => (
+                            <option key={index} value={position.id}>
+                              {position.name}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.position_id && (
+                          <div className="app__error_message">
+                            Position is required
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="app__form_field_container">
-                <div className="w-full">
-                  <div className="app__label_standard">Committee Chairman:</div>
-                  <SearchUserInput
-                    isMultiple={false}
-                    selectedUsers={
-                      editData
-                        ? editData.chairman
-                          ? [editData.chairman]
-                          : []
-                        : []
-                    }
-                    handleSelectedUsers={handleSelectedUsers}
-                  />
-                </div>
-              </div>
-              <div className="app__form_field_container">
-                <div className="w-full">
-                  <div className="app__label_standard">Department</div>
-                  <div>
-                    <select
-                      {...register('department', { required: true })}
-                      className="app__select_standard"
-                    >
-                      <option value="">Choose</option>
-                      <option value="Non-Teaching">Non-Teaching</option>
-                      <option value="Elementary">Elementary</option>
-                      <option value="Junior Highschool">
-                        Junior Highschool
-                      </option>
-                      <option value="Senior Highschool">
-                        Senior Highschool
-                      </option>
-                    </select>
-                    {errors.department && (
-                      <div className="app__error_message">
-                        Department is required
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Status</div>
+                      <div>
+                        <select
+                          {...register('status', { required: true })}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose</option>
+                          <option value="Open">Open</option>
+                          <option value="Closed">Closed</option>
+                        </select>
+                        {errors.status && (
+                          <div className="app__error_message">
+                            Status is required
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="app__form_field_container">
-                <div className="w-full">
-                  <div className="app__label_standard">
-                    Display on Job Postings?
-                  </div>
-                  <div>
-                    <select
-                      {...register('display_on_portal', { required: true })}
-                      className="app__select_standard"
-                    >
-                      <option value="">Choose</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                    {errors.display_on_portal && (
-                      <div className="app__error_message">This is required</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="app__form_field_container">
-                <div className="w-full">
-                  <div className="app__label_standard">Description</div>
-                  <div>
-                    <textarea
-                      {...register('description', { required: true })}
-                      className="app__input_standard"
-                    />
-                    {errors.description && (
-                      <div className="app__error_message">
-                        Description is required
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">
+                        Committee Chairman:
                       </div>
-                    )}
+                      <SearchUserInput
+                        isMultiple={false}
+                        selectedUsers={
+                          editData
+                            ? editData.chairman
+                              ? [editData.chairman]
+                              : []
+                            : []
+                        }
+                        handleSelectedUsers={handleSelectedUsers}
+                      />
+                      <input
+                        type="hidden"
+                        {...register('chairman_id', {
+                          required: true
+                        })}
+                      />
+                      {errors.chairman_id && (
+                        <div className="app__error_message">
+                          Chairman is required
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Department</div>
+                      <div>
+                        <select
+                          {...register('department', { required: true })}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose</option>
+                          <option value="Non-Teaching">Non-Teaching</option>
+                          <option value="Elementary">Elementary</option>
+                          <option value="Junior Highschool">
+                            Junior Highschool
+                          </option>
+                          <option value="Senior Highschool">
+                            Senior Highschool
+                          </option>
+                        </select>
+                        {errors.department && (
+                          <div className="app__error_message">
+                            Department is required
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">
+                        Display on Job Postings?
+                      </div>
+                      <div>
+                        <select
+                          {...register('display_on_portal', { required: true })}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose</option>
+                          <option value="Yes">Yes</option>
+                          <option value="No">No</option>
+                        </select>
+                        {errors.display_on_portal && (
+                          <div className="app__error_message">
+                            This is required
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Description</div>
+                      <div>
+                        <textarea
+                          {...register('description', { required: true })}
+                          className="app__input_standard"
+                        />
+                        {errors.description && (
+                          <div className="app__error_message">
+                            Description is required
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
+                {/* End First Column */}
+                {/* Begin Second Column */}
+                <div className="w-full px-4">
+                  <div className="text-sm font-semibold text-gray-700 mb-1">
+                    Qualification Standards
+                  </div>
+                  {fields.map((_q, index) => (
+                    <div key={index} className="app__form_field_container">
+                      <div className="flex items-center justify-start space-x-2">
+                        <input
+                          placeholder="Qualification Name"
+                          className="app__input_standard"
+                          {...register(`qualifications.${index}.name`, {
+                            required: true
+                          })}
+                        />
+                        {fields.length > 1 && (
+                          <button
+                            type="button"
+                            className="app__btn_red_xs"
+                            onClick={() => remove(index)}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      {errors.qualifications?.[index]?.name && (
+                        <div className="app__error_message">
+                          Qualification Name is required
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    className="app__btn_blue_xs"
+                    onClick={handleAddQualification}
+                  >
+                    Add Qualification
+                  </button>
+                </div>
+                {/* End First Column */}
               </div>
 
               <hr className="my-6" />

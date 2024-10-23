@@ -1,16 +1,40 @@
 'use client'
-import { TopBarDark } from '@/components'
+import { OneColLayoutLoading, TopBarDark } from '@/components'
 import Footer from '@/components/Footer'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { ApplicationTypes, RankingTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
+import {
+  generateRandomAlphaNumber,
+  generateReferenceCode
+} from '@/utils/text-helper'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
+interface ExistingQualificationTypes {
+  qualification_name: string
+  documents: Array<{
+    id: string
+    document_url: string
+  }>
+}
 const Page: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [isCodeFound, setIsCodeFound] = useState(true)
+
+  const [documents, setDocuments] = useState<File[][]>([])
+  const [existingQualification, setExistingQualification] = useState<
+    ExistingQualificationTypes[] | []
+  >([])
+
+  const [applicantDetails, setApplicantDetails] =
+    useState<ApplicationTypes | null>(null)
+  const [refCode, setRefCode] = useState('')
+  const [inputValue, setInputValue] = useState('')
   const [ranking, setRanking] = useState<RankingTypes | null>(null)
   const searchParams = useSearchParams()
   const { supabase, session } = useSupabase()
@@ -21,12 +45,14 @@ const Page: React.FC = () => {
     register,
     formState: { errors },
     watch,
+    setValue,
     handleSubmit
   } = useForm<ApplicationTypes>({
     mode: 'onSubmit'
   })
 
   const watchedType = watch('type')
+  const email = watch('email')
 
   const onSubmit = async (formdata: ApplicationTypes) => {
     if (saving) return
@@ -37,19 +63,25 @@ const Page: React.FC = () => {
   }
 
   const handleCreate = async (formdata: ApplicationTypes) => {
+    const randomCode = generateRandomAlphaNumber(5)
+    setRefCode(randomCode)
+
     const newData = {
       ranking_id,
       type: formdata.type,
-      item_number: formdata.item_number,
+      code: randomCode,
       lastname: formdata.lastname,
       firstname: formdata.firstname,
-      middlename: formdata.middlename
+      middlename: formdata.middlename,
+      email: formdata.email,
+      deped_email: formdata.deped_email
     }
 
     try {
-      const { error } = await supabase
+      const { data: applicantData, error } = await supabase
         .from('hrm_ranking_applicants')
         .insert(newData)
+        .select()
 
       if (error) {
         void logError(
@@ -62,6 +94,57 @@ const Page: React.FC = () => {
         throw new Error(error.message)
       }
 
+      // Upload documents
+      if (ranking?.qualifications) {
+        // Create an array of promises
+        const uploadPromises = ranking.qualifications.map(
+          async (qualification, index) => {
+            // Create an array for the current qualification's file uploads
+            if (documents[index]) {
+              const fileUploadPromises = documents[index].map(async (file) => {
+                const randomString = generateReferenceCode()
+
+                // Extract the file extension (e.g., ".pdf", ".jpg")
+                const fileExtension = file.name.split('.').pop()
+                const newFileName = `${randomString}.${fileExtension}`
+
+                const { data: fileData, error: uploadError } =
+                  await supabase.storage
+                    .from('hrm_public')
+                    .upload(
+                      `applicant_documents/${applicantData[0].id}/${newFileName}`,
+                      file
+                    )
+
+                // Check for upload errors
+                if (uploadError) {
+                  console.error('Upload error:', uploadError)
+                  throw new Error(`Error uploading file: ${file.name}`)
+                }
+
+                // Insert the document URL into the database
+                await supabase.from('hrm_ranking_applicant_documents').insert({
+                  applicant_id: applicantData[0].id,
+                  qualification_id: qualification.id,
+                  document_url: fileData?.path
+                })
+              })
+
+              // Return the promise for the current qualification's file uploads
+              return await Promise.all(fileUploadPromises)
+            }
+          }
+        )
+
+        // Await all qualifications upload promises
+        try {
+          await Promise.all(uploadPromises)
+          console.log('All files uploaded successfully!')
+        } catch (error) {
+          console.error('Error during file upload:', error)
+        }
+      }
+
       setIsSuccess(true)
 
       setSaving(false)
@@ -70,11 +153,99 @@ const Page: React.FC = () => {
     }
   }
 
+  const handleFileUpload = (index: number, files: FileList | null) => {
+    if (!files) return
+
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ] // Images, PDF, DOCX
+
+    const newDocuments = Array.from(files).filter((file) => {
+      if (!allowedTypes.includes(file.type)) {
+        alert(
+          `File type ${file.name} is not allowed. Please upload only images, DOCX, or PDF files.`
+        )
+        return false // Exclude invalid files
+      }
+      return true // Include valid files
+    })
+
+    if (newDocuments.length === 0) return // Stop if no valid files
+
+    const updatedDocuments = [...documents]
+    updatedDocuments[index] = newDocuments
+    setDocuments(updatedDocuments)
+    setValue(`documents.${index}`, updatedDocuments[index])
+  }
+
+  // Function to be called when the user types or pastes the 5th character
+  const handleFifthCharacter = async (value: string) => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('hrm_ranking_applicants')
+      .select(
+        '*, applicant_documents:hrm_ranking_applicant_documents(*, qualification:qualification_id(*))'
+      )
+      .neq('ranking_id', ranking_id)
+      .eq('code', value)
+      .maybeSingle()
+
+    if (data) {
+      setIsCodeFound(true)
+      setApplicantDetails(data)
+
+      const groupedDocuments = data.applicant_documents.reduce(
+        (acc: any, document: any) => {
+          const { qualification_id, qualification } = document
+
+          if (!acc[qualification_id]) {
+            acc[qualification_id] = {
+              qualification_name: qualification.name,
+              documents: []
+            }
+          }
+
+          acc[qualification_id].documents.push(document)
+          return acc
+        },
+        {}
+      )
+      console.log('groupedDocuments', groupedDocuments)
+      setExistingQualification(groupedDocuments)
+    } else {
+      setIsCodeFound(false)
+      setApplicantDetails(null)
+    }
+    setLoading(false)
+  }
+
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setInputValue(value)
+
+    // Check if the input has 5 characters
+    if (value.length === 5) {
+      void handleFifthCharacter(value)
+    } else {
+      setIsCodeFound(true)
+    }
+  }
+
+  const extractFilename = (url: string) => {
+    return url.split('/').pop() // Get the last part of the URL which is the filename
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       const { data } = await supabase
         .from('hrm_rankings')
-        .select('*, position:position_id(name)')
+        .select(
+          '*, position:position_id(name),qualifications:hrm_ranking_qualifications(*)'
+        )
         .eq('id', ranking_id)
         .single()
 
@@ -87,12 +258,13 @@ const Page: React.FC = () => {
   return (
     <div className="app__home">
       <TopBarDark isGuest={session ? false : true} />
-      <div className="bg-gray-700 h-screen pb-10 pt-32 px-6 flex items-start justify-center">
+      <div className="bg-gray-700 h-full pb-10 pt-32 px-6 flex items-start justify-center">
         {ranking && (
-          <div className="bg-gray-100 p-4 rounded-lg border w-full md:w-[720px]">
+          <div className="bg-gray-100 p-4 mb-20 rounded-lg border w-full md:w-[720px]">
             {isSuccess && (
-              <div className="text-green-700">
-                Application successfully submitted.
+              <div className="text-gray-700">
+                Application successfully submitted. Your application referece
+                code is <span className="font-bold text-lg">{refCode}</span>
               </div>
             )}
             {!isSuccess && (
@@ -120,10 +292,10 @@ const Page: React.FC = () => {
                         <label className="space-x-2">
                           <input
                             type="radio"
-                            value="For Promotion"
+                            value="Old Applicant"
                             {...register('type', { required: true })}
                           />
-                          <span>For Promotion</span>
+                          <span>Use data from previous application</span>
                         </label>
 
                         {errors.type && (
@@ -185,31 +357,216 @@ const Page: React.FC = () => {
                           </div>
                         </div>
                       </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">Email</div>
+                          <div>
+                            <input
+                              type="email"
+                              {...register('email', {
+                                required: 'Email is required'
+                              })}
+                              className="app__input_standard"
+                            />
+                            {errors.email && (
+                              <span className="app__error_message">
+                                Email is required
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Re-type Email
+                          </div>
+                          <input
+                            type="email"
+                            {...register('retypeEmail', {
+                              required: 'Re-typed email is required',
+                              validate: (value) =>
+                                value === email || 'Emails do not match'
+                            })}
+                            className="app__input_standard"
+                          />
+                          {errors.retypeEmail && (
+                            <span className="app__error_message">
+                              {errors.retypeEmail.message}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Are you a current DepEd employee? If so, please
+                            provide your DepEd email below
+                          </div>
+                          <div>
+                            <input
+                              type="email"
+                              placeholder="(Optional)"
+                              {...register('deped_email')}
+                              className="app__input_standard"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-600 text-sm">
+                          Upload supporting documents for each Qualification
+                          Standards:{' '}
+                        </div>
+                        <div className="p-4 bg-gray-50 border space-y-6">
+                          <div className="text-center text-sm">
+                            QUALIFICATION STANDARDS
+                          </div>
+                          {ranking.qualifications.map(
+                            (qualification, index) => (
+                              <div key={qualification.id}>
+                                <h3 className="text-gray-700 text-sm font-bold">
+                                  {index + 1}. {qualification.name}
+                                </h3>
+                                <input
+                                  type="file"
+                                  multiple
+                                  onChange={(e) =>
+                                    handleFileUpload(index, e.target.files)
+                                  }
+                                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
+                                />
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
                     </>
                   )}
-                  {watchedType === 'For Promotion' && (
+                  {watchedType === 'Old Applicant' && (
                     <>
                       <div className="app__form_field_container">
                         <div className="w-full">
                           <div className="app__label_standard">
-                            Type your Item No.{' '}
-                            <span className="italic text-xs">
-                              (Do not add space or symbols)
-                            </span>
+                            Enter your previous application code:
                           </div>
                           <div>
                             <input
-                              {...register('item_number', { required: true })}
+                              {...register('code', { required: true })}
+                              placeholder="Code"
+                              value={inputValue}
+                              onChange={handleCodeChange}
                               className="app__input_standard"
                             />
-                            {errors.item_number && (
+                            {errors.code && (
                               <div className="app__error_message">
-                                Item number is required
+                                Application code is required
                               </div>
                             )}
                           </div>
                         </div>
                       </div>
+                      {loading && <OneColLayoutLoading rows={4} />}
+                      {!loading && !isCodeFound && (
+                        <div className="text-red-500 bg-red-100 border border-red-500 text-xs p-1">
+                          No matching application for this code.
+                        </div>
+                      )}
+                      {!loading && applicantDetails && (
+                        <div className="grid gap-4">
+                          <div>
+                            <div className="app__label_standard">
+                              Applicant Name:
+                            </div>
+                            <div className="app__label_value">
+                              {applicantDetails.firstname}{' '}
+                              {applicantDetails.middlename}{' '}
+                              {applicantDetails.lastname}
+                              <span className="font-light">
+                                ({applicantDetails.email})
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="p-4 bg-gray-50 border space-y-6">
+                              <div className="text-center text-sm">
+                                PREVIOUSLY SUBMITTED QUALIFICATION STANDARDS
+                              </div>
+                              {Object.entries(existingQualification).map(
+                                (
+                                  [
+                                    qualificationId,
+                                    { qualification_name, documents }
+                                  ],
+                                  index
+                                ) => (
+                                  <div key={qualificationId} className="mb-4">
+                                    <h3 className="text-gray-700 text-sm font-bold">
+                                      {index + 1}. {qualification_name}
+                                    </h3>
+                                    {documents.length > 0 ? (
+                                      <ul>
+                                        {documents.map((doc, index) => {
+                                          const filename = extractFilename(
+                                            doc.document_url
+                                          )
+
+                                          return (
+                                            <li key={index} className="mb-2">
+                                              {/* Display the filename and make it downloadable */}
+                                              <Link
+                                                href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/hrm_public/${doc.document_url}`}
+                                                download={filename}
+                                                target="_blank"
+                                                className="text-blue-600 hover:underline"
+                                              >
+                                                {filename}
+                                              </Link>
+                                            </li>
+                                          )
+                                        })}
+                                      </ul>
+                                    ) : (
+                                      <p className="text-gray-500">
+                                        No documents available.
+                                      </p>
+                                    )}
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-gray-600 text-sm">
+                              Upload updated supporting documents for each
+                              Qualification Standards (If applicable):{' '}
+                            </div>
+                            <div className="p-4 bg-gray-50 border space-y-6">
+                              <div className="text-center text-sm">
+                                QUALIFICATION STANDARDS
+                              </div>
+                              {ranking.qualifications.map(
+                                (qualification, index) => (
+                                  <div key={qualification.id}>
+                                    <h3 className="text-gray-700 text-sm font-bold">
+                                      {index + 1}. {qualification.name}
+                                    </h3>
+                                    <input
+                                      type="file"
+                                      multiple
+                                      onChange={(e) =>
+                                        handleFileUpload(index, e.target.files)
+                                      }
+                                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
+                                    />
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
 

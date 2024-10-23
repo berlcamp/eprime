@@ -16,7 +16,7 @@ const Filters = ({ setFilterStatus, setFilterPosition }: FilterTypes) => {
   const [positions, setPositions] = useState<PositionTypes[]>([])
 
   const handleApply = () => {
-    if (selectedPosition !== '' && selectedStatus === '') return
+    if (selectedPosition === '' && selectedStatus === '') return
 
     // pass filter values to parent
     setFilterStatus(selectedStatus)
@@ -26,7 +26,7 @@ const Filters = ({ setFilterStatus, setFilterPosition }: FilterTypes) => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (selectedPosition !== '' && selectedStatus === '') return
+    if (selectedPosition === '' && selectedStatus === '') return
 
     // pass filter values to parent
     setFilterStatus(selectedStatus)
@@ -65,7 +65,7 @@ const Filters = ({ setFilterStatus, setFilterPosition }: FilterTypes) => {
                 onChange={(e) => setSelectedPosition(e.target.value)}
                 className="app__filter_select"
               >
-                <option value="">Choose Position</option>
+                <option value="">All Position</option>
                 {positions.map((item, index) => (
                   <option key={index} value={item.id}>
                     {item.name}
@@ -80,7 +80,7 @@ const Filters = ({ setFilterStatus, setFilterPosition }: FilterTypes) => {
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="app__filter_select"
               >
-                <option value="">Choose Status</option>
+                <option value="">All Status</option>
                 <option value="Open">Open</option>
                 <option value="Closed">Closed</option>
               </select>

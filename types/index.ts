@@ -198,11 +198,11 @@ export interface SalaryGradeTypes {
   grade: string
   step: string
   salary: string
-  logs: {
+  logs: Array<{
     date: string // Represents the date and time as a string in the given format
     user_name: string // Represents the name of the user
     message: string // Represents the update message
-  }[]
+  }>
 }
 
 export interface ItemTypes {
@@ -707,6 +707,13 @@ export interface RankingTypes {
   display_on_portal: string
   display_on_portal_until: string
   confirmed: string
+  qualifications: Array<{ id?: string; name: string }>
+}
+
+export interface RankingQualifications {
+  id: string
+  ranking_id: string
+  name: string
 }
 export interface ApplicationTypes {
   id: string
@@ -714,7 +721,27 @@ export interface ApplicationTypes {
   lastname: string
   firstname: string
   middlename: string
+  email: string
+  deped_email: string
+  retypeEmail: string
   ranking_id: string
-  item_number: string
+  code: string
   confirmed: string
+  documents: File[][]
+  applicant_documents: ApplicantDocuments[]
+  qualifications: Array<{ id?: string; name: string; files: [] }>
+}
+
+export interface ApplicantDocuments {
+  id: string
+  ranking_id: string
+  qualification_id: string
+  qualification: RankingQualifications
+  document_url: string
+}
+
+export interface AnnouncementTypes {
+  id: string
+  title: string
+  description: string
 }
