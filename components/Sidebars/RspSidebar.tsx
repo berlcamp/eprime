@@ -26,12 +26,14 @@ const RspSidebar = () => {
               </li>
               <li>
                 <Link
-                  href="#"
+                  href="/applicants"
                   className={`app__menu_link ${
-                    currentRoute === '/carrqa' ? 'app_menu_link_active' : ''
+                    currentRoute === '/applicants' ? 'app_menu_link_active' : ''
                   }`}
                 >
-                  <span className="flex-1 ml-3 whitespace-nowrap">CAR-RQA</span>
+                  <span className="flex-1 ml-3 whitespace-nowrap">
+                    Ranking Applicants
+                  </span>
                 </Link>
               </li>
             </ul>

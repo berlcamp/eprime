@@ -628,7 +628,57 @@ export async function fetchRankings(
 
     return { data, count }
   } catch (error) {
-    console.error('fetch items error', error)
+    console.error('fetch ranking error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchRankingApplicants(
+  filters: {
+    filterKeyword?: string
+    filterRanking?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
+  try {
+    let query = supabase
+      .from('hrm_ranking_applicants')
+      .select('*, ranking:ranking_id(*,position:position_id(*))', {
+        count: 'exact'
+      })
+
+    // filter ranking
+    if (filters.filterRanking && filters.filterRanking !== '') {
+      query = query.eq('ranking_id', filters.filterRanking)
+    }
+
+    // filter keyword
+    if (filters.filterKeyword && filters.filterKeyword !== '') {
+      query = query.or(
+        `lastname.ilike.%${filters.filterKeyword}%,firstname.ilike.%${filters.filterKeyword}%,middlename.ilike.%${filters.filterKeyword}%`
+      )
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch ranking applicants error', error)
     return { data: [], count: 0 }
   }
 }

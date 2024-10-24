@@ -1,4 +1,5 @@
 import { CustomButton } from '@/components'
+import ApplicantDetails from '@/components/Rsp/ApplicantDetails'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
   ApplicantTypes,
@@ -6,7 +7,6 @@ import {
   RankingCommitteeTypes
 } from '@/types'
 import { useEffect, useState } from 'react'
-import ApplicantQualifications from './ApplicantQualifications'
 import CastPoints from './CastPoints'
 
 interface ModalProps {
@@ -18,6 +18,7 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
   const [showQualificationsModal, setShowQualificationsModal] = useState(false)
   const [showCastPointsModal, setShowCastPointsModal] = useState(false)
   const [selectedId, setSelectedId] = useState('')
+  const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
   const [refetch, setRefetch] = useState(false)
 
   // use for Cast Points modal
@@ -31,9 +32,9 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
   const [list, setList] = useState<ApplicantTypes[] | []>([])
   const { supabase, session } = useSupabase()
 
-  const handleViewQualifications = (id: string) => {
+  const handleViewQualifications = (item: ApplicantTypes) => {
     setShowQualificationsModal(true)
-    setSelectedId(id)
+    setSelectedItem(item)
   }
   const handleCastPoints = (id: string) => {
     setShowCastPointsModal(true)
@@ -107,8 +108,18 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                         <th className="app__th_firstcol">
                           <div className="font-medium">
                             {item.lastname}, {item.firstname} {item.middlename}
-                            <span className="font-light">({item.email})</span>
                           </div>
+                          <div className="font-light">{item.email}</div>
+                          {item.current_employee === 'Yes' && (
+                            <div className="font-bold">
+                              (Current DepEd Employee)
+                            </div>
+                          )}
+                          {item.previous_applicant === 'Yes' && (
+                            <div className="font-bold">
+                              (Previous Applicant)
+                            </div>
+                          )}
                         </th>
                         <td className="app__td">
                           <div className="space-x-2">
@@ -116,9 +127,7 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                               containerStyles="app__btn_blue_xs"
                               title="View Qualifications"
                               btnType="button"
-                              handleClick={() =>
-                                handleViewQualifications(item.id)
-                              }
+                              handleClick={() => handleViewQualifications(item)}
                             />
                             {canCastPoints && (
                               <CustomButton
@@ -139,9 +148,9 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
         </div>
       </div>
       {/* Show Applicants Modal */}
-      {showQualificationsModal && (
-        <ApplicantQualifications
-          applicantId={selectedId}
+      {selectedItem && showQualificationsModal && (
+        <ApplicantDetails
+          applicantData={selectedItem}
           hideModal={() => setShowQualificationsModal(false)}
         />
       )}

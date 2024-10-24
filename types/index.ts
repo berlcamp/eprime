@@ -718,16 +718,20 @@ export interface RankingQualifications {
 export interface ApplicantTypes {
   id: string
   type: string
+  current_employee: string
+  previous_applicant: string
+  previous_applicant_code: string
   lastname: string
   firstname: string
   middlename: string
   email: string
   deped_email: string
-  retypeEmail: string
+  retype_email: string
   ranking_id: string
   code: string
   confirmed: string
   documents: File[][]
+  ranking: RankingTypes
   applicant_documents: ApplicantDocuments[]
   qualifications: Array<{ id?: string; name: string; files: [] }>
 }

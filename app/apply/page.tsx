@@ -1,8 +1,9 @@
 'use client'
-import { OneColLayoutLoading, TopBarDark } from '@/components'
+import { CustomButton, OneColLayoutLoading, TopBarDark } from '@/components'
 import Footer from '@/components/Footer'
+import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { ApplicantTypes, RankingTypes } from '@/types'
+import { ApplicantTypes, Employee, RankingTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import {
   generateRandomAlphaNumber,
@@ -24,7 +25,10 @@ const Page: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [searching, setSearching] = useState(false)
   const [isCodeFound, setIsCodeFound] = useState(true)
+  const [emailFound, setEmailFound] = useState(false)
+  const [doneSearch, setDoneSearch] = useState(false)
 
   const [documents, setDocuments] = useState<File[][]>([])
   const [existingQualification, setExistingQualification] = useState<
@@ -52,10 +56,15 @@ const Page: React.FC = () => {
   })
 
   const watchedType = watch('type')
-  const email = watch('email')
+  const watchedCurrentEmployee = watch('current_employee')
+  const watchedDepedEmail = watch('deped_email')
 
   const onSubmit = async (formdata: ApplicantTypes) => {
     if (saving) return
+
+    if (watchedCurrentEmployee === 'Yes' && !emailFound) {
+      return
+    }
 
     setSaving(true)
 
@@ -74,7 +83,10 @@ const Page: React.FC = () => {
       firstname: formdata.firstname,
       middlename: formdata.middlename,
       email: formdata.email,
-      deped_email: formdata.deped_email
+      deped_email: formdata.deped_email,
+      current_employee: emailFound ? 'Yes' : 'No',
+      previous_applicant: formdata.previous_applicant,
+      previous_applicant_code: formdata.previous_applicant_code
     }
 
     try {
@@ -198,6 +210,13 @@ const Page: React.FC = () => {
       setIsCodeFound(true)
       setApplicantDetails(data)
 
+      setValue('lastname', data.lastname)
+      setValue('firstname', data.firstname)
+      setValue('middlename', data.middlename)
+      setValue('email', data.email)
+      setValue('previous_applicant', 'Yes')
+      setValue('previous_applicant_code', value)
+
       const groupedDocuments = data.applicant_documents.reduce(
         (acc: any, document: any) => {
           const { qualification_id, qualification } = document
@@ -238,6 +257,37 @@ const Page: React.FC = () => {
     return url.split('/').pop() // Get the last part of the URL which is the filename
   }
 
+  const handleSearch = async () => {
+    setSearching(true)
+    setEmailFound(false)
+    setDoneSearch(false)
+
+    const { data } = await supabase
+      .from('hrm_users')
+      .select()
+      .eq('email', watchedDepedEmail)
+      .maybeSingle()
+    if (data) {
+      const employeeData: Employee = data
+      setEmailFound(true)
+      setValue('lastname', employeeData.lastname)
+      setValue('firstname', employeeData.firstname)
+      setValue('middlename', employeeData.middlename)
+      setValue('email', employeeData.email)
+    } else {
+      setEmailFound(false)
+      setValue('lastname', '')
+      setValue('firstname', '')
+      setValue('middlename', '')
+      setValue('email', '')
+    }
+
+    setValue('previous_applicant', 'No')
+    setValue('previous_applicant_code', '')
+    setSearching(false)
+    setDoneSearch(true)
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       const { data } = await supabase
@@ -262,8 +312,8 @@ const Page: React.FC = () => {
           <div className="bg-gray-100 p-4 mb-20 rounded-lg border w-full md:w-[720px]">
             {isSuccess && (
               <div className="text-gray-700">
-                Application successfully submitted. Your application referece
-                code is <span className="font-bold text-lg">{refCode}</span>
+                Application successfully submitted. Your application Reference
+                Code is <span className="font-bold text-lg">{refCode}</span>
               </div>
             )}
             {!isSuccess && (
@@ -306,240 +356,190 @@ const Page: React.FC = () => {
                     </div>
                   </div>
 
-                  {watchedType === 'New Applicant' && (
-                    <>
-                      <div className="app__form_field_container mt-4">
-                        <div className="w-full">
-                          <div className="app__label_standard">Firstname</div>
-                          <div>
-                            <input
-                              {...register('firstname', { required: true })}
-                              className="app__input_standard"
-                            />
-                            {errors.firstname && (
-                              <div className="app__error_message">
-                                Firstname is required
-                              </div>
-                            )}
-                          </div>
+                  {watchedType === 'Old Applicant' && (
+                    <div className="app__form_field_container">
+                      <div className="w-full">
+                        <div className="app__label_standard">
+                          Enter your previous application code:
                         </div>
-                      </div>
-                      <div className="app__form_field_container">
-                        <div className="w-full">
-                          <div className="app__label_standard">Middlename</div>
-                          <div>
-                            <input
-                              {...register('middlename', { required: true })}
-                              className="app__input_standard"
-                            />
-                            {errors.middlename && (
-                              <div className="app__error_message">
-                                Firstname is required
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="app__form_field_container">
-                        <div className="w-full">
-                          <div className="app__label_standard">Lastname</div>
-                          <div>
-                            <input
-                              {...register('lastname', { required: true })}
-                              className="app__input_standard"
-                            />
-                            {errors.lastname && (
-                              <div className="app__error_message">
-                                Lastname is required
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="app__form_field_container">
-                        <div className="w-full">
-                          <div className="app__label_standard">Email</div>
-                          <div>
-                            <input
-                              type="email"
-                              {...register('email', {
-                                required: 'Email is required'
-                              })}
-                              className="app__input_standard"
-                            />
-                            {errors.email && (
-                              <span className="app__error_message">
-                                Email is required
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="app__form_field_container">
-                        <div className="w-full">
-                          <div className="app__label_standard">
-                            Re-type Email
-                          </div>
+                        <div>
                           <input
-                            type="email"
-                            {...register('retypeEmail', {
-                              required: 'Re-typed email is required',
-                              validate: (value) =>
-                                value === email || 'Emails do not match'
-                            })}
+                            {...register('code', { required: true })}
+                            placeholder="Code"
+                            value={inputValue}
+                            onChange={handleCodeChange}
                             className="app__input_standard"
                           />
-                          {errors.retypeEmail && (
-                            <span className="app__error_message">
-                              {errors.retypeEmail.message}
-                            </span>
+                          {errors.code && (
+                            <div className="app__error_message">
+                              Application code is required
+                            </div>
                           )}
                         </div>
                       </div>
-                      <div className="app__form_field_container">
-                        <div className="w-full">
-                          <div className="app__label_standard">
-                            Are you a current DepEd employee? If so, please
-                            provide your DepEd email below
-                          </div>
-                          <div>
-                            <input
-                              type="email"
-                              placeholder="(Optional)"
-                              {...register('deped_email')}
-                              className="app__input_standard"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-gray-600 text-sm">
-                          Upload supporting documents for each Qualification
-                          Standards:{' '}
-                        </div>
-                        <div className="p-4 bg-gray-50 border space-y-6">
-                          <div className="text-center text-sm">
-                            QUALIFICATION STANDARDS
-                          </div>
-                          {ranking.qualifications.map(
-                            (qualification, index) => (
-                              <div key={qualification.id}>
-                                <h3 className="text-gray-700 text-sm font-bold">
-                                  {index + 1}. {qualification.name}
-                                </h3>
-                                <input
-                                  type="file"
-                                  multiple
-                                  onChange={(e) =>
-                                    handleFileUpload(index, e.target.files)
-                                  }
-                                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
-                                />
-                              </div>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    </>
+                    </div>
                   )}
-                  {watchedType === 'Old Applicant' && (
-                    <>
-                      <div className="app__form_field_container">
-                        <div className="w-full">
-                          <div className="app__label_standard">
-                            Enter your previous application code:
-                          </div>
-                          <div>
+
+                  {watchedType === 'New Applicant' && (
+                    <div className="app__form_field_container">
+                      <div className="w-full">
+                        <div className="app__label_standard">
+                          Are you a current employee of DepEd?
+                        </div>
+                        <div className="mt-3 flex items-start justify-start space-x-2 text-sm">
+                          <label className="space-x-2">
                             <input
-                              {...register('code', { required: true })}
-                              placeholder="Code"
-                              value={inputValue}
-                              onChange={handleCodeChange}
-                              className="app__input_standard"
+                              type="radio"
+                              value="No"
+                              {...register('current_employee', {
+                                required: true
+                              })}
                             />
-                            {errors.code && (
+                            <span>No</span>
+                          </label>
+
+                          <label className="space-x-2">
+                            <input
+                              type="radio"
+                              value="Yes"
+                              {...register('current_employee', {
+                                required: true
+                              })}
+                            />
+                            <span>Yes</span>
+                          </label>
+                        </div>
+                        {errors.current_employee && (
+                          <div className="app__error_message">
+                            This is required
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {watchedCurrentEmployee === 'Yes' &&
+                    watchedType === 'New Applicant' && (
+                      <>
+                        <div className="app__form_field_container mt-4">
+                          <div className="w-full">
+                            <div className="app__label_standard">
+                              Please type your DepEd email and click "Get
+                              Details"
+                            </div>
+                            <div className="flex space-x-2">
+                              <input
+                                {...register('deped_email', {
+                                  required: true
+                                })}
+                                className="app__input_standard !w-[200px]"
+                              />
+                              <CustomButton
+                                containerStyles="app__btn_gray"
+                                title="Get Details"
+                                btnType="button"
+                                handleClick={handleSearch}
+                              />
+                            </div>
+                            {errors.deped_email && (
                               <div className="app__error_message">
-                                Application code is required
+                                Deped email is required
                               </div>
                             )}
                           </div>
                         </div>
-                      </div>
-                      {loading && <OneColLayoutLoading rows={4} />}
-                      {!loading && !isCodeFound && (
-                        <div className="text-red-500 bg-red-100 border border-red-500 text-xs p-1">
-                          No matching application for this code.
+                      </>
+                    )}
+                  {searching && <TwoColTableLoading />}
+                  {(watchedCurrentEmployee === 'No' || doneSearch) && (
+                    <>
+                      {!emailFound && watchedCurrentEmployee === 'Yes' && (
+                        <div className="text-red-500 text-sm font-light">
+                          No matching records found. Please Fill up the forms
+                          below:
                         </div>
                       )}
-                      {!loading && applicantDetails && (
-                        <div className="grid gap-4">
-                          <div>
-                            <div className="app__label_standard">
-                              Applicant Name:
-                            </div>
-                            <div className="app__label_value">
-                              {applicantDetails.firstname}{' '}
-                              {applicantDetails.middlename}{' '}
-                              {applicantDetails.lastname}
-                              <span className="font-light">
-                                ({applicantDetails.email})
-                              </span>
-                            </div>
-                          </div>
-                          <div>
-                            <div className="p-4 bg-gray-50 border space-y-6">
-                              <div className="text-center text-sm">
-                                PREVIOUSLY SUBMITTED QUALIFICATION STANDARDS
+                      {watchedType === 'New Applicant' && (
+                        <>
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Firstname
                               </div>
-                              {Object.entries(existingQualification).map(
-                                (
-                                  [
-                                    qualificationId,
-                                    { qualification_name, documents }
-                                  ],
-                                  index
-                                ) => (
-                                  <div key={qualificationId} className="mb-4">
-                                    <h3 className="text-gray-700 text-sm font-bold">
-                                      {index + 1}. {qualification_name}
-                                    </h3>
-                                    {documents.length > 0 ? (
-                                      <ul>
-                                        {documents.map((doc, index) => {
-                                          const filename = extractFilename(
-                                            doc.document_url
-                                          )
-
-                                          return (
-                                            <li key={index} className="mb-2">
-                                              {/* Display the filename and make it downloadable */}
-                                              <Link
-                                                href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/hrm_public/${doc.document_url}`}
-                                                download={filename}
-                                                target="_blank"
-                                                className="text-blue-600 hover:underline"
-                                              >
-                                                {filename}
-                                              </Link>
-                                            </li>
-                                          )
-                                        })}
-                                      </ul>
-                                    ) : (
-                                      <p className="text-gray-500">
-                                        No documents available.
-                                      </p>
-                                    )}
+                              <div>
+                                <input
+                                  {...register('firstname', { required: true })}
+                                  className="app__input_standard"
+                                />
+                                {errors.firstname && (
+                                  <div className="app__error_message">
+                                    Firstname is required
                                   </div>
-                                )
-                              )}
+                                )}
+                              </div>
                             </div>
                           </div>
+                          <div className="app__form_field_container">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Middlename
+                              </div>
+                              <div>
+                                <input
+                                  {...register('middlename', {
+                                    required: true
+                                  })}
+                                  className="app__input_standard"
+                                />
+                                {errors.middlename && (
+                                  <div className="app__error_message">
+                                    Firstname is required
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="app__form_field_container">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Lastname
+                              </div>
+                              <div>
+                                <input
+                                  {...register('lastname', { required: true })}
+                                  className="app__input_standard"
+                                />
+                                {errors.lastname && (
+                                  <div className="app__error_message">
+                                    Lastname is required
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="app__form_field_container">
+                            <div className="w-full">
+                              <div className="app__label_standard">Email</div>
+                              <div>
+                                <input
+                                  type="email"
+                                  {...register('email', {
+                                    required: 'Email is required'
+                                  })}
+                                  className="app__input_standard"
+                                />
+                                {errors.email && (
+                                  <span className="app__error_message">
+                                    Email is required
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
                           <div>
                             <div className="text-gray-600 text-sm">
-                              Upload updated supporting documents for each
-                              Qualification Standards (If applicable):{' '}
+                              Upload supporting documents for each Qualification
+                              Standards:{' '}
                             </div>
                             <div className="p-4 bg-gray-50 border space-y-6">
                               <div className="text-center text-sm">
@@ -564,10 +564,115 @@ const Page: React.FC = () => {
                               )}
                             </div>
                           </div>
-                        </div>
+                        </>
                       )}
                     </>
                   )}
+
+                  {loading && <OneColLayoutLoading rows={4} />}
+                  {!loading &&
+                    watchedType === 'Old Applicant' &&
+                    !isCodeFound && (
+                      <div className="text-red-500 bg-red-100 border border-red-500 text-xs p-1">
+                        No matching application for this code.
+                      </div>
+                    )}
+                  {!loading &&
+                    watchedType === 'Old Applicant' &&
+                    applicantDetails && (
+                      <div className="grid gap-4">
+                        <div>
+                          <div className="app__label_standard">
+                            Applicant Name:
+                          </div>
+                          <div className="app__label_value">
+                            {applicantDetails.firstname}{' '}
+                            {applicantDetails.middlename}{' '}
+                            {applicantDetails.lastname}
+                            <span className="font-light">
+                              ({applicantDetails.email})
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="p-4 bg-gray-50 border space-y-6">
+                            <div className="text-center text-sm">
+                              PREVIOUSLY SUBMITTED QUALIFICATION STANDARDS
+                            </div>
+                            {Object.entries(existingQualification).map(
+                              (
+                                [
+                                  qualificationId,
+                                  { qualification_name, documents }
+                                ],
+                                index
+                              ) => (
+                                <div key={qualificationId} className="mb-4">
+                                  <h3 className="text-gray-700 text-sm font-bold">
+                                    {index + 1}. {qualification_name}
+                                  </h3>
+                                  {documents.length > 0 ? (
+                                    <ul>
+                                      {documents.map((doc, index) => {
+                                        const filename = extractFilename(
+                                          doc.document_url
+                                        )
+
+                                        return (
+                                          <li key={index} className="mb-2">
+                                            {/* Display the filename and make it downloadable */}
+                                            <Link
+                                              href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/hrm_public/${doc.document_url}`}
+                                              download={filename}
+                                              target="_blank"
+                                              className="text-blue-600 hover:underline"
+                                            >
+                                              {filename}
+                                            </Link>
+                                          </li>
+                                        )
+                                      })}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-gray-500">
+                                      No documents available.
+                                    </p>
+                                  )}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-600 text-sm">
+                            Upload updated supporting documents for each
+                            Qualification Standards (If applicable):{' '}
+                          </div>
+                          <div className="p-4 bg-gray-50 border space-y-6">
+                            <div className="text-center text-sm">
+                              QUALIFICATION STANDARDS
+                            </div>
+                            {ranking.qualifications.map(
+                              (qualification, index) => (
+                                <div key={qualification.id}>
+                                  <h3 className="text-gray-700 text-sm font-bold">
+                                    {index + 1}. {qualification.name}
+                                  </h3>
+                                  <input
+                                    type="file"
+                                    multiple
+                                    onChange={(e) =>
+                                      handleFileUpload(index, e.target.files)
+                                    }
+                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
+                                  />
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                   <hr className="my-6" />
                   {watchedType && (
