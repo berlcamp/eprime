@@ -8,7 +8,8 @@ import {
   TableRowLoading,
   Title,
   TopBar,
-  Unauthorized
+  Unauthorized,
+  UserBlock
 } from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { fetchRankings } from '@/utils/fetchApi'
@@ -25,9 +26,10 @@ import type { RankingTypes } from '@/types'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { TableIcon, User2Icon } from 'lucide-react'
+import { TableIcon, User2Icon, UsersIcon } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import RankingApplicants from './RankingApplicants'
+import RankingCommittees from './RankingCommittees'
 import RankingCriterias from './RankingCriterias'
 
 const Page: React.FC = () => {
@@ -35,6 +37,7 @@ const Page: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showApplicantsModal, setShowApplicantsModal] = useState(false)
   const [showCriteriasModal, setShowCriteriasModal] = useState(false)
+  const [showCommitteesModal, setShowCommitteesModal] = useState(false)
   const [selectedId, setSelectedId] = useState('')
   const [refetch, setRefetch] = useState(false)
 
@@ -124,6 +127,11 @@ const Page: React.FC = () => {
 
   const handleViewCriterias = (id: string) => {
     setShowCriteriasModal(true)
+    setSelectedId(id)
+  }
+
+  const handleViewCommittees = (id: string) => {
+    setShowCommitteesModal(true)
     setSelectedId(id)
   }
 
@@ -225,7 +233,18 @@ const Page: React.FC = () => {
                                     className="app__dropdown_item"
                                   >
                                     <TableIcon className="w-4 h-4" />
-                                    <span>View Criterias</span>
+                                    <span>Manage Criterias</span>
+                                  </div>
+                                </Menu.Item>
+                                <Menu.Item>
+                                  <div
+                                    onClick={() =>
+                                      handleViewCommittees(item.id)
+                                    }
+                                    className="app__dropdown_item"
+                                  >
+                                    <UsersIcon className="w-4 h-4" />
+                                    <span>Manage Committees</span>
                                   </div>
                                 </Menu.Item>
                                 <Menu.Item>
@@ -280,9 +299,7 @@ const Page: React.FC = () => {
                               <span className="app_td_mobile_label">
                                 Chairman:
                               </span>{' '}
-                              {item.chairman.firstname}{' '}
-                              {item.chairman.middlename}{' '}
-                              {item.chairman.lastname}
+                              <UserBlock user={item.chairman} />
                             </div>
                             <div>
                               <span className="app_td_mobile_label">
@@ -301,8 +318,7 @@ const Page: React.FC = () => {
                         {item.display_on_portal ? 'Yes' : 'No'}
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        {item.chairman.firstname} {item.chairman.middlename}{' '}
-                        {item.chairman.lastname}
+                        <UserBlock user={item.chairman} />
                       </td>
                       <td className="hidden md:table-cell app__td">
                         {item.status}
@@ -344,6 +360,13 @@ const Page: React.FC = () => {
         <RankingCriterias
           rankingId={selectedId}
           hideModal={() => setShowCriteriasModal(false)}
+        />
+      )}
+      {/* Show Criterias Modal */}
+      {showCommitteesModal && (
+        <RankingCommittees
+          rankingId={selectedId}
+          hideModal={() => setShowCommitteesModal(false)}
         />
       )}
     </>

@@ -751,4 +751,34 @@ export interface RankingCriteriaTypes {
   name: string
   points: string
   ranking_id: string
+  committees?: RankingCommitteeTypes[]
+}
+
+export interface RankingCriteriaPoints {
+  id: string
+  applicant_id: string
+  committee_criteria_id: string
+  points: string
+  cast: Array<{
+    commmittee_criteria_id: number
+    points: number
+  }>
+}
+
+export interface RankingCommitteeCriteriaTypes {
+  id: string
+  committee_id: string
+  criteria_id: string
+  criteria: RankingCriteriaTypes
+  criteria_points: RankingCriteriaPoints[]
+}
+
+export interface RankingCommitteeTypes {
+  id: string
+  user_id: string
+  hrm_user: Employee
+  ranking_id: string
+  type: string
+  criteria_ids?: string[]
+  committee_criterias?: RankingCommitteeCriteriaTypes[]
 }

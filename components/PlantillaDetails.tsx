@@ -48,7 +48,9 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     editData ? editData.hrm_user : null
   )
 
-  const [selectedImplementingUnit, setSelectedImplementingUnit] = useState('')
+  const [selectedImplementingUnit, setSelectedImplementingUnit] = useState(
+    editData ? editData.implementing_unit_id : ''
+  )
   const [selectedSchool, setSelectedSchool] = useState('')
   const [selectedPosition, setSelectedPosition] = useState('')
 
@@ -70,6 +72,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     register,
     formState: { errors },
     reset,
+    setValue,
     handleSubmit
   } = useForm<ItemTypes>({
     mode: 'onSubmit'
@@ -333,7 +336,18 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
 
   const handleSelectedUsers = (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
-      setUser(selectedUsers[0])
+      const selectedUser = selectedUsers[0]
+      if (selectedUser.school_id) {
+        setValue('school_id', selectedUser.school_id)
+      }
+      if (selectedUser.birthday) {
+        setValue(
+          'birthday',
+          format(new Date(selectedUser.birthday), 'yyyy-MM-dd')
+        )
+      }
+      setValue('sex', selectedUser.gender)
+      setUser(selectedUser)
     } else {
       setUser(null)
     }

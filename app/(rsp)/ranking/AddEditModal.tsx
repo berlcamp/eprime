@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 
 // Types
-import type { Employee, PositionTypes, RankingTypes, namesType } from '@/types'
+import type { Employee, PositionTypes, RankingTypes } from '@/types'
 
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
@@ -24,7 +24,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
   const { supabase } = useSupabase()
   const [saving, setSaving] = useState(false)
 
-  const [user, setUser] = useState<namesType | null>(
+  const [user, setUser] = useState<Employee | null>(
     editData ? editData.chairman : null
   )
   const [positions, setPositions] = useState<PositionTypes[] | []>([])
@@ -40,6 +40,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
     reset,
     control,
     setValue,
+    clearErrors,
     handleSubmit
   } = useForm<RankingTypes>({
     mode: 'onSubmit',
@@ -287,6 +288,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
     if (selectedUsers.length > 0) {
       setUser(selectedUsers[0])
       setValue('chairman_id', selectedUsers[0].id)
+      clearErrors('chairman_id')
     } else {
       setUser(null)
       setValue('chairman_id', '')

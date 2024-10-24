@@ -20,7 +20,7 @@ interface PropTypes {
 export default function SearchUserInput({
   classNames,
   isMultiple,
-  clear,
+  clear = false,
   nonTeachingOnly,
   teachingOnly,
   handleSelectedUsers,
@@ -88,6 +88,9 @@ export default function SearchUserInput({
 
   useEffect(() => {
     // setSelectedItems([]) //commented this as it will cause problem on edit modals
+    if (clear) {
+      setSelectedItems([])
+    }
   }, [clear])
 
   return (
