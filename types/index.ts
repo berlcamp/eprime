@@ -73,6 +73,14 @@ export interface PositionTypes {
   type: string
   salary_grade: string
   org_id: string
+  qualifications: Array<{ id?: string; name: string; description: string }>
+}
+
+export interface PositionQualificationTypes {
+  id: string
+  name: string
+  description: string
+  position_id: string
 }
 
 export interface ImplementingUnitTypes {
@@ -703,11 +711,13 @@ export interface RankingTypes {
   chairman: Employee
   department: string
   description: string
+  has_qualification_standard: string
+  qualifications: Array<{ id?: string; name: string; description: string }>
   status: string
   display_on_portal: string
   display_on_portal_until: string
+  applicants: ApplicantTypes[]
   confirmed: string
-  qualifications: Array<{ id?: string; name: string }>
 }
 
 export interface RankingQualifications {

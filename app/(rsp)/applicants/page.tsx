@@ -139,7 +139,7 @@ const Page: React.FC = () => {
       <div className="app__main">
         <div>
           <div className="app__title">
-            <Title title="Ranking Applicants" />
+            <Title title="Applicants" />
           </div>
 
           {/* Filters */}

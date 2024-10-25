@@ -28,8 +28,6 @@ const CastPoints = ({
   const [saving, setSaving] = useState(false)
   const [criteriasField, setCriteriasField] = useState<CriteriaFieldsType[]>([])
 
-  console.log('criterias', criterias)
-
   const { setToast } = useFilter()
   const { supabase } = useSupabase()
 

@@ -1,13 +1,9 @@
 import { CustomButton } from '@/components'
+import ApplicantAccumulatedPoints from '@/components/Rsp/ApplicantAccumulatedPoints'
 import ApplicantDetails from '@/components/Rsp/ApplicantDetails'
 import { useSupabase } from '@/context/SupabaseProvider'
-import {
-  ApplicantTypes,
-  RankingCommitteeCriteriaTypes,
-  RankingCommitteeTypes
-} from '@/types'
+import { ApplicantTypes } from '@/types'
 import { useEffect, useState } from 'react'
-import CastPoints from './CastPoints'
 import CommitteePointsModal from './CommitteePointsModal'
 
 interface ModalProps {
@@ -17,32 +13,19 @@ interface ModalProps {
 
 const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
   const [showQualificationsModal, setShowQualificationsModal] = useState(false)
-  const [showCastPointsModal, setShowCastPointsModal] = useState(false)
   const [showCommitteePointsModal, setShowCommitteePointsModal] =
     useState(false)
-  const [selectedId, setSelectedId] = useState('')
+
   const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
-  const [refetch, setRefetch] = useState(false)
-
-  // use for Cast Points modal
-  const [commiteeId, setCommitteeId] = useState('')
-  const [criterias, setCriterias] = useState<
-    RankingCommitteeCriteriaTypes[] | []
-  >([])
-
-  const [canCastPoints, setCanCastPoints] = useState(false)
 
   const [list, setList] = useState<ApplicantTypes[] | []>([])
-  const { supabase, session } = useSupabase()
+  const { supabase } = useSupabase()
 
   const handleViewQualifications = (item: ApplicantTypes) => {
     setShowQualificationsModal(true)
     setSelectedItem(item)
   }
-  const handleCastPoints = (id: string) => {
-    setShowCastPointsModal(true)
-    setSelectedId(id)
-  }
+
   const handleViewCommitteePoints = (item: ApplicantTypes) => {
     setShowCommitteePointsModal(true)
     setSelectedItem(item)
@@ -58,32 +41,8 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
       setList(data)
     }
 
-    // find if logged in user belongs to any criteria
-    const fetchCommitteeCriteriasData = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_committees')
-        .select(
-          '*,committee_criterias:hrm_ranking_committee_criterias(*,criteria:criteria_id(*),criteria_points:hrm_ranking_applicant_points(*))'
-        )
-        .eq('ranking_id', rankingId)
-        .eq('user_id', session.user.id)
-        .maybeSingle()
-
-      const committeeData: RankingCommitteeTypes = data
-
-      if (
-        committeeData?.committee_criterias &&
-        committeeData?.committee_criterias.length > 0
-      ) {
-        setCommitteeId(committeeData.id)
-        setCriterias(committeeData.committee_criterias)
-        setCanCastPoints(true)
-      }
-    }
-
     void fetchApplicantsData()
-    void fetchCommitteeCriteriasData()
-  }, [refetch])
+  }, [])
 
   return (
     <>
@@ -91,7 +50,7 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
         <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
-              <h5 className="app__modal_header_text">Ranking Details</h5>
+              <h5 className="app__modal_header_text">Applicants</h5>
               <CustomButton
                 containerStyles="app__btn_gray"
                 title="Close"
@@ -105,6 +64,7 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                 <thead className="app__thead">
                   <tr>
                     <th className="app__th">Applicant</th>
+                    <th className="app__th">Accumulated Points</th>
                     <th className="app__th"></th>
                   </tr>
                 </thead>
@@ -128,6 +88,10 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                             </div>
                           )}
                         </th>
+
+                        <td>
+                          <ApplicantAccumulatedPoints applicantData={item} />
+                        </td>
                         <td className="app__td">
                           <div className="space-x-2">
                             <CustomButton
@@ -144,14 +108,6 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                                 handleViewCommitteePoints(item)
                               }
                             />
-                            {canCastPoints && (
-                              <CustomButton
-                                containerStyles="app__btn_blue_xs"
-                                title="Cast Points"
-                                btnType="button"
-                                handleClick={() => handleCastPoints(item.id)}
-                              />
-                            )}
                           </div>
                         </td>
                       </tr>
@@ -167,16 +123,6 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
         <ApplicantDetails
           applicantData={selectedItem}
           hideModal={() => setShowQualificationsModal(false)}
-        />
-      )}
-      {/* Show Cast Points Modal */}
-      {showCastPointsModal && (
-        <CastPoints
-          committeeId={commiteeId}
-          criterias={criterias}
-          refetch={() => setRefetch(!refetch)}
-          applicantId={selectedId}
-          hideModal={() => setShowCastPointsModal(false)}
         />
       )}
       {/* Show Casted Points Modal */}

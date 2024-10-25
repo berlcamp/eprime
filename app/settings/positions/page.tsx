@@ -1,24 +1,39 @@
 'use client'
 
+import {
+  CustomButton,
+  DeleteModal,
+  PerPage,
+  SettingsSideBar,
+  ShowMore,
+  Sidebar,
+  TableRowLoading,
+  Title,
+  TopBar
+} from '@/components'
 import { fetchPositions } from '@/utils/fetchApi'
-import React, { Fragment, useEffect, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, TrashIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
-import { Sidebar, PerPage, TopBar, DeleteModal, TableRowLoading, CustomButton, ShowMore, SettingsSideBar, Title } from '@/components'
-import AddEditModal from './AddEditModal'
+import {
+  ChevronDownIcon,
+  PencilSquareIcon,
+  TrashIcon
+} from '@heroicons/react/20/solid'
+import React, { Fragment, useEffect, useState } from 'react'
 import uuid from 'react-uuid'
+import AddEditModal from './AddEditModal'
 import Filters from './Filters'
 
 // Types
 import type { PositionTypes } from '@/types'
 
 // Redux imports
-import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { useDispatch, useSelector } from 'react-redux'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
+  const [refetch, setRefetch] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedId, setSelectedId] = useState<string>('')
@@ -42,7 +57,12 @@ const Page: React.FC = () => {
       dispatch(updateList(result.data))
 
       // Updating showing text in redux
-      dispatch(updateResultCounter({ showing: result.data.length, results: result.count ? result.count : 0 }))
+      dispatch(
+        updateResultCounter({
+          showing: result.data.length,
+          results: result.count ? result.count : 0
+        })
+      )
     } catch (e) {
       console.error(e)
     } finally {
@@ -55,14 +75,23 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchPositions(filterKeyword, perPageCount, list.length)
+      const result = await fetchPositions(
+        filterKeyword,
+        perPageCount,
+        list.length
+      )
 
       // update the list in redux
       const newList = [...list, ...result.data]
       dispatch(updateList(newList))
 
       // Updating showing text in redux
-      dispatch(updateResultCounter({ showing: newList.length, results: result.count ? result.count : 0 }))
+      dispatch(
+        updateResultCounter({
+          showing: newList.length,
+          results: result.count ? result.count : 0
+        })
+      )
     } catch (e) {
       console.error(e)
     } finally {
@@ -94,34 +123,32 @@ const Page: React.FC = () => {
   useEffect(() => {
     setList([])
     void fetchData()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, perPageCount])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refetch, filterKeyword, perPageCount])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
   return (
     <>
-    <Sidebar>
-      <SettingsSideBar/>
-    </Sidebar>
-    <TopBar/>
-    <div className="app__main">
-      <div>
-          <div className='app__title'>
-            <Title title='Positions'/>
+      <Sidebar>
+        <SettingsSideBar />
+      </Sidebar>
+      <TopBar />
+      <div className="app__main">
+        <div>
+          <div className="app__title">
+            <Title title="Positions" />
             <CustomButton
-              containerStyles='app__btn_green'
-              title='Add New Position'
-              btnType='button'
+              containerStyles="app__btn_green"
+              title="Add New Position"
+              btnType="button"
               handleClick={handleAdd}
             />
           </div>
 
           {/* Filters */}
-          <div className='app__filters'>
-            <Filters
-              setFilterKeyword={setFilterKeyword}
-            />
+          <div className="app__filters">
+            <Filters setFilterKeyword={setFilterKeyword} />
           </div>
 
           {/* Per Page */}
@@ -129,37 +156,32 @@ const Page: React.FC = () => {
             showingCount={resultsCounter.showing}
             resultsCount={resultsCounter.results}
             perPageCount={perPageCount}
-            setPerPageCount={setPerPageCount}/>
+            setPerPageCount={setPerPageCount}
+          />
 
           {/* Main Content */}
           <div>
             <table className="app__table">
               <thead className="app__thead">
-                  <tr>
-                      <th className="hidden md:table-cell app__th pl-4"></th>
-                      <th className="hidden md:table-cell app__th">
-                          Position
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Type
-                      </th>
-                      <th className="hidden md:table-cell app__th">
-                          Salary Grade
-                      </th>
-                  </tr>
+                <tr>
+                  <th className="hidden md:table-cell app__th pl-4"></th>
+                  <th className="hidden md:table-cell app__th">Position</th>
+                  <th className="hidden md:table-cell app__th">Type</th>
+                  <th className="hidden md:table-cell app__th">Salary Grade</th>
+                </tr>
               </thead>
               <tbody>
-                {
-                  !isDataEmpty && list.map((item: any) => (
-                    <tr
-                      key={uuid()}
-                      className="app__tr">
-                      <td
-                        className="w-6 pl-4 app__td">
+                {!isDataEmpty &&
+                  list.map((item: any) => (
+                    <tr key={uuid()} className="app__tr">
+                      <td className="w-6 pl-4 app__td">
                         <Menu as="div" className="app__menu_container">
                           <div>
                             <Menu.Button className="app__dropdown_btn">
-                              <ChevronDownIcon className="h-5 w-5" aria-hidden="true" />
+                              <ChevronDownIcon
+                                className="h-5 w-5"
+                                aria-hidden="true"
+                              />
                             </Menu.Button>
                           </div>
 
@@ -176,89 +198,84 @@ const Page: React.FC = () => {
                               <div className="py-1">
                                 <Menu.Item>
                                   <div
-                                      onClick={() => handleEdit(item)}
-                                      className='app__dropdown_item'
-                                    >
-                                      <PencilSquareIcon className='w-4 h-4'/>
-                                      <span>Edit</span>
-                                    </div>
+                                    onClick={() => handleEdit(item)}
+                                    className="app__dropdown_item"
+                                  >
+                                    <PencilSquareIcon className="w-4 h-4" />
+                                    <span>Edit</span>
+                                  </div>
                                 </Menu.Item>
                                 <Menu.Item>
                                   <div
-                                      onClick={ () => handleDelete(item.id) }
-                                      className='app__dropdown_item'
-                                    >
-                                      <TrashIcon className='w-4 h-4'/>
-                                      <span>Delete</span>
-                                    </div>
+                                    onClick={() => handleDelete(item.id)}
+                                    className="app__dropdown_item"
+                                  >
+                                    <TrashIcon className="w-4 h-4" />
+                                    <span>Delete</span>
+                                  </div>
                                 </Menu.Item>
                               </div>
                             </Menu.Items>
                           </Transition>
                         </Menu>
                       </td>
-                      <th
-                        className="app__th_firstcol">
+                      <th className="app__th_firstcol">
                         {item.name}
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">
-                            <span className='font-light'>Salary Grade: {item.salary_grade}</span>
+                            <span className="font-light">
+                              Salary Grade: {item.salary_grade}
+                            </span>
                           </div>
                           <div className="md:hidden app__td">
-                            <span className='font-light'>Type: {item.type}</span>
+                            <span className="font-light">
+                              Type: {item.type}
+                            </span>
                           </div>
                         </div>
                         {/* End - Mobile View */}
-
                       </th>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <span className='font-light'>{item.type}</span>
+                      <td className="hidden md:table-cell app__td">
+                        <span className="font-light">{item.type}</span>
                       </td>
-                      <td
-                        className="hidden md:table-cell app__td">
-                        <span className='font-light'>{item.salary_grade}</span>
+                      <td className="hidden md:table-cell app__td">
+                        <span className="font-light">{item.salary_grade}</span>
                       </td>
                     </tr>
-                  ))
-                }
-                { loading && <TableRowLoading cols={3} rows={2}/> }
+                  ))}
+                {loading && <TableRowLoading cols={4} rows={2} />}
               </tbody>
             </table>
-            {
-              (!loading && isDataEmpty) &&
-                <div className='app__norecordsfound'>No records found.</div>
-            }
+            {!loading && isDataEmpty && (
+              <div className="app__norecordsfound">No records found.</div>
+            )}
           </div>
 
           {/* Show More */}
-          {
-            (resultsCounter.results > resultsCounter.showing && !loading) &&
-              <ShowMore
-                handleShowMore={handleShowMore}/>
-          }
-      </div>
-      {/* Add/Edit Modal */}
-      {
-        showAddModal && (
+          {resultsCounter.results > resultsCounter.showing && !loading && (
+            <ShowMore handleShowMore={handleShowMore} />
+          )}
+        </div>
+        {/* Add/Edit Modal */}
+        {showAddModal && (
           <AddEditModal
+            refetch={() => setRefetch(!refetch)}
             editData={editData}
-            hideModal={() => setShowAddModal(false)}/>
-        )
-      }
+            hideModal={() => setShowAddModal(false)}
+          />
+        )}
 
-      {/* Delete Modal */}
-      {
-        showDeleteModal && (
+        {/* Delete Modal */}
+        {showDeleteModal && (
           <DeleteModal
             id={selectedId}
-            table='hrm_positions'
-            hideModal={() => setShowDeleteModal(false)}/>
-        )
-      }
-    </div>
-  </>
+            table="hrm_positions"
+            hideModal={() => setShowDeleteModal(false)}
+          />
+        )}
+      </div>
+    </>
   )
 }
 export default Page

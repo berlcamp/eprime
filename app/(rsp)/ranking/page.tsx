@@ -195,7 +195,7 @@ const Page: React.FC = () => {
                   <th className="hidden md:table-cell app__th">Position</th>
                   <th className="hidden md:table-cell app__th">Type</th>
                   <th className="hidden md:table-cell app__th">
-                    Display on Portal
+                    Display On Job Postings
                   </th>
                   <th className="hidden md:table-cell app__th">Chairman</th>
                   <th className="hidden md:table-cell app__th">Status</th>
@@ -291,9 +291,9 @@ const Page: React.FC = () => {
                             </div>
                             <div>
                               <span className="app_td_mobile_label">
-                                Display On Portal:
+                                Display On Job Postings:
                               </span>{' '}
-                              {item.display_on_portal ? 'Yes' : 'No'}
+                              {item.display_on_portal === 'Yes' ? 'Yes' : 'No'}
                             </div>
                             <div>
                               <span className="app_td_mobile_label">
@@ -315,7 +315,7 @@ const Page: React.FC = () => {
                         {item.type}
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        {item.display_on_portal ? 'Yes' : 'No'}
+                        {item.display_on_portal === 'Yes' ? 'Yes' : 'No'}
                       </td>
                       <td className="hidden md:table-cell app__td">
                         <UserBlock user={item.chairman} />

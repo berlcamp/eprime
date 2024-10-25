@@ -255,6 +255,7 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
                       <option value="">Choose</option>
                       <option value="Original Member">Original Member</option>
                       <option value="Sub-committee">Sub-committee</option>
+                      <option value="Secretariat">Secretariat</option>
                     </select>
                     {errors.type && (
                       <div className="app__error_message">Type is required</div>

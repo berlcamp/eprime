@@ -14,6 +14,7 @@ export default function Jobs() {
         .from('hrm_rankings')
         .select('*, position:position_id(name)')
         .eq('display_on_portal', 'Yes')
+        .eq('status', 'Open')
 
       setRankings(data)
     }

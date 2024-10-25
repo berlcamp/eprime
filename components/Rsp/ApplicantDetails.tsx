@@ -11,6 +11,7 @@ interface ModalProps {
 
 interface QualificationTypes {
   qualification_name: string
+  qualification_description: string
   documents: Array<{
     id: string
     document_url: string
@@ -26,7 +27,6 @@ const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
   >([])
   const { supabase } = useSupabase()
 
-  console.log('applicantData', applicantData)
   const extractFilename = (url: string) => {
     return url.split('/').pop() // Get the last part of the URL which is the filename
   }
@@ -45,6 +45,7 @@ const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
           if (!acc[qualification_id]) {
             acc[qualification_id] = {
               qualification_name: qualification.name,
+              qualification_description: qualification.description,
               documents: []
             }
           }
@@ -78,6 +79,7 @@ const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
             if (!acc[qualification_id]) {
               acc[qualification_id] = {
                 qualification_name: qualification.name,
+                qualification_description: qualification.description,
                 documents: []
               }
             }
@@ -124,13 +126,23 @@ const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
                   <div className="p-4 bg-gray-50 border space-y-6">
                     {Object.entries(qualification).map(
                       (
-                        [qualificationId, { qualification_name, documents }],
+                        [
+                          qualificationId,
+                          {
+                            qualification_name,
+                            qualification_description,
+                            documents
+                          }
+                        ],
                         index
                       ) => (
                         <div key={qualificationId} className="mb-4">
                           <h3 className="text-gray-700 text-sm font-bold">
                             {index + 1}. {qualification_name}
                           </h3>
+                          <div className="text-xs text-gray-600 mb-2 pl-4">
+                            {qualification_description}
+                          </div>
                           {documents.length > 0 ? (
                             <ul>
                               {documents.map((doc, index) => {
@@ -176,7 +188,11 @@ const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
                           (
                             [
                               qualificationId,
-                              { qualification_name, documents }
+                              {
+                                qualification_name,
+                                qualification_description,
+                                documents
+                              }
                             ],
                             index
                           ) => (
@@ -184,6 +200,9 @@ const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
                               <h3 className="text-gray-700 text-sm font-bold">
                                 {index + 1}. {qualification_name}
                               </h3>
+                              <div className="text-xs text-gray-600 mb-2 pl-4">
+                                {qualification_description}
+                              </div>
                               {documents.length > 0 ? (
                                 <ul>
                                   {documents.map((doc, index) => {
