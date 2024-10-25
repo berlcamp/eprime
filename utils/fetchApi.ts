@@ -685,6 +685,57 @@ export async function fetchRankingApplicants(
   }
 }
 
+export async function fetchReclassificationApplicants(
+  filters: {
+    filterUser?: string
+    filterRanking?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
+  try {
+    let query = supabase
+      .from('hrm_reclassification_applicants')
+      .select(
+        '*, employee:user_id(id,lastname,firstname,middlename,avatar_url),reclassification:reclassification_id(*,position:position_id(*))',
+        {
+          count: 'exact'
+        }
+      )
+
+    // filter ranking
+    if (filters.filterRanking && filters.filterRanking !== '') {
+      query = query.eq('reclassification_id', filters.filterRanking)
+    }
+
+    // filter user
+    if (filters.filterUser && filters.filterUser !== '') {
+      query = query.eq('user_id', filters.filterUser)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch ranking applicants error', error)
+    return { data: [], count: 0 }
+  }
+}
+
 export async function fetchNosi(
   filters: {
     filterUser?: string

@@ -7,37 +7,37 @@ import {
   TableRowLoading,
   Title,
   TopBar,
-  Unauthorized
+  Unauthorized,
+  UserBlock
 } from '@/components'
 import { useFilter } from '@/context/FilterContext'
-import { fetchRankingApplicants } from '@/utils/fetchApi'
+import { fetchReclassificationApplicants } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import React, { Fragment, useEffect, useState } from 'react'
 import Filters from './Filters'
 
 // Types
-import type { ApplicantTypes } from '@/types'
+import type { ReclassificationApplicantTypes } from '@/types'
 
 // Redux imports
-import ApplicantDetails from '@/components/Rsp/ApplicantDetails'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { ArrowUpRight, EyeIcon } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import MoveRanking from './MoveRanking'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showMoveModal, setShowMoveModal] = useState(false)
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
+  const [selectedItem, setSelectedItem] =
+    useState<ReclassificationApplicantTypes | null>(null)
 
-  const [list, setList] = useState<ApplicantTypes[]>([])
-  const [filterKeyword, setFilterKeyword] = useState<string>('')
+  const [list, setList] = useState<ReclassificationApplicantTypes[]>([])
+
   const [filterRanking, setFilterRanking] = useState<string>('')
-
+  const [filterUser, setFilterUser] = useState<string>('')
   const [perPageCount, setPerPageCount] = useState<number>(10)
 
   // Redux staff
@@ -51,8 +51,8 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchRankingApplicants(
-        { filterRanking, filterKeyword },
+      const result = await fetchReclassificationApplicants(
+        { filterRanking, filterUser },
         perPageCount,
         0
       )
@@ -79,8 +79,8 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchRankingApplicants(
-        { filterRanking, filterKeyword },
+      const result = await fetchReclassificationApplicants(
+        { filterRanking, filterUser },
         perPageCount,
         list.length
       )
@@ -103,13 +103,8 @@ const Page: React.FC = () => {
     }
   }
 
-  const handleMoveToRanking = (item: ApplicantTypes) => {
+  const handleMoveToRanking = (item: ReclassificationApplicantTypes) => {
     setShowMoveModal(true)
-    setSelectedItem(item)
-  }
-
-  const handleViewDetails = (item: ApplicantTypes) => {
-    setShowDetailsModal(true)
     setSelectedItem(item)
   }
 
@@ -123,7 +118,7 @@ const Page: React.FC = () => {
     setList([])
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPageCount, filterRanking, filterKeyword])
+  }, [perPageCount, filterRanking, filterUser])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -139,14 +134,14 @@ const Page: React.FC = () => {
       <div className="app__main">
         <div>
           <div className="app__title">
-            <Title title="CAR/RQA Applicants" />
+            <Title title="Reclassification Applicants" />
           </div>
 
           {/* Filters */}
           <div className="app__filters">
             <Filters
               setFilterRanking={setFilterRanking}
-              setFilterKeyword={setFilterKeyword}
+              setFilterUser={setFilterUser}
             />
           </div>
 
@@ -165,13 +160,14 @@ const Page: React.FC = () => {
                 <tr>
                   <th className="hidden md:table-cell app__th pl-4"></th>
                   <th className="hidden md:table-cell app__th">Applicant</th>
-                  <th className="hidden md:table-cell app__th">Ranking</th>
-                  <th className="hidden md:table-cell app__th">Status</th>
+                  <th className="hidden md:table-cell app__th">
+                    Reclassification Ranking
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {!isDataEmpty &&
-                  list.map((item: ApplicantTypes, index) => (
+                  list.map((item: ReclassificationApplicantTypes, index) => (
                     <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td">
                         <Menu as="div" className="app__menu_container">
@@ -204,15 +200,6 @@ const Page: React.FC = () => {
                                     <span>Move to Another Ranking</span>
                                   </div>
                                 </Menu.Item>
-                                <Menu.Item>
-                                  <div
-                                    onClick={() => handleViewDetails(item)}
-                                    className="app__dropdown_item"
-                                  >
-                                    <EyeIcon className="w-4 h-4" />
-                                    <span>View Applicant Details</span>
-                                  </div>
-                                </Menu.Item>
                               </div>
                             </Menu.Items>
                           </Transition>
@@ -220,17 +207,8 @@ const Page: React.FC = () => {
                       </td>
                       <th className="app__th_firstcol">
                         <div className="font-medium">
-                          {item.lastname}, {item.firstname} {item.middlename}
+                          <UserBlock user={item.employee} />
                         </div>
-                        <div className="font-light">{item.email}</div>
-                        {item.current_employee === 'Yes' && (
-                          <div className="font-bold">
-                            (Current DepEd Employee)
-                          </div>
-                        )}
-                        {item.previous_applicant === 'Yes' && (
-                          <div className="font-bold">(Previous Applicant)</div>
-                        )}
 
                         {/* Mobile View */}
                         <div>
@@ -239,23 +217,16 @@ const Page: React.FC = () => {
                               <span className="app_td_mobile_label">
                                 Ranking:
                               </span>{' '}
-                              <span>{item.ranking?.position.name} - </span>
-                            </div>
-                            <div>
-                              <span className="app_td_mobile_label">
-                                Status
-                              </span>{' '}
-                              {item.ranking.status}
+                              <span>
+                                {item.reclassification?.position.name}
+                              </span>
                             </div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
                       </th>
                       <td className="hidden md:table-cell app__td">
-                        {item.ranking.position.name} - {item.ranking.type}
-                      </td>
-                      <td className="hidden md:table-cell app__td">
-                        {item.ranking.status}
+                        {item.reclassification?.position.name}
                       </td>
                     </tr>
                   ))}
@@ -277,14 +248,6 @@ const Page: React.FC = () => {
             <MoveRanking
               applicantData={selectedItem}
               hideModal={() => setShowMoveModal(false)}
-            />
-          )}
-
-          {/* Show Details Modal */}
-          {selectedItem && showDetailsModal && (
-            <ApplicantDetails
-              applicantData={selectedItem}
-              hideModal={() => setShowDetailsModal(false)}
             />
           )}
         </div>

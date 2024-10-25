@@ -10,6 +10,8 @@ interface PropTypes {
 }
 
 const UserBlock = ({ user }: PropTypes) => {
+  if (!user) return
+
   return (
     <div className="flex items-center space-x-1">
       {user.avatar_url && user.avatar_url !== '' ? (

@@ -746,6 +746,28 @@ export interface ApplicantTypes {
   qualifications: Array<{ id?: string; name: string; files: [] }>
 }
 
+export interface ReclassificationTypes {
+  id: string
+  position_id: string
+  position: PositionTypes
+  chairman_id: string
+  chairman: Employee
+  description: string
+  status: string
+  applicants: ReclassificationApplicantTypes[]
+  confirmed: string
+}
+
+export interface ReclassificationApplicantTypes {
+  id: string
+  employee: Employee
+  user_id: string
+  email: string
+  status: string
+  reclassification_id: string
+  reclassification?: ReclassificationTypes
+}
+
 export interface ApplicantDocuments {
   id: string
   ranking_id: string

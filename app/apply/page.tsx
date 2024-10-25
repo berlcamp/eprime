@@ -318,7 +318,7 @@ const Page: React.FC = () => {
             )}
             {!isSuccess && (
               <>
-                <div>
+                <div className="px-4 text-lg text-center uppercase font-semibold text-gray-700">
                   Apply for{' '}
                   <span className="font-bold">{ranking.position.name}</span>
                 </div>
