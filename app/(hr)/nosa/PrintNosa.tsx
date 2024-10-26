@@ -52,16 +52,16 @@ export const PrintNosa = React.forwardRef<
                 </div>
                 <div className="mt-10">
                   <div className="font-bold uppercase">
-                    {selectedItem.hrm_user.lastname},{' '}
-                    {selectedItem.hrm_user.firstname}{' '}
-                    {selectedItem.hrm_user.middlename}
+                    {selectedItem.hrm_user?.lastname},{' '}
+                    {selectedItem.hrm_user?.firstname}{' '}
+                    {selectedItem.hrm_user?.middlename}
                   </div>
                   <div className="hrm_user">
-                    {selectedItem.hrm_user.hrm_positions?.name}
+                    {selectedItem.hrm_user?.hrm_positions?.name}
                   </div>
                   <div className="uppercase">
-                    {selectedItem.hrm_user.hrm_schools?.name}{' '}
-                    {selectedItem.hrm_user.hrm_offices?.name}
+                    {selectedItem.hrm_user?.hrm_schools?.name}{' '}
+                    {selectedItem.hrm_user?.hrm_offices?.name}
                   </div>
                 </div>
 
@@ -221,7 +221,7 @@ export const PrintNosa = React.forwardRef<
             <tr>
               <td colSpan={2} className="text-xs">
                 <div className="mt-4">
-                  Position Title: {selectedItem.hrm_user.hrm_positions?.name}
+                  Position Title: {selectedItem.hrm_user?.hrm_positions?.name}
                 </div>
                 <div>Salary Grade: {selectedItem.new_grade}</div>
                 <div>
@@ -229,7 +229,7 @@ export const PrintNosa = React.forwardRef<
                 </div>
                 <div>
                   And/or Plantilla of Personnel:{' '}
-                  {selectedItem.hrm_user.hrm_item?.item_number}
+                  {selectedItem.hrm_user?.hrm_item?.item_number}
                 </div>
                 <div>Copy Furnished: GSIS, DPSU</div>
               </td>

@@ -1,17 +1,17 @@
 'use client'
+import { OfflinePage } from '@/components'
+import { useSupabase } from '@/context/SupabaseProvider'
+import type { UserAccessTypes } from '@/types'
 import React, { useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useSupabase } from '@/context/SupabaseProvider'
-import { OfflinePage } from '@/components'
-import type { UserAccessTypes } from '@/types'
 
 const FilterContext = React.createContext<any | ''>('')
 
-export function useFilter () {
+export function useFilter() {
   return useContext(FilterContext)
 }
 
-export function FilterProvider ({ children }: { children: React.ReactNode }) {
+export function FilterProvider({ children }: { children: React.ReactNode }) {
   const { systemAccess, session } = useSupabase()
   const [isOnline, setIsOnline] = useState(true)
   const [filters, setFilters] = useState({})
@@ -30,7 +30,9 @@ export function FilterProvider ({ children }: { children: React.ReactNode }) {
 
   const hasAccess = (type: string) => {
     const find = systemAccess.find((item: UserAccessTypes) => {
-      return item.type === type && item.hrm_user.id.toString() === session.user.id
+      return (
+        item.type === type && item.hrm_user?.id.toString() === session.user.id
+      )
     })
 
     if (find) {
@@ -41,11 +43,11 @@ export function FilterProvider ({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    function handleOnlineStatus () {
+    function handleOnlineStatus() {
       setIsOnline(true)
     }
 
-    function handleOfflineStatus () {
+    function handleOfflineStatus() {
       setIsOnline(false)
     }
 
@@ -73,12 +75,15 @@ export function FilterProvider ({ children }: { children: React.ReactNode }) {
   }
 
   return (
-      <FilterContext.Provider value={value}>
-          {
-            !isOnline
-              ? <><OfflinePage/><div className='pointer-events-none'>{children}</div></>
-              : children
-          }
-      </FilterContext.Provider>
+    <FilterContext.Provider value={value}>
+      {!isOnline ? (
+        <>
+          <OfflinePage />
+          <div className="pointer-events-none">{children}</div>
+        </>
+      ) : (
+        children
+      )}
+    </FilterContext.Provider>
   )
 }

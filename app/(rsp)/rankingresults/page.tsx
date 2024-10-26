@@ -167,7 +167,7 @@ const Page: React.FC = () => {
                   list.map((item: RankingTypes, index) => (
                     <tr key={index} className="app__tr">
                       <td className="pl-4 app__td">
-                        {item.position.name}
+                        {item.position?.name}
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td_mobile">
@@ -176,7 +176,7 @@ const Page: React.FC = () => {
                                 Position:
                               </span>{' '}
                               {item.position && (
-                                <span>{item.position.name}</span>
+                                <span>{item.position?.name}</span>
                               )}
                             </div>
                             <div>

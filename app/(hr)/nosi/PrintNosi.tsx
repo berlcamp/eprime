@@ -52,16 +52,16 @@ export const PrintNosi = React.forwardRef<
                 </div>
                 <div className="mt-10">
                   <div className="font-bold uppercase">
-                    {selectedItem.hrm_user.lastname},{' '}
-                    {selectedItem.hrm_user.firstname}{' '}
-                    {selectedItem.hrm_user.middlename}
+                    {selectedItem.hrm_user?.lastname},{' '}
+                    {selectedItem.hrm_user?.firstname}{' '}
+                    {selectedItem.hrm_user?.middlename}
                   </div>
                   <div className="hrm_user">
-                    {selectedItem.hrm_user.hrm_positions?.name}
+                    {selectedItem.hrm_user?.hrm_positions?.name}
                   </div>
                   <div className="uppercase">
-                    {selectedItem.hrm_user.hrm_schools?.name}{' '}
-                    {selectedItem.hrm_user.hrm_offices?.name}
+                    {selectedItem.hrm_user?.hrm_schools?.name}{' '}
+                    {selectedItem.hrm_user?.hrm_offices?.name}
                   </div>
                 </div>
 
@@ -73,8 +73,8 @@ export const PrintNosi = React.forwardRef<
                   dated September 3, 2012 implementing item (4) (d) of the
                   Senate of the House of Representatives Joint Resolution No. 4,
                   s. 2009, approved on June 17, 2009, your salary as{' '}
-                  {selectedItem.hrm_user.hrm_positions?.name} is hereby adjusted
-                  effective{' '}
+                  {selectedItem.hrm_user?.hrm_positions?.name} is hereby
+                  adjusted effective{' '}
                   <span className="font-bold underline">
                     {format(
                       new Date(selectedItem.effective_date),
@@ -216,7 +216,7 @@ export const PrintNosi = React.forwardRef<
                 </div>
                 <div>
                   And/or Plantilla of Personnel:{' '}
-                  {selectedItem.hrm_user.hrm_item?.item_number}
+                  {selectedItem.hrm_user?.hrm_item?.item_number}
                 </div>
                 <div>Copy Furnished: GSIS, DPSU</div>
               </td>

@@ -32,21 +32,7 @@ const RspSidebar = () => {
                   }`}
                 >
                   <span className="flex-1 ml-3 whitespace-nowrap">
-                    CAR/RQA Applicants
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/reclassificationapplicants"
-                  className={`app__menu_link ${
-                    currentRoute === '/reclassificationapplicants'
-                      ? 'app_menu_link_active'
-                      : ''
-                  }`}
-                >
-                  <span className="flex-1 ml-3 whitespace-nowrap">
-                    Reclassification Applicants
+                    Applicants
                   </span>
                 </Link>
               </li>
@@ -65,23 +51,7 @@ const RspSidebar = () => {
                     currentRoute === '/ranking' ? 'app_menu_link_active' : ''
                   }`}
                 >
-                  <span className="flex-1 ml-3 whitespace-nowrap">
-                    CAR/RQA Ranking
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#"
-                  className={`app__menu_link ${
-                    currentRoute === '/reclassificationranking'
-                      ? 'app_menu_link_active'
-                      : ''
-                  }`}
-                >
-                  <span className="flex-1 ml-3 whitespace-nowrap">
-                    Reclassification Ranking
-                  </span>
+                  <span className="flex-1 ml-3 whitespace-nowrap">Ranking</span>
                 </Link>
               </li>
             </ul>

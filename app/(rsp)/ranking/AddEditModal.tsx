@@ -341,6 +341,9 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                           <option value="">Choose Type</option>
                           <option value="CAR-RQA">CAR-RQA</option>
                           <option value="CAR">CAR</option>
+                          <option value="Reclassification">
+                            Reclassification
+                          </option>
                         </select>
                         {errors.type && (
                           <div className="app__error_message">
@@ -357,7 +360,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                         {editData && editData.applicants.length > 0 ? (
                           <>
                             <div className="app__label_value">
-                              {editData.position.name}
+                              {editData.position?.name}
                             </div>
                             <div className="app__warning_text !mx-0">
                               Position can no longer be edited as there are

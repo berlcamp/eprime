@@ -186,8 +186,8 @@ export default function ChooseUsers({
             {selectedManagers.map((item: UserAccessTypes) => (
               <div key={uuid()} className="mb-1 inline-flex">
                 <span className="inline-flex items-center text-sm  border border-gray-400 rounded-sm px-1 bg-gray-300">
-                  {item.hrm_user.firstname} {item.hrm_user.middlename}{' '}
-                  {item.hrm_user.lastname}
+                  {item.hrm_user?.firstname} {item.hrm_user?.middlename}{' '}
+                  {item.hrm_user?.lastname}
                   <XMarkIcon
                     onClick={() => handleRemoveSelected(item.user_id)}
                     className="w-4 h-4 ml-2 cursor-pointer"

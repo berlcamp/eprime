@@ -1,44 +1,52 @@
 'use client'
 
 import {
+  CustomButton,
   PerPage,
   ShowMore,
   Sidebar,
   TableRowLoading,
   Title,
   TopBar,
-  Unauthorized
+  Unauthorized,
+  UserBlock
 } from '@/components'
 import { useFilter } from '@/context/FilterContext'
-import { fetchRankingApplicants } from '@/utils/fetchApi'
+import { fetchRankings } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { ChevronDownIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
 import React, { Fragment, useEffect, useState } from 'react'
+import AddEditModal from './AddEditModal'
 import Filters from './Filters'
 
 // Types
-import type { ApplicantTypes } from '@/types'
+import type { RankingTypes } from '@/types'
 
 // Redux imports
-import ApplicantDetails from '@/components/Rsp/ApplicantDetails'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { ArrowUpRight, EyeIcon } from 'lucide-react'
+import { TableIcon, User2Icon, UsersIcon } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
-import MoveRanking from './MoveRanking'
+import RankingApplicants from './RankingApplicants'
+import RankingCommittees from './RankingCommittees'
+import RankingCriterias from './RankingCriterias'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
-  const [showMoveModal, setShowMoveModal] = useState(false)
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showApplicantsModal, setShowApplicantsModal] = useState(false)
+  const [showCriteriasModal, setShowCriteriasModal] = useState(false)
+  const [showCommitteesModal, setShowCommitteesModal] = useState(false)
+  const [selectedId, setSelectedId] = useState('')
+  const [refetch, setRefetch] = useState(false)
 
-  const [list, setList] = useState<ApplicantTypes[]>([])
-  const [filterKeyword, setFilterKeyword] = useState<string>('')
-  const [filterRanking, setFilterRanking] = useState<string>('')
+  const [list, setList] = useState<RankingTypes[]>([])
+  const [filterPosition, setFilterPosition] = useState<string>('')
+  const [filterStatus, setFilterStatus] = useState<string>('')
 
   const [perPageCount, setPerPageCount] = useState<number>(10)
+  const [editData, setEditData] = useState<RankingTypes | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -51,8 +59,8 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchRankingApplicants(
-        { filterRanking, filterKeyword },
+      const result = await fetchRankings(
+        { filterStatus, filterPosition },
         perPageCount,
         0
       )
@@ -79,8 +87,8 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchRankingApplicants(
-        { filterRanking, filterKeyword },
+      const result = await fetchRankings(
+        { filterStatus, filterPosition },
         perPageCount,
         list.length
       )
@@ -103,14 +111,28 @@ const Page: React.FC = () => {
     }
   }
 
-  const handleMoveToRanking = (item: ApplicantTypes) => {
-    setShowMoveModal(true)
-    setSelectedItem(item)
+  const handleAdd = () => {
+    setShowAddModal(true)
+    setEditData(null)
   }
 
-  const handleViewDetails = (item: ApplicantTypes) => {
-    setShowDetailsModal(true)
-    setSelectedItem(item)
+  const handleEdit = (item: RankingTypes) => {
+    setShowAddModal(true)
+    setEditData(item)
+  }
+  const handleViewApplicants = (id: string) => {
+    setShowApplicantsModal(true)
+    setSelectedId(id)
+  }
+
+  const handleViewCriterias = (id: string) => {
+    setShowCriteriasModal(true)
+    setSelectedId(id)
+  }
+
+  const handleViewCommittees = (id: string) => {
+    setShowCommitteesModal(true)
+    setSelectedId(id)
   }
 
   // Update list whenever list in redux updates
@@ -123,7 +145,7 @@ const Page: React.FC = () => {
     setList([])
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPageCount, filterRanking, filterKeyword])
+  }, [refetch, perPageCount, filterPosition, filterStatus])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -139,14 +161,20 @@ const Page: React.FC = () => {
       <div className="app__main">
         <div>
           <div className="app__title">
-            <Title title="Applicants" />
+            <Title title="Ranking" />
+            <CustomButton
+              containerStyles="app__btn_green"
+              title="Create New Ranking"
+              btnType="button"
+              handleClick={handleAdd}
+            />
           </div>
 
           {/* Filters */}
           <div className="app__filters">
             <Filters
-              setFilterRanking={setFilterRanking}
-              setFilterKeyword={setFilterKeyword}
+              setFilterStatus={setFilterStatus}
+              setFilterPosition={setFilterPosition}
             />
           </div>
 
@@ -164,15 +192,18 @@ const Page: React.FC = () => {
               <thead className="app__thead">
                 <tr>
                   <th className="hidden md:table-cell app__th pl-4"></th>
-                  <th className="hidden md:table-cell app__th">Applicant</th>
+                  <th className="hidden md:table-cell app__th">Position</th>
                   <th className="hidden md:table-cell app__th">Type</th>
-                  <th className="hidden md:table-cell app__th">Ranking</th>
+                  <th className="hidden md:table-cell app__th">
+                    Display On Job Postings
+                  </th>
+                  <th className="hidden md:table-cell app__th">Chairman</th>
                   <th className="hidden md:table-cell app__th">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {!isDataEmpty &&
-                  list.map((item: ApplicantTypes, index) => (
+                  list.map((item: RankingTypes, index) => (
                     <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td">
                         <Menu as="div" className="app__menu_container">
@@ -198,20 +229,42 @@ const Page: React.FC = () => {
                               <div className="py-1">
                                 <Menu.Item>
                                   <div
-                                    onClick={() => handleMoveToRanking(item)}
+                                    onClick={() => handleViewCriterias(item.id)}
                                     className="app__dropdown_item"
                                   >
-                                    <ArrowUpRight className="w-4 h-4" />
-                                    <span>Move to Another Ranking</span>
+                                    <TableIcon className="w-4 h-4" />
+                                    <span>Manage Criterias</span>
                                   </div>
                                 </Menu.Item>
                                 <Menu.Item>
                                   <div
-                                    onClick={() => handleViewDetails(item)}
+                                    onClick={() =>
+                                      handleViewCommittees(item.id)
+                                    }
                                     className="app__dropdown_item"
                                   >
-                                    <EyeIcon className="w-4 h-4" />
-                                    <span>View Applicant Details</span>
+                                    <UsersIcon className="w-4 h-4" />
+                                    <span>Manage Committees</span>
+                                  </div>
+                                </Menu.Item>
+                                <Menu.Item>
+                                  <div
+                                    onClick={() =>
+                                      handleViewApplicants(item.id)
+                                    }
+                                    className="app__dropdown_item"
+                                  >
+                                    <User2Icon className="w-4 h-4" />
+                                    <span>View Applicants</span>
+                                  </div>
+                                </Menu.Item>
+                                <Menu.Item>
+                                  <div
+                                    onClick={() => handleEdit(item)}
+                                    className="app__dropdown_item"
+                                  >
+                                    <PencilSquareIcon className="w-4 h-4" />
+                                    <span>Edit Details</span>
                                   </div>
                                 </Menu.Item>
                               </div>
@@ -220,60 +273,59 @@ const Page: React.FC = () => {
                         </Menu>
                       </td>
                       <th className="app__th_firstcol">
-                        <div className="font-medium">
-                          {item.lastname}, {item.firstname} {item.middlename}
-                        </div>
-                        <div className="font-light">{item.email}</div>
-                        {item.current_employee === 'Yes' && (
-                          <div className="font-bold">
-                            (Current DepEd Employee)
-                          </div>
-                        )}
-                        {item.previous_applicant === 'Yes' && (
-                          <div className="font-bold">(Previous Applicant)</div>
-                        )}
-
+                        <div className="font-medium">{item.position?.name}</div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td_mobile">
                             <div>
+                              <span className="app_td_mobile_label">
+                                Position:
+                              </span>{' '}
+                              {item.position && (
+                                <span>{item.position?.name}</span>
+                              )}
+                            </div>
+                            <div>
                               <span className="app_td_mobile_label">Type:</span>{' '}
-                              <span>
-                                {item.type === 'Reclassification'
-                                  ? 'Reclassification'
-                                  : item.ranking?.type}
-                              </span>
+                              {item.type}
                             </div>
                             <div>
                               <span className="app_td_mobile_label">
-                                Ranking:
+                                Display On Job Postings:
                               </span>{' '}
-                              <span>{item.ranking?.position?.name}</span>
+                              {item.display_on_portal === 'Yes' ? 'Yes' : 'No'}
                             </div>
                             <div>
                               <span className="app_td_mobile_label">
-                                Status
+                                Chairman:
                               </span>{' '}
-                              {item.ranking?.status}
+                              <UserBlock user={item.chairman} />
+                            </div>
+                            <div>
+                              <span className="app_td_mobile_label">
+                                Status:
+                              </span>{' '}
+                              {item.status}
                             </div>
                           </div>
                         </div>
                         {/* End - Mobile View */}
                       </th>
                       <td className="hidden md:table-cell app__td">
-                        {item.type === 'Reclassification'
-                          ? 'Reclassification'
-                          : item.ranking?.type}
+                        {item.type}
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        {item.ranking?.position?.name}
+                        {item.display_on_portal === 'Yes' ? 'Yes' : 'No'}
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        {item.ranking?.status}
+                        <UserBlock user={item.chairman} />
+                      </td>
+                      <td className="hidden md:table-cell app__td">
+                        {item.status}
                       </td>
                     </tr>
                   ))}
-                {loading && <TableRowLoading cols={4} rows={2} />}
+                {loading && <TableRowLoading cols={6} rows={2} />}
               </tbody>
             </table>
             {!loading && isDataEmpty && (
@@ -285,24 +337,38 @@ const Page: React.FC = () => {
           {resultsCounter.results > resultsCounter.showing && !loading && (
             <ShowMore handleShowMore={handleShowMore} />
           )}
-
-          {/* Show Criterias Modal */}
-          {selectedItem && showMoveModal && (
-            <MoveRanking
-              applicantData={selectedItem}
-              hideModal={() => setShowMoveModal(false)}
-            />
-          )}
-
-          {/* Show Details Modal */}
-          {selectedItem && showDetailsModal && (
-            <ApplicantDetails
-              applicantData={selectedItem}
-              hideModal={() => setShowDetailsModal(false)}
-            />
-          )}
         </div>
       </div>
+
+      {/* Add/Edit Modal */}
+      {showAddModal && (
+        <AddEditModal
+          refetch={() => setRefetch(!refetch)}
+          editData={editData}
+          hideModal={() => setShowAddModal(false)}
+        />
+      )}
+      {/* Show Applicants Modal */}
+      {showApplicantsModal && (
+        <RankingApplicants
+          rankingId={selectedId}
+          hideModal={() => setShowApplicantsModal(false)}
+        />
+      )}
+      {/* Show Criterias Modal */}
+      {showCriteriasModal && (
+        <RankingCriterias
+          rankingId={selectedId}
+          hideModal={() => setShowCriteriasModal(false)}
+        />
+      )}
+      {/* Show Criterias Modal */}
+      {showCommitteesModal && (
+        <RankingCommittees
+          rankingId={selectedId}
+          hideModal={() => setShowCommitteesModal(false)}
+        />
+      )}
     </>
   )
 }

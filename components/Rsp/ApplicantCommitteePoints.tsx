@@ -57,8 +57,8 @@ const ApplicantCommitteePoints = ({ applicantData }: PropTypes) => {
               <tr key={i}>
                 <td className="app__td">
                   <span className="font-bold">
-                    {item.hrm_user.lastname}, {item.hrm_user.firstname}{' '}
-                    {item.hrm_user.middlename}{' '}
+                    {item.hrm_user?.lastname}, {item.hrm_user?.firstname}{' '}
+                    {item.hrm_user?.middlename}{' '}
                   </span>
                   <span>({item.type})</span>
                 </td>

@@ -97,11 +97,14 @@ const MoveRanking = ({ hideModal, applicantData }: ModalProps) => {
 
   useEffect(() => {
     const fetchRankings = async () => {
-      const { data } = await supabase
+      let query = supabase
         .from('hrm_rankings')
         .select('*,position:position_id(name)')
         .eq('status', 'Open')
-        .neq('id', applicantData.ranking_id)
+      if (applicantData.ranking_id) {
+        query = query.neq('id', applicantData.ranking_id)
+      }
+      const { data } = await query
       if (data) {
         setRankings(data)
       }
@@ -142,7 +145,7 @@ const MoveRanking = ({ hideModal, applicantData }: ModalProps) => {
                       {rankings.length > 0 &&
                         rankings.map((ranking) => (
                           <option key={ranking.id} value={ranking.id}>
-                            {ranking.type} - {ranking.position.name}
+                            {ranking.type} - {ranking.position?.name}
                           </option>
                         ))}
                     </select>

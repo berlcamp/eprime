@@ -400,7 +400,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
         .update({
           item_id: null
         })
-        .eq('id', editData.hrm_user.id)
+        .eq('id', editData.hrm_user?.id)
 
       if (error2) {
         void logError(

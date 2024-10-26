@@ -46,18 +46,24 @@ const Page: React.FC = () => {
   const handleCreate = async () => {
     const newData = {
       user_id: applicantDetails?.id,
-      email: watchedDepedEmail
+      lastname: applicantDetails?.lastname,
+      firstname: applicantDetails?.lastname,
+      middlename: applicantDetails?.lastname,
+      type: 'Reclassification',
+      current_employee: 'Yes',
+      email: watchedDepedEmail,
+      deped_email: watchedDepedEmail
     }
 
     try {
       const { error } = await supabase
-        .from('hrm_reclassification_applicants')
+        .from('hrm_ranking_applicants')
         .insert(newData)
 
       if (error) {
         void logError(
           'Reclassification application',
-          'hrm_reclassification_applicants',
+          'hrm_ranking_applicants',
           JSON.stringify(newData),
           error.message
         )
@@ -82,13 +88,13 @@ const Page: React.FC = () => {
 
     // search if user has existing active application
     const { data: existingApplicant } = await supabase
-      .from('hrm_reclassification_applicants')
+      .from('hrm_ranking_applicants')
       .select()
       .eq('email', watchedDepedEmail)
+      .eq('type', 'Reclassification')
       .eq('status', 'Active')
-      .maybeSingle()
 
-    if (existingApplicant) {
+    if (existingApplicant && existingApplicant.length > 0) {
       setSearching(false)
       setDoneSearch(true)
       setApplicantExist(true)
@@ -197,7 +203,7 @@ const Page: React.FC = () => {
                 </div>
                 <div className="app__modal_footer">
                   <button type="submit" className="app__btn_green_sm">
-                    {saving ? 'Saving..' : 'Submit'}
+                    {saving ? 'Submiting..' : 'Apply Now'}
                   </button>
                 </div>
               </form>

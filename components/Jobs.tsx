@@ -29,7 +29,7 @@ export default function Jobs() {
           <div key={index} className="flex items-start text-sm space-x-4 mb-8">
             <div>{index + 1}.</div>
             <div className="flex flex-col space-y-1">
-              <div className="font-bold">{item.position.name}</div>
+              <div className="font-bold">{item.position?.name}</div>
               <div>{item.description}</div>
               <div className="pt-2">
                 <Link href={`/apply?ref=${item.id}`} className="app__btn_green">

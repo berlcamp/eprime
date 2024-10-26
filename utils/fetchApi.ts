@@ -685,6 +685,56 @@ export async function fetchRankingApplicants(
   }
 }
 
+export async function fetchReclassifications(
+  filters: {
+    filterPosition?: string
+    filterStatus?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
+  try {
+    let query = supabase
+      .from('hrm_reclassifications')
+      .select(
+        '*, chairman:chairman_id(id,firstname,middlename,lastname,avatar_url),position:position_id(name), applicants:hrm_reclassification_applicants(*)',
+        { count: 'exact' }
+      )
+      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+    // filter position
+    if (filters.filterPosition && filters.filterPosition !== '') {
+      query = query.eq('position_id', filters.filterPosition)
+    }
+
+    // filter status
+    if (filters.filterStatus && filters.filterStatus !== '') {
+      query = query.eq('status', filters.filterStatus)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { data, count }
+  } catch (error) {
+    console.error('fetch reclassifications error', error)
+    return { data: [], count: 0 }
+  }
+}
+
 export async function fetchReclassificationApplicants(
   filters: {
     filterUser?: string

@@ -320,7 +320,7 @@ const Page: React.FC = () => {
               <>
                 <div className="px-4 text-lg text-center uppercase font-semibold text-gray-700">
                   Apply for{' '}
-                  <span className="font-bold">{ranking.position.name}</span>
+                  <span className="font-bold">{ranking.position?.name}</span>
                 </div>
                 <form
                   onSubmit={handleSubmit(onSubmit)}
