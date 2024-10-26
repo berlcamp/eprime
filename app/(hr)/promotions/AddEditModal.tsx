@@ -280,7 +280,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       <option value="">Choose Position</option>
                       {plantillaItems.map((item: ItemTypes, index) => (
                         <option key={index} value={item.id}>
-                          {item.hrm_position.name} - Item No. {item.item_number}
+                          {item.hrm_position?.name} - Item No.{' '}
+                          {item.item_number}
                         </option>
                       ))}
                     </select>

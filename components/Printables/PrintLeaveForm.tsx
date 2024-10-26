@@ -102,7 +102,7 @@ export const PrintLeaveForm = React.forwardRef<
                     <span className="font-bold underline uppercase">
                       {selectedItem.creator.hrm_item ? (
                         <span>
-                          {selectedItem.creator.hrm_item.hrm_position.name}
+                          {selectedItem.creator.hrm_item.hrm_position?.name}
                         </span>
                       ) : (
                         <span>{selectedItem.creator.hrm_positions?.name}</span>

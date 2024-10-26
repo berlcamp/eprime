@@ -129,6 +129,7 @@ export interface Employee {
   org_id: string
   school_id: string
   office_id: string
+  item_id: string
   avatar_url: string
   hrm_schools?: SchoolTypes
   hrm_districts?: DistrictTypes
@@ -141,6 +142,8 @@ export interface Employee {
   joining_date: string
   birthday: string
   date_of_last_promotion: string
+  date_of_next_step_increment: string
+  step_increment_leave_days: string
   date_of_last_designation: string
   confirmed: string
 }
@@ -219,7 +222,7 @@ export interface ItemTypes {
   user_id: string
   position_id: string
   implementing_unit_id?: string
-  implementing_unit: SchoolTypes
+  implementing_unit: ImplementingUnitTypes
   school_id?: string
   hrm_school: SchoolTypes
   hrm_position: PositionTypes

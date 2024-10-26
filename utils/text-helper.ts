@@ -20,6 +20,7 @@ export function fullTextQuery(string: string): string {
 
 export function capitalizeWords(inputString: string) {
   return inputString
+    .toLowerCase()
     .split(' ')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')

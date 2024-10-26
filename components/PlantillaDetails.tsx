@@ -9,6 +9,7 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import {
   fetchImplementingUnits,
   fetchPositions,
+  fetchSalaryGrades,
   fetchSchools,
   logError
 } from '@/utils/fetchApi'
@@ -20,7 +21,9 @@ import type {
   Employee,
   ImplementingUnitTypes,
   ItemTypes,
+  PdsPersonalInfomationTypes,
   PositionTypes,
+  SalaryGradeTypes,
   SchoolTypes,
   namesType
 } from '@/types'
@@ -54,6 +57,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
   const [selectedSchool, setSelectedSchool] = useState('')
   const [selectedPosition, setSelectedPosition] = useState('')
 
+  const [salaryGrades, setSalaryGrades] = useState<SalaryGradeTypes[] | []>([])
   const [schools, setSchools] = useState<SchoolTypes[] | []>([])
   const [positions, setPositions] = useState<PositionTypes[] | []>([])
   const [implementingUnits, setImplementingUnits] = useState<
@@ -73,6 +77,8 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     formState: { errors },
     reset,
     setValue,
+    setError,
+    clearErrors,
     handleSubmit
   } = useForm<ItemTypes>({
     mode: 'onSubmit'
@@ -218,6 +224,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     setSaving(true)
 
     const newData = {
+      user_id: user ? user.id : null,
       position_id: formdata.position_id,
       item_number: formdata.item_number,
       implementing_unit_id: formdata.implementing_unit_id,
@@ -261,7 +268,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       }
 
       if (user) {
-        const { error2 } = await supabase
+        const { error: error2 } = await supabase
           .from('hrm_users')
           .update({
             item_id: editData.id,
@@ -334,21 +341,66 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     return data !== null
   }
 
-  const handleSelectedUsers = (selectedUsers: Employee[]) => {
+  const handleSelectedUsers = async (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
       const selectedUser = selectedUsers[0]
+      if (selectedUser.item_id) {
+        setError('user_id', {
+          type: 'manual',
+          message: 'This employee currently assigned to different plantilla'
+        })
+        return
+      }
+      clearErrors('user_id')
+      // Prepopulate assigned area
       if (selectedUser.school_id) {
         setValue('school_id', selectedUser.school_id)
       }
+      // Prepopulate birthday
       if (selectedUser.birthday) {
         setValue(
           'birthday',
           format(new Date(selectedUser.birthday), 'yyyy-MM-dd')
         )
       }
+      // Prepopulate sex
       setValue('sex', selectedUser.gender)
       setUser(selectedUser)
+
+      // Prepopulate actual and authorized salary
+      const matchingSalaryStepOne = salaryGrades.find(
+        (sg) =>
+          sg.grade.toString() === selectedUser.salary_grade.toString() &&
+          sg.step.toString() === '1'
+      )
+      const matchingSalaryStep = salaryGrades.find(
+        (sg) =>
+          sg.grade.toString() === selectedUser.salary_grade.toString() &&
+          sg.step.toString() === selectedUser.salary_step.toString()
+      )
+      const autorizedSalary = matchingSalaryStepOne
+        ? Number(matchingSalaryStepOne.salary) * 12
+        : ''
+      const actualSalary = matchingSalaryStep
+        ? Number(matchingSalaryStep.salary) * 12
+        : ''
+      setValue('authorized_annual_salary', autorizedSalary.toString())
+      setValue('actual_annual_salary', actualSalary.toString())
+
+      // Prepopulate Tin No
+      const { data } = await supabase
+        .from('hrm_pds')
+        .select()
+        .eq('user_id', selectedUser.id)
+        .limit(1)
+        .maybeSingle()
+
+      if (data) {
+        const pdsData: PdsPersonalInfomationTypes = data
+        setValue('tin_no', pdsData.tin_no)
+      }
     } else {
+      clearErrors('user_id')
       setUser(null)
     }
   }
@@ -486,6 +538,13 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       const result = await fetchImplementingUnits('', 3000, 0)
       setImplementingUnits(result.data.length > 0 ? result.data : [])
     }
+
+    const fetchSalaryGradesData = async () => {
+      const result = await fetchSalaryGrades(999, 0)
+      setSalaryGrades(result.data.length > 0 ? result.data : [])
+    }
+
+    void fetchSalaryGradesData()
     void fetchIus()
     void fetchPositionsData()
     void fetchSchoolsData()
@@ -611,6 +670,11 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           <div className="text-gray-600 italic mt-1">
                             (Leaving blank means this item is Vacant)
                           </div>
+                          {errors.user_id && (
+                            <div className="app__error_message">
+                              {errors.user_id.message}
+                            </div>
+                          )}
                         </>
                       )}
                     </div>

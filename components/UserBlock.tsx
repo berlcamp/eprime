@@ -4,6 +4,7 @@ import Avatar from 'react-avatar'
 
 // types
 import type { Employee } from '@/types'
+import { capitalizeWords } from '@/utils/text-helper'
 
 interface PropTypes {
   user: Employee
@@ -21,8 +22,10 @@ const UserBlock = ({ user }: PropTypes) => {
       ) : (
         <Avatar round={true} size="20" name={user.firstname} />
       )}
-      <div className="font-medium lowercase-except-first">
-        {user.firstname} {user.middlename} {user.lastname}
+      <div className="font-medium">
+        {capitalizeWords(
+          `${user.firstname} ${user.middlename} ${user.lastname}`
+        )}
       </div>
     </div>
   )

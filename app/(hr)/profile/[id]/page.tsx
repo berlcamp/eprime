@@ -10,6 +10,7 @@ import Nosa from '@/components/Nosa/Nosa'
 import Nosi from '@/components/Nosi/Nosi'
 import Pdf from '@/components/Pdf/Pdf'
 import Pds from '@/components/Pds/Pds'
+import Plantilla from '@/components/Profile/Plantilla'
 import ProfileDashboard from '@/components/ProfileDashboard'
 import Promotions from '@/components/Promotions/Promotions'
 import ServiceCredits from '@/components/ServiceCredits/ServiceCredits'
@@ -22,13 +23,14 @@ import { generateReferenceCode } from '@/utils/text-helper'
 import { format } from 'date-fns'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { notFound, useRouter, useSearchParams } from 'next/navigation'
 import { type ChangeEvent, useEffect, useState } from 'react'
 import Avatar from 'react-avatar'
 import { BsCamera } from 'react-icons/bs'
 
 export default function Page({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(false)
+  const [isFound, setIsFound] = useState(true)
   const [userData, setUserData] = useState<Employee | null>(null)
 
   const userId = params.id
@@ -140,19 +142,24 @@ export default function Page({ params }: { params: { id: string } }) {
         const { data, error } = await supabase
           .from('hrm_users')
           .select(
-            '*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))'
+            '*, hrm_schools:school_id(name), hrm_item:item_id(*), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))'
           )
           .eq('id', userId)
           .limit(1)
           .maybeSingle()
 
+        if (data) {
+          setAvatarUrl(data?.avatar_url)
+          setUserData(data)
+          setIsFound(true)
+        } else {
+          setIsFound(false)
+        }
         if (error) throw new Error(error.message)
-
-        setAvatarUrl(data?.avatar_url)
-        setUserData(data)
-        setLoading(false)
       } catch (e) {
         console.error('fetch error: ', e)
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -162,6 +169,10 @@ export default function Page({ params }: { params: { id: string } }) {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  if (!isFound) {
+    notFound()
+  }
 
   return (
     <>
@@ -271,6 +282,18 @@ export default function Page({ params }: { params: { id: string } }) {
                   >
                     <span className="flex-1 ml-3 whitespace-nowrap">
                       Dashboard
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href={`/profile/${userId}?page=plantilla`}
+                    className={`app__profile_menu_link ${
+                      page === 'plantilla' ? 'bg-gray-700' : ''
+                    }`}
+                  >
+                    <span className="flex-1 ml-3 whitespace-nowrap">
+                      Plantilla
                     </span>
                   </Link>
                 </li>
@@ -420,7 +443,9 @@ export default function Page({ params }: { params: { id: string } }) {
         {loading && <TwoColTableLoading />}
         {!loading && (
           <div>
-            {(!page || page === '') && <ProfileDashboard userId={userId} />}
+            {(!page || page === '') && userData && (
+              <ProfileDashboard userId={userId} userData={userData} />
+            )}
             {page && page === 'pds' && (
               <>
                 <div className="app__title">
@@ -455,6 +480,7 @@ export default function Page({ params }: { params: { id: string } }) {
             )}
             {page && page === 'promotions' && <Promotions userId={userId} />}
             {page && page === 'pdf' && <Pdf userId={userId} />}
+            {page && page === 'plantilla' && <Plantilla userId={userId} />}
             {page &&
               page === 'loginsettings' &&
               (superAdmins.includes(session.user.email) ||

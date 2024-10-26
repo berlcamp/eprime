@@ -240,7 +240,7 @@ const Page: React.FC = () => {
                                 Position:
                               </span>{' '}
                               {item.hrm_position && (
-                                <span>{item.hrm_position.name}</span>
+                                <span>{item.hrm_position?.name}</span>
                               )}
                             </div>
                             <div>
@@ -285,7 +285,7 @@ const Page: React.FC = () => {
                         )}
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        <span>{item.hrm_position.name}</span>
+                        <span>{item.hrm_position?.name}</span>
                       </td>
                       <td className="hidden md:table-cell app__td">
                         {item.implementing_unit?.name}

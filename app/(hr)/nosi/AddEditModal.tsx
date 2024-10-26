@@ -11,6 +11,7 @@ import type { Employee, NosiTypes, SalaryGradeTypes } from '@/types'
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { nosiSideEffects } from '@/utils/sideEffectFunctions'
 import { format, subDays } from 'date-fns'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -114,6 +115,17 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         )
         throw new Error(error.message)
       }
+
+      const { status, error: error2 } = await nosiSideEffects(data[0])
+      if (error2) {
+        void logError(
+          'Nosi side effects',
+          'hrm_nosi',
+          JSON.stringify(error2),
+          JSON.stringify(error2)
+        )
+      }
+      console.log('status', status)
 
       const updatedData = {
         ...newData,

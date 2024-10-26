@@ -33,6 +33,7 @@ import type {
   PositionTypes,
   SchoolTypes
 } from '@/types'
+import { format, isValid, parseISO } from 'date-fns'
 import Link from 'next/link'
 import CustomButton from './CustomButton'
 import PlantillaDetails from './PlantillaDetails'
@@ -86,10 +87,13 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
     register,
     formState: { errors },
     reset,
-    handleSubmit
+    handleSubmit,
+    watch
   } = useForm<Employee>({
     mode: 'onSubmit'
   })
+
+  const watchedSalaryStep = watch('salary_step')
 
   const onSubmit = async (formdata: Employee) => {
     if (loading || saving) return
@@ -122,6 +126,10 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         position_id: formdata.position_id ? formdata.position_id : null,
         salary_grade: formdata.salary_grade,
         salary_step: formdata.salary_step,
+        date_of_next_step_increment:
+          formdata.salary_step.toString() !== '8'
+            ? formdata.date_of_next_step_increment
+            : null, // no more next increment if step = 8,
         position_type: formdata.position_type
         // joining date and date of last promotion has been remove as it is manage on plantilla item
         // date_of_last_promotion: formdata.date_of_last_promotion
@@ -277,7 +285,10 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
           position_id: data ? data.position_id : '',
           position_type: data ? data.position_type : '',
           salary_grade: data ? data.salary_grade : '',
-          salary_step: data ? data.salary_step : ''
+          salary_step: data ? data.salary_step : '',
+          date_of_next_step_increment: data
+            ? data.date_of_next_step_increment
+            : ''
           // joining date and date of last promotion has been remove as it is manage on plantilla item
           // joining_date: data?.joining_date ? data.joining_date : '',
           // date_of_last_promotion: data?.date_of_last_promotion
@@ -763,7 +774,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                             <div>
                               <select
                                 {...register('salary_grade')}
-                                className="app__input_standard"
+                                className="app__select_standard"
                               >
                                 <option value="">Choose Salary Grade</option>
                                 {salaryGradeOptions}
@@ -785,7 +796,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                             <div>
                               <select
                                 {...register('salary_step')}
-                                className="app__input_standard"
+                                className="app__select_standard"
                               >
                                 <option value="">
                                   Choose Salary Grade (Step)
@@ -796,6 +807,38 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           )}
                         </div>
                       </div>
+                      {watchedSalaryStep !== '8' && (
+                        <div className="app__form_field_container">
+                          <div className="w-full">
+                            <div className="app__label_standard">
+                              Date of next Step Increment:
+                            </div>
+                            {!isAdmin ? (
+                              <div className="app__label_value">
+                                {userData &&
+                                isValid(
+                                  parseISO(userData.date_of_next_step_increment)
+                                )
+                                  ? format(
+                                      parseISO(
+                                        userData.date_of_next_step_increment
+                                      ),
+                                      'MMMM d, yyyy'
+                                    )
+                                  : ''}
+                              </div>
+                            ) : (
+                              <div>
+                                <input
+                                  {...register('date_of_next_step_increment')}
+                                  type="date"
+                                  className="app__input_standard"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                       {/* // joining date and date of last promotion has been remove as it is manage on plantilla item */}
                       {/* <div className="app__form_field_container">
                         <div className="w-full">

@@ -244,24 +244,29 @@ const Page: React.FC = () => {
                                     <span>Print NOSI</span>
                                   </div>
                                 </Menu.Item>
-                                <Menu.Item>
-                                  <div
-                                    onClick={() => handleEdit(item)}
-                                    className="app__dropdown_item"
-                                  >
-                                    <PencilSquareIcon className="w-4 h-4" />
-                                    <span>Edit</span>
-                                  </div>
-                                </Menu.Item>
-                                <Menu.Item>
-                                  <div
-                                    onClick={() => handleDelete(item.id)}
-                                    className="app__dropdown_item"
-                                  >
-                                    <TrashIcon className="w-4 h-4" />
-                                    <span>Delete</span>
-                                  </div>
-                                </Menu.Item>
+                                {new Date(item.effective_date) > new Date() ? (
+                                  <>
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() => handleEdit(item)}
+                                        className="app__dropdown_item"
+                                      >
+                                        <PencilSquareIcon className="w-4 h-4" />
+                                        <span>Edit</span>
+                                      </div>
+                                    </Menu.Item>
+
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() => handleDelete(item.id)}
+                                        className="app__dropdown_item"
+                                      >
+                                        <TrashIcon className="w-4 h-4" />
+                                        <span>Delete</span>
+                                      </div>
+                                    </Menu.Item>
+                                  </>
+                                ) : null}
                               </div>
                             </Menu.Items>
                           </Transition>

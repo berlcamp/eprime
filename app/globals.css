@@ -2,14 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-.lowercase-except-first {
-  text-transform: lowercase;
-}
-
-.lowercase-except-first::first-letter {
-  text-transform: uppercase;
-}
-
 /* Additional styles for the arrow */
 .app__main {
   @apply lg:ml-64 mt-20 pb-14;

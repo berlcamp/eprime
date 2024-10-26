@@ -331,6 +331,9 @@ const AddEditModal = ({ hideModal, editData, refetch }: ModalProps) => {
                         >
                           <option value="">Choose Type</option>
                           <option value="Teaching">Teaching</option>
+                          <option value="Teaching-Related">
+                            Teaching-Related
+                          </option>
                           <option value="Non-teaching">Non-teaching</option>
                         </select>
                         {errors.type && (
