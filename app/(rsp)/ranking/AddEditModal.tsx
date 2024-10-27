@@ -343,21 +343,31 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                     <div className="w-full">
                       <div className="app__label_standard">Type</div>
                       <div>
-                        <select
-                          {...register('type', { required: true })}
-                          className="app__select_standard"
-                        >
-                          <option value="">Choose Type</option>
-                          <option value="CAR-RQA">CAR-RQA</option>
-                          <option value="CAR">CAR</option>
-                          <option value="Reclassification">
-                            Reclassification
-                          </option>
-                        </select>
-                        {errors.type && (
-                          <div className="app__error_message">
-                            Type is required
-                          </div>
+                        {editData && editData.applicants.length > 0 ? (
+                          <>
+                            <div className="app__label_value">
+                              {editData.type}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <select
+                              {...register('type', { required: true })}
+                              className="app__select_standard"
+                            >
+                              <option value="">Choose Type</option>
+                              <option value="CAR-RQA">CAR-RQA</option>
+                              <option value="CAR">CAR</option>
+                              <option value="Reclassification">
+                                Reclassification
+                              </option>
+                            </select>
+                            {errors.type && (
+                              <div className="app__error_message">
+                                Type is required
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -366,21 +376,31 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                     <div className="w-full">
                       <div className="app__label_standard">Calendar Year</div>
                       <div>
-                        <select
-                          {...register('year', { required: true })}
-                          className="app__select_standard"
-                        >
-                          <option value="">Choose</option>
-                          {years.map((year) => (
-                            <option key={year} value={year.toString()}>
-                              {year}
-                            </option>
-                          ))}
-                        </select>
-                        {errors.year && (
-                          <div className="app__error_message">
-                            Calendar Year is required
-                          </div>
+                        {editData && editData.applicants.length > 0 ? (
+                          <>
+                            <div className="app__label_value">
+                              {editData.type}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <select
+                              {...register('year', { required: true })}
+                              className="app__select_standard"
+                            >
+                              <option value="">Choose</option>
+                              {years.map((year) => (
+                                <option key={year} value={year.toString()}>
+                                  {year}
+                                </option>
+                              ))}
+                            </select>
+                            {errors.year && (
+                              <div className="app__error_message">
+                                Calendar Year is required
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>

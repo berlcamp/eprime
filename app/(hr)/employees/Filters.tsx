@@ -225,8 +225,13 @@ const Filters = ({
                 className="app__filter_select"
               >
                 <option value="">Account Setup:</option>
-                <option value="Completed">Completed</option>
-                <option value="Incomplete">Incomplete</option>
+                <option value="No current position">No current position</option>
+                <option value="No current salary grade">
+                  No current salary grade
+                </option>
+                <option value="No date of next increment">
+                  No date of next increment
+                </option>
               </select>
             </div>
           </div>

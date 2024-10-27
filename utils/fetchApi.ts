@@ -289,15 +289,15 @@ export async function fetchEmployees(
 
     // filter setup status
     if (filters.filterSetupStatus && filters.filterSetupStatus !== '') {
-      if (filters.filterSetupStatus === 'Completed') {
-        query = query.not('position_id', 'is', null)
-        query = query.neq('salary_grade', '')
-        query = query.neq('salary_step', '')
+      if (filters.filterSetupStatus === 'No current position') {
+        query = query.is('position_id', null)
       }
-      if (filters.filterSetupStatus === 'Incomplete') {
-        query = query.or(
-          "salary_grade.eq.'',salary_step.eq.'',position_id.is.null"
-        )
+      if (filters.filterSetupStatus === 'No current salary grade') {
+        query = query.eq('salary_grade', '')
+      }
+      if (filters.filterSetupStatus === 'No date of next increment') {
+        query = query.neq('salary_step', '8')
+        query = query.is('date_of_next_step_increment', null)
       }
     }
 
