@@ -278,11 +278,7 @@ const Page: React.FC = () => {
                         )}
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        {!item.hrm_user && (
-                          <div>
-                            {item.vacancy_type ? item.vacancy_type : 'New'}
-                          </div>
-                        )}
+                        {!item.hrm_user && <div>{item.vacancy_type}</div>}
                       </td>
                       <td className="hidden md:table-cell app__td">
                         <span>{item.hrm_position?.name}</span>

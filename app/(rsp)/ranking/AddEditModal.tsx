@@ -28,6 +28,8 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
   const { setToast } = useFilter()
   const { supabase } = useSupabase()
   const [saving, setSaving] = useState(false)
+  const [years, setYears] = useState<number[]>([])
+
   const [qualifications, setQualifications] = useState<
     PositionQualificationTypes[] | []
   >([])
@@ -77,6 +79,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       chairman_id: user ? user.id : null,
       position_id: formdata.position_id,
       type: formdata.type,
+      year: formdata.year,
       department: formdata.department,
       description: formdata.description,
       status: formdata.status,
@@ -161,6 +164,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       chairman_id: user ? user.id : null,
       position_id: formdata.position_id,
       type: formdata.type,
+      year: formdata.year,
       department: formdata.department,
       description: formdata.description,
       status: formdata.status,
@@ -293,6 +297,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       chairman_id: editData ? editData.chairman_id : '',
       position_id: editData ? editData.position_id : '',
       type: editData ? editData.type : '',
+      year: editData ? editData.year : '',
       department: editData ? editData.department : '',
       description: editData ? editData.description : '',
       status: editData ? editData.status : '',
@@ -308,6 +313,10 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
     }
 
     void fetchPositionsData()
+
+    // set year for select options
+    const currentYear = new Date().getFullYear()
+    setYears([currentYear, currentYear + 1, currentYear + 2])
   }, [])
 
   return (
@@ -348,6 +357,29 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                         {errors.type && (
                           <div className="app__error_message">
                             Type is required
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Calendar Year</div>
+                      <div>
+                        <select
+                          {...register('year', { required: true })}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose</option>
+                          {years.map((year) => (
+                            <option key={year} value={year.toString()}>
+                              {year}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.year && (
+                          <div className="app__error_message">
+                            Calendar Year is required
                           </div>
                         )}
                       </div>

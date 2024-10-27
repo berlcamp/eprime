@@ -79,10 +79,13 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     setValue,
     setError,
     clearErrors,
+    watch,
     handleSubmit
   } = useForm<ItemTypes>({
     mode: 'onSubmit'
   })
+
+  const watchedTrack = watch('track')
 
   const onSubmit = async (formdata: ItemTypes) => {
     if (saving) return
@@ -110,6 +113,9 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       user_id: user ? user.id : null,
       position_id: formdata.position_id,
       item_number: formdata.item_number,
+      vacancy_type: formdata.vacancy_type,
+      track: formdata.track,
+      strand: formdata.strand,
       implementing_unit_id: formdata.implementing_unit_id,
       school_id: formdata.school_id ? formdata.school_id : null,
       salary_grade: formdata.salary_grade,
@@ -227,6 +233,9 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       user_id: user ? user.id : null,
       position_id: formdata.position_id,
       item_number: formdata.item_number,
+      vacancy_type: formdata.vacancy_type,
+      track: formdata.track,
+      strand: formdata.strand,
       implementing_unit_id: formdata.implementing_unit_id,
       school_id: formdata.school_id !== '' ? formdata.school_id : null,
       salary_grade: formdata.salary_grade,
@@ -503,6 +512,9 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       school_id: editData ? editData.school_id : '',
       position_id: editData ? editData.position_id : '',
       item_number: editData ? editData.item_number : '',
+      vacancy_type: editData ? editData.vacancy_type : '',
+      track: editData ? editData.track : '',
+      strand: editData ? editData.strand : '',
       salary_grade: editData ? editData.salary_grade : '',
       vice: editData ? editData.vice : '',
       sex: editData ? editData.sex : '',
@@ -621,6 +633,31 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                   </div>
                   <div className="app__form_field_container">
                     <div className="w-full">
+                      <div className="app__label_standard">Vacancy Type</div>
+
+                      <div>
+                        <select
+                          {...register('vacancy_type', { required: true })}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose</option>
+                          <option value="New">New</option>
+                          <option value="Natural Vacancy">
+                            Natural Vacancy
+                          </option>
+                          <option value="Provisional">Provisional</option>
+                          <option value="Special Item">Special Item</option>
+                        </select>
+                        {errors.vacancy_type && (
+                          <div className="app__error_message">
+                            Vacancy Type is required
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
                       <div className="app__label_standard">Position</div>
                       {!isHr ? (
                         <div className="app__label_value">
@@ -654,6 +691,55 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           )}
                         </div>
                       )}
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Track</div>
+                      <div>
+                        <select
+                          {...register('track')}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose</option>
+                          <option value="Academic Track">Academic Track</option>
+                          <option value="TVL Track">TVL Track</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Strand</div>
+                      <div>
+                        <select
+                          {...register('strand')}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose</option>
+                          {watchedTrack === 'Academic Track' && (
+                            <>
+                              <option value="Arts">Arts</option>
+                              <option value="Sports">Sports</option>
+                              <option value="HUMMS">HUMMS</option>
+                              <option value="STEM">STEM</option>
+                              <option value="GAS">GAS</option>
+                            </>
+                          )}
+                          {watchedTrack === 'TVL Track' && (
+                            <>
+                              <option value="Home Economics">
+                                Home Economics
+                              </option>
+                              <option value="Industrial Arts">
+                                Industrial Arts
+                              </option>
+                              <option value="Agriculture">Agriculture</option>
+                              <option value="ICT">ICT</option>
+                            </>
+                          )}
+                        </select>
+                      </div>
                     </div>
                   </div>
                   <div className="app__form_field_container">

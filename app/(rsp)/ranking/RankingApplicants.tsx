@@ -1,5 +1,6 @@
 import { CustomButton } from '@/components'
 import ApplicantDetails from '@/components/Rsp/ApplicantDetails'
+import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
   ApplicantTypes,
@@ -8,7 +9,6 @@ import {
 } from '@/types'
 import { useEffect, useState } from 'react'
 import CastPoints from './CastPoints'
-import CommitteePointsModal from './CommitteePointsModal'
 
 interface ModalProps {
   hideModal: () => void

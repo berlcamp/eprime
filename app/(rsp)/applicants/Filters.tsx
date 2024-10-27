@@ -87,7 +87,7 @@ const Filters = ({ setFilterKeyword, setFilterRanking }: FilterTypes) => {
                 {rankings.length > 0 &&
                   rankings.map((item, index) => (
                     <option key={index} value={item.id}>
-                      {item.position?.name} - {item.type}
+                      {item.position?.name} - {item.type} - {item.year}
                     </option>
                   ))}
               </select>

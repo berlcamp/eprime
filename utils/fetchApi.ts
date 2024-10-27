@@ -587,6 +587,7 @@ export async function fetchAnnoucements(
 
 export async function fetchRankings(
   filters: {
+    userId?: string
     filterPosition?: string
     filterStatus?: string
   },
@@ -594,6 +595,31 @@ export async function fetchRankings(
   rangeFrom: number
 ) {
   try {
+    // If not RSP Manager
+    const rankingIds: string[] = []
+
+    if (filters.userId) {
+      const { data: data1 } = await supabase
+        .from('hrm_rankings')
+        .select('id')
+        .eq('chairman_id', filters.userId)
+        .limit(500)
+      if (data1 && data1.length > 0) {
+        data1.forEach((d: any) => rankingIds.push(d.id))
+      }
+      const { data: data2 } = await supabase
+        .from('hrm_ranking_committees')
+        .select('ranking_id')
+        .eq('user_id', filters.userId)
+        .limit(500)
+      if (data2 && data2.length > 0) {
+        data2.forEach((d: any) => rankingIds.push(d.ranking_id))
+      }
+      if (rankingIds.length === 0) {
+        rankingIds.push('99999')
+      }
+    }
+
     let query = supabase
       .from('hrm_rankings')
       .select(
@@ -610,6 +636,11 @@ export async function fetchRankings(
     // filter status
     if (filters.filterStatus && filters.filterStatus !== '') {
       query = query.eq('status', filters.filterStatus)
+    }
+
+    // If not RSP Manager
+    if (rankingIds.length > 0) {
+      query = query.in('id', rankingIds)
     }
 
     // Per Page from context

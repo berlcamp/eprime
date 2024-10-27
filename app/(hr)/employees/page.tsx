@@ -128,11 +128,13 @@ const Page: React.FC = () => {
   const setupCounter = (
     positionId: number,
     salaryGrade: string,
-    salaryStep: string
+    salaryStep: string,
+    dateOfNextStepIncrement: string
   ) => {
     let count = 1
     if (positionId) count++
     if (salaryGrade !== '' && salaryStep !== '') count++
+    if (salaryStep === '8' || dateOfNextStepIncrement) count++
 
     return count
   }
@@ -235,6 +237,7 @@ const Page: React.FC = () => {
                           <div className="md:hidden app__td">
                             {item.position_id &&
                             item.salary_grade !== '' &&
+                            item.date_of_next_step_increment &&
                             item.salary_step !== '' ? (
                               <>
                                 <div className="flex items-center space-x-1">
@@ -249,11 +252,12 @@ const Page: React.FC = () => {
                                     {setupCounter(
                                       item.position_id,
                                       item.salary_grade,
-                                      item.salary_step
+                                      item.salary_step,
+                                      item.date_of_next_step_increment
                                     )}
                                   </span>{' '}
                                   out of{' '}
-                                  <span className="text-green-600">3</span>{' '}
+                                  <span className="text-green-600">4</span>{' '}
                                   Completed
                                 </div>
                                 <div className="space-y-1 mt-2 pl-4">
@@ -277,6 +281,15 @@ const Page: React.FC = () => {
                                       <XMarkIcon className="w-4 h-4 text-red-500" />
                                     )}
                                     <span>Set current Salary Grade</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    {item.date_of_next_step_increment ||
+                                    item.salary_step.toString() === '8' ? (
+                                      <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                                    ) : (
+                                      <XMarkIcon className="w-4 h-4 text-red-500" />
+                                    )}
+                                    <span>Date of next Step Increment</span>
                                   </div>
                                 </div>
                               </>
@@ -306,6 +319,8 @@ const Page: React.FC = () => {
                         <div>
                           {item.position_id &&
                           item.salary_grade !== '' &&
+                          (item.date_of_next_step_increment ||
+                            item.salary_step === '8') &&
                           item.salary_step !== '' ? (
                             <>
                               <div className="flex items-center space-x-1">
@@ -320,10 +335,11 @@ const Page: React.FC = () => {
                                   {setupCounter(
                                     item.position_id,
                                     item.salary_grade,
-                                    item.salary_step
+                                    item.salary_step,
+                                    item.date_of_next_step_increment
                                   )}
                                 </span>{' '}
-                                out of <span className="text-green-600">3</span>{' '}
+                                out of <span className="text-green-600">4</span>{' '}
                                 Completed
                               </div>
                               <div className="space-y-1 mt-2 pl-4">
@@ -346,6 +362,15 @@ const Page: React.FC = () => {
                                     <XMarkIcon className="w-4 h-4 text-red-500" />
                                   )}
                                   <span>Set current Salary Grade</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  {item.date_of_next_step_increment ||
+                                  item.salary_step.toString() === '8' ? (
+                                    <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                                  ) : (
+                                    <XMarkIcon className="w-4 h-4 text-red-500" />
+                                  )}
+                                  <span>Date of next Step Increment</span>
                                 </div>
                               </div>
                             </>

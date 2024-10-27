@@ -18,6 +18,7 @@ interface CriteriaFieldsType {
   name: string
   commmittee_criteria_id: string
   points: string
+  max_points: number
 }
 const CastPoints = ({
   hideModal,
@@ -98,6 +99,7 @@ const CastPoints = ({
       fields.push({
         name: c.criteria.name,
         commmittee_criteria_id: c.id,
+        max_points: Number(c.criteria.points),
         points: findPoint ? findPoint.points : ''
       })
       setCriteriasField(fields)
@@ -124,7 +126,12 @@ const CastPoints = ({
                 {criteriasField.map((criteria, idx) => (
                   <div key={idx} className="app__form_field_container">
                     <div className="w-full">
-                      <div className="app__label_standard">{criteria.name}</div>
+                      <div className="app__label_standard">
+                        <span>{criteria.name}</span>{' '}
+                        <span className="font-light italic">
+                          (Max: {criteria.max_points})
+                        </span>
+                      </div>
                       <div>
                         <input
                           type="hidden"
@@ -138,13 +145,17 @@ const CastPoints = ({
                           defaultValue={criteria.points}
                           placeholder="Points"
                           {...register(`cast.${idx}.points`, {
-                            required: true
+                            required: 'Points are required',
+                            max: {
+                              value: criteria.max_points,
+                              message: `Points cannot exceed ${criteria.max_points}`
+                            }
                           })}
                           className="app__input_standard"
                         />
-                        {errors.cast?.[idx]?.points && (
+                        {errors.cast?.[idx]?.points?.message && (
                           <div className="app__error_message">
-                            Points is required
+                            {errors.cast?.[idx]?.points?.message}
                           </div>
                         )}
                       </div>

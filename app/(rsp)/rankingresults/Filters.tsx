@@ -1,53 +1,62 @@
 import { CustomButton } from '@/components'
-import { fetchPositions } from '@/utils/fetchApi'
-import { TagIcon } from '@heroicons/react/20/solid'
+import { MagnifyingGlassIcon, TagIcon } from '@heroicons/react/20/solid'
 import React, { useEffect, useState } from 'react'
 
-import type { PositionTypes } from '@/types'
+import { useSupabase } from '@/context/SupabaseProvider'
+import type { RankingTypes } from '@/types'
 
 interface FilterTypes {
-  setFilterStatus: (status: string) => void
-  setFilterPosition: (type: string) => void
+  setFilterKeyword: (keyword: string) => void
+  setFilterRanking: (type: string) => void
 }
 
-const Filters = ({ setFilterStatus, setFilterPosition }: FilterTypes) => {
-  const [selectedPosition, setSelectedPosition] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState('')
-  const [positions, setPositions] = useState<PositionTypes[]>([])
+const Filters = ({ setFilterKeyword, setFilterRanking }: FilterTypes) => {
+  const [selectedRanking, setSelectedRanking] = useState('')
+  const [keyword, setKeyword] = useState('')
+
+  const [rankings, setRankings] = useState<RankingTypes[] | []>([])
+
+  const { supabase } = useSupabase()
 
   const handleApply = () => {
-    if (selectedPosition === '' && selectedStatus === '') return
+    if (keyword.trim() === '' && selectedRanking === '') return
 
     // pass filter values to parent
-    setFilterStatus(selectedStatus)
-    setFilterPosition(selectedPosition)
+    setFilterKeyword(keyword)
+    setFilterRanking(selectedRanking)
   }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (selectedPosition === '' && selectedStatus === '') return
+    if (keyword.trim() === '' && selectedRanking === '') return
 
     // pass filter values to parent
-    setFilterStatus(selectedStatus)
-    setFilterPosition(selectedPosition)
+    setFilterKeyword(keyword)
+    setFilterRanking(selectedRanking)
   }
 
   // clear all filters
   const handleClear = () => {
-    setSelectedStatus('')
-    setFilterStatus('')
-    setFilterPosition('')
-    setSelectedPosition('')
+    setFilterKeyword('')
+    setKeyword('')
+    setSelectedRanking('')
+    setFilterRanking('')
   }
 
   // Featch data
   useEffect(() => {
-    const fetchPositionsData = async () => {
-      const result = await fetchPositions('', 3000, 0)
-      setPositions(result.data.length > 0 ? result.data : [])
+    const fetchRankings = async () => {
+      const { data } = await supabase
+        .from('hrm_rankings')
+        .select('*,position:position_id(name)')
+        .eq('status', 'Open')
+      if (data) {
+        setRankings(data)
+      }
     }
-    void fetchPositionsData()
+
+    void fetchRankings()
   }, [])
 
   return (
@@ -59,30 +68,28 @@ const Filters = ({ setFilterStatus, setFilterPosition }: FilterTypes) => {
         >
           <div className="items-center space-y-1">
             <div className="app__filter_container">
-              <TagIcon className="w-4 h-4 mr-1" />
-              <select
-                value={selectedPosition}
-                onChange={(e) => setSelectedPosition(e.target.value)}
-                className="app__filter_select"
-              >
-                <option value="">All Position</option>
-                {positions.map((item, index) => (
-                  <option key={index} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+              <MagnifyingGlassIcon className="w-4 h-4 mr-1" />
+              <input
+                placeholder="Search Applicant"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                className="app__filter_input"
+              />
             </div>
             <div className="app__filter_container">
               <TagIcon className="w-4 h-4 mr-1" />
               <select
-                value={selectedPosition}
-                onChange={(e) => setSelectedStatus(e.target.value)}
+                value={selectedRanking}
+                onChange={(e) => setSelectedRanking(e.target.value)}
                 className="app__filter_select"
               >
-                <option value="">All Status</option>
-                <option value="Open">Open</option>
-                <option value="Closed">Closed</option>
+                <option value="">Choose Ranking</option>
+                {rankings.length > 0 &&
+                  rankings.map((item, index) => (
+                    <option key={index} value={item.id}>
+                      {item.position?.name} - {item.type} - {item.year}
+                    </option>
+                  ))}
               </select>
             </div>
           </div>

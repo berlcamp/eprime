@@ -2,68 +2,101 @@
 
 import {
   CustomButton,
-  PerPage,
-  ShowMore,
   Sidebar,
   TableRowLoading,
   Title,
   TopBar,
-  Unauthorized,
-  UserBlock
+  Unauthorized
 } from '@/components'
 import { useFilter } from '@/context/FilterContext'
-import { fetchRankings } from '@/utils/fetchApi'
-import React, { useEffect, useState } from 'react'
+import { Menu, Transition } from '@headlessui/react'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import React, { Fragment, useEffect, useState } from 'react'
 import Filters from './Filters'
 
 // Types
-import type { RankingTypes } from '@/types'
+import type { ApplicantTypes } from '@/types'
 
-// Redux imports
+import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
-import { updateList } from '@/GlobalRedux/Features/listSlice'
-import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { useDispatch, useSelector } from 'react-redux'
-import RankingApplicants from './RankingApplicants'
+import { useSupabase } from '@/context/SupabaseProvider'
+import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
+import { CheckIcon, EyeIcon } from 'lucide-react'
+
+interface ListTypes {
+  applicant: ApplicantTypes
+  accumulated_points: Record<string, number> | null
+  overall_score: string
+}
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
-  const [showApplicantsModal, setShowApplicantsModal] = useState(false)
-  const [selectedId, setSelectedId] = useState('')
 
-  const [list, setList] = useState<RankingTypes[]>([])
-  const [filterPosition, setFilterPosition] = useState<string>('')
-  const [filterStatus, setFilterStatus] = useState<string>('')
+  const [showCommitteePointsModal, setShowCommitteePointsModal] =
+    useState(false)
+  const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
 
-  const [perPageCount, setPerPageCount] = useState<number>(10)
-
-  // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
-  const resultsCounter = useSelector((state: any) => state.results.value)
-  const dispatch = useDispatch()
+  const [list, setList] = useState<ListTypes[]>([])
+  const [rankList, setRankList] = useState<ListTypes[]>([])
+  const [filterKeyword, setFilterKeyword] = useState<string>('')
+  const [filterRanking, setFilterRanking] = useState<string>('')
+  const [filterDisplay, setFilterDisplay] = useState<string>('')
+  const [filterPassingScore, setFilterPassingScore] = useState<string>('50')
 
   const { hasAccess } = useFilter()
+  const { supabase } = useSupabase()
 
   const fetchData = async () => {
     setLoading(true)
 
     try {
-      const result = await fetchRankings(
-        { filterStatus: 'Closed', filterPosition },
-        perPageCount,
-        0
-      )
+      let query = supabase
+        .from('hrm_ranking_applicants')
+        .select(
+          '*, ranking:ranking_id(committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          {
+            count: 'exact'
+          }
+        )
 
-      // update the list in redux
-      dispatch(updateList(result.data))
+      // filter ranking
+      if (filterRanking !== '') {
+        query = query.eq('ranking_id', filterRanking)
+      }
 
-      // Updating showing text in redux
-      dispatch(
-        updateResultCounter({
-          showing: result.data.length,
-          results: result.count ? result.count : 0
-        })
-      )
+      // filter keyword
+      if (filterKeyword !== '') {
+        query = query.or(
+          `lastname.ilike.%${filterKeyword}%,firstname.ilike.%${filterKeyword}%,middlename.ilike.%${filterKeyword}%`
+        )
+      }
+      const { data, error } = await query
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      if (filterRanking !== '') {
+        if (data.length > 0) {
+          const structguredData: ListTypes[] = []
+          data.forEach((d: ApplicantTypes) => {
+            const accumulatedPoints: Record<string, number> | null =
+              CommitteeAccumulatedPoints(d.id, d.ranking.committees)
+
+            structguredData.push({
+              applicant: d,
+              accumulated_points: accumulatedPoints,
+              overall_score: accumulatedPoints
+                ? Object.values(accumulatedPoints)
+                    .reduce((sum: number, points) => sum + points, 0)
+                    .toFixed(2)
+                : ''
+            })
+          })
+          setList(structguredData)
+          setRankList(structguredData)
+        }
+      }
     } catch (e) {
       console.error(e)
     } finally {
@@ -71,51 +104,33 @@ const Page: React.FC = () => {
     }
   }
 
-  // Append data to existing list whenever 'show more' button is clicked
-  const handleShowMore = async () => {
-    setLoading(true)
-
-    try {
-      const result = await fetchRankings(
-        { filterStatus: 'Closed', filterPosition },
-        perPageCount,
-        list.length
-      )
-
-      // update the list in redux
-      const newList = [...list, ...result.data]
-      dispatch(updateList(newList))
-
-      // Updating showing text in redux
-      dispatch(
-        updateResultCounter({
-          showing: newList.length,
-          results: result.count ? result.count : 0
-        })
-      )
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
+  const handleViewCommitteePoints = (item: ApplicantTypes) => {
+    setShowCommitteePointsModal(true)
+    setSelectedItem(item)
   }
 
-  const handleViewApplicants = (id: string) => {
-    setShowApplicantsModal(true)
-    setSelectedId(id)
-  }
-
-  // Update list whenever list in redux updates
+  // Filter data by Display
   useEffect(() => {
-    setList(globallist)
-  }, [globallist])
+    setLoading(true)
+    if (filterDisplay === 'RQA') {
+      const filteredList = rankList.filter(
+        (item) => Number(item.overall_score) > Number(filterPassingScore)
+      )
+      setList(filteredList)
+    } else {
+      setList(rankList)
+    }
+    console.log(filterDisplay, filterPassingScore)
+    setLoading(false)
+  }, [filterDisplay, filterPassingScore])
 
-  // Featch data
+  // Fetch data
   useEffect(() => {
     setList([])
+    setRankList([])
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPageCount, filterPosition, filterStatus])
+  }, [filterRanking, filterKeyword])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -137,108 +152,155 @@ const Page: React.FC = () => {
           {/* Filters */}
           <div className="app__filters">
             <Filters
-              setFilterStatus={setFilterStatus}
-              setFilterPosition={setFilterPosition}
+              setFilterRanking={setFilterRanking}
+              setFilterKeyword={setFilterKeyword}
             />
           </div>
 
-          {/* Per Page */}
-          <PerPage
-            showingCount={resultsCounter.showing}
-            resultsCount={resultsCounter.results}
-            perPageCount={perPageCount}
-            setPerPageCount={setPerPageCount}
-          />
+          {rankList.length > 0 && (
+            <div className="flex items-center space-x-2 py-2 px-4 bg-gray-50 border-t border-gray-200 text-gray-500">
+              <div className="flex-1 text-xs">{`Total results: ${list.length}`}</div>
+              <div className="space-x-2">
+                <CustomButton
+                  containerStyles="app__btn_blue"
+                  title="Display Rank List"
+                  btnType="button"
+                  handleClick={() => setFilterDisplay('Rank List')}
+                />
+                <CustomButton
+                  containerStyles="app__btn_blue"
+                  title="Display RQA"
+                  btnType="button"
+                  handleClick={() => setFilterDisplay('RQA')}
+                />
+              </div>
+              <div className="app__filter_container">
+                <CheckIcon className="w-4 h-4 mr-1" />
+                <div className="text-xs mr-1">RQA Passing Score:</div>
+                <input
+                  value={filterPassingScore}
+                  type="number"
+                  step="any"
+                  onChange={(e) => setFilterPassingScore(e.target.value)}
+                  className="app__filter_input !w-20"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Main Content */}
-          <div>
-            <table className="app__table">
-              <thead className="app__thead">
-                <tr>
-                  <th className="hidden md:table-cell app__th">Position</th>
-                  <th className="hidden md:table-cell app__th"></th>
-                  <th className="hidden md:table-cell app__th">Type</th>
-                  <th className="hidden md:table-cell app__th"></th>
-                  <th className="hidden md:table-cell app__th">Chairman</th>
-                </tr>
-              </thead>
-              <tbody>
-                {!isDataEmpty &&
-                  list.map((item: RankingTypes, index) => (
-                    <tr key={index} className="app__tr">
-                      <td className="pl-4 app__td">
-                        {item.position?.name}
-                        {/* Mobile View */}
-                        <div>
-                          <div className="md:hidden app__td_mobile">
+          {rankList.length > 0 && (
+            <div>
+              <table className="app__table">
+                <thead className="app__thead">
+                  <tr>
+                    <th className="app__th pl-4"></th>
+                    <th className="app__th">Applicant</th>
+                    <th className="app__th">Accumulated Points</th>
+                    <th className="app__th">Overall Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {!isDataEmpty &&
+                    list.map((item, index) => (
+                      <tr key={index} className="app__tr">
+                        <td className="w-6 pl-4 app__td">
+                          <Menu as="div" className="app__menu_container">
                             <div>
-                              <span className="app_td_mobile_label">
-                                Position:
-                              </span>{' '}
-                              {item.position && (
-                                <span>{item.position?.name}</span>
+                              <Menu.Button className="app__dropdown_btn">
+                                <ChevronDownIcon
+                                  className="h-5 w-5"
+                                  aria-hidden="true"
+                                />
+                              </Menu.Button>
+                            </div>
+
+                            <Transition
+                              as={Fragment}
+                              enter="transition ease-out duration-100"
+                              enterFrom="transform opacity-0 scale-95"
+                              enterTo="transform opacity-100 scale-100"
+                              leave="transition ease-in duration-75"
+                              leaveFrom="transform opacity-100 scale-100"
+                              leaveTo="transform opacity-0 scale-95"
+                            >
+                              <Menu.Items className="app__dropdown_items">
+                                <div className="py-1">
+                                  <Menu.Item>
+                                    <div
+                                      onClick={() =>
+                                        handleViewCommitteePoints(
+                                          item.applicant
+                                        )
+                                      }
+                                      className="app__dropdown_item"
+                                    >
+                                      <EyeIcon className="w-4 h-4" />
+                                      <span>View Committee Points</span>
+                                    </div>
+                                  </Menu.Item>
+                                </div>
+                              </Menu.Items>
+                            </Transition>
+                          </Menu>
+                        </td>
+                        <th className="app__th_firstcol">
+                          <div className="font-medium">
+                            {item.applicant.lastname},{' '}
+                            {item.applicant.firstname}{' '}
+                            {item.applicant.middlename}
+                          </div>
+                          <div className="font-light">
+                            {item.applicant.email}
+                          </div>
+                          {item.applicant.current_employee === 'Yes' && (
+                            <div className="font-bold">
+                              (Current DepEd Employee)
+                            </div>
+                          )}
+                          {item.applicant.previous_applicant === 'Yes' && (
+                            <div className="font-bold">
+                              (Previous Applicant)
+                            </div>
+                          )}
+                        </th>
+                        <td className="app__td">
+                          {item.accumulated_points && (
+                            <div>
+                              {Object.entries(item.accumulated_points).map(
+                                ([criteriaName, avgPoints]) => (
+                                  <div key={criteriaName}>
+                                    <span>{criteriaName}:</span>
+                                    <span className="font-bold">
+                                      {' '}
+                                      {avgPoints.toFixed(2)}{' '}
+                                    </span>
+                                    {/* Display with 2 decimal places */}
+                                  </div>
+                                )
                               )}
                             </div>
-                            <div>
-                              <span className="app_td_mobile_label">Type:</span>{' '}
-                              {item.type}
-                            </div>
-                            <div>
-                              <span className="app_td_mobile_label">
-                                Chairman:
-                              </span>{' '}
-                              <UserBlock user={item.chairman} />
-                            </div>
-                            <div>
-                              <CustomButton
-                                containerStyles="app__btn_green_xs"
-                                title="Vew Results"
-                                btnType="button"
-                                handleClick={() =>
-                                  handleViewApplicants(item.id)
-                                }
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        {/* End - Mobile View */}
-                      </td>
-                      <td className="hidden md:table-cell app__td">
-                        <CustomButton
-                          containerStyles="app__btn_green_xs"
-                          title="Vew Results"
-                          btnType="button"
-                          handleClick={() => handleViewApplicants(item.id)}
-                        />
-                      </td>
-                      <td className="hidden md:table-cell app__td">
-                        {item.type}
-                      </td>
-                      <td className="hidden md:table-cell app__td">
-                        <UserBlock user={item.chairman} />
-                      </td>
-                    </tr>
-                  ))}
-                {loading && <TableRowLoading cols={4} rows={2} />}
-              </tbody>
-            </table>
-            {!loading && isDataEmpty && (
-              <div className="app__norecordsfound">No records found.</div>
-            )}
-          </div>
-
-          {/* Show More */}
-          {resultsCounter.results > resultsCounter.showing && !loading && (
-            <ShowMore handleShowMore={handleShowMore} />
+                          )}
+                        </td>
+                        <td className="app__td">{item.overall_score}</td>
+                      </tr>
+                    ))}
+                  {loading && <TableRowLoading cols={4} rows={2} />}
+                </tbody>
+              </table>
+              {!loading && isDataEmpty && (
+                <div className="app__norecordsfound">No results.</div>
+              )}
+            </div>
           )}
         </div>
       </div>
 
-      {/* Show Applicants Modal */}
-      {showApplicantsModal && (
-        <RankingApplicants
-          rankingId={selectedId}
-          hideModal={() => setShowApplicantsModal(false)}
+      {/* Show Casted Points Modal */}
+      {showCommitteePointsModal && selectedItem && (
+        <CommitteePointsModal
+          applicantData={selectedItem}
+          hideModal={() => setShowCommitteePointsModal(false)}
         />
       )}
     </>

@@ -244,6 +244,8 @@ export interface ItemTypes {
   umid_no: string
   confirmed: string
   vacancy_type: string
+  track: string
+  strand: string
 }
 
 export interface NosiTypes {
@@ -713,12 +715,14 @@ export interface RankingTypes {
   chairman_id: string
   chairman: Employee
   department: string
+  year: string
   description: string
   has_qualification_standard: string
   qualifications: Array<{ id?: string; name: string; description: string }>
   status: string
   display_on_portal: string
   display_on_portal_until: string
+  committees: RankingCommitteeTypes[]
   applicants: ApplicantTypes[]
   confirmed: string
 }

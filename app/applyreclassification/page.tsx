@@ -4,6 +4,7 @@ import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { ApplicantTypes, Employee } from '@/types'
 import { logError } from '@/utils/fetchApi'
+import { generateRandomAlphaNumber } from '@/utils/text-helper'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -13,6 +14,7 @@ const Page: React.FC = () => {
   const [emailFound, setEmailFound] = useState(false)
   const [applicantExist, setApplicantExist] = useState(false)
   const [searching, setSearching] = useState(false)
+  const [refCode, setRefCode] = useState('')
   const [doneSearch, setDoneSearch] = useState(false)
 
   const [applicantDetails, setApplicantDetails] = useState<Employee | null>(
@@ -44,6 +46,9 @@ const Page: React.FC = () => {
   }
 
   const handleCreate = async () => {
+    const randomCode = generateRandomAlphaNumber(5)
+    setRefCode(randomCode)
+
     const newData = {
       user_id: applicantDetails?.id,
       lastname: applicantDetails?.lastname,
@@ -51,6 +56,7 @@ const Page: React.FC = () => {
       middlename: applicantDetails?.lastname,
       type: 'Reclassification',
       current_employee: 'Yes',
+      code: randomCode,
       email: watchedDepedEmail,
       deped_email: watchedDepedEmail
     }
@@ -122,7 +128,8 @@ const Page: React.FC = () => {
         <div className="bg-gray-100 p-4 mb-20 rounded-lg border w-full md:w-[720px]">
           {isSuccess && (
             <div className="text-gray-700">
-              Application successfully submitted.
+              Application successfully submitted. Your application Reference
+              Code is <span className="font-bold text-lg">{refCode}</span>
             </div>
           )}
           {!isSuccess && (

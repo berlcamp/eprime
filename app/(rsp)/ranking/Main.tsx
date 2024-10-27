@@ -8,7 +8,6 @@ import {
   TableRowLoading,
   Title,
   TopBar,
-  Unauthorized,
   UserBlock
 } from '@/components'
 import { useFilter } from '@/context/FilterContext'
@@ -24,6 +23,7 @@ import type { RankingTypes } from '@/types'
 
 // Redux imports
 import RspSidebar from '@/components/Sidebars/RspSidebar'
+import { useSupabase } from '@/context/SupabaseProvider'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { TableIcon, User2Icon, UsersIcon } from 'lucide-react'
@@ -54,13 +54,18 @@ const Page: React.FC = () => {
   const dispatch = useDispatch()
 
   const { hasAccess } = useFilter()
+  const { session } = useSupabase()
 
   const fetchData = async () => {
     setLoading(true)
 
     try {
       const result = await fetchRankings(
-        { filterStatus, filterPosition },
+        {
+          userId: hasAccess('rsp_manager') ? null : session.user.id,
+          filterStatus,
+          filterPosition
+        },
         perPageCount,
         0
       )
@@ -88,7 +93,11 @@ const Page: React.FC = () => {
 
     try {
       const result = await fetchRankings(
-        { filterStatus, filterPosition },
+        {
+          userId: hasAccess('rsp_manager') ? null : session.user.id,
+          filterStatus,
+          filterPosition
+        },
         perPageCount,
         list.length
       )
@@ -149,9 +158,6 @@ const Page: React.FC = () => {
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
-  // Check access from permission settings or Super Admins
-  if (!hasAccess('rsp_manager')) return <Unauthorized />
-
   return (
     <>
       <Sidebar>
@@ -162,12 +168,14 @@ const Page: React.FC = () => {
         <div>
           <div className="app__title">
             <Title title="Ranking" />
-            <CustomButton
-              containerStyles="app__btn_green"
-              title="Create New Ranking"
-              btnType="button"
-              handleClick={handleAdd}
-            />
+            {hasAccess('rsp_manager') && (
+              <CustomButton
+                containerStyles="app__btn_green"
+                title="Create New Ranking"
+                btnType="button"
+                handleClick={handleAdd}
+              />
+            )}
           </div>
 
           {/* Filters */}
@@ -227,26 +235,33 @@ const Page: React.FC = () => {
                           >
                             <Menu.Items className="app__dropdown_items">
                               <div className="py-1">
-                                <Menu.Item>
-                                  <div
-                                    onClick={() => handleViewCriterias(item.id)}
-                                    className="app__dropdown_item"
-                                  >
-                                    <TableIcon className="w-4 h-4" />
-                                    <span>Manage Criterias</span>
-                                  </div>
-                                </Menu.Item>
-                                <Menu.Item>
-                                  <div
-                                    onClick={() =>
-                                      handleViewCommittees(item.id)
-                                    }
-                                    className="app__dropdown_item"
-                                  >
-                                    <UsersIcon className="w-4 h-4" />
-                                    <span>Manage Committees</span>
-                                  </div>
-                                </Menu.Item>
+                                {(hasAccess('rsp_manager') ||
+                                  item.chairman_id === session.user.id) && (
+                                  <>
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() =>
+                                          handleViewCriterias(item.id)
+                                        }
+                                        className="app__dropdown_item"
+                                      >
+                                        <TableIcon className="w-4 h-4" />
+                                        <span>Manage Criterias</span>
+                                      </div>
+                                    </Menu.Item>
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() =>
+                                          handleViewCommittees(item.id)
+                                        }
+                                        className="app__dropdown_item"
+                                      >
+                                        <UsersIcon className="w-4 h-4" />
+                                        <span>Manage Committees</span>
+                                      </div>
+                                    </Menu.Item>
+                                  </>
+                                )}
                                 <Menu.Item>
                                   <div
                                     onClick={() =>
@@ -258,15 +273,17 @@ const Page: React.FC = () => {
                                     <span>View Applicants</span>
                                   </div>
                                 </Menu.Item>
-                                <Menu.Item>
-                                  <div
-                                    onClick={() => handleEdit(item)}
-                                    className="app__dropdown_item"
-                                  >
-                                    <PencilSquareIcon className="w-4 h-4" />
-                                    <span>Edit Details</span>
-                                  </div>
-                                </Menu.Item>
+                                {hasAccess('rsp_manager') && (
+                                  <Menu.Item>
+                                    <div
+                                      onClick={() => handleEdit(item)}
+                                      className="app__dropdown_item"
+                                    >
+                                      <PencilSquareIcon className="w-4 h-4" />
+                                      <span>Edit Details</span>
+                                    </div>
+                                  </Menu.Item>
+                                )}
                               </div>
                             </Menu.Items>
                           </Transition>
@@ -287,7 +304,7 @@ const Page: React.FC = () => {
                             </div>
                             <div>
                               <span className="app_td_mobile_label">Type:</span>{' '}
-                              {item.type}
+                              {item.type} - {item.year}
                             </div>
                             <div>
                               <span className="app_td_mobile_label">
@@ -312,7 +329,7 @@ const Page: React.FC = () => {
                         {/* End - Mobile View */}
                       </th>
                       <td className="hidden md:table-cell app__td">
-                        {item.type}
+                        {item.type} - {item.year}
                       </td>
                       <td className="hidden md:table-cell app__td">
                         {item.display_on_portal === 'Yes' ? 'Yes' : 'No'}
