@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  ConfirmModal,
   CustomButton,
   Sidebar,
   TableRowLoading,
@@ -21,6 +22,7 @@ import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
+import { logError } from '@/utils/fetchApi'
 import { CheckIcon, EyeIcon } from 'lucide-react'
 
 interface ListTypes {
@@ -31,9 +33,11 @@ interface ListTypes {
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
-
+  const [saving, setSaving] = useState(false)
+  const [refetch, setRefetch] = useState(false)
   const [showCommitteePointsModal, setShowCommitteePointsModal] =
     useState(false)
+  const [showConfirmAppointModal, setShowConfirmAppointModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
 
   const [list, setList] = useState<ListTypes[]>([])
@@ -43,7 +47,7 @@ const Page: React.FC = () => {
   const [filterDisplay, setFilterDisplay] = useState<string>('')
   const [filterPassingScore, setFilterPassingScore] = useState<string>('50')
 
-  const { hasAccess } = useFilter()
+  const { hasAccess, setToast } = useFilter()
   const { supabase } = useSupabase()
 
   const fetchData = async () => {
@@ -93,6 +97,14 @@ const Page: React.FC = () => {
                 : ''
             })
           })
+
+          // Sort structguredData by overall_score in descending order
+          structguredData.sort((a, b) => {
+            const scoreA = parseFloat(a.overall_score || '0')
+            const scoreB = parseFloat(b.overall_score || '0')
+            return scoreB - scoreA // Sort in descending order
+          })
+
           setList(structguredData)
           setRankList(structguredData)
         }
@@ -107,6 +119,49 @@ const Page: React.FC = () => {
   const handleViewCommitteePoints = (item: ApplicantTypes) => {
     setShowCommitteePointsModal(true)
     setSelectedItem(item)
+  }
+
+  const handleAppoint = (item: ApplicantTypes) => {
+    setShowConfirmAppointModal(true)
+    setSelectedItem(item)
+  }
+
+  const handleConfirmedAppoint = async () => {
+    if (saving || !selectedItem) return
+
+    setSaving(true)
+
+    try {
+      const { error } = await supabase
+        .from('hrm_ranking_applicants')
+        .update({
+          status: 'Appointed'
+        })
+        .eq('id', selectedItem.id)
+
+      if (error) {
+        void logError(
+          'Appoint applicant',
+          'hrm_ranking_applicants',
+          '',
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(error.message)
+      }
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      setSaving(false)
+      setShowConfirmAppointModal(false)
+      setRefetch(!refetch)
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   // Filter data by Display
@@ -130,7 +185,7 @@ const Page: React.FC = () => {
     setRankList([])
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterRanking, filterKeyword])
+  }, [filterRanking, filterKeyword, refetch])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -188,6 +243,12 @@ const Page: React.FC = () => {
             </div>
           )}
 
+          {filterRanking === '' && (
+            <div className="mt-10 text-center text-xl font-light text-gray-600">
+              Choose ranking from filters above.
+            </div>
+          )}
+
           {/* Main Content */}
           {rankList.length > 0 && (
             <div>
@@ -195,7 +256,8 @@ const Page: React.FC = () => {
                 <thead className="app__thead">
                   <tr>
                     <th className="app__th pl-4"></th>
-                    <th className="app__th">Applicant</th>
+                    <th className="app__th w-[300px]">Applicant</th>
+                    <th className="app__th w-40"></th>
                     <th className="app__th">Accumulated Points</th>
                     <th className="app__th">Overall Score</th>
                   </tr>
@@ -265,6 +327,18 @@ const Page: React.FC = () => {
                           )}
                         </th>
                         <td className="app__td">
+                          {item.applicant.status === 'Appointed' ? (
+                            <span className="font-bold text-lg">Appointed</span>
+                          ) : (
+                            <CustomButton
+                              containerStyles="app__btn_blue"
+                              title="Appoint"
+                              btnType="button"
+                              handleClick={() => handleAppoint(item.applicant)}
+                            />
+                          )}
+                        </td>
+                        <td className="app__td">
                           {item.accumulated_points && (
                             <div>
                               {Object.entries(item.accumulated_points).map(
@@ -301,6 +375,17 @@ const Page: React.FC = () => {
         <CommitteePointsModal
           applicantData={selectedItem}
           hideModal={() => setShowCommitteePointsModal(false)}
+        />
+      )}
+
+      {/* Disapprove Confirmation Modal */}
+      {showConfirmAppointModal && (
+        <ConfirmModal
+          header="Confirmation"
+          btnText="Confirm"
+          message="Are you sure you want to appoint this employee?"
+          onConfirm={handleConfirmedAppoint}
+          onCancel={() => setShowConfirmAppointModal(false)}
         />
       )}
     </>

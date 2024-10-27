@@ -1,7 +1,11 @@
 import { CustomButton } from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { RankingCommitteeCriteriaTypes, RankingCriteriaPoints } from '@/types'
+import {
+  ApplicantTypes,
+  RankingCommitteeCriteriaTypes,
+  RankingCriteriaPoints
+} from '@/types'
 import { logError } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -9,7 +13,7 @@ import { useForm } from 'react-hook-form'
 interface ModalProps {
   hideModal: () => void
   refetch: () => void
-  applicantId: string
+  applicantData: ApplicantTypes
   committeeId: string
   criterias: RankingCommitteeCriteriaTypes[]
 }
@@ -23,7 +27,7 @@ interface CriteriaFieldsType {
 const CastPoints = ({
   hideModal,
   refetch,
-  applicantId,
+  applicantData,
   criterias
 }: ModalProps) => {
   const [saving, setSaving] = useState(false)
@@ -43,17 +47,11 @@ const CastPoints = ({
   const onSubmit = async (formdata: RankingCriteriaPoints) => {
     setSaving(true)
 
-    // const upsertData = formdata.cast.map((c) => ({
-    //   committee_criteria_id: Number(c.commmittee_criteria_id),
-    //   applicant_id: applicantId,
-    //   points: c.points
-    // }))
-
     const upsertData: any = []
     formdata.cast.forEach((c) =>
       upsertData.push({
         committee_criteria_id: Number(c.commmittee_criteria_id),
-        applicant_id: applicantId,
+        applicant_id: applicantData.id,
         points: c.points
       })
     )
@@ -93,7 +91,7 @@ const CastPoints = ({
     const fields: CriteriaFieldsType[] = []
     criterias.forEach((c) => {
       const findPoint = c.criteria_points.find(
-        (p) => p.applicant_id.toString() === applicantId.toString()
+        (p) => p.applicant_id.toString() === applicantData.id.toString()
       )
 
       fields.push({
