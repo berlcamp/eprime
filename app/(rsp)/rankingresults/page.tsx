@@ -327,15 +327,19 @@ const Page: React.FC = () => {
                           )}
                         </th>
                         <td className="app__td">
-                          {item.applicant.status === 'Appointed' ? (
+                          {hasAccess('sds') &&
+                            item.applicant.status !== 'Appointed' && (
+                              <CustomButton
+                                containerStyles="app__btn_blue"
+                                title="Appoint"
+                                btnType="button"
+                                handleClick={() =>
+                                  handleAppoint(item.applicant)
+                                }
+                              />
+                            )}
+                          {item.applicant.status === 'Appointed' && (
                             <span className="font-bold text-lg">Appointed</span>
-                          ) : (
-                            <CustomButton
-                              containerStyles="app__btn_blue"
-                              title="Appoint"
-                              btnType="button"
-                              handleClick={() => handleAppoint(item.applicant)}
-                            />
                           )}
                         </td>
                         <td className="app__td">

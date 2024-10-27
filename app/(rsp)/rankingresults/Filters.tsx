@@ -50,7 +50,7 @@ const Filters = ({ setFilterKeyword, setFilterRanking }: FilterTypes) => {
       const { data } = await supabase
         .from('hrm_rankings')
         .select('*,position:position_id(name)')
-        .eq('status', 'Open')
+        .eq('status', 'Closed')
       if (data) {
         setRankings(data)
       }
@@ -83,7 +83,12 @@ const Filters = ({ setFilterKeyword, setFilterRanking }: FilterTypes) => {
                 onChange={(e) => setSelectedRanking(e.target.value)}
                 className="app__filter_select"
               >
-                <option value="">Choose Ranking</option>
+                {rankings.length === 0 && (
+                  <option value="">No Closed Rankings Yet</option>
+                )}
+                {rankings.length > 0 && (
+                  <option value="">Choose Ranking</option>
+                )}
                 {rankings.length > 0 &&
                   rankings.map((item, index) => (
                     <option key={index} value={item.id}>
