@@ -34,6 +34,23 @@ export const requestTypes = [
   'Undertime Permit'
 ]
 
+export const leaveCreditTypes = [
+  { gender: 'All', type: 'Service Credit' },
+  { gender: 'All', type: 'Solo Parent Leave' },
+  { gender: 'All', type: 'Study Leave' },
+  { gender: 'All', type: 'Special Emergency (Calamity) Leave' },
+  { gender: 'Female', type: '10-Day VAWC Leave' },
+  { gender: 'All', type: 'Adoption Leave' },
+  { gender: 'Male', type: 'Paternity Leave' },
+  { gender: 'All', type: 'Special Privilege Leave' },
+  { gender: 'All', type: 'Rehabilitation Leave' },
+  { gender: 'Female', type: 'Maternity Leave' },
+  { gender: 'Female', type: 'Special Leave Benefits For Women' },
+  { gender: 'All', type: 'Sick Leave' },
+  { gender: 'All', type: 'Compensatory Overtime Credit' },
+  { gender: 'All', type: 'Vacation Leave' }
+]
+
 export const leaveTypes = [
   'Vacation Leave',
   'Mandatory/Forced Leave',

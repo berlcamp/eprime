@@ -288,6 +288,15 @@ export default function DetailsModal({
     setConfirmMessage('')
   }
 
+  const getBalance = (data: any, type: string) => {
+    const find = data.find((item: any) => item.type === type)
+    if (find) {
+      return find.balance
+    } else {
+      return 0
+    }
+  }
+
   const handleConfirmedForward = async () => {
     if (!selectedUser) return
 
@@ -426,106 +435,92 @@ export default function DetailsModal({
 
       // Add entry to employees leave card if type of request is Leave
       if (documentData.type === 'Leave') {
+        const creditsUsed = [
+          {
+            type: 'Vacation Leave',
+            value: documentData.leave_credit_use_vl
+          },
+          {
+            type: 'Sick Leave',
+            value: documentData.leave_credit_use_sl
+          },
+          {
+            type: 'Compensatory Overtime Credit',
+            value: documentData.leave_credit_use_coc
+          },
+          {
+            type: 'Service Credit',
+            value: documentData.leave_credit_use_sc
+          },
+          {
+            type: 'Adoption Leave',
+            value: documentData.leave_credit_use_adoption
+          },
+          {
+            type: '10-Day VAWC Leave',
+            value: documentData.leave_credit_use_vawc
+          },
+          {
+            type: 'Special Emergency (Calamity) Leave',
+            value: documentData.leave_credit_use_emergency
+          },
+          {
+            type: 'Study Leave',
+            value: documentData.leave_credit_use_study
+          },
+          {
+            type: 'Solo Parent Leave',
+            value: documentData.leave_credit_use_soloparent
+          },
+          {
+            type: 'Special Leave Benefits For Women',
+            value: documentData.leave_credit_use_slbw
+          },
+          {
+            type: 'Special Privilege Leave',
+            value: documentData.leave_credit_use_spl
+          },
+          {
+            type: 'Rehabilitation Leave',
+            value: documentData.leave_credit_use_rehab
+          },
+          {
+            type: 'Paternity Leave',
+            value: documentData.leave_credit_use_paternity
+          },
+          {
+            type: 'Maternity Leave',
+            value: documentData.leave_credit_use_maternity
+          }
+        ]
+
         const result = await fetchLeaveCards(
           documentData.created_by,
           '',
-          300,
+          999,
           0
         ) // fetch all
 
         if (result.data) {
-          const slList = result.data.filter(
-            (item) => item.type === 'Sick Leave'
-          )
-          const vlList = result.data.filter(
-            (item) => item.type === 'Vacation Leave'
-          )
-          const scList = result.data.filter(
-            (item) => item.type === 'Service Credit'
-          )
-          const cocList = result.data.filter(
-            (item) => item.type === 'Compensatory Overtime Credit'
-          )
-
-          // first index of array should be the latest and updated balance
-          const slBalance = slList.length > 0 ? Number(slList[0].balance) : 0
-          const vlBalance = vlList.length > 0 ? Number(vlList[0].balance) : 0
-          const scBalance = scList.length > 0 ? Number(scList[0].balance) : 0
-          const cocBalance = cocList.length > 0 ? Number(cocList[0].balance) : 0
-
           // insert array
-          const leaveCardData = []
-          if (
-            documentData.leave_credit_use_coc &&
-            cocBalance > Number(documentData.leave_credit_use_coc)
-          ) {
-            leaveCardData.push({
-              adjustment_date: new Date(),
-              particulars: 'Compensatory Overtime Credit Adjustment',
-              remarks: 'Credit used from Leave Request',
-              credits_used: documentData.leave_credit_use_coc,
-              balance: (
-                cocBalance - Number(documentData.leave_credit_use_coc)
-              ).toFixed(3),
-              type: 'Compensatory Overtime Credit',
-              tracker_id: documentData.id,
-              user_id: documentData.created_by
-            })
-          }
+          const leaveCardData: any = []
 
-          if (
-            documentData.leave_credit_use_sc &&
-            scBalance > Number(documentData.leave_credit_use_sc)
-          ) {
-            leaveCardData.push({
-              adjustment_date: new Date(),
-              particulars: 'Service Credit Adjustment',
-              remarks: 'Credit used from Leave Request',
-              credits_used: documentData.leave_credit_use_sc,
-              balance: (
-                scBalance - Number(documentData.leave_credit_use_sc)
-              ).toFixed(3),
-              type: 'Service Credit',
-              tracker_id: documentData.id,
-              user_id: documentData.created_by
-            })
-          }
-
-          if (
-            documentData.leave_credit_use_vl &&
-            vlBalance > Number(documentData.leave_credit_use_vl)
-          ) {
-            leaveCardData.push({
-              adjustment_date: new Date(),
-              particulars: 'Vacation Leave Adjustment',
-              remarks: 'Credit used from Leave Request',
-              credits_used: documentData.leave_credit_use_vl,
-              balance: (
-                vlBalance - Number(documentData.leave_credit_use_vl)
-              ).toFixed(3),
-              type: 'Vacation Leave',
-              tracker_id: documentData.id,
-              user_id: documentData.created_by
-            })
-          }
-
-          if (
-            documentData.leave_credit_use_sl &&
-            slBalance > Number(documentData.leave_credit_use_sl)
-          ) {
-            leaveCardData.push({
-              adjustment_date: new Date(),
-              particulars: 'Sick Leave Adjustment',
-              remarks: 'Credit used from Leave Request',
-              credits_used: documentData.leave_credit_use_sl,
-              balance: (
-                slBalance - Number(documentData.leave_credit_use_sl)
-              ).toFixed(3),
-              type: 'Sick Leave',
-              tracker_id: documentData.id,
-              user_id: documentData.created_by
-            })
-          }
+          // Foreach credits used
+          creditsUsed.forEach((cu) => {
+            if (cu.value) {
+              const bal = getBalance(result.data, cu.type)
+              leaveCardData.push({
+                adjustment_date: new Date(),
+                particulars: `${cu.type} Adjustment`,
+                remarks: 'Credit used from Leave Request',
+                credits_used: cu.value,
+                balance: (Number(bal) - Number(cu.value)).toFixed(3),
+                type: cu.type,
+                tracker_id: documentData.id,
+                user_id: documentData.created_by
+              })
+            }
+          })
 
           // Insert to database
           const { error } = await supabase

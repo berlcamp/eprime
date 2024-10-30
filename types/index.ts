@@ -576,6 +576,18 @@ export interface DocumentTypes {
   leave_credit_use_sl: string
   leave_credit_use_coc: string
   leave_credit_use_sc: string
+
+  leave_credit_use_adoption: string
+  leave_credit_use_vawc: string
+  leave_credit_use_emergency: string
+  leave_credit_use_study: string
+  leave_credit_use_soloparent: string
+  leave_credit_use_slbw: string
+  leave_credit_use_spl: string
+  leave_credit_use_rehab: string
+  leave_credit_use_paternity: string
+  leave_credit_use_maternity: string
+
   locator_slip_purpose: string
   locator_slip_type: string
   locator_slip_date: string

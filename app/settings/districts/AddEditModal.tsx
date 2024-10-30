@@ -46,13 +46,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     mode: 'onSubmit'
   })
 
-  // manually set the defaultValues of use-form-hook whenever the component receives new props.
-  useEffect(() => {
-    reset({
-      name: editData ? editData.name : ''
-    })
-  }, [editData, reset])
-
   const onSubmit = async (formdata: FormValues) => {
     if (!user) {
       setErrorMessage('District Head is Required')
@@ -181,6 +174,13 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       setUser(null)
     }
   }
+
+  // manually set the defaultValues of use-form-hook whenever the component receives new props.
+  useEffect(() => {
+    reset({
+      name: editData ? editData.name : ''
+    })
+  }, [editData, reset])
 
   return (
     <>

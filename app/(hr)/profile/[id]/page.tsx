@@ -462,7 +462,9 @@ export default function Page({ params }: { params: { id: string } }) {
                   <Title title="Leave Card" />
                 </div>
                 <div className="mt-4 mx-2">
-                  <LeaveCard userId={userId} />
+                  {userData && (
+                    <LeaveCard userId={userId} userData={userData} />
+                  )}
                 </div>
               </>
             )}
