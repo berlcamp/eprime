@@ -109,6 +109,7 @@ export default function Page() {
       setUser(selectedUsers[0])
     } else {
       setUser(null)
+      setList([])
     }
   }
 
