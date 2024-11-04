@@ -383,7 +383,7 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
                       <div>
                         <input
                           {...register('separation_date')}
-                          type="text"
+                          type="date"
                           placeholder="MM/DD/YYYY"
                           className="app__select_standard"
                         />
