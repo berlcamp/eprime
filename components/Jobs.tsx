@@ -1,6 +1,7 @@
 'use client'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { RankingTypes } from '@/types'
+import { format } from 'date-fns'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
@@ -9,11 +10,13 @@ export default function Jobs() {
   const { supabase } = useSupabase()
 
   useEffect(() => {
+    const today = format(new Date(), 'yyyy-MM-dd')
     const fetchRankins = async () => {
       const { data } = await supabase
         .from('hrm_rankings')
         .select('*, position:position_id(name)')
         .eq('display_on_portal', 'Yes')
+        .gte('display_on_portal_until', today)
         .eq('status', 'Open')
 
       setRankings(data)

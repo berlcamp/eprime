@@ -786,6 +786,7 @@ export interface ApplicantDocuments {
   qualification_id: string
   qualification: RankingQualifications
   document_url: string
+  status: string
 }
 
 export interface AnnouncementTypes {
@@ -798,6 +799,7 @@ export interface RankingCriteriaTypes {
   id: string
   name: string
   points: string
+  lense: string
   ranking_id: string
   committees?: RankingCommitteeTypes[]
 }
@@ -829,4 +831,11 @@ export interface RankingCommitteeTypes {
   type: string
   criteria_ids?: string[]
   committee_criterias?: RankingCommitteeCriteriaTypes[]
+}
+
+export interface RankingEvaluatorTypes {
+  id: string
+  user_id: string
+  hrm_user: Employee
+  ranking_id: string
 }

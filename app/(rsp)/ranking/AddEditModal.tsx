@@ -61,6 +61,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
   })
 
   const watchPositionId = watch('position_id')
+  const watchedDisplay = watch('display_on_portal')
 
   const onSubmit = async (formdata: RankingTypes) => {
     if (saving) return
@@ -84,6 +85,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       description: formdata.description,
       status: formdata.status,
       display_on_portal: formdata.display_on_portal,
+      display_on_portal_until: formdata.display_on_portal_until,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
 
@@ -168,7 +170,8 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       department: formdata.department,
       description: formdata.description,
       status: formdata.status,
-      display_on_portal: formdata.display_on_portal
+      display_on_portal: formdata.display_on_portal,
+      display_on_portal_until: formdata.display_on_portal_until
     }
 
     try {
@@ -541,6 +544,29 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       </div>
                     </div>
                   </div>
+                  {watchedDisplay === 'Yes' && (
+                    <div className="app__form_field_container">
+                      <div className="w-full">
+                        <div className="app__label_standard">
+                          Display on Job Postings Until?
+                        </div>
+                        <div>
+                          <input
+                            {...register('display_on_portal_until', {
+                              required: true
+                            })}
+                            type="date"
+                            className="app__input_standard"
+                          />
+                          {errors.display_on_portal_until && (
+                            <div className="app__error_message">
+                              This is required
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="app__form_field_container">
                     <div className="w-full">
                       <div className="app__label_standard">Description</div>

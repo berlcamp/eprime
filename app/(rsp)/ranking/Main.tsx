@@ -26,11 +26,13 @@ import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { format } from 'date-fns'
 import { TableIcon, User2Icon, UsersIcon } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import RankingApplicants from './RankingApplicants'
 import RankingCommittees from './RankingCommittees'
 import RankingCriterias from './RankingCriterias'
+import RankingEvaluators from './RankingEvaluators'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -38,6 +40,7 @@ const Page: React.FC = () => {
   const [showApplicantsModal, setShowApplicantsModal] = useState(false)
   const [showCriteriasModal, setShowCriteriasModal] = useState(false)
   const [showCommitteesModal, setShowCommitteesModal] = useState(false)
+  const [showEvaluatorsModal, setShowEvaluatorsModal] = useState(false)
   const [selectedId, setSelectedId] = useState('')
   const [refetch, setRefetch] = useState(false)
 
@@ -141,6 +144,11 @@ const Page: React.FC = () => {
 
   const handleViewCommittees = (id: string) => {
     setShowCommitteesModal(true)
+    setSelectedId(id)
+  }
+
+  const handleViewEvaluator = (id: string) => {
+    setShowEvaluatorsModal(true)
     setSelectedId(id)
   }
 
@@ -260,6 +268,17 @@ const Page: React.FC = () => {
                                         <span>Manage Committees</span>
                                       </div>
                                     </Menu.Item>
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() =>
+                                          handleViewEvaluator(item.id)
+                                        }
+                                        className="app__dropdown_item"
+                                      >
+                                        <UsersIcon className="w-4 h-4" />
+                                        <span>Manage Evaluators</span>
+                                      </div>
+                                    </Menu.Item>
                                   </>
                                 )}
                                 <Menu.Item>
@@ -311,6 +330,12 @@ const Page: React.FC = () => {
                                 Display On Job Postings:
                               </span>{' '}
                               {item.display_on_portal === 'Yes' ? 'Yes' : 'No'}
+                              (Until{' '}
+                              {format(
+                                new Date(item.display_on_portal_until),
+                                'MMM d, yyyy'
+                              )}
+                              )
                             </div>
                             <div>
                               <span className="app_td_mobile_label">
@@ -332,7 +357,17 @@ const Page: React.FC = () => {
                         {item.type} - {item.year}
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        {item.display_on_portal === 'Yes' ? 'Yes' : 'No'}
+                        {item.display_on_portal === 'Yes' ? (
+                          <span>
+                            Displayed until{' '}
+                            {format(
+                              new Date(item.display_on_portal_until),
+                              'MMM d, yyyy'
+                            )}
+                          </span>
+                        ) : (
+                          'No'
+                        )}
                       </td>
                       <td className="hidden md:table-cell app__td">
                         <UserBlock user={item.chairman} />
@@ -384,6 +419,13 @@ const Page: React.FC = () => {
         <RankingCommittees
           rankingId={selectedId}
           hideModal={() => setShowCommitteesModal(false)}
+        />
+      )}
+      {/* Show Evaluators Modal */}
+      {showEvaluatorsModal && (
+        <RankingEvaluators
+          rankingId={selectedId}
+          hideModal={() => setShowEvaluatorsModal(false)}
         />
       )}
     </>

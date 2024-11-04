@@ -244,6 +244,15 @@
 .app__label_value {
   @apply text-gray-600 font-bold text-sm mb-1;
 }
+.app__status_green {
+  @apply font-medium text-green-700 bg-green-100 border border-green-500 py-px px-1 text-xs;
+}
+.app__status_orange {
+  @apply font-medium text-orange-700 bg-orange-100 border border-orange-500 py-px px-1 text-xs;
+}
+.app__status_red {
+  @apply font-medium text-red-700 bg-red-100 border border-red-500 py-px px-1 text-xs;
+}
 .app__status_container_green {
   @apply font-medium text-green-600 border px-1 py-px border-green-400 bg-green-100;
 }

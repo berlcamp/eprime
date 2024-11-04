@@ -1,12 +1,17 @@
-import { CustomButton } from '@/components'
+import { ConfirmModal, CustomButton } from '@/components'
 import ApplicantDetails from '@/components/Rsp/ApplicantDetails'
 import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
+import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
+  ApplicantDocuments,
   ApplicantTypes,
   RankingCommitteeCriteriaTypes,
-  RankingCommitteeTypes
+  RankingCommitteeTypes,
+  RankingTypes
 } from '@/types'
+import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
+import { logError } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
 import CastPoints from './CastPoints'
 
@@ -15,9 +20,17 @@ interface ModalProps {
   rankingId: string
 }
 
+interface ListTypes {
+  applicant: ApplicantTypes
+  accumulated_points: Record<string, number> | null
+  overall_score: string
+  ranking: RankingTypes
+}
+
 const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
   const [showQualificationsModal, setShowQualificationsModal] = useState(false)
   const [showCastPointsModal, setShowCastPointsModal] = useState(false)
+  const [showRemoveModal, setShowRemoveModal] = useState(false)
   const [showCommitteePointsModal, setShowCommitteePointsModal] =
     useState(false)
   const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
@@ -31,11 +44,16 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
 
   const [canCastPoints, setCanCastPoints] = useState(false)
 
-  const [list, setList] = useState<ApplicantTypes[] | []>([])
+  const [list, setList] = useState<ListTypes[] | []>([])
   const { supabase, session } = useSupabase()
+  const { setToast } = useFilter()
 
   const handleViewQualifications = (item: ApplicantTypes) => {
     setShowQualificationsModal(true)
+    setSelectedItem(item)
+  }
+  const handleRemoveApplicant = (item: ApplicantTypes) => {
+    setShowRemoveModal(true)
     setSelectedItem(item)
   }
   const handleCastPoints = (item: ApplicantTypes) => {
@@ -47,14 +65,91 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
     setSelectedItem(item)
   }
 
+  const handleRemoveConfirmed = async () => {
+    try {
+      const { error } = await supabase
+        .from('hrm_ranking_applicants')
+        .delete()
+        .eq('id', selectedItem?.id)
+
+      if (error) {
+        void logError(
+          'Delete Ranking Applicant',
+          'hrm_ranking_applicants',
+          '',
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(error.message)
+      }
+
+      // pop up the success message
+      setToast('success', 'Successfully Deleted!')
+
+      setShowRemoveModal(false)
+      setRefetch(!refetch)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const qualificationStatus = (statuses: ApplicantDocuments[]) => {
+    if (statuses.length === 0) {
+      return 'No Qualifications'
+    }
+    if (statuses.some((item) => item.status === 'Not Okay')) {
+      return 'Not Qualified'
+    } else if (statuses.some((item) => item.status === 'For Evaluation')) {
+      return 'For Evaluation'
+    } else if (statuses.every((item) => item.status === 'Okay')) {
+      return 'Qualified'
+    }
+    return 'Not Known'
+  }
+
   useEffect(() => {
     const fetchApplicantsData = async () => {
       const { data } = await supabase
         .from('hrm_ranking_applicants')
-        .select('*, ranking:ranking_id(status)')
+        .select(
+          '*,applicant_documents:hrm_ranking_applicant_documents(status),ranking:ranking_id(status,chairman_id,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          {
+            count: 'exact'
+          }
+        )
         .eq('ranking_id', rankingId)
         .order('lastname', { assending: true })
-      setList(data)
+
+      if (data.length > 0) {
+        const structguredData: ListTypes[] = []
+        data.forEach((d: ApplicantTypes) => {
+          const accumulatedPoints: Record<string, number> | null =
+            CommitteeAccumulatedPoints(d.id, d.ranking.committees)
+
+          structguredData.push({
+            applicant: d,
+            ranking: d.ranking,
+            accumulated_points: accumulatedPoints,
+            overall_score: accumulatedPoints
+              ? Object.values(accumulatedPoints)
+                  .reduce((sum: number, points) => sum + points, 0)
+                  .toFixed(2)
+              : ''
+          })
+        })
+
+        // Sort structguredData by overall_score in descending order
+        structguredData.sort((a, b) => {
+          const scoreA = parseFloat(a.overall_score || '0')
+          const scoreB = parseFloat(b.overall_score || '0')
+          return scoreB - scoreA // Sort in descending order
+        })
+
+        setList(structguredData)
+      }
     }
 
     // find if logged in user belongs to any criteria
@@ -105,6 +200,8 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                   <tr>
                     <th className="app__th">Applicant</th>
                     <th className="app__th"></th>
+                    <th className="app__th">Accumulated Points</th>
+                    <th className="app__th">Overall Score</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -113,47 +210,120 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                       <tr key={index} className="app__tr">
                         <th className="app__th_firstcol">
                           <div className="font-medium">
-                            {item.lastname}, {item.firstname} {item.middlename}
+                            {item.applicant.lastname},{' '}
+                            {item.applicant.firstname}{' '}
+                            {item.applicant.middlename}
                           </div>
-                          <div className="font-light">{item.email}</div>
-                          {item.current_employee === 'Yes' && (
+                          <div className="font-light">
+                            {item.applicant.email}
+                          </div>
+                          {item.applicant.current_employee === 'Yes' && (
                             <div className="font-bold">
                               (Current DepEd Employee)
                             </div>
                           )}
-                          {item.previous_applicant === 'Yes' && (
+                          {item.applicant.previous_applicant === 'Yes' && (
                             <div className="font-bold">
                               (Previous Applicant)
                             </div>
                           )}
+                          <div className="mt-1">
+                            {qualificationStatus(
+                              item.applicant.applicant_documents
+                            ) === 'For Evaluation' && (
+                              <span className="text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
+                                For Evaluation
+                              </span>
+                            )}
+                            {qualificationStatus(
+                              item.applicant.applicant_documents
+                            ) === 'Qualified' && (
+                              <span className="text-green-500 bg-green-100 border border-green-500 py-px px-1">
+                                Qualified
+                              </span>
+                            )}
+                            {qualificationStatus(
+                              item.applicant.applicant_documents
+                            ) === 'Not Qualified' && (
+                              <span className="text-red-500 bg-red-100 border border-red-500 py-px px-1">
+                                Not Qualified
+                              </span>
+                            )}
+                            {qualificationStatus(
+                              item.applicant.applicant_documents
+                            ) === 'No Qualifications' && (
+                              <span className="text-red-500 bg-red-100 border border-red-500 py-px px-1">
+                                No Qualifications
+                              </span>
+                            )}
+                          </div>
                         </th>
                         <td className="app__td">
                           <div className="space-x-2">
+                            {item.ranking.chairman_id === session.user.id && (
+                              <CustomButton
+                                containerStyles="app__btn_red_xs"
+                                title="Remove this Applicant"
+                                btnType="button"
+                                handleClick={() =>
+                                  handleRemoveApplicant(item.applicant)
+                                }
+                              />
+                            )}
                             <CustomButton
                               containerStyles="app__btn_blue_xs"
                               title="View Qualifications"
                               btnType="button"
-                              handleClick={() => handleViewQualifications(item)}
-                            />
-                            <CustomButton
-                              containerStyles="app__btn_blue_xs"
-                              title="View Casted Points"
-                              btnType="button"
                               handleClick={() =>
-                                handleViewCommitteePoints(item)
+                                handleViewQualifications(item.applicant)
                               }
                             />
-                            {canCastPoints &&
-                              item.ranking.status === 'Open' && (
+                            {qualificationStatus(
+                              item.applicant.applicant_documents
+                            ) === 'Qualified' && (
+                              <>
                                 <CustomButton
                                   containerStyles="app__btn_blue_xs"
-                                  title="Cast Points"
+                                  title="View Casted Points"
                                   btnType="button"
-                                  handleClick={() => handleCastPoints(item)}
+                                  handleClick={() =>
+                                    handleViewCommitteePoints(item.applicant)
+                                  }
                                 />
-                              )}
+                                {canCastPoints &&
+                                  item.ranking.status === 'Open' && (
+                                    <CustomButton
+                                      containerStyles="app__btn_blue_xs"
+                                      title="Cast Points"
+                                      btnType="button"
+                                      handleClick={() =>
+                                        handleCastPoints(item.applicant)
+                                      }
+                                    />
+                                  )}
+                              </>
+                            )}
                           </div>
                         </td>
+                        <td className="app__td">
+                          {item.accumulated_points && (
+                            <div>
+                              {Object.entries(item.accumulated_points).map(
+                                ([criteriaName, avgPoints]) => (
+                                  <div key={criteriaName}>
+                                    <span>{criteriaName}:</span>
+                                    <span className="font-bold">
+                                      {' '}
+                                      {avgPoints.toFixed(2)}{' '}
+                                    </span>
+                                    {/* Display with 2 decimal places */}
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td className="app__td">{item.overall_score}</td>
                       </tr>
                     ))}
                 </tbody>
@@ -166,6 +336,7 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
       {selectedItem && showQualificationsModal && (
         <ApplicantDetails
           applicantData={selectedItem}
+          refetch={() => setRefetch(!refetch)}
           hideModal={() => setShowQualificationsModal(false)}
         />
       )}
@@ -184,6 +355,16 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
         <CommitteePointsModal
           applicantData={selectedItem}
           hideModal={() => setShowCommitteePointsModal(false)}
+        />
+      )}
+      {/* Delete Modal */}
+      {showRemoveModal && (
+        <ConfirmModal
+          header="Confirm Remove"
+          btnText="Confirm"
+          message="This action cannot be undone. Are you sure you want to remove this applicant?"
+          onConfirm={handleRemoveConfirmed}
+          onCancel={() => setShowRemoveModal(false)}
         />
       )}
     </>

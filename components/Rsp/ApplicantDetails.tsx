@@ -1,12 +1,14 @@
 import { CustomButton } from '@/components'
+import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { ApplicantTypes } from '@/types'
+import { ApplicantTypes, RankingEvaluatorTypes } from '@/types'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 interface ModalProps {
   hideModal: () => void
   applicantData: ApplicantTypes
+  refetch: () => void
 }
 
 interface QualificationTypes {
@@ -14,21 +16,48 @@ interface QualificationTypes {
   qualification_description: string
   documents: Array<{
     id: string
+    status: string
     document_url: string
   }>
 }
 
-const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
+const ApplicantDetails = ({
+  hideModal,
+  applicantData,
+  refetch
+}: ModalProps) => {
   const [qualification, setQualification] = useState<QualificationTypes[] | []>(
     []
   )
   const [previousQualification, setPreviousQualification] = useState<
     QualificationTypes[] | []
   >([])
-  const { supabase } = useSupabase()
+  const [refresh, setRefresh] = useState(false)
+  const [evaluators, setEvaluators] = useState<RankingEvaluatorTypes[] | []>([])
+  const { supabase, session } = useSupabase()
+  const { setToast } = useFilter()
 
   const extractFilename = (url: string) => {
     return url.split('/').pop() // Get the last part of the URL which is the filename
+  }
+
+  const handleUpdateStatus = async (id: string, status: string) => {
+    const { error } = await supabase
+      .from('hrm_ranking_applicant_documents')
+      .update({
+        status
+      })
+      .eq('id', id)
+    if (error) {
+      setToast('error', 'Something went wrong, please reload the page')
+    } else {
+      setRefresh(!refresh)
+    }
+  }
+
+  const handleClose = () => {
+    hideModal()
+    refetch()
   }
 
   useEffect(() => {
@@ -78,6 +107,8 @@ const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
 
             if (!acc[qualification_id]) {
               acc[qualification_id] = {
+                document_id: document.id,
+                document_status: document.status,
                 qualification_name: qualification.name,
                 qualification_description: qualification.description,
                 documents: []
@@ -93,12 +124,21 @@ const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
       }
     }
 
+    const fetchEvaluators = async () => {
+      const { data: evaluatorsData } = await supabase
+        .from('hrm_ranking_evaluators')
+        .select()
+        .eq('ranking_id', applicantData.ranking_id)
+      setEvaluators(evaluatorsData)
+    }
+
     void fetchQualificationsData()
+    void fetchEvaluators()
 
     if (applicantData.previous_applicant === 'Yes') {
       void fetchPreviousQualificationsData()
     }
-  }, [applicantData])
+  }, [applicantData, refresh])
 
   return (
     <>
@@ -113,7 +153,7 @@ const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
                 containerStyles="app__btn_gray"
                 title="Close"
                 btnType="button"
-                handleClick={hideModal}
+                handleClick={handleClose}
               />
             </div>
 
@@ -124,6 +164,9 @@ const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
                 </div>
                 <div>
                   <div className="p-4 bg-gray-50 border space-y-6">
+                    {Object.entries(qualification).length === 0 && (
+                      <div className="text-gray-600">No QS Uploaded</div>
+                    )}
                     {Object.entries(qualification).map(
                       (
                         [
@@ -152,15 +195,66 @@ const ApplicantDetails = ({ hideModal, applicantData }: ModalProps) => {
 
                                 return (
                                   <li key={index} className="mb-2">
-                                    {/* Display the filename and make it downloadable */}
-                                    <Link
-                                      href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/hrm_public/${doc.document_url}`}
-                                      download={filename}
-                                      target="_blank"
-                                      className="text-blue-600 hover:underline"
-                                    >
-                                      {filename}
-                                    </Link>
+                                    <div className="flex space-x-2">
+                                      {/* Display the filename and make it downloadable */}
+                                      <Link
+                                        href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/hrm_public/${doc.document_url}`}
+                                        download={filename}
+                                        target="_blank"
+                                        className="text-blue-600 hover:underline"
+                                      >
+                                        {filename}
+                                      </Link>
+                                      <div className="flex-1">
+                                        {doc.status === 'Okay' && (
+                                          <span className="app__status_green">
+                                            Okay
+                                          </span>
+                                        )}
+                                        {doc.status === 'Not Okay' && (
+                                          <span className="app__status_red">
+                                            Not Okay
+                                          </span>
+                                        )}
+                                        {doc.status === 'For Evaluation' && (
+                                          <span className="app__status_orange">
+                                            For Evaluation
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div>
+                                        {evaluators.some(
+                                          (evaluator) =>
+                                            evaluator.user_id ===
+                                            session.user.id
+                                        ) && (
+                                          <div className="space-x-2">
+                                            <CustomButton
+                                              containerStyles="app__btn_green_xs"
+                                              title="Okay"
+                                              btnType="button"
+                                              handleClick={() =>
+                                                handleUpdateStatus(
+                                                  doc.id,
+                                                  'Okay'
+                                                )
+                                              }
+                                            />
+                                            <CustomButton
+                                              containerStyles="app__btn_red_xs"
+                                              title="Not Okay"
+                                              btnType="button"
+                                              handleClick={() =>
+                                                handleUpdateStatus(
+                                                  doc.id,
+                                                  'Not Okay'
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
                                   </li>
                                 )
                               })}

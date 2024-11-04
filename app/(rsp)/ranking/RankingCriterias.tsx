@@ -3,6 +3,7 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { RankingCriteriaTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
+import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -50,6 +51,7 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
     const newData = {
       name: formdata.name,
       points: formdata.points,
+      lense: formdata.lense === 'Yes' ? 'Yes' : 'No',
       ranking_id: rankingId
     }
 
@@ -155,7 +157,7 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
   return (
     <>
       <div className="app__modal_wrapper">
-        <div className="app__modal_wrapper2">
+        <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
               <h5 className="app__modal_header_text">Ranking Criterias</h5>
@@ -199,6 +201,17 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
                         </div>
                       )}
                     </div>
+                    <div>
+                      <label className="flex space-x-2">
+                        <input
+                          {...register('lense')}
+                          type="checkbox"
+                          value="Yes"
+                          className="app__input_standard"
+                        />
+                        <span className="text-gray-600">Lense</span>
+                      </label>
+                    </div>
                     <div className="flex-1">
                       <button type="submit" className="app__btn_green_sm">
                         {saving ? 'Saving..' : 'Add'}
@@ -228,7 +241,12 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
                     list.map((item, index) => (
                       <tr key={index} className="app__tr">
                         <th className="app__th_firstcol">
-                          <div className="font-medium">{item.name}</div>
+                          <div className="font-medium flex space-x-2">
+                            <span>{item.name}</span>
+                            {item.lense === 'Yes' && (
+                              <MagnifyingGlassIcon className="w-5 h-5" />
+                            )}
+                          </div>
                         </th>
                         <td className="app__td">{item.points}</td>
                         <td className="app__td">

@@ -297,6 +297,9 @@ const Page: React.FC = () => {
           {/* Show Details Modal */}
           {selectedItem && showDetailsModal && (
             <ApplicantDetails
+              refetch={() => {
+                return false
+              }}
               applicantData={selectedItem}
               hideModal={() => setShowDetailsModal(false)}
             />

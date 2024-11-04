@@ -7,6 +7,7 @@ import {
   RankingCriteriaPoints
 } from '@/types'
 import { logError } from '@/utils/fetchApi'
+import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -22,6 +23,7 @@ interface CriteriaFieldsType {
   name: string
   commmittee_criteria_id: string
   points: string
+  lense: boolean
   max_points: number
 }
 const CastPoints = ({
@@ -98,6 +100,7 @@ const CastPoints = ({
         name: c.criteria.name,
         commmittee_criteria_id: c.id,
         max_points: Number(c.criteria.points),
+        lense: c.criteria.lense === 'Yes',
         points: findPoint ? findPoint.points : ''
       })
       setCriteriasField(fields)
@@ -125,10 +128,15 @@ const CastPoints = ({
                   <div key={idx} className="app__form_field_container">
                     <div className="w-full">
                       <div className="app__label_standard">
-                        <span>{criteria.name}</span>{' '}
-                        <span className="font-light italic">
-                          (Max: {criteria.max_points})
-                        </span>
+                        <div className="flex space-x-2">
+                          <span>{criteria.name}</span>{' '}
+                          {criteria.lense && (
+                            <MagnifyingGlassIcon className="w-5 h-5" />
+                          )}
+                          <span className="font-light italic">
+                            (Max: {criteria.max_points})
+                          </span>
+                        </div>
                       </div>
                       <div>
                         <input
