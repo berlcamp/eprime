@@ -35,26 +35,81 @@ export const requestTypes = [
 ]
 
 export const leaveCreditTypes = [
-  { gender: 'All', type: 'Service Credit' },
-  { gender: 'All', type: 'Solo Parent Leave' },
-  { gender: 'All', type: 'Study Leave' },
-  { gender: 'All', type: 'Special Emergency (Calamity) Leave' },
-  { gender: 'Female', type: '10-Day VAWC Leave' },
-  { gender: 'All', type: 'Adoption Leave' },
-  { gender: 'Male', type: 'Paternity Leave' },
-  { gender: 'All', type: 'Special Privilege Leave' },
-  { gender: 'All', type: 'Rehabilitation Leave' },
-  { gender: 'Female', type: 'Maternity Leave' },
-  { gender: 'Female', type: 'Special Leave Benefits For Women' },
-  { gender: 'All', type: 'Sick Leave' },
-  { gender: 'All', type: 'Compensatory Overtime Credit' },
-  { gender: 'All', type: 'Vacation Leave' }
+  {
+    position_type: 'Teaching',
+    gender: 'All',
+    type: 'Service Credit',
+    credits: 0
+  },
+  {
+    position_type: 'All',
+    gender: 'All',
+    type: 'Solo Parent Leave',
+    credits: 7
+  },
+  { position_type: 'All', gender: 'All', type: 'Study Leave', credits: 182 },
+  {
+    position_type: 'All',
+    gender: 'All',
+    type: 'Special Emergency (Calamity) Leave',
+    credits: 5
+  },
+  {
+    position_type: 'All',
+    gender: 'Female',
+    type: '10-Day VAWC Leave',
+    credits: 10
+  },
+  { position_type: 'All', gender: 'All', type: 'Adoption Leave', credits: 60 },
+  { position_type: 'All', gender: 'Male', type: 'Paternity Leave', credits: 7 },
+  {
+    position_type: 'All',
+    gender: 'All',
+    type: 'Special Privilege Leave',
+    credits: 3
+  },
+  {
+    position_type: 'All',
+    gender: 'All',
+    type: 'Rehabilitation Leave',
+    credits: 182
+  },
+  {
+    position_type: 'All',
+    gender: 'Female',
+    type: 'Maternity Leave',
+    credits: 105
+  },
+  {
+    position_type: 'All',
+    gender: 'Female',
+    type: 'Special Leave Benefits For Women',
+    credits: 60
+  },
+  {
+    position_type: 'Non-teaching',
+    gender: 'All',
+    type: 'Sick Leave',
+    credits: 0
+  },
+  {
+    position_type: 'Non-teaching',
+    gender: 'All',
+    type: 'Compensatory Overtime Credit',
+    credits: 0
+  },
+  {
+    position_type: 'Non-teaching',
+    gender: 'All',
+    type: 'Vacation Leave',
+    credits: 0
+  }
 ]
 
 export const leaveTypes = [
   'Vacation Leave',
-  'Mandatory/Forced Leave',
   'Sick Leave',
+  'Mandatory/Forced Leave',
   'Maternity Leave',
   'Paternity Leave',
   'Special Privilege Leave',

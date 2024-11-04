@@ -1,6 +1,6 @@
-import { logError } from '@/utils/fetchApi'
+import { leaveCreditTypes } from '@/constants'
+import { Employee } from '@/types'
 import { createClient } from '@supabase/supabase-js'
-import { format } from 'date-fns'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -14,118 +14,55 @@ export async function GET() {
     }
   })
 
-  const today = format(new Date(), 'yyyy-MM-dd')
-
   try {
     /*
      * Automated CTO Expiration
      */
-    const { error } = await supabase
-      .from('hrm_ctos')
-      .update({ status: 'Expired' })
-      .is('status', null)
-      .lte('expiration', today)
+    const { data, error } = await supabase
+      .from('hrm_users')
+      .select()
+      .eq('status', 'Active')
 
     if (error) {
-      void logError('Cron Job', 'hrm_ctos', '', error.message)
       throw new Error(error.message)
     }
 
-    const { error: error2 } = await supabase
-      .from('hrm_cto_users')
-      .update({ status: 'Expired' })
-      .is('status', null)
-      .lte('expiration', today)
+    const currentYear = new Date().getFullYear() // Get the current year
+    const nextYear = currentYear + 1 // Add 1 to the current year
+    const resetDate = `${nextYear}/01/02`
 
-    if (error2) {
-      void logError('Cron Job', 'hrm_cto_users', '', error2.message)
-      throw new Error(error2.message)
-    }
+    const insertData: any = []
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    data.forEach(async (emp: Employee) => {
+      const leaveCardData = leaveCreditTypes.map((l) => {
+        return {
+          type: l.type,
+          gender: l.gender,
+          position_type: l.position_type,
+          date_of_next_reset:
+            l.type !== 'Vacation Leave' && l.type !== 'Sick Leave'
+              ? resetDate
+              : null,
+          credits: l.credits,
+          user_id: emp.id
+        }
+      })
 
-    /*
-     * Auto update employee's date_of_last_designation and position_type based from effectivity date of designation
-     */
+      insertData.push(...leaveCardData)
+    })
 
-    /*
-     * Automated NOSI Generation
-     */
-    await generateNosi(supabase)
+    console.log('len: ', insertData.length)
+    // const { error: error3 } = await supabase
+    //   .from('hrm_leave_credits')
+    //   .insert(insertData)
+
+    // if (error3) {
+    //   throw new Error(error3.message)
+    // }
 
     return NextResponse.json('Cron completed')
   } catch (error) {
     console.log('Error: ', error)
     return NextResponse.json(error)
-  }
-}
-
-// NOSI generation logic
-async function generateNosi(supabase: any) {
-  try {
-    // Fetch all active employees
-    const { data: employees, error } = await supabase
-      .from('hrm_users')
-      .select(
-        'id, date_of_last_promotion, status, joining_date, absent_days_without_pay, item_id'
-      )
-      .not('item_id', 'is', null)
-      .eq('status', 'active')
-
-    if (error) throw new Error(`Error fetching employees: ${error.message}`)
-
-    const today = new Date()
-
-    // Loop through each employee to check if NOSI should be generated
-    for (const employee of employees) {
-      const {
-        id,
-        date_of_last_promotion,
-        joining_date,
-        absent_days_without_pay
-      } = employee
-
-      // Calculate the latest relevant date (promotion or joining)
-      let referenceDate = new Date(joining_date)
-      if (
-        date_of_last_promotion &&
-        new Date(date_of_last_promotion) > new Date(joining_date)
-      ) {
-        referenceDate = new Date(date_of_last_promotion)
-      }
-
-      // Add 3 years to the reference date
-      const nosiDate = new Date(referenceDate)
-      nosiDate.setFullYear(nosiDate.getFullYear() + 3)
-
-      // Ensure absent_days_without_pay is a number
-      const absentDaysWithoutPay = Number(absent_days_without_pay)
-
-      // Add extra days if absent_days_without_pay > 90
-      if (absentDaysWithoutPay > 90) {
-        nosiDate.setDate(nosiDate.getDate() + absentDaysWithoutPay)
-      }
-
-      // Check if the current date has reached or passed the calculated NOSI date
-      if (today >= nosiDate) {
-        // Generate the NOSI record
-        const { error: nosiError } = await supabase.from('hrm_nosi').insert({
-          user_id: id
-        })
-
-        if (nosiError) {
-          void logError('Cron Job', 'hrm_nosi', id, nosiError.message)
-          continue // Move to next employee if error
-        }
-
-        console.log(`NOSI generated for user ${id}`)
-
-        // Reset absent_days_without_pay to 0
-        await supabase
-          .from('hrm_users')
-          .update({ absent_days_without_pay: 0 })
-          .eq('id', id)
-      }
-    }
-  } catch (error) {
-    console.error('Error generating NOSI: ', error)
   }
 }

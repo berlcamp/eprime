@@ -24,7 +24,7 @@ interface AdjustmentTypes {
   balance: string
   remarks: string
   confirmed: string
-  adjustment_date: string
+  date_of_next_increment: string
 }
 
 export default function LeaveCard({ userId, userData }: PageProps) {
@@ -79,10 +79,13 @@ export default function LeaveCard({ userId, userData }: PageProps) {
     register,
     formState: { errors },
     reset,
+    watch,
     handleSubmit
   } = useForm<AdjustmentTypes>({
     mode: 'onSubmit'
   })
+
+  const watchedType = watch('type')
 
   const onSubmit = async (formdata: AdjustmentTypes) => {
     if (saving) return
@@ -117,13 +120,36 @@ export default function LeaveCard({ userId, userData }: PageProps) {
         throw new Error(error.message)
       }
 
+      // Update leave credits
+      const { error: error2 } = await supabase
+        .from('hrm_leave_credits')
+        .update({
+          credits: formdata.balance,
+          date_of_next_increment: formdata.date_of_next_increment
+            ? formdata.date_of_next_increment
+            : null
+        })
+        .eq('user_id', userId)
+        .eq('type', formdata.type)
+
+      if (error2) {
+        void logError(
+          'Create Leave Credit Manual Adjustment',
+          'hrm_leave_credits',
+          '',
+          error2.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(error2.message)
+      }
+
       // update the list in redux
       const newList = [
         {
-          adjustment_date: format(
-            new Date(formdata.adjustment_date),
-            'MMM dd, yyyy'
-          ),
+          adjustment_date: format(new Date(), 'MMM dd, yyyy'),
           particulars: `${formdata.type} Adjustment`,
           credits_used: '',
           credits_earned: '',
@@ -222,24 +248,27 @@ export default function LeaveCard({ userId, userData }: PageProps) {
                     </div>
                   )}
                 </div>
-                <div className="mb-2 w-full">
-                  <div className="app__label_standard">Adjustment Date:</div>
-                  <input
-                    {...register('adjustment_date', { required: true })}
-                    type="date"
-                    placeholder="Updated Balance"
-                    className="app__input_standard"
-                  />
-                  <div className="text-xs text-gray-600 italic mt-1">
-                    (Next auto increment will be in 1 month from this adjustment
-                    date)
-                  </div>
-                  {errors.adjustment_date && (
-                    <div className="app__error_message">
-                      Adjustment Date is required
+                {(watchedType === 'Vacation Leave' ||
+                  watchedType === 'Sick Leave') && (
+                  <div className="mb-2 w-full">
+                    <div className="app__label_standard">
+                      Date of next Increment:
                     </div>
-                  )}
-                </div>
+                    <input
+                      {...register('date_of_next_increment', {
+                        required: true
+                      })}
+                      type="date"
+                      placeholder="Updated Balance"
+                      className="app__input_standard"
+                    />
+                    {errors.date_of_next_increment && (
+                      <div className="app__error_message">
+                        Date of next Increment is required
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="mb-2 w-full">
                   <div className="app__label_standard">
                     Remarks{' '}

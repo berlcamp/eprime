@@ -6,6 +6,7 @@ import { type Employee } from '@/types'
 import { logError } from '@/utils/fetchApi'
 
 import { RegisteredTemplate } from '@/components/Emails/RegisteredTemplate'
+import { leaveCreditTypes } from '@/constants'
 import type * as React from 'react'
 import { Resend } from 'resend'
 
@@ -89,73 +90,33 @@ export async function POST(req: NextRequest) {
       throw new Error('hrmUserError' + updateRegistrationError.message)
     }
 
-    let leaveCardData
-    if (item.gender === 'Male') {
-      leaveCardData = [
-        {
-          type: 'Paternity Leave',
-          balance: 7,
-          remarks: 'Auto added to system after signup, adjust accordingly',
-          user_id: newUser.user.id,
-          particulars: 'Paternity Leave Adjustment'
-        },
-        {
-          type: 'Special Privilege Leave',
-          balance: 3,
-          remarks: 'Auto added to system after signup, adjust accordingly',
-          user_id: newUser.user.id,
-          particulars: 'Special Privilege Leave Adjustment'
-        },
-        {
-          type: 'Rehabilitation Leave',
-          balance: 180,
-          remarks: 'Auto added to system after signup, adjust accordingly',
-          user_id: newUser.user.id,
-          particulars: 'Rehabilitation Leave Adjustment'
-        }
-      ]
-    } else {
-      leaveCardData = [
-        {
-          type: 'Maternity Leave',
-          balance: 105,
-          remarks: 'Auto added to system after signup, adjust accordingly',
-          user_id: newUser.user.id,
-          particulars: 'Maternity Leave Adjustment'
-        },
-        {
-          type: 'Special Privilege Leave',
-          balance: 3,
-          remarks: 'Auto added to system after signup, adjust accordingly',
-          user_id: newUser.user.id,
-          particulars: 'Special Privilege Leave Adjustment'
-        },
-        {
-          type: 'Rehabilitation Leave',
-          balance: 180,
-          remarks: 'Auto added to system after signup, adjust accordingly',
-          user_id: newUser.user.id,
-          particulars: 'Rehabilitation Leave Adjustment'
-        },
-        {
-          type: 'Special Leave Benefits For Women',
-          balance: 60,
-          remarks: 'Auto added to system after signup, adjust accordingly',
-          user_id: newUser.user.id,
-          particulars: 'Special Leave Benefits For Women Adjustment'
-        }
-      ]
-    }
+    const currentYear = new Date().getFullYear() // Get the current year
+    const nextYear = currentYear + 1 // Add 1 to the current year
+    const resetDate = `${nextYear}/01/02`
+
+    const leaveCardData = leaveCreditTypes.map((l) => {
+      return {
+        type: l.type,
+        gender: l.gender,
+        position_type: l.position_type,
+        date_of_next_reset:
+          l.type !== 'Vacation Leave' && l.type !== 'Sick Leave'
+            ? resetDate
+            : null,
+        credits: l.credits,
+        user_id: newUser.user.id
+      }
+    })
 
     // Generate default leave credit values for all leave types expect SL, VL, COC, SC
     const { error: error3 } = await supabase
-      .from('hrm_leave_cards')
+      .from('hrm_leave_credits')
       .insert(leaveCardData)
 
     if (error3) {
       void logError(
-        'Auto add leave card record on registration approval',
-        'hrm_leave_cards',
+        'Auto add leave card credits on registration approval',
+        'hrm_leave_credits',
         '',
         error3.message
       )

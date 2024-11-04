@@ -174,10 +174,12 @@ export default function CreditsCertification({ documentData }: PropTypes) {
     }
     setCreditsUsed(balances)
 
-    const withpay = Number(sl) + Number(vl) + Number(coc) + Number(sc)
-    const withoutpay =
-      Number(documentData.leave_days) -
-      (Number(sl) + Number(vl) + Number(coc) + Number(sc))
+    let withpay = 0
+    balances.forEach((b) => {
+      withpay += Number(b.balance)
+    })
+
+    const withoutpay = Number(documentData.leave_days) - withpay
 
     setWithPay(withpay)
     setWithoutPay(withoutpay >= 0 ? withoutpay : 0)

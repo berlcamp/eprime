@@ -168,6 +168,18 @@ export interface LeaveCardTypes {
   updater?: Employee
 }
 
+export interface LeaveCreditTypes {
+  id: string
+  position_type: string
+  gender: string
+  type: string
+  credits: number
+  date_of_next_increment: string
+  date_of_next_reset: string
+  user_id: string
+  employee: Employee
+}
+
 export interface AccountDetailsForm {
   firstname: string
   middlename: string
