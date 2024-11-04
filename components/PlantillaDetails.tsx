@@ -121,7 +121,9 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       salary_grade: formdata.salary_grade,
       vice: formdata.vice,
       sex: formdata.sex,
-      birthday: format(new Date(formdata.birthday), 'MM/dd/yyyy'),
+      birthday: formdata.birthday
+        ? format(new Date(formdata.birthday), 'MM/dd/yyyy')
+        : null,
       eligibility: formdata.eligibility,
       date_of_last_promotion: new Date(formdata.date_of_last_promotion),
       date_of_original_appointment: new Date(
