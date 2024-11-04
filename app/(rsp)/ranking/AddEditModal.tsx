@@ -349,6 +349,40 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
               name: 'Certification of Eligibility',
               description:
                 'Photocopy of Certificate of Eligibility/Report of Rating, if applicable'
+            },
+            {
+              name: 'Scholastic/Academic Record',
+              description:
+                'Photocopy of scholastic/ academic record such as but not limited to Transcript of Records (TOR) and Diploma, including completion of graduate and post-graduate units/ degrees, if available'
+            },
+            {
+              name: 'Certificate/s of Training',
+              description:
+                'Photocopy of Certificate/s of Training, if applicable'
+            },
+            {
+              name: 'Certificate of Employment, Contract of Service, or duly signed Service Record',
+              description:
+                'Photocopy of Certificate of Employment, Contract of Service, or duly signed Service Record, whichever is/are applicable'
+            },
+            {
+              name: 'Latest Appointment,',
+              description: 'Photocopy of latest appointment, if applicable'
+            },
+            {
+              name: 'Performance Ratings',
+              description:
+                'Photocopy of the Performance Ratings in the last rating period(s) covering one (1) year performance prior to the deadline of submission, if applicable'
+            },
+            {
+              name: 'Checklist of Requirements and Omnibus Sworn Statement',
+              description:
+                'Checklist of Requirements and Omnibus Sworn Statement on the Certification on the Authenticity and Veracity (CAV) of the documents submitted and Data Privacy Consent Form'
+            },
+            {
+              name: 'Other documents',
+              description:
+                'Other documents as may be required for comparative assessment, such as but not limited to: Means of Verification (MOVs) showing Outstanding Accomplishments, Application of Education, and Application of Learning and Development reckoned from the date of last issuance of appointment. Photocopy of Performance Rating obtained from the relevant work experience, if performance rating in Item i) is not relevant to the position to be filled'
             }
           ]
     })

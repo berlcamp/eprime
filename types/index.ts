@@ -486,6 +486,7 @@ export interface ServiceRecordTypes {
   org_id: string
   from: string
   to: string
+  days_without_pay: string
   designation: string
   status: string
   salary: string

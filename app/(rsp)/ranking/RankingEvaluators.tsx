@@ -175,7 +175,9 @@ const RankingEvaluators = ({ hideModal, rankingId }: ModalProps) => {
     const fetchEvaluators = async () => {
       const { data } = await supabase
         .from('hrm_ranking_evaluators')
-        .select('*, hrm_user:user_id(id,firstname,lastname,avatar_url))')
+        .select(
+          '*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url))'
+        )
         .eq('ranking_id', rankingId)
       if (data) {
         setList(data)
@@ -191,7 +193,7 @@ const RankingEvaluators = ({ hideModal, rankingId }: ModalProps) => {
         <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
-              <h5 className="app__modal_header_text">Ranking Criterias</h5>
+              <h5 className="app__modal_header_text">Ranking Evaluators</h5>
               <CustomButton
                 containerStyles="app__btn_gray"
                 title="Close"

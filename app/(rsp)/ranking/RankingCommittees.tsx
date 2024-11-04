@@ -219,7 +219,7 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
         <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
-              <h5 className="app__modal_header_text">Ranking Criterias</h5>
+              <h5 className="app__modal_header_text">Ranking Committees</h5>
               <CustomButton
                 containerStyles="app__btn_gray"
                 title="Close"

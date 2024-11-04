@@ -2,6 +2,7 @@ import { CustomButton } from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { ApplicantTypes, RankingEvaluatorTypes } from '@/types'
+import { format } from 'date-fns'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
@@ -18,6 +19,7 @@ interface QualificationTypes {
     id: string
     status: string
     document_url: string
+    created_at: string
   }>
 }
 
@@ -197,14 +199,23 @@ const ApplicantDetails = ({
                                   <li key={index} className="mb-2">
                                     <div className="flex space-x-2">
                                       {/* Display the filename and make it downloadable */}
-                                      <Link
-                                        href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/hrm_public/${doc.document_url}`}
-                                        download={filename}
-                                        target="_blank"
-                                        className="text-blue-600 hover:underline"
-                                      >
-                                        {filename}
-                                      </Link>
+                                      <div>
+                                        <Link
+                                          href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/hrm_public/${doc.document_url}`}
+                                          download={filename}
+                                          target="_blank"
+                                          className="text-blue-600 hover:underline"
+                                        >
+                                          {filename}
+                                        </Link>
+                                        <div className="text-[10px] italic text-gray-600">
+                                          Submitted on{' '}
+                                          {format(
+                                            new Date(doc.created_at),
+                                            'MMM d, yyyy'
+                                          )}
+                                        </div>
+                                      </div>
                                       <div className="flex-1">
                                         {doc.status === 'Okay' && (
                                           <span className="app__status_green">

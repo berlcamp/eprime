@@ -615,6 +615,14 @@ export async function fetchRankings(
       if (data2 && data2.length > 0) {
         data2.forEach((d: any) => rankingIds.push(d.ranking_id))
       }
+      const { data: data3 } = await supabase
+        .from('hrm_ranking_evaluators')
+        .select('ranking_id')
+        .eq('user_id', filters.userId)
+        .limit(500)
+      if (data3 && data3.length > 0) {
+        data3.forEach((d: any) => rankingIds.push(d.ranking_id))
+      }
       if (rankingIds.length === 0) {
         rankingIds.push('99999')
       }
