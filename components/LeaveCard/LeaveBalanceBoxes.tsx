@@ -1,8 +1,7 @@
 'use client'
 
-import { leaveCreditTypes } from '@/constants'
-import type { Employee } from '@/types'
-import { fetchLeaveCards } from '@/utils/fetchApi'
+import { useSupabase } from '@/context/SupabaseProvider'
+import type { Employee, LeaveCreditTypes } from '@/types'
 import { useEffect, useState } from 'react'
 
 interface ModalProps {
@@ -16,40 +15,49 @@ interface boxes {
 
 export default function LeaveBalanceBoxes({ user }: ModalProps) {
   const [balanceBoxes, setBalanceBoxes] = useState<boxes[] | []>([])
-
-  const getBalance = (data: any, type: string) => {
-    const find = data.find((item: any) => item.type === type)
-    if (find) {
-      return find.balance
-    } else {
-      return null
-    }
-  }
+  const { supabase } = useSupabase()
 
   useEffect(() => {
     void (async () => {
+      const exclude: string[] = []
+      if (user.position_type === 'Teaching') {
+        exclude.push(
+          'Vacation Leave',
+          'Sick Leave',
+          'Compensatory Overtime Credit'
+        )
+      } else {
+        exclude.push('Service Credit')
+      }
+
+      if (user.gender === 'Male') {
+        exclude.push(
+          'Maternity Leave',
+          'Special Leave Benefits For Women',
+          '10-Day VAWC Leave'
+        )
+      } else {
+        exclude.push('Paternity Leave')
+      }
+
       try {
-        const result = await fetchLeaveCards(user.id, '', 300, 0)
+        const { data } = await supabase
+          .from('hrm_leave_credits')
+          .select()
+          .eq('user_id', user.id)
 
-        const balances: Array<{ type: string; balance: string }> = []
-
-        if (result.data) {
-          leaveCreditTypes.forEach((leave) => {
-            if (
-              leave.gender.toLowerCase() === user.gender.toLowerCase() ||
-              leave.gender.toLowerCase() === 'all'
-            ) {
-              const bal = getBalance(result.data, leave.type)
-              if (bal) {
-                balances.push({
-                  type: leave.type,
-                  balance: bal
-                })
-              }
+        const balances: boxes[] = []
+        if (data && data.length > 0) {
+          const credits: LeaveCreditTypes[] = data
+          credits.forEach((credit) => {
+            if (!exclude.includes(credit.type)) {
+              balances.push({
+                type: credit.type,
+                balance: credit.credits.toString()
+              })
             }
           })
         }
-
         setBalanceBoxes(balances)
       } catch (e) {
         console.error(e)
