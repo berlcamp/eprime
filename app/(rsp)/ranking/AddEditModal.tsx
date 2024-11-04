@@ -5,17 +5,12 @@ import { fetchPositions, logError } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
 
 // Types
-import type {
-  Employee,
-  PositionQualificationTypes,
-  PositionTypes,
-  RankingTypes
-} from '@/types'
+import type { Employee, PositionTypes, RankingTypes } from '@/types'
 
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { useForm } from 'react-hook-form'
+import { useFieldArray, useForm } from 'react-hook-form'
 import { useDispatch, useSelector } from 'react-redux'
 
 interface ModalProps {
@@ -29,10 +24,6 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
   const { supabase } = useSupabase()
   const [saving, setSaving] = useState(false)
   const [years, setYears] = useState<number[]>([])
-
-  const [qualifications, setQualifications] = useState<
-    PositionQualificationTypes[] | []
-  >([])
 
   const [user, setUser] = useState<Employee | null>(
     editData ? editData.chairman : null
@@ -49,8 +40,8 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
     formState: { errors },
     reset,
     setValue,
-    setError,
     clearErrors,
+    control,
     watch,
     handleSubmit
   } = useForm<RankingTypes>({
@@ -60,8 +51,12 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
     }
   })
 
-  const watchPositionId = watch('position_id')
   const watchedDisplay = watch('display_on_portal')
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'qualifications'
+  })
 
   const onSubmit = async (formdata: RankingTypes) => {
     if (saving) return
@@ -85,7 +80,9 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       description: formdata.description,
       status: formdata.status,
       display_on_portal: formdata.display_on_portal,
-      display_on_portal_until: formdata.display_on_portal_until,
+      display_on_portal_until: formdata.display_on_portal_until
+        ? formdata.display_on_portal_until
+        : null,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
 
@@ -110,14 +107,15 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       }
 
       // Insert qualifications to db
-      const insertPromises = qualifications.map(async (qualification) => {
-        return supabase.from('hrm_ranking_qualifications').insert({
-          ranking_id: data[0].id,
-          position_qualification_id: qualification.id,
-          name: qualification.name,
-          description: qualification.description
-        })
-      })
+      const insertPromises = formdata.qualifications.map(
+        async (qualification) => {
+          return supabase.from('hrm_ranking_qualifications').insert({
+            ranking_id: data[0].id,
+            name: qualification.name,
+            description: qualification.description
+          })
+        }
+      )
 
       await Promise.all(insertPromises)
 
@@ -194,35 +192,75 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
         throw new Error(error.message)
       }
 
-      // upsert qualification standards
-      const upsertData: any = []
-      qualifications.forEach((qual) =>
-        upsertData.push({
-          ranking_id: editData.id,
-          position_qualification_id: qual.id,
-          name: qual.name,
-          description: qual.description
-        })
+      // Fetch existing qualifications from the database for this position
+      const { data: existingQualifications, error: fetchError } = await supabase
+        .from('hrm_ranking_qualifications')
+        .select('id')
+        .eq('ranking_id', editData.id)
+
+      if (fetchError) {
+        throw fetchError
+      }
+
+      const existingQualificationIds = existingQualifications.map(
+        (q: { id: any }) => q.id
       )
 
-      const { error: error2 } = await supabase
-        .from('hrm_ranking_qualifications')
-        .upsert(upsertData, {
-          onConflict: ['ranking_id', 'position_qualification_id'] // Define conflict columns
-        })
+      // Separate qualifications into ones that need to be updated or inserted
+      const qualificationsToUpdate = formdata.qualifications.filter((q) => q.id) // Has an ID, update existing
+      const qualificationsToInsert = formdata.qualifications.filter(
+        (q) => !q.id
+      ) // No ID, new entry
 
-      if (error2) {
-        void logError(
-          'Upsert ranking qualifications standard',
-          'hrm_ranking_qualifications',
-          JSON.stringify(upsertData),
-          error2.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error2.message)
+      // Update existing qualifications
+      for (const qual of qualificationsToUpdate) {
+        const { error: updateQualError } = await supabase
+          .from('hrm_ranking_qualifications')
+          .update({
+            name: qual.name,
+            description: qual.description
+          })
+          .eq('id', qual.id)
+
+        if (updateQualError) {
+          throw updateQualError
+        }
+      }
+
+      // Insert new qualifications
+      if (qualificationsToInsert.length > 0) {
+        const newQualifications = qualificationsToInsert.map((qual) => ({
+          ranking_id: editData.id,
+          name: qual.name,
+          description: qual.description
+        }))
+
+        const { error: insertError } = await supabase
+          .from('hrm_ranking_qualifications')
+          .insert(newQualifications)
+
+        if (insertError) {
+          throw insertError
+        }
+      }
+
+      // Remove qualifications that are no longer in the form
+      const formQualificationIds = formdata.qualifications
+        .map((q) => q.id)
+        .filter((id) => id) // Get ids from form
+      const qualificationsToDelete = existingQualificationIds.filter(
+        (id: string | undefined) => !formQualificationIds.includes(id)
+      ) // IDs not present in the form
+
+      if (qualificationsToDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('hrm_ranking_qualifications')
+          .delete()
+          .in('id', qualificationsToDelete) // Remove them from the database
+
+        if (deleteError) {
+          throw deleteError
+        }
       }
 
       // Update data in redux
@@ -269,30 +307,9 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
     }
   }
 
-  useEffect(() => {
-    if (qualifications.length === 0) {
-      setError('has_qualification_standard', {
-        type: 'manual',
-        message: 'Qualification standard is required'
-      })
-    } else {
-      clearErrors('has_qualification_standard')
-    }
-  }, [qualifications])
-
-  useEffect(() => {
-    const fetchQualifications = async () => {
-      const { data } = await supabase
-        .from('hrm_position_qualifications')
-        .select()
-        .eq('position_id', watchPositionId)
-
-      if (data) {
-        setQualifications(data)
-      }
-    }
-    void fetchQualifications()
-  }, [watchPositionId])
+  const handleAddQualification = () => {
+    append({ name: '', description: '' }) // Add a blank qualification
+  }
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
   useEffect(() => {
@@ -305,7 +322,35 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       description: editData ? editData.description : '',
       status: editData ? editData.status : '',
       display_on_portal: editData ? editData.display_on_portal : '',
-      display_on_portal_until: editData ? editData.display_on_portal_until : ''
+      display_on_portal_until: editData ? editData.display_on_portal_until : '',
+      qualifications: editData
+        ? editData.qualifications.map((qual) => ({
+            id: qual.id, // Preserve the qualification id
+            name: qual.name,
+            description: qual.description
+          }))
+        : [
+            {
+              name: 'Letter of Intent',
+              description:
+                'Letter of intent addressed to the Head of Office or highest human resource officer'
+            },
+            {
+              name: 'Personal Data Sheet',
+              description:
+                'Duly accomplished PDS (CS Form No. 212, Revised 2017) and Work Experience Sheet, if applicable'
+            },
+            {
+              name: 'PRC/License ID',
+              description:
+                'Photocopy of valid and updated PRC License/ID, if applicable'
+            },
+            {
+              name: 'Certification of Eligibility',
+              description:
+                'Photocopy of Certificate of Eligibility/Report of Rating, if applicable'
+            }
+          ]
     })
   }, [editData, positions, reset])
 
@@ -589,26 +634,65 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                 <div className="w-full px-8">
                   <div className="border p-4 bg-white">
                     <div className="text-sm font-semibold text-gray-700 mb-4">
-                      Qualification Standards
+                      Qualification Standards for this Ranking
                     </div>
-                    {errors.has_qualification_standard && (
-                      <div className="app__error_message">
-                        No qualification standard added for this position yet.
-                        Please tell system administration to add qualification
-                        under Position Settings.
-                      </div>
-                    )}
-                    {qualifications.length > 0 &&
-                      qualifications.map((qual, index) => (
-                        <div key={index} className="app__form_field_container">
-                          <div className="flex space-x-2">
-                            <div className="font-bold">
-                              {index + 1}. {qual.name}
-                            </div>
-                            <div>{qual.description}</div>
-                          </div>
+                    {fields.map((_q, index) => (
+                      <div key={index} className="app__form_field_container">
+                        <div className="flex items-center justify-start space-x-2">
+                          <input
+                            placeholder="Qualification Name"
+                            className="app__input_standard"
+                            {...register(`qualifications.${index}.name`, {
+                              required: true
+                            })}
+                          />
+                          <input
+                            placeholder="Description"
+                            className="app__input_standard"
+                            {...register(
+                              `qualifications.${index}.description`,
+                              {
+                                required: true
+                              }
+                            )}
+                          />
+                          {fields.length > 1 && (
+                            <button
+                              type="button"
+                              className="app__btn_red_xs"
+                              onClick={() => remove(index)}
+                            >
+                              Remove
+                            </button>
+                          )}
                         </div>
-                      ))}
+                        {errors.qualifications?.[index]?.name && (
+                          <div className="app__error_message">
+                            Qualification Name is required
+                          </div>
+                        )}
+                        {errors.qualifications?.[index]?.description && (
+                          <div className="app__error_message">
+                            Description is required
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      className="app__btn_blue_xs"
+                      onClick={handleAddQualification}
+                    >
+                      Add Qualification
+                    </button>
+
+                    <div className="app__warning_text !mx-0">
+                      <span className="font-bold">Warning:</span> Deleting a
+                      qualification standard will also permanently remove all
+                      documents uploaded by applicants for this position on
+                      Rankings.
+                    </div>
                   </div>
                 </div>
                 {/* End Seocond Column */}
