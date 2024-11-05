@@ -1,0 +1,16 @@
+name: Trigger Leave Credits Increment
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Runs every 5 minutes
+
+jobs:
+  triggerIncrement:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Leave Credits Increment API
+        env:
+          API_URL: https://eprime.sortbrite.com/api/cronann
+        run: |
+          curl -X POST "$API_URL"
