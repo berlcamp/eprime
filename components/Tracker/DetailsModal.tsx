@@ -24,9 +24,10 @@ import type {
   DocumentTypes,
   Employee,
   FollowersTypes,
+  LeaveCreditTypes,
   namesType
 } from '@/types'
-import { fetchLeaveCards, logError } from '@/utils/fetchApi'
+import { logError } from '@/utils/fetchApi'
 import {
   BellAlertIcon,
   BellSlashIcon,
@@ -288,15 +289,6 @@ export default function DetailsModal({
     setConfirmMessage('')
   }
 
-  const getBalance = (data: any, type: string) => {
-    const find = data.find((item: any) => item.type === type)
-    if (find) {
-      return find.balance
-    } else {
-      return 0
-    }
-  }
-
   const handleConfirmedForward = async () => {
     if (!selectedUser) return
 
@@ -435,6 +427,27 @@ export default function DetailsModal({
 
       // Add entry to employees leave card if type of request is Leave
       if (documentData.type === 'Leave') {
+        // Current Balances
+        const { data: balancesData } = await supabase
+          .from('hrm_leave_credits')
+          .select()
+          .eq('user_id', documentData.creator.id)
+
+        const balances: Array<{
+          type: string
+          balance: string
+        }> = []
+
+        if (balancesData && balancesData.length > 0) {
+          const creditsData: LeaveCreditTypes[] = balancesData
+          creditsData.forEach((credit) => {
+            balances.push({
+              type: credit.type,
+              balance: credit.credits.toString()
+            })
+          })
+        }
+
         const creditsUsed = [
           {
             type: 'Vacation Leave',
@@ -494,47 +507,102 @@ export default function DetailsModal({
           }
         ]
 
-        const result = await fetchLeaveCards(
-          documentData.created_by,
-          '',
-          999,
-          0
-        ) // fetch all
+        // Foreach credits used
+        let totalCredits = 0
+        const usedCredits: string[] = []
+        creditsUsed.forEach((cu) => {
+          if (cu.value) {
+            totalCredits += Number(cu.value)
+            usedCredits.push(`${cu.type} (${cu.value})`)
+          }
+        })
 
-        if (result.data) {
-          // insert array
-          const leaveCardData: any = []
+        // Insert qualifications to db
+        const insertPromises = creditsUsed.map(async (c) => {
+          if (c.value) {
+            const bal = balances.find((b) => b.type === c.type)
 
-          // Foreach credits used
-          creditsUsed.forEach((cu) => {
-            if (cu.value) {
-              const bal = getBalance(result.data, cu.type)
-              leaveCardData.push({
-                adjustment_date: new Date(),
-                particulars: `${cu.type} Adjustment`,
-                remarks: 'Credit used from Leave Request',
-                credits_used: cu.value,
-                balance: (Number(bal) - Number(cu.value)).toFixed(3),
-                type: cu.type,
-                tracker_id: documentData.id,
-                user_id: documentData.created_by
-              })
+            if (bal) {
+              return supabase
+                .from('hrm_leave_credits')
+                .update({
+                  credits: Number(bal.balance) - Number(c.value)
+                })
+                .eq('type', c.type)
+                .eq('user_id', documentData.creator.id)
             }
-          })
+          }
+        })
 
-          // Insert to database
-          const { error } = await supabase
-            .from('hrm_leave_cards')
-            .insert(leaveCardData)
+        await Promise.all(insertPromises)
 
-          if (error) {
+        // Insert to leave cards
+        const { error } = await supabase.from('hrm_leave_cards').insert({
+          adjustment_date: new Date(),
+          particulars: 'Leave Request',
+          remarks: `Credit used:  ${usedCredits.join(', ')}`,
+          credits_used: totalCredits,
+          balance: '',
+          absence_with_pay: documentData.leave_days_with_pay,
+          absence_without_pay: documentData.leave_days_without_pay,
+          type: documentData.leave_type,
+          tracker_id: documentData.id,
+          user_id: documentData.created_by
+        })
+
+        if (error) {
+          void logError(
+            'Leave request - add to leave card',
+            'hrm_leave_cards',
+            '',
+            error.message
+          )
+          throw new Error(error.message)
+        }
+
+        // If leave days without add to Service Record and Update hrm_user 'step_increment_leave_days'
+        if (Number(documentData.leave_days_without_pay) > 0) {
+          const newData = {
+            user_id: documentData.created_by,
+            org_id: process.env.NEXT_PUBLIC_ORG_ID,
+            from: documentData.leave_from,
+            to: documentData.leave_to,
+            designation: documentData.creator.hrm_positions?.name,
+            days_without_pay: documentData.leave_days_without_pay,
+            remarks: documentData.leave_type,
+            created_by: session.user.id
+          }
+
+          const { error: insertSRError } = await supabase
+            .from('hrm_service_records')
+            .insert(newData)
+            .select()
+
+          if (insertSRError) {
             void logError(
-              'Leave request - leave card adjustment',
-              'hrm_leave_cards',
-              JSON.stringify(leaveCardData),
-              error.message
+              'Create service record from Leave',
+              'hrm_service_records',
+              JSON.stringify(newData),
+              insertSRError.message
             )
-            throw new Error(error.message)
+          }
+
+          const { error: updateUserError } = await supabase
+            .from('hrm_users')
+            .update({
+              step_increment_leave_days:
+                Number(documentData.creator.step_increment_leave_days) +
+                Number(documentData.leave_days_without_pay)
+            })
+            .eq('id', documentData.created_by)
+
+          if (updateUserError) {
+            void logError(
+              'Update step_increment_leave_days during leave',
+              'hrm_users',
+              '',
+              updateUserError.message
+            )
           }
         }
       }

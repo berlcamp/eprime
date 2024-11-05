@@ -134,8 +134,7 @@ const MainMenu = () => {
             {(hasAccess('employee_accounts') ||
               hasAccess('records') ||
               hasAccess('sds') ||
-              hasAccess('asds') ||
-              hasAccess('certify_leave_credits')) && (
+              hasAccess('asds')) && (
               <>
                 <Link href="/employees">
                   <div className="app__menu_item">

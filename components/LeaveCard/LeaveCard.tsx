@@ -97,7 +97,10 @@ export default function LeaveCard({ userId, userData }: PageProps) {
         balance: formdata.balance,
         remarks: formdata.remarks,
         user_id: userId,
-        particulars: `${formdata.type} Adjustment`,
+        particulars: `${formdata.type} Adjustment, next increment on ${format(
+          new Date(formdata.date_of_next_increment),
+          'MM/dd/yyyy'
+        )}`,
         updated_by: session.user.id
       }
 
@@ -150,7 +153,10 @@ export default function LeaveCard({ userId, userData }: PageProps) {
       const newList = [
         {
           adjustment_date: format(new Date(), 'MMM dd, yyyy'),
-          particulars: `${formdata.type} Adjustment`,
+          particulars: `${formdata.type} Adjustment, next increment on ${format(
+            new Date(formdata.date_of_next_increment),
+            'MM/dd/yyyy'
+          )}`,
           credits_used: '',
           credits_earned: '',
           balance: formdata.balance,

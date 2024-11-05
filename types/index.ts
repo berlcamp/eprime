@@ -589,7 +589,6 @@ export interface DocumentTypes {
   leave_credit_use_sl: string
   leave_credit_use_coc: string
   leave_credit_use_sc: string
-
   leave_credit_use_adoption: string
   leave_credit_use_vawc: string
   leave_credit_use_emergency: string
@@ -600,6 +599,8 @@ export interface DocumentTypes {
   leave_credit_use_rehab: string
   leave_credit_use_paternity: string
   leave_credit_use_maternity: string
+  leave_days_with_pay: string
+  leave_days_without_pay: string
 
   locator_slip_purpose: string
   locator_slip_type: string

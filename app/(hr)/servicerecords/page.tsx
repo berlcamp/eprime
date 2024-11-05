@@ -220,7 +220,7 @@ export default function Page() {
                         Designation
                       </th>
                       <th className="hidden md:table-cell app__th">
-                        Days without Pay
+                        Leave without Pay
                       </th>
                       <th className="hidden md:table-cell app__th">Status</th>
                       <th className="hidden md:table-cell app__th">Salary</th>
@@ -320,9 +320,10 @@ export default function Page() {
                                 </div>
                                 <div>
                                   <span className="app_td_mobile_label">
-                                    No of Days without Pay:
+                                    Leave without Pay:
                                   </span>{' '}
-                                  {item.days_without_pay}
+                                  {Number(item.days_without_pay) > 0 &&
+                                    `${item.days_without_pay} day/s`}
                                 </div>
                                 <div>
                                   <span className="app_td_mobile_label">
@@ -378,7 +379,8 @@ export default function Page() {
                             {item.designation}
                           </td>
                           <td className="hidden md:table-cell app__td">
-                            {item.days_without_pay}
+                            {Number(item.days_without_pay) > 0 &&
+                              `${item.days_without_pay} day/s`}
                           </td>
                           <td className="hidden md:table-cell app__td">
                             {item.status}

@@ -1,9 +1,10 @@
 import { CustomButton, LeaveBalanceBoxes } from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import type { DocumentTypes } from '@/types'
+import type { DocumentTypes, LeaveCreditTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
 
 interface PropTypes {
   documentData: DocumentTypes
@@ -14,91 +15,129 @@ interface boxes {
   balance: number
 }
 
+interface FormTypes {
+  vl: string
+  sl: string
+  coc: string
+  sc: string
+  adoption: string
+  vawc: string
+  emergency: string
+  study: string
+  soloparent: string
+  slbw: string
+  spl: string
+  rehab: string
+  paternity: string
+  maternity: string
+}
+
 export default function CreditsCertification({ documentData }: PropTypes) {
   const { supabase, session } = useSupabase()
   const { setToast, hasAccess } = useFilter()
+  const [saving, setSaving] = useState(false)
 
   const [creditsUsed, setCreditsUsed] = useState<boxes[] | []>([])
-
-  const [vl, setVl] = useState(
-    documentData.leave_credit_use_vl ? documentData.leave_credit_use_vl : ''
-  )
-  const [sl, setSl] = useState(
-    documentData.leave_credit_use_sl ? documentData.leave_credit_use_sl : ''
-  )
-  const [coc, setCoc] = useState(
-    documentData.leave_credit_use_coc ? documentData.leave_credit_use_coc : ''
-  )
-  const [sc, setSc] = useState(
-    documentData.leave_credit_use_sc ? documentData.leave_credit_use_sc : ''
-  )
-
-  const [adoption, setAdoption] = useState(
-    documentData.leave_credit_use_adoption
-      ? documentData.leave_credit_use_adoption
-      : ''
-  )
-  const [vawc, setVawc] = useState(
-    documentData.leave_credit_use_vawc ? documentData.leave_credit_use_vawc : ''
-  )
-  const [emergency, setEmergency] = useState(
-    documentData.leave_credit_use_emergency
-      ? documentData.leave_credit_use_emergency
-      : ''
-  )
-  const [study, setStudy] = useState(
-    documentData.leave_credit_use_study
-      ? documentData.leave_credit_use_study
-      : ''
-  )
-  const [soloparent, setSoloparent] = useState(
-    documentData.leave_credit_use_soloparent
-      ? documentData.leave_credit_use_soloparent
-      : ''
-  )
-  const [slbw, setSlbw] = useState(
-    documentData.leave_credit_use_slbw ? documentData.leave_credit_use_slbw : ''
-  )
-  const [spl, setSpl] = useState(
-    documentData.leave_credit_use_spl ? documentData.leave_credit_use_spl : ''
-  )
-  const [rehab, setRehab] = useState(
-    documentData.leave_credit_use_rehab
-      ? documentData.leave_credit_use_rehab
-      : ''
-  )
-  const [paternity, setPaternity] = useState(
-    documentData.leave_credit_use_paternity
-      ? documentData.leave_credit_use_paternity
-      : ''
-  )
-  const [maternity, setMaternity] = useState(
-    documentData.leave_credit_use_maternity
-      ? documentData.leave_credit_use_maternity
-      : ''
-  )
+  const [leaveCreditBalances, setLeaveCreditBalances] = useState<
+    LeaveCreditTypes[] | []
+  >([])
 
   const [withPay, setWithPay] = useState(0)
   const [withoutPay, setWithoutPay] = useState(Number(documentData.leave_days))
 
-  // update certifications of leave credits
-  const saveCertifications = async () => {
-    const newData = {
-      leave_credit_use_vl: vl !== '' ? vl : null,
-      leave_credit_use_sl: sl !== '' ? sl : null,
-      leave_credit_use_coc: coc !== '' ? coc : null,
-      leave_credit_use_sc: sc !== '' ? sc : null,
+  const {
+    register,
+    formState: { errors },
+    reset,
+    watch,
+    handleSubmit
+  } = useForm<FormTypes>({
+    mode: 'onSubmit'
+  })
 
-      leave_credit_use_adoption: adoption !== '' ? adoption : null,
-      leave_credit_use_vawc: vawc !== '' ? vawc : null,
-      leave_credit_use_emergency: emergency !== '' ? emergency : null,
-      leave_credit_use_study: study !== '' ? study : null,
-      leave_credit_use_soloparent: soloparent !== '' ? soloparent : null,
-      leave_credit_use_slbw: slbw !== '' ? slbw : null,
-      leave_credit_use_spl: spl !== '' ? spl : null,
-      leave_credit_use_rehab: rehab !== '' ? rehab : null,
-      leave_credit_use_paternity: paternity !== '' ? paternity : null,
-      leave_credit_use_maternity: maternity !== '' ? maternity : null
+  const [
+    vl,
+    sl,
+    coc,
+    sc,
+    adoption,
+    vawc,
+    emergency,
+    study,
+    soloparent,
+    slbw,
+    spl,
+    rehab,
+    paternity,
+    maternity
+  ] = watch([
+    'vl',
+    'sl',
+    'coc',
+    'sc',
+    'adoption',
+    'vawc',
+    'emergency',
+    'study',
+    'soloparent',
+    'slbw',
+    'spl',
+    'rehab',
+    'paternity',
+    'maternity'
+  ])
+
+  const onSubmit = async (formdata: FormTypes) => {
+    if (saving) return
+
+    setSaving(true)
+    void saveCertifications(formdata)
+  }
+
+  // update certifications of leave credits
+  const saveCertifications = async (formdata: FormTypes) => {
+    const newData = {
+      leave_credit_use_vl:
+        formdata.vl && Number(formdata.vl) > 0 ? formdata.vl : null,
+      leave_credit_use_sl:
+        formdata.sl && Number(formdata.sl) > 0 ? formdata.sl : null,
+      leave_credit_use_coc:
+        formdata.coc && Number(formdata.coc) > 0 ? formdata.coc : null,
+      leave_credit_use_sc:
+        formdata.sc && Number(formdata.sc) > 0 ? formdata.sc : null,
+
+      leave_credit_use_adoption:
+        formdata.adoption && Number(formdata.adoption) > 0
+          ? formdata.adoption
+          : null,
+      leave_credit_use_vawc:
+        formdata.vawc && Number(formdata.vawc) > 0 ? formdata.vawc : null,
+      leave_credit_use_emergency:
+        formdata.emergency && Number(formdata.emergency) > 0
+          ? formdata.emergency
+          : null,
+      leave_credit_use_study:
+        formdata.study && Number(formdata.study) > 0 ? formdata.study : null,
+      leave_credit_use_soloparent:
+        formdata.soloparent && Number(formdata.soloparent) > 0
+          ? formdata.soloparent
+          : null,
+      leave_credit_use_slbw:
+        formdata.slbw && Number(formdata.slbw) > 0 ? formdata.slbw : null,
+      leave_credit_use_spl:
+        formdata.spl && Number(formdata.spl) > 0 ? formdata.spl : null,
+      leave_credit_use_rehab:
+        formdata.rehab && Number(formdata.rehab) > 0 ? formdata.rehab : null,
+      leave_credit_use_paternity:
+        formdata.paternity && Number(formdata.paternity) > 0
+          ? formdata.paternity
+          : null,
+      leave_credit_use_maternity:
+        formdata.maternity && Number(formdata.maternity) > 0
+          ? formdata.maternity
+          : null,
+      leave_days_with_pay: withPay,
+      leave_days_without_pay: withoutPay
     }
 
     try {
@@ -129,7 +168,7 @@ export default function CreditsCertification({ documentData }: PropTypes) {
   }
 
   useEffect(() => {
-    const balances = []
+    const balances: Array<{ type: string; balance: number }> = []
     if (Number(sl) > 0) {
       balances.push({ type: 'SL', balance: Number(sl) })
     }
@@ -172,6 +211,7 @@ export default function CreditsCertification({ documentData }: PropTypes) {
     if (Number(maternity) > 0) {
       balances.push({ type: 'maternity', balance: Number(maternity) })
     }
+
     setCreditsUsed(balances)
 
     let withpay = 0
@@ -184,8 +224,8 @@ export default function CreditsCertification({ documentData }: PropTypes) {
     setWithPay(withpay)
     setWithoutPay(withoutpay >= 0 ? withoutpay : 0)
   }, [
-    sl,
     vl,
+    sl,
     coc,
     sc,
     adoption,
@@ -199,6 +239,65 @@ export default function CreditsCertification({ documentData }: PropTypes) {
     paternity,
     maternity
   ])
+
+  // manually set the defaultValues of use-form-hook whenever the component receives new props.
+  useEffect(() => {
+    reset({
+      vl: documentData.leave_credit_use_vl
+        ? documentData.leave_credit_use_vl
+        : '',
+      sl: documentData.leave_credit_use_sl
+        ? documentData.leave_credit_use_sl
+        : '',
+      coc: documentData.leave_credit_use_coc
+        ? documentData.leave_credit_use_coc
+        : '',
+      sc: documentData.leave_credit_use_sc
+        ? documentData.leave_credit_use_sc
+        : '',
+      adoption: documentData.leave_credit_use_adoption
+        ? documentData.leave_credit_use_adoption
+        : '',
+      vawc: documentData.leave_credit_use_vawc
+        ? documentData.leave_credit_use_vawc
+        : '',
+      emergency: documentData.leave_credit_use_emergency
+        ? documentData.leave_credit_use_emergency
+        : '',
+      study: documentData.leave_credit_use_study
+        ? documentData.leave_credit_use_study
+        : '',
+      soloparent: documentData.leave_credit_use_soloparent
+        ? documentData.leave_credit_use_soloparent
+        : '',
+      slbw: documentData.leave_credit_use_slbw
+        ? documentData.leave_credit_use_slbw
+        : '',
+      spl: documentData.leave_credit_use_spl
+        ? documentData.leave_credit_use_spl
+        : '',
+      rehab: documentData.leave_credit_use_rehab
+        ? documentData.leave_credit_use_rehab
+        : '',
+      paternity: documentData.leave_credit_use_paternity
+        ? documentData.leave_credit_use_paternity
+        : '',
+      maternity: documentData.leave_credit_use_maternity
+        ? documentData.leave_credit_use_maternity
+        : ''
+    })
+  }, [reset])
+
+  useEffect(() => {
+    const fetchBalances = async () => {
+      const { data } = await supabase
+        .from('hrm_leave_credits')
+        .select()
+        .eq('user_id', documentData.creator.id)
+      setLeaveCreditBalances(data)
+    }
+    void fetchBalances()
+  }, [])
 
   return (
     <div className="w-full px-4">
@@ -229,8 +328,9 @@ export default function CreditsCertification({ documentData }: PropTypes) {
           {hasAccess('certify_leave_credits') &&
             documentData.receiver_id === session.user.id &&
             documentData.current_status !== 'Disapproved' &&
+            documentData.current_status !== 'Approved' &&
             documentData.current_status !== 'Cancelled' && (
-              <>
+              <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="text-gray-600 text-xs mt-4 mb-2">
                   Use the following credits for this Leave:
                 </div>
@@ -240,57 +340,138 @@ export default function CreditsCertification({ documentData }: PropTypes) {
                       <div className="flex space-x-2 items-center">
                         <span className="font-bold">Vacation Leave:</span>
                         <input
-                          value={vl}
-                          onChange={(e) => setVl(e.target.value)}
+                          {...register('vl', {
+                            max: {
+                              value:
+                                leaveCreditBalances.find(
+                                  (b) => b.type === 'Vacation Leave'
+                                )?.credits ?? 0,
+                              message: `Cannot exceed ${
+                                leaveCreditBalances.find(
+                                  (b) => b.type === 'Vacation Leave'
+                                )?.credits
+                              }`
+                            }
+                          })}
                           type="number"
                           step="any"
                           className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                         />
+                        {errors.vl?.message && (
+                          <div className="app__error_message">
+                            {errors.vl.message}
+                          </div>
+                        )}
                       </div>
                       <div className="flex space-x-2 items-center">
                         <span className="font-bold">Sick Leave:</span>
                         <input
-                          value={sl}
-                          onChange={(e) => setSl(e.target.value)}
+                          {...register('sl', {
+                            max: {
+                              value:
+                                leaveCreditBalances.find(
+                                  (b) => b.type === 'Sick Leave'
+                                )?.credits ?? 0,
+                              message: `Cannot exceed ${
+                                leaveCreditBalances.find(
+                                  (b) => b.type === 'Sick Leave'
+                                )?.credits
+                              }`
+                            }
+                          })}
                           type="number"
                           step="any"
                           className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                         />
+                        {errors.sl?.message && (
+                          <div className="app__error_message">
+                            {errors.sl.message}
+                          </div>
+                        )}
                       </div>
                       <div className="flex space-x-2 items-center">
-                        <span className="font-bold">COC:</span>
+                        <span className="font-bold">COC Leave:</span>
                         <input
-                          value={coc}
-                          onChange={(e) => setCoc(e.target.value)}
+                          {...register('coc', {
+                            max: {
+                              value:
+                                leaveCreditBalances.find(
+                                  (b) =>
+                                    b.type === 'Compensatory Overtime Credit'
+                                )?.credits ?? 0,
+                              message: `Cannot exceed ${
+                                leaveCreditBalances.find(
+                                  (b) =>
+                                    b.type === 'Compensatory Overtime Credit'
+                                )?.credits
+                              }`
+                            }
+                          })}
                           type="number"
                           step="any"
                           className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                         />
+                        {errors.coc?.message && (
+                          <div className="app__error_message">
+                            {errors.coc.message}
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
                   {documentData.creator.position_type === 'Teaching' && (
                     <div className="flex space-x-2 items-center">
-                      <span className="font-bold">Service Credits:</span>
+                      <span className="font-bold">Service Credit:</span>
                       <input
-                        value={sc}
-                        onChange={(e) => setSc(e.target.value)}
+                        {...register('sc', {
+                          max: {
+                            value:
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Service Credit'
+                              )?.credits ?? 0,
+                            message: `Cannot exceed ${
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Service Credit'
+                              )?.credits
+                            }`
+                          }
+                        })}
                         type="number"
                         step="any"
                         className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                       />
+                      {errors.sc?.message && (
+                        <div className="app__error_message">
+                          {errors.sc.message}
+                        </div>
+                      )}
                     </div>
                   )}
-
                   <div className="flex space-x-2 items-center">
                     <span className="font-bold">Adoption Leave:</span>
                     <input
-                      value={adoption}
-                      onChange={(e) => setAdoption(e.target.value)}
+                      {...register('adoption', {
+                        max: {
+                          value:
+                            leaveCreditBalances.find(
+                              (b) => b.type === 'Adoption Leave'
+                            )?.credits ?? 0,
+                          message: `Cannot exceed ${
+                            leaveCreditBalances.find(
+                              (b) => b.type === 'Adoption Leave'
+                            )?.credits
+                          }`
+                        }
+                      })}
                       type="number"
                       step="any"
                       className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                     />
+                    {errors.adoption?.message && (
+                      <div className="app__error_message">
+                        {errors.adoption.message}
+                      </div>
+                    )}
                   </div>
 
                   {/* Female */}
@@ -299,36 +480,88 @@ export default function CreditsCertification({ documentData }: PropTypes) {
                       <div className="flex space-x-2 items-center">
                         <span className="font-bold">VAWC Leave:</span>
                         <input
-                          value={vawc}
-                          onChange={(e) => setVawc(e.target.value)}
+                          {...register('vawc', {
+                            max: {
+                              value:
+                                leaveCreditBalances.find(
+                                  (b) => b.type === '10-Day VAWC Leave'
+                                )?.credits ?? 0,
+                              message: `Cannot exceed ${
+                                leaveCreditBalances.find(
+                                  (b) => b.type === '10-Day VAWC Leave'
+                                )?.credits
+                              }`
+                            }
+                          })}
                           type="number"
                           step="any"
                           className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                         />
+                        {errors.vawc?.message && (
+                          <div className="app__error_message">
+                            {errors.vawc.message}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex space-x-2 items-center">
                         <span className="font-bold">
-                          Special Leave Benefits for Women:
+                          Special Leave Benefits for Women Leave:
                         </span>
                         <input
-                          value={slbw}
-                          onChange={(e) => setSlbw(e.target.value)}
+                          {...register('slbw', {
+                            max: {
+                              value:
+                                leaveCreditBalances.find(
+                                  (b) =>
+                                    b.type ===
+                                    'Special Leave Benefits For Women'
+                                )?.credits ?? 0,
+                              message: `Cannot exceed ${
+                                leaveCreditBalances.find(
+                                  (b) =>
+                                    b.type ===
+                                    'Special Leave Benefits For Women'
+                                )?.credits
+                              }`
+                            }
+                          })}
                           type="number"
                           step="any"
                           className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                         />
+                        {errors.slbw?.message && (
+                          <div className="app__error_message">
+                            {errors.slbw.message}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex space-x-2 items-center">
                         <span className="font-bold">Maternity Leave:</span>
                         <input
-                          value={maternity}
-                          onChange={(e) => setMaternity(e.target.value)}
+                          {...register('maternity', {
+                            max: {
+                              value:
+                                leaveCreditBalances.find(
+                                  (b) => b.type === 'Maternity Leave'
+                                )?.credits ?? 0,
+                              message: `Cannot exceed ${
+                                leaveCreditBalances.find(
+                                  (b) => b.type === 'Maternity Leave'
+                                )?.credits
+                              }`
+                            }
+                          })}
                           type="number"
                           step="any"
                           className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                         />
+                        {errors.maternity?.message && (
+                          <div className="app__error_message">
+                            {errors.maternity.message}
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
@@ -339,12 +572,28 @@ export default function CreditsCertification({ documentData }: PropTypes) {
                       <div className="flex space-x-2 items-center">
                         <span className="font-bold">Paternity Leave:</span>
                         <input
-                          value={paternity}
-                          onChange={(e) => setPaternity(e.target.value)}
+                          {...register('paternity', {
+                            max: {
+                              value:
+                                leaveCreditBalances.find(
+                                  (b) => b.type === 'Paternity Leave'
+                                )?.credits ?? 0,
+                              message: `Cannot exceed ${
+                                leaveCreditBalances.find(
+                                  (b) => b.type === 'Paternity Leave'
+                                )?.credits
+                              }`
+                            }
+                          })}
                           type="number"
                           step="any"
                           className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                         />
+                        {errors.paternity?.message && (
+                          <div className="app__error_message">
+                            {errors.paternity.message}
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
@@ -352,67 +601,149 @@ export default function CreditsCertification({ documentData }: PropTypes) {
                   <div className="flex space-x-2 items-center">
                     <span className="font-bold">Special Emergency Leave:</span>
                     <input
-                      value={emergency}
-                      onChange={(e) => setEmergency(e.target.value)}
+                      {...register('emergency', {
+                        max: {
+                          value:
+                            leaveCreditBalances.find(
+                              (b) =>
+                                b.type === 'Special Emergency (Calamity) Leave'
+                            )?.credits ?? 0,
+                          message: `Cannot exceed ${
+                            leaveCreditBalances.find(
+                              (b) =>
+                                b.type === 'Special Emergency (Calamity) Leave'
+                            )?.credits
+                          }`
+                        }
+                      })}
                       type="number"
                       step="any"
                       className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                     />
+                    {errors.emergency?.message && (
+                      <div className="app__error_message">
+                        {errors.emergency.message}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex space-x-2 items-center">
                     <span className="font-bold">Study Leave:</span>
                     <input
-                      value={study}
-                      onChange={(e) => setStudy(e.target.value)}
+                      {...register('study', {
+                        max: {
+                          value:
+                            leaveCreditBalances.find(
+                              (b) => b.type === 'Study Leave'
+                            )?.credits ?? 0,
+                          message: `Cannot exceed ${
+                            leaveCreditBalances.find(
+                              (b) => b.type === 'Study Leave'
+                            )?.credits
+                          }`
+                        }
+                      })}
                       type="number"
                       step="any"
                       className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                     />
+                    {errors.study?.message && (
+                      <div className="app__error_message">
+                        {errors.study.message}
+                      </div>
+                    )}
                   </div>
-
                   <div className="flex space-x-2 items-center">
                     <span className="font-bold">Solo Parent Leave:</span>
                     <input
-                      value={soloparent}
-                      onChange={(e) => setSoloparent(e.target.value)}
+                      {...register('soloparent', {
+                        max: {
+                          value:
+                            leaveCreditBalances.find(
+                              (b) => b.type === 'Solo Parent Leave'
+                            )?.credits ?? 0,
+                          message: `Cannot exceed ${
+                            leaveCreditBalances.find(
+                              (b) => b.type === 'Solo Parent Leave'
+                            )?.credits
+                          }`
+                        }
+                      })}
                       type="number"
                       step="any"
                       className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                     />
+                    {errors.soloparent?.message && (
+                      <div className="app__error_message">
+                        {errors.soloparent.message}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex space-x-2 items-center">
                     <span className="font-bold">Special Privilege Leave:</span>
                     <input
-                      value={spl}
-                      onChange={(e) => setSpl(e.target.value)}
+                      {...register('spl', {
+                        max: {
+                          value:
+                            leaveCreditBalances.find(
+                              (b) => b.type === 'Special Privilege Leave'
+                            )?.credits ?? 0,
+                          message: `Cannot exceed ${
+                            leaveCreditBalances.find(
+                              (b) => b.type === 'Special Privilege Leave'
+                            )?.credits
+                          }`
+                        }
+                      })}
                       type="number"
                       step="any"
                       className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                     />
+                    {errors.spl?.message && (
+                      <div className="app__error_message">
+                        {errors.spl.message}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex space-x-2 items-center">
                     <span className="font-bold">Rehabilitation Leave:</span>
                     <input
-                      value={rehab}
-                      onChange={(e) => setRehab(e.target.value)}
+                      {...register('rehab', {
+                        max: {
+                          value:
+                            leaveCreditBalances.find(
+                              (b) => b.type === 'Rehabilitation Leave'
+                            )?.credits ?? 0,
+                          message: `Cannot exceed ${
+                            leaveCreditBalances.find(
+                              (b) => b.type === 'Rehabilitation Leave'
+                            )?.credits
+                          }`
+                        }
+                      })}
                       type="number"
                       step="any"
                       className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                     />
+                    {errors.rehab?.message && (
+                      <div className="app__error_message">
+                        {errors.rehab.message}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <CustomButton
                   containerStyles="app__btn_green mt-2"
                   title="Save Changes"
-                  isDisabled={withPay > Number(documentData.leave_days)}
-                  btnType="button"
-                  handleClick={saveCertifications}
+                  isDisabled={
+                    saving || withPay > Number(documentData.leave_days)
+                  }
+                  btnType="submit"
                 />
-              </>
+              </form>
             )}
           <div className="text-gray-600 text-xs mt-4">
             Credits used for this Leave:
