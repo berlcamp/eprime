@@ -110,22 +110,70 @@ const Page: React.FC = () => {
       ranking_id,
       type: formdata.type,
       code: randomCode,
-      lastname: formdata.lastname,
-      firstname: formdata.firstname,
-      middlename: formdata.middlename,
-      email: formdata.email,
-      address: formdata.address,
-      age: formdata.age,
-      sex: formdata.sex,
-      civil_status: formdata.civil_status,
-      religion: formdata.religion,
-      disability: formdata.disability,
-      ethnicity: formdata.ethnicity,
-      ethnicity_detail: formdata.ethnicity_detail,
-      solo_parent: formdata.solo_parent,
-      solo_parent_detail: formdata.solo_parent_detail,
-      contact_number: formdata.contact_number,
-      specific_major: formdata.specific_major,
+      lastname:
+        formdata.type === 'New Applicant'
+          ? formdata.lastname
+          : applicantDetails?.lastname,
+      firstname:
+        formdata.type === 'New Applicant'
+          ? formdata.firstname
+          : applicantDetails?.firstname,
+      middlename:
+        formdata.type === 'New Applicant'
+          ? formdata.middlename
+          : applicantDetails?.middlename,
+      email:
+        formdata.type === 'New Applicant'
+          ? formdata.email
+          : applicantDetails?.email,
+      address:
+        formdata.type === 'New Applicant'
+          ? formdata.address
+          : applicantDetails?.address,
+      age:
+        formdata.type === 'New Applicant'
+          ? formdata.age
+          : applicantDetails?.age,
+      sex:
+        formdata.type === 'New Applicant'
+          ? formdata.sex
+          : applicantDetails?.sex,
+      civil_status:
+        formdata.type === 'New Applicant'
+          ? formdata.civil_status
+          : applicantDetails?.civil_status,
+      religion:
+        formdata.type === 'New Applicant'
+          ? formdata.religion
+          : applicantDetails?.religion,
+      disability:
+        formdata.type === 'New Applicant'
+          ? formdata.disability
+          : applicantDetails?.disability,
+      ethnicity:
+        formdata.type === 'New Applicant'
+          ? formdata.ethnicity
+          : applicantDetails?.ethnicity,
+      ethnicity_detail:
+        formdata.type === 'New Applicant'
+          ? formdata.ethnicity_detail
+          : applicantDetails?.ethnicity_detail,
+      solo_parent:
+        formdata.type === 'New Applicant'
+          ? formdata.solo_parent
+          : applicantDetails?.solo_parent,
+      solo_parent_detail:
+        formdata.type === 'New Applicant'
+          ? formdata.solo_parent_detail
+          : applicantDetails?.solo_parent_detail,
+      contact_number:
+        formdata.type === 'New Applicant'
+          ? formdata.contact_number
+          : applicantDetails?.contact_number,
+      specific_major:
+        formdata.type === 'New Applicant'
+          ? formdata.specific_major
+          : applicantDetails?.specific_major,
       deped_email: formdata.deped_email,
       current_employee: emailFound ? 'Yes' : 'No',
       previous_applicant: formdata.previous_applicant,
@@ -292,6 +340,7 @@ const Page: React.FC = () => {
     if (value.length === 5) {
       void handleFifthCharacter(value)
     } else {
+      setApplicantDetails(null)
       setIsCodeFound(true)
     }
   }
@@ -893,7 +942,7 @@ const Page: React.FC = () => {
                       <div className="grid gap-4">
                         <div>
                           <div className="app__label_standard">
-                            Applicant Name:
+                            Applicant Details:
                           </div>
                           <div className="app__label_value">
                             {applicantDetails.firstname}{' '}
@@ -902,6 +951,36 @@ const Page: React.FC = () => {
                             <span className="font-light">
                               ({applicantDetails.email})
                             </span>
+                          </div>
+                          <div className="app__label_value">
+                            {applicantDetails.age} years old,{' '}
+                            {applicantDetails.sex} (
+                            {applicantDetails.civil_status})
+                          </div>
+                          <div className="app__label_value">
+                            {applicantDetails.address}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="app__label_standard">
+                            Specific Major: {applicantDetails.specific_major}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="app__label_standard">
+                            Disability: {applicantDetails.disability}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="app__label_standard">
+                            Ethnicity: {applicantDetails.ethnicity}{' '}
+                            {applicantDetails.ethnicity_detail}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="app__label_standard">
+                            Solo Parent: {applicantDetails.solo_parent}{' '}
+                            {applicantDetails.solo_parent_detail}
                           </div>
                         </div>
                         <div>
@@ -951,6 +1030,8 @@ const Page: React.FC = () => {
                                 </div>
                               )
                             )}
+                            {Object.entries(existingQualification).length ===
+                              0 && <div>No records found.</div>}
                           </div>
                         </div>
                         <div>
@@ -985,7 +1066,7 @@ const Page: React.FC = () => {
                     )}
 
                   <hr className="my-6" />
-                  {watchedType && (
+                  {(watchedType === 'New Applicant' || applicantDetails) && (
                     <>
                       <div className="w-full">
                         <div className="app__label_standard">
