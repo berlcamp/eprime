@@ -11,7 +11,8 @@ import type {
   excludedItemsTypes,
   FlowListTypes,
   FollowersTypes,
-  ItemTypes
+  ItemTypes,
+  LeaveCreditTypes
 } from '@/types'
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -1677,7 +1678,10 @@ export async function fetchLeaveCards(
   }
 }
 
-export async function handleConvertEmployeeToNonTeaching(userId: string) {
+export async function handleConvertEmployeeToNonTeaching(
+  userId: string,
+  dateOfNextIncrement: string
+) {
   // convert employee to non-teaching
   const { error } = await supabase
     .from('hrm_users')
@@ -1693,44 +1697,121 @@ export async function handleConvertEmployeeToNonTeaching(userId: string) {
     )
   }
 
-  // Count Service Credits balance if teaching
-  const result = await fetchLeaveCards(userId, 'Service Credit', 10, 0)
-  if (result.count && result.count > 0) {
-    // first index of array should be the latest and updated balance
-    const scBalance = result.data[0].balance
+  // Current Balances
+  const { data: balancesData } = await supabase
+    .from('hrm_leave_credits')
+    .select()
+    .eq('user_id', userId)
 
-    // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
-    const vlsl = (30 * Number(scBalance)) / 69
+  const balances: Array<{
+    type: string
+    balance: string
+  }> = []
 
-    // insert the result into leave cards table
-    const newData = [
-      {
-        type: 'Sick Leave',
-        balance: (vlsl / 2).toFixed(3),
-        user_id: userId,
-        remarks: 'Converted Service Credit to VL/SL',
-        particulars: 'Sick Leave Adjustment'
-      },
-      {
-        type: 'Vacation Leave',
-        balance: (vlsl / 2).toFixed(3),
-        user_id: userId,
-        particulars: 'Vacation Leave Adjustment',
-        remarks: 'Converted Service Credit to VL/SL'
-      }
-    ]
+  if (balancesData && balancesData.length > 0) {
+    const creditsData: LeaveCreditTypes[] = balancesData
+    creditsData.forEach((credit) => {
+      balances.push({
+        type: credit.type,
+        balance: credit.credits.toString()
+      })
+    })
+  }
 
-    const { error } = await supabase.from('hrm_leave_cards').insert(newData)
+  // Current Service Credits balance
+  const scBalance =
+    balances.find((item) => item.type === 'Service Credit')?.balance ?? 0
 
-    if (error) {
-      void logError(
-        'Create Leave Card Adjustment from convertion formula',
-        'hrm_leave_cards',
-        JSON.stringify(newData),
-        error.message
-      )
-      throw new Error(error.message)
+  // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
+  const vlsl = (30 * Number(scBalance)) / 69
+  const vl = (vlsl / 2).toFixed(3)
+  const sl = (vlsl / 2).toFixed(3)
+
+  // Update SC to Zero
+  const { error: error5 } = await supabase
+    .from('hrm_leave_credits')
+    .update({
+      credits: 0
+    })
+    .eq('user_id', userId)
+    .eq('type', 'Service Credit')
+
+  if (error5) {
+    void logError(
+      'Create Leave Credit Adjustment',
+      'hrm_leave_credits',
+      '',
+      error5.message
+    )
+  }
+
+  // Update VL
+  const { error: error2 } = await supabase
+    .from('hrm_leave_credits')
+    .update({
+      credits: vl,
+      date_of_next_increment: new Date(dateOfNextIncrement)
+    })
+    .eq('user_id', userId)
+    .eq('type', 'Vacation Leave')
+
+  if (error2) {
+    void logError(
+      'Create Leave Credit Adjustment',
+      'hrm_leave_credits',
+      '',
+      error2.message
+    )
+  }
+
+  // Update SL
+  const { error: error3 } = await supabase
+    .from('hrm_leave_credits')
+    .update({
+      credits: sl,
+      date_of_next_increment: new Date(dateOfNextIncrement)
+    })
+    .eq('user_id', userId)
+    .eq('type', 'Sick Leave')
+
+  if (error3) {
+    void logError(
+      'Create Leave Credit Adjustment',
+      'hrm_leave_credits',
+      '',
+      error3.message
+    )
+  }
+
+  // insert the result into leave cards table
+  const newData = [
+    {
+      type: 'Sick Leave',
+      balance: (vlsl / 2).toFixed(3),
+      user_id: userId,
+      remarks: 'Converted Service Credit to VL/SL',
+      particulars: 'Sick Leave Adjustment'
+    },
+    {
+      type: 'Vacation Leave',
+      balance: (vlsl / 2).toFixed(3),
+      user_id: userId,
+      particulars: 'Vacation Leave Adjustment',
+      remarks: 'Converted Service Credit to VL/SL'
     }
+  ]
+
+  const { error: error4 } = await supabase
+    .from('hrm_leave_cards')
+    .insert(newData)
+
+  if (error4) {
+    void logError(
+      'Create Leave Card Adjustment from convertion formula',
+      'hrm_leave_cards',
+      JSON.stringify(newData),
+      error4.message
+    )
   }
 }
 
@@ -1745,38 +1826,112 @@ export async function handleConvertEmployeeToTeaching(userId: string) {
     void logError('Update employee to Teaching', 'hrm_users', '', error.message)
   }
 
-  // Count VL and SL balance if non-teaching
-  const result = await fetchLeaveCards(userId, '', 500, 0)
-  if (result.count && result.count > 0) {
-    const slList = result.data.filter((item) => item.type === 'Sick Leave')
-    const vlList = result.data.filter((item) => item.type === 'Vacation Leave')
+  // Current Balances
+  const { data: balancesData } = await supabase
+    .from('hrm_leave_credits')
+    .select()
+    .eq('user_id', userId)
 
-    // first index of array should be the latest and updated balance
-    const sl = slList.length > 0 ? slList[0].balance : 0
-    const vl = vlList.length > 0 ? vlList[0].balance : 0
+  const balances: Array<{
+    type: string
+    balance: string
+  }> = []
 
-    // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
-    const sc = ((Number(sl) + Number(vl)) / 30) * 69
+  if (balancesData && balancesData.length > 0) {
+    const creditsData: LeaveCreditTypes[] = balancesData
+    creditsData.forEach((credit) => {
+      balances.push({
+        type: credit.type,
+        balance: credit.credits.toString()
+      })
+    })
+  }
 
-    // insert the result into leave cards table
-    const newData = {
-      type: 'Service Credit',
-      balance: sc.toFixed(3),
-      user_id: userId,
-      remarks: 'Converted SL/VL to Service Credit',
-      particulars: 'Service Credit Adjustment'
-    }
+  // Current Service Credits balance
+  const slBalance =
+    balances.find((item) => item.type === 'Sick Leave')?.balance ?? 0
+  const vlBalance =
+    balances.find((item) => item.type === 'Vacation Leave')?.balance ?? 0
 
-    const { error } = await supabase.from('hrm_leave_cards').insert(newData)
+  // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
+  const sc = ((Number(slBalance) + Number(vlBalance)) / 30) * 69
 
-    if (error) {
-      void logError(
-        'Create Leave Card Adjustment from convertion formula',
-        'hrm_leave_cards',
-        JSON.stringify(newData),
-        error.message
-      )
-      throw new Error(error.message)
-    }
+  // Update Service Credit
+  const { error: error2 } = await supabase
+    .from('hrm_leave_credits')
+    .update({
+      credits: sc
+    })
+    .eq('user_id', userId)
+    .eq('type', 'Service Credit')
+
+  if (error2) {
+    void logError(
+      'Create Leave Credit Manual Adjustment',
+      'hrm_leave_credits',
+      '',
+      error2.message
+    )
+  }
+
+  // Update VL
+  const { error: error4 } = await supabase
+    .from('hrm_leave_credits')
+    .update({
+      credits: 0,
+      date_of_next_increment: null
+    })
+    .eq('user_id', userId)
+    .eq('type', 'Vacation Leave')
+
+  if (error4) {
+    void logError(
+      'Create Leave Credit Adjustment',
+      'hrm_leave_credits',
+      '',
+      error4.message
+    )
+  }
+
+  // Update SL
+  const { error: error5 } = await supabase
+    .from('hrm_leave_credits')
+    .update({
+      credits: 0,
+      date_of_next_increment: null
+    })
+    .eq('user_id', userId)
+    .eq('type', 'Sick Leave')
+
+  if (error5) {
+    void logError(
+      'Create Leave Credit Adjustment',
+      'hrm_leave_credits',
+      '',
+      error5.message
+    )
+  }
+
+  // insert the result into leave cards table
+  const newData = {
+    type: 'Service Credit',
+    balance: sc.toFixed(3),
+    user_id: userId,
+    remarks: 'Converted SL/VL to Service Credit',
+    particulars: 'Service Credit Adjustment'
+  }
+
+  const { error: error3 } = await supabase
+    .from('hrm_leave_cards')
+    .insert(newData)
+
+  if (error3) {
+    void logError(
+      'Create Leave Card Adjustment from convertion formula',
+      'hrm_leave_cards',
+      JSON.stringify(newData),
+      error3.message
+    )
+    throw new Error(error3.message)
   }
 }

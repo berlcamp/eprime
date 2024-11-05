@@ -1,18 +1,32 @@
-import React, { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { CustomButton, OneColLayoutLoading, UserBlock } from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchDistricts, fetchLeaveCards, fetchOffices, fetchPositions, fetchSchools, handleConvertEmployeeToNonTeaching, logError } from '@/utils/fetchApi'
-import { CustomButton, OneColLayoutLoading, UserBlock } from '@/components'
+import {
+  fetchDistricts,
+  fetchOffices,
+  fetchPositions,
+  fetchSchools,
+  handleConvertEmployeeToNonTeaching,
+  logError
+} from '@/utils/fetchApi'
 import { generateReferenceCode } from '@/utils/text-helper'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
 
 // Types
-import type { RevokeTypes, DistrictTypes, Office, SchoolTypes, PositionTypes } from '@/types'
+import type {
+  DistrictTypes,
+  LeaveCreditTypes,
+  Office,
+  PositionTypes,
+  RevokeTypes,
+  SchoolTypes
+} from '@/types'
 
 // Redux imports
-import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { useDispatch, useSelector } from 'react-redux'
 
 interface ModalProps {
   hideModal: () => void
@@ -53,7 +67,12 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { register, formState: { errors }, reset, handleSubmit } = useForm<RevokeTypes>({
+  const {
+    register,
+    formState: { errors },
+    reset,
+    handleSubmit
+  } = useForm<RevokeTypes>({
     mode: 'onSubmit'
   })
 
@@ -109,9 +128,12 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
   const handleCreateDesignation = async (formdata: RevokeTypes) => {
     if (!editData) return
 
-    let district = formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
-    let school = formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
-    let office = formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
+    let district =
+      formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
+    let school =
+      formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
+    let office =
+      formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
 
     // set these to null to prevent error
     if (formdata.type === 'Function only') {
@@ -145,8 +167,16 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
         .select()
 
       if (error) {
-        void logError('Create designation', 'hrm_designations', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Create designation',
+          'hrm_designations',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
@@ -158,39 +188,39 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
       }
 
       // convert employee to non-teaching and service credits to vl/sl
-      if (isLeaveCardChecked) {
-        void handleConvertEmployeeToNonTeaching(editData.hrm_user_id)
-      }
-
-      // update position type of employee to Non-teaching only if checkbox is checked
       if (isTeaching && isLeaveCardChecked) {
-        const { error: error2 } = await supabase
-          .from('hrm_users')
-          .update({ position_type: 'Non-teaching' })
-          .eq('id', editData.hrm_user_id)
-
-        if (error2) {
-          void logError('Update teaching to non-teaching on designation save', 'hrm_users', '', error2.message)
-          setToast('error', 'Saving failed, please reload the page and try again.')
-          throw new Error(error2.message)
-        }
+        void handleConvertEmployeeToNonTeaching(
+          editData.hrm_user_id,
+          formdata.date_of_next_increment
+        )
       }
 
       // Update data in redux
       const items = [...globallist]
       const updatedData = { status: 'Revoked', to: endDate, id: editData.id }
-      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
 
       const updatedDropdownData = getUpdatedDropdownData(formdata)
-      const newDataArray = { ...newData, from: formdata.from, hrm_users: editData.hrm_users, ...updatedDropdownData, id: newId }
+      const newDataArray = {
+        ...newData,
+        from: formdata.from,
+        hrm_users: editData.hrm_users,
+        ...updatedDropdownData,
+        id: newId
+      }
       dispatch(updateList([newDataArray, ...items]))
 
       // pop up the success message
       setToast('success', 'Successfully saved.')
 
       // Updating showing text in redux
-      dispatch(updateResultCounter({ showing: Number(resultsCounter.showing) + 1, results: Number(resultsCounter.results) + 1 }))
+      dispatch(
+        updateResultCounter({
+          showing: Number(resultsCounter.showing) + 1,
+          results: Number(resultsCounter.results) + 1
+        })
+      )
 
       setSaving(false)
 
@@ -207,9 +237,12 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
   const handleCreateAssignment = async (formdata: RevokeTypes) => {
     if (!editData) return
 
-    const district = formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
-    const school = formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
-    const office = formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
+    const district =
+      formdata.area_assigned === 'school' ? Number(formdata.district_id) : null
+    const school =
+      formdata.area_assigned === 'school' ? Number(formdata.school_id) : null
+    const office =
+      formdata.area_assigned === 'office' ? Number(formdata.office_id) : null
     const position = Number(formdata.position_id)
 
     const newData = {
@@ -236,8 +269,16 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
         .select()
 
       if (error) {
-        void logError('Create New re-Assignment', 'hrm_assignments', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Create New re-Assignment',
+          'hrm_assignments',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
 
@@ -254,12 +295,17 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
       // Update data in redux
       const items = [...globallist]
       const updatedData = { status: 'Revoked', to: endDate, id: editData.id }
-      const foundIndex = items.findIndex(x => x.id === updatedData.id)
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
       dispatch(updateList(items))
 
       // Updating showing text in redux
-      dispatch(updateResultCounter({ showing: Number(resultsCounter.showing) + 1, results: Number(resultsCounter.results) + 1 }))
+      dispatch(
+        updateResultCounter({
+          showing: Number(resultsCounter.showing) + 1,
+          results: Number(resultsCounter.results) + 1
+        })
+      )
 
       setSaving(false)
 
@@ -273,15 +319,22 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  const handleAddToServiceRecord = async (formdata: RevokeTypes, newId: string) => {
+  const handleAddToServiceRecord = async (
+    formdata: RevokeTypes,
+    newId: string
+  ) => {
     if (!editData) return
 
     let station = ''
     if (formdata.area_assigned === 'school') {
-      const hrmSchool = schools.find(p => p.id.toString() === formdata.school_id?.toString())
+      const hrmSchool = schools.find(
+        (p) => p.id.toString() === formdata.school_id?.toString()
+      )
       station = hrmSchool ? hrmSchool.name : ''
     } else {
-      const hrmOffice = offices.find(p => p.id.toString() === formdata.office_id?.toString())
+      const hrmOffice = offices.find(
+        (p) => p.id.toString() === formdata.office_id?.toString()
+      )
       station = hrmOffice ? hrmOffice.name : ''
     }
 
@@ -308,8 +361,16 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
         .insert(newData)
 
       if (error) {
-        void logError('Create service record from designations', 'hrm_service_records', JSON.stringify(newData), error.message)
-        setToast('error', 'Saving failed, please reload the page and try again.')
+        void logError(
+          'Create service record from designations',
+          'hrm_service_records',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
         throw new Error(error.message)
       }
     } catch (e) {
@@ -321,19 +382,21 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
     let json = {}
     if (formdata.area_assigned === 'school') {
       // Districts
-      const dis = districts.filter(x => x.id.toString() === formdata.district_id)
+      const dis = districts.filter(
+        (x) => x.id.toString() === formdata.district_id
+      )
       if (dis.length > 0) {
         json = { ...json, hrm_districts: { id: dis[0].id, name: dis[0].name } }
       }
 
       // Schools
-      const sch = schools.filter(x => x.id.toString() === formdata.school_id)
+      const sch = schools.filter((x) => x.id.toString() === formdata.school_id)
       if (sch.length > 0) {
         json = { ...json, hrm_schools: { id: sch[0].id, name: sch[0].name } }
       }
     } else {
       // offices
-      const off = offices?.filter(x => x.id.toString() === formdata.office_id)
+      const off = offices?.filter((x) => x.id.toString() === formdata.office_id)
       if (off.length > 0) {
         json = { ...json, hrm_offices: { id: off[0].id, name: off[0].name } }
       }
@@ -358,16 +421,34 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
 
       // Count Service Credits balance if teaching
       if (editData?.hrm_users.position_type === 'Teaching') {
-        const result = await fetchLeaveCards(editData.hrm_user_id, 'Service Credit', 10, 0)
-        if (result.count && result.count > 0) {
-          // first index of array should be the latest and updated balance
-          const sc = result.data[0].balance
-          setScBalance(sc)
+        // Current Balances
+        const { data: balancesData } = await supabase
+          .from('hrm_leave_credits')
+          .select()
+          .eq('user_id', editData.hrm_users.id)
 
-          // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
-          const vlsl = (30 * Number(sc)) / 69
-          setVlslBalance(vlsl)
+        const balances: Array<{
+          type: string
+          balance: string
+        }> = []
+
+        if (balancesData && balancesData.length > 0) {
+          const creditsData: LeaveCreditTypes[] = balancesData
+          creditsData.forEach((credit) => {
+            balances.push({
+              type: credit.type,
+              balance: credit.credits.toString()
+            })
+          })
         }
+        // Count Service Credits balance if teaching
+        const sc =
+          balances.find((item) => item.type === 'Service Credit')?.balance ?? 0
+        setScBalance(Number(sc))
+
+        // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
+        const vlsl = (30 * Number(sc)) / 69
+        setVlslBalance(vlsl)
       }
     })()
   }, [])
@@ -395,423 +476,574 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
   }, [editData, reset])
 
   return (
-  <>
-    <div className="app__modal_wrapper">
-      <div className="app__modal_wrapper2">
-        <div className="app__modal_wrapper3">
-          <div className="app__modal_header">
-            <h5 className="app__modal_header_text">
-              Revoke Designation
-            </h5>
-            <CustomButton
-                containerStyles='app__btn_gray'
-                title='Close'
-                btnType='button'
+    <>
+      <div className="app__modal_wrapper">
+        <div className="app__modal_wrapper2">
+          <div className="app__modal_wrapper3">
+            <div className="app__modal_header">
+              <h5 className="app__modal_header_text">Revoke Designation</h5>
+              <CustomButton
+                containerStyles="app__btn_gray"
+                title="Close"
+                btnType="button"
                 handleClick={hideModal}
               />
-          </div>
+            </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
-            {
-              editData &&
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Employee Name:</div>
-                    <div className='app__label_value'><UserBlock user={editData.hrm_users}/></div>
+            <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
+              {editData && (
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">Employee Name:</div>
+                    <div className="app__label_value">
+                      <UserBlock user={editData.hrm_users} />
+                    </div>
                   </div>
                 </div>
-            }
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>End Date</div>
-                <div>
-                  <input
-                    value={endDate}
-                    onChange={e => setEndDate(e.target.value)}
-                    type='date'
-                    className='app__select_standard'/>
-                {(endDate === '' && hasError) && <div className='app__error_message'>End Date is required</div>}
+              )}
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">End Date</div>
+                  <div>
+                    <input
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      type="date"
+                      className="app__select_standard"
+                    />
+                    {endDate === '' && hasError && (
+                      <div className="app__error_message">
+                        End Date is required
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className='app__form_field_container'>
-              <div className='w-full'>
-                <div className='app__label_standard'>Action</div>
-                <div>
-                  <select
-                    value={action}
-                    onChange={e => setAction(e.target.value)}
-                    className='app__select_standard'>
-                      <option value=''>Choose</option>
-                      <option value='Reassign'>Reassign</option>
-                      <option value='Redesignate'>Redesignate</option>
-                  </select>
-                  {(action === '' && hasError) && <div className='app__error_message'>Action is required</div>}
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Action</div>
+                  <div>
+                    <select
+                      value={action}
+                      onChange={(e) => setAction(e.target.value)}
+                      className="app__select_standard"
+                    >
+                      <option value="">Choose</option>
+                      <option value="Reassign">Reassign</option>
+                      <option value="Redesignate">Redesignate</option>
+                    </select>
+                    {action === '' && hasError && (
+                      <div className="app__error_message">
+                        Action is required
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            {
-              action === 'Redesignate' &&
+              {action === 'Redesignate' && (
                 <>
-                  <div className='app__form_field_container'>
-                    <div className='w-full'>
-                      <div className='app__label_standard'>Designation</div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Designation</div>
                       <div>
                         <input
                           {...register('designation', { required: true })}
-                          type='text'
-                          className='app__input_standard'/>
-                        {errors.designation && <div className='app__error_message'>Designation is required</div>}
+                          type="text"
+                          className="app__input_standard"
+                        />
+                        {errors.designation && (
+                          <div className="app__error_message">
+                            Designation is required
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                  <div className='app__form_field_container'>
-                    <div className='w-full'>
-                      <div className='app__label_standard'>Type</div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Type</div>
                       <div>
                         <select
                           {...register('type', { required: true })}
                           value={type}
-                          onChange={e => setType(e.target.value)}
-                          className='app__select_standard'>
-                            <option value=''>Choose</option>
-                            <option value='Function only'>Function only</option>
-                            <option value='Function with Station'>Function with Station</option>
+                          onChange={(e) => setType(e.target.value)}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose</option>
+                          <option value="Function only">Function only</option>
+                          <option value="Function with Station">
+                            Function with Station
+                          </option>
                         </select>
-                        {errors.type && <div className='app__error_message'>Type is required</div>}
+                        {errors.type && (
+                          <div className="app__error_message">
+                            Type is required
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                  {
-                    type === 'Function with Station' &&
-                      <div className='app__form_field_container'>
-                        <div className='w-full'>
-                          <div className='app__label_standard'>Station</div>
-                          <div>
-                            <select
-                              {...register('area_assigned', { required: true })}
-                              value={assignment}
-                              onChange={e => setAssignment(e.target.value)}
-                              className='app__select_standard'>
-                                <option value=''>Choose</option>
-                                <option value='school'>School</option>
-                                <option value='office'>Division Office</option>
-                            </select>
-                            {errors.area_assigned && <div className='app__error_message'>Station is required</div>}
-                          </div>
+                  {type === 'Function with Station' && (
+                    <div className="app__form_field_container">
+                      <div className="w-full">
+                        <div className="app__label_standard">Station</div>
+                        <div>
+                          <select
+                            {...register('area_assigned', { required: true })}
+                            value={assignment}
+                            onChange={(e) => setAssignment(e.target.value)}
+                            className="app__select_standard"
+                          >
+                            <option value="">Choose</option>
+                            <option value="school">School</option>
+                            <option value="office">Division Office</option>
+                          </select>
+                          {errors.area_assigned && (
+                            <div className="app__error_message">
+                              Station is required
+                            </div>
+                          )}
                         </div>
                       </div>
-                  }
-                  {
-                    (assignment === 'school' && type === 'Function with Station') &&
+                    </div>
+                  )}
+                  {assignment === 'school' &&
+                    type === 'Function with Station' && (
                       <>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Choose district</div>
+                        <div className="app__form_field_container">
+                          <div className="w-full">
+                            <div className="app__label_standard">
+                              Choose district
+                            </div>
                             <div>
                               <select
                                 {...register('district_id', { required: true })}
-                                onChange={async e => await handleDistrictChange(e.target.value)}
+                                onChange={async (e) =>
+                                  await handleDistrictChange(e.target.value)
+                                }
                                 value={selectedDistrict}
-                                className='app__select_standard'>
-                                  <option value=''>Choose</option>
-                                  {
-                                    districts.map((item, index) => (
-                                      <option key={index} value={item.id}>{item.name}</option>
-                                    ))
-                                  }
+                                className="app__select_standard"
+                              >
+                                <option value="">Choose</option>
+                                {districts.map((item, index) => (
+                                  <option key={index} value={item.id}>
+                                    {item.name}
+                                  </option>
+                                ))}
                               </select>
-                              {errors.district_id && <div className='app__error_message'>District is required</div>}
+                              {errors.district_id && (
+                                <div className="app__error_message">
+                                  District is required
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
                       </>
-                  }
-                  {
-                    loadingSchools &&
-                      <div className=''>
-                        <OneColLayoutLoading rows={1}/>
-                      </div>
-                  }
-                  {
-                    (assignment === 'school' && type === 'Function with Station' && !loadingSchools) &&
+                    )}
+                  {loadingSchools && (
+                    <div className="">
+                      <OneColLayoutLoading rows={1} />
+                    </div>
+                  )}
+                  {assignment === 'school' &&
+                    type === 'Function with Station' &&
+                    !loadingSchools && (
                       <>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Choose School</div>
+                        <div className="app__form_field_container">
+                          <div className="w-full">
+                            <div className="app__label_standard">
+                              Choose School
+                            </div>
                             <div>
                               <select
                                 {...register('school_id', { required: true })}
                                 value={selectedSchool}
-                                onChange={e => setSelectedSchool(e.target.value)}
-                                className='app__select_standard'>
-                                  <option value=''>Choose</option>
-                                  {
-                                    schools.map((item, index) => (
-                                      <option key={index} value={item.id}>{item.name}</option>
-                                    ))
-                                  }
+                                onChange={(e) =>
+                                  setSelectedSchool(e.target.value)
+                                }
+                                className="app__select_standard"
+                              >
+                                <option value="">Choose</option>
+                                {schools.map((item, index) => (
+                                  <option key={index} value={item.id}>
+                                    {item.name}
+                                  </option>
+                                ))}
                               </select>
-                              {errors.school_id && <div className='app__error_message'>School is required</div>}
+                              {errors.school_id && (
+                                <div className="app__error_message">
+                                  School is required
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
                       </>
-                  }
-                  {
-                    (assignment === 'office' && type === 'Function with Station') &&
-                      <div className='app__form_field_container'>
-                        <div className='w-full'>
-                          <div className='app__label_standard'>Choose office</div>
+                    )}
+                  {assignment === 'office' &&
+                    type === 'Function with Station' && (
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Choose office
+                          </div>
                           <div>
                             <select
                               {...register('office_id', { required: true })}
                               value={selectedOffice}
-                              onChange={e => setSelectedOffice(e.target.value)}
-                              className='app__select_standard'>
-                                <option value=''>Choose</option>
-                                {
-                                  offices.map((item, index) => (
-                                    <option key={index} value={item.id}>{item.name}</option>
-                                  ))
-                                }
+                              onChange={(e) =>
+                                setSelectedOffice(e.target.value)
+                              }
+                              className="app__select_standard"
+                            >
+                              <option value="">Choose</option>
+                              {offices.map((item, index) => (
+                                <option key={index} value={item.id}>
+                                  {item.name}
+                                </option>
+                              ))}
                             </select>
-                            {errors.office_id && <div className='app__error_message'>Office is required</div>}
+                            {errors.office_id && (
+                              <div className="app__error_message">
+                                Office is required
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
-                  }
-                  <div className='app__form_field_container'>
-                    <div className='w-full'>
-                      <div className='app__label_standard'>Start Date</div>
+                    )}
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Start Date</div>
                       <div>
                         <input
                           {...register('from', { required: true })}
-                          type='date'
-                          className='app__select_standard'/>
-                        {errors.from && <div className='app__error_message'>Start Date is required</div>}
+                          type="date"
+                          className="app__select_standard"
+                        />
+                        {errors.from && (
+                          <div className="app__error_message">
+                            Start Date is required
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                  {
-                    isTeaching &&
-                      <div className='app__form_field_container'>
-                        <div className='w-full'>
-                          <div className='app__label_standard'>
-                            <label className='flex items-center space-x-1'>
-                              <input
-                                onChange={() => setIsLeaveCardChecked(!isLeaveCardChecked)}
-                                checked={isLeaveCardChecked}
-                                type='checkbox'
-                                className=''/>
-                              <span>Convert employee&apos;s Service Credits to SL/VL</span>
-                            </label>
-                          </div>
-                          {isLeaveCardChecked && <div className='ml-4 text-xs text-gray-700'><span className='text-green-700 font-bold'>{Number(scBalance).toFixed(3)}</span> Service Credits will be converted to <span className='text-green-700 font-bold'>{(vlslBalance / 2).toFixed(3)}</span> VL and <span className='text-green-700 font-bold'>{(vlslBalance / 2).toFixed(3)}</span> SL</div>}
+                  {isTeaching && (
+                    <div className="app__form_field_container">
+                      <div className="w-full">
+                        <div className="app__label_standard">
+                          <label className="flex items-center space-x-1">
+                            <input
+                              onChange={() =>
+                                setIsLeaveCardChecked(!isLeaveCardChecked)
+                              }
+                              checked={isLeaveCardChecked}
+                              type="checkbox"
+                              className=""
+                            />
+                            <span>
+                              Convert employee&apos;s Service Credits to SL/VL
+                            </span>
+                          </label>
                         </div>
+                        {isLeaveCardChecked && (
+                          <>
+                            <div className="ml-4 mb-4 text-xs text-gray-700">
+                              <span className="text-green-700 font-bold">
+                                {Number(scBalance).toFixed(3)}
+                              </span>{' '}
+                              Service Credits will be converted to{' '}
+                              <span className="text-green-700 font-bold">
+                                {(vlslBalance / 2).toFixed(3)}
+                              </span>{' '}
+                              VL and{' '}
+                              <span className="text-green-700 font-bold">
+                                {(vlslBalance / 2).toFixed(3)}
+                              </span>{' '}
+                              SL
+                            </div>
+                            <div className="app__form_field_container">
+                              <div className="w-full">
+                                <div className="app__label_standard">
+                                  Specify date of next VL/SL Increment:
+                                </div>
+                                <div>
+                                  <input
+                                    {...register('date_of_next_increment', {
+                                      required: true
+                                    })}
+                                    type="date"
+                                    className="app__input_standard"
+                                  />
+                                  {errors.date_of_next_increment && (
+                                    <div className="app__error_message">
+                                      Specify date of next VL/SL increment
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
-                  }
+                    </div>
+                  )}
                 </>
-            }
-            {
-              action === 'Reassign' &&
+              )}
+              {action === 'Reassign' && (
                 <>
-                  <div className='app__form_field_container'>
-                    <div className='w-full'>
-                      <div className='app__label_standard'>Position</div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Position</div>
                       <div>
                         <select
                           {...register('position_id', { required: true })}
                           value={selectedPosition}
-                          onChange={e => setSelectedPosition(e.target.value)}
-                          className='app__input_standard'>
-                            <option value=''>Choose Position</option>
-                            {
-                              positions.map((position: PositionTypes, index) => <option key={index} value={position.id}>{position.name}</option>)
-                            }
+                          onChange={(e) => setSelectedPosition(e.target.value)}
+                          className="app__input_standard"
+                        >
+                          <option value="">Choose Position</option>
+                          {positions.map((position: PositionTypes, index) => (
+                            <option key={index} value={position.id}>
+                              {position.name}
+                            </option>
+                          ))}
                         </select>
-                        {errors.position_id && <div className='app__error_message'>Position is required</div>}
+                        {errors.position_id && (
+                          <div className="app__error_message">
+                            Position is required
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                  <div className='app__form_field_container'>
-                    <div className='w-full'>
-                      <div className='app__label_standard'>Station</div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Station</div>
                       <div>
                         <select
                           {...register('area_assigned', { required: true })}
                           value={assignment}
-                          onChange={e => setAssignment(e.target.value)}
-                          className='app__select_standard'>
-                            <option value=''>Choose</option>
-                            <option value='school'>School</option>
-                            <option value='office'>Division Office</option>
+                          onChange={(e) => setAssignment(e.target.value)}
+                          className="app__select_standard"
+                        >
+                          <option value="">Choose</option>
+                          <option value="school">School</option>
+                          <option value="office">Division Office</option>
                         </select>
-                        {errors.area_assigned && <div className='app__error_message'>Station is required</div>}
+                        {errors.area_assigned && (
+                          <div className="app__error_message">
+                            Station is required
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                  {
-                    assignment === 'school' &&
-                      <>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Choose district</div>
-                            <div>
-                              <select
-                                {...register('district_id', { required: true })}
-                                onChange={async e => await handleDistrictChange(e.target.value)}
-                                value={selectedDistrict}
-                                className='app__select_standard'>
-                                  <option value=''>Choose</option>
-                                  {
-                                    districts.map((item, index) => (
-                                      <option key={index} value={item.id}>{item.name}</option>
-                                    ))
-                                  }
-                              </select>
-                              {errors.district_id && <div className='app__error_message'>District is required</div>}
-                            </div>
+                  {assignment === 'school' && (
+                    <>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Choose district
                           </div>
-                        </div>
-                      </>
-                  }
-                  {
-                    loadingSchools &&
-                      <div className=''>
-                        <OneColLayoutLoading rows={1}/>
-                      </div>
-                  }
-                  {
-                    (assignment === 'school' && !loadingSchools) &&
-                      <>
-                        <div className='app__form_field_container'>
-                          <div className='w-full'>
-                            <div className='app__label_standard'>Choose School</div>
-                            <div>
-                              <select
-                                {...register('school_id', { required: true })}
-                                value={selectedSchool}
-                                onChange={e => setSelectedSchool(e.target.value)}
-                                className='app__select_standard'>
-                                  <option value=''>Choose</option>
-                                  {
-                                    schools.map((item, index) => (
-                                      <option key={index} value={item.id}>{item.name}</option>
-                                    ))
-                                  }
-                              </select>
-                              {errors.school_id && <div className='app__error_message'>School is required</div>}
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                  }
-                  {
-                    assignment === 'office' &&
-                      <div className='app__form_field_container'>
-                        <div className='w-full'>
-                          <div className='app__label_standard'>Choose office</div>
                           <div>
                             <select
-                              {...register('office_id', { required: true })}
-                              value={selectedOffice}
-                              onChange={e => setSelectedOffice(e.target.value)}
-                              className='app__select_standard'>
-                                <option value=''>Choose</option>
-                                {
-                                  offices.map((item, index) => (
-                                    <option key={index} value={item.id}>{item.name}</option>
-                                  ))
-                                }
+                              {...register('district_id', { required: true })}
+                              onChange={async (e) =>
+                                await handleDistrictChange(e.target.value)
+                              }
+                              value={selectedDistrict}
+                              className="app__select_standard"
+                            >
+                              <option value="">Choose</option>
+                              {districts.map((item, index) => (
+                                <option key={index} value={item.id}>
+                                  {item.name}
+                                </option>
+                              ))}
                             </select>
-                            {errors.office_id && <div className='app__error_message'>Office is required</div>}
+                            {errors.district_id && (
+                              <div className="app__error_message">
+                                District is required
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
-                  }
-                  <div className='app__form_field_container'>
-                    <div className='w-full'>
-                      <div className='app__label_standard'>Start Date</div>
+                    </>
+                  )}
+                  {loadingSchools && (
+                    <div className="">
+                      <OneColLayoutLoading rows={1} />
+                    </div>
+                  )}
+                  {assignment === 'school' && !loadingSchools && (
+                    <>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Choose School
+                          </div>
+                          <div>
+                            <select
+                              {...register('school_id', { required: true })}
+                              value={selectedSchool}
+                              onChange={(e) =>
+                                setSelectedSchool(e.target.value)
+                              }
+                              className="app__select_standard"
+                            >
+                              <option value="">Choose</option>
+                              {schools.map((item, index) => (
+                                <option key={index} value={item.id}>
+                                  {item.name}
+                                </option>
+                              ))}
+                            </select>
+                            {errors.school_id && (
+                              <div className="app__error_message">
+                                School is required
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {assignment === 'office' && (
+                    <div className="app__form_field_container">
+                      <div className="w-full">
+                        <div className="app__label_standard">Choose office</div>
+                        <div>
+                          <select
+                            {...register('office_id', { required: true })}
+                            value={selectedOffice}
+                            onChange={(e) => setSelectedOffice(e.target.value)}
+                            className="app__select_standard"
+                          >
+                            <option value="">Choose</option>
+                            {offices.map((item, index) => (
+                              <option key={index} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                          {errors.office_id && (
+                            <div className="app__error_message">
+                              Office is required
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Start Date</div>
                       <div>
                         <input
                           {...register('from', { required: true })}
-                          type='date'
-                          className='app__select_standard'/>
-                        {errors.from && <div className='app__error_message'>Start Date is required</div>}
+                          type="date"
+                          className="app__select_standard"
+                        />
+                        {errors.from && (
+                          <div className="app__error_message">
+                            Start Date is required
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                 </>
-            }
-            {
-              action !== '' &&
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>
-                      <label className='flex items-center space-x-1'>
+              )}
+              {action !== '' && (
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">
+                      <label className="flex items-center space-x-1">
                         <input
-                          onChange={() => setIsServiceRecordChecked(!isServiceRecordChecked)}
+                          onChange={() =>
+                            setIsServiceRecordChecked(!isServiceRecordChecked)
+                          }
                           checked={isServiceRecordChecked}
-                          type='checkbox'
-                          className=''/>
-                        <span>Include this to Employee&apos;s Service Record</span>
+                          type="checkbox"
+                          className=""
+                        />
+                        <span>
+                          Include this to Employee&apos;s Service Record
+                        </span>
                       </label>
                     </div>
                   </div>
                 </div>
-            }
-            {
-              (isServiceRecordChecked) &&
-                <div className='app__form_field_container'>
-                  <div className='w-full'>
-                    <div className='app__label_standard'>Status</div>
+              )}
+              {isServiceRecordChecked && (
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">Status</div>
                     <div>
                       <select
-                        {...register('service_record_status', { required: true })}
-                        className='app__select_standard'>
-                          <option value=''>Choose</option>
-                          <option value="Casual">Casual</option>
-                          <option value="Contractual">Contractual</option>
-                          <option value="Permanent">Permanent</option>
-                          <option value="Provisionary">Provisionary</option>
-                          <option value="Provisional">Provisional</option>
-                          <option value="Permanent">Permanent</option>
-                          <option value="School Board">School Board</option>
-                          <option value="Substitute">Substitute</option>
-                          <option value="Temporary">Temporary</option>
+                        {...register('service_record_status', {
+                          required: true
+                        })}
+                        className="app__select_standard"
+                      >
+                        <option value="">Choose</option>
+                        <option value="Casual">Casual</option>
+                        <option value="Contractual">Contractual</option>
+                        <option value="Permanent">Permanent</option>
+                        <option value="Provisionary">Provisionary</option>
+                        <option value="Provisional">Provisional</option>
+                        <option value="Permanent">Permanent</option>
+                        <option value="School Board">School Board</option>
+                        <option value="Substitute">Substitute</option>
+                        <option value="Temporary">Temporary</option>
                       </select>
-                      {errors.service_record_status && <div className='app__error_message'>Status is required</div>}
+                      {errors.service_record_status && (
+                        <div className="app__error_message">
+                          Status is required
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-            }
-            <hr className='my-6'/>
-            <div className='app__form_field_container'>
-              <div className='app__label_standard'>
-                <label className='flex items-center space-x-1'>
-                  <input
-                    {...register('confirmed', { required: true })}
-                    type='checkbox'
-                    className=''/>
-                  <span className='font-normal text-xs'>By checking this box, you acknowledge that all information is accurate and up-to-date.</span>
-                </label>
-                {errors.confirmed && <div className='app__error_message'>Confirmation is required</div>}
+              )}
+              <hr className="my-6" />
+              <div className="app__form_field_container">
+                <div className="app__label_standard">
+                  <label className="flex items-center space-x-1">
+                    <input
+                      {...register('confirmed', { required: true })}
+                      type="checkbox"
+                      className=""
+                    />
+                    <span className="font-normal text-xs">
+                      By checking this box, you acknowledge that all information
+                      is accurate and up-to-date.
+                    </span>
+                  </label>
+                  {errors.confirmed && (
+                    <div className="app__error_message">
+                      Confirmation is required
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="app__modal_footer">
-                  <CustomButton
-                    btnType='submit'
-                    isDisabled={saving}
-                    title={saving ? 'Saving...' : 'Save'}
-                    containerStyles="app__btn_green"
-                  />
-            </div>
-          </form>
+              <div className="app__modal_footer">
+                <CustomButton
+                  btnType="submit"
+                  isDisabled={saving}
+                  title={saving ? 'Saving...' : 'Save'}
+                  containerStyles="app__btn_green"
+                />
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
-  </>
+    </>
   )
 }
 

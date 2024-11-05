@@ -97,10 +97,7 @@ export default function LeaveCard({ userId, userData }: PageProps) {
         balance: formdata.balance,
         remarks: formdata.remarks,
         user_id: userId,
-        particulars: `${formdata.type} Adjustment, next increment on ${format(
-          new Date(formdata.date_of_next_increment),
-          'MM/dd/yyyy'
-        )}`,
+        particulars: `${formdata.type} Adjustment`,
         updated_by: session.user.id
       }
 
@@ -153,10 +150,7 @@ export default function LeaveCard({ userId, userData }: PageProps) {
       const newList = [
         {
           adjustment_date: format(new Date(), 'MMM dd, yyyy'),
-          particulars: `${formdata.type} Adjustment, next increment on ${format(
-            new Date(formdata.date_of_next_increment),
-            'MM/dd/yyyy'
-          )}`,
+          particulars: `${formdata.type} Adjustment`,
           credits_used: '',
           credits_earned: '',
           balance: formdata.balance,
@@ -226,9 +220,12 @@ export default function LeaveCard({ userId, userData }: PageProps) {
                     {leaveCreditTypes
                       .filter(
                         (l) =>
-                          l.gender.toLowerCase() ===
+                          (l.gender.toLowerCase() ===
                             userData.gender.toLowerCase() ||
-                          l.gender.toLowerCase() === 'all'
+                            l.gender.toLowerCase() === 'all') &&
+                          (l.position_type.toLowerCase() ===
+                            userData.position_type.toLowerCase() ||
+                            l.position_type.toLowerCase() === 'all')
                       )
                       .map((l, i) => (
                         <option key={i} value={`${l.type}`}>

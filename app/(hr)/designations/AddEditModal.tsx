@@ -8,7 +8,6 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
   fetchDistricts,
-  fetchLeaveCards,
   fetchOffices,
   fetchSchools,
   handleConvertEmployeeToNonTeaching,
@@ -23,6 +22,7 @@ import type {
   DesignationTypes,
   DistrictTypes,
   Employee,
+  LeaveCreditTypes,
   Office,
   SchoolTypes
 } from '@/types'
@@ -169,7 +169,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       // update position type of employee to Non-teaching only if checkbox is checked and convert employee to non-teaching and service credits to vl/sl
       if (isTeaching && isLeaveCardChecked) {
-        void handleConvertEmployeeToNonTeaching(user.id)
+        void handleConvertEmployeeToNonTeaching(
+          user.id,
+          formdata.date_of_next_increment
+        )
       }
 
       // Append new data in redux
@@ -449,17 +452,34 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleFetchLeaveCard = async (userId: string) => {
-    // Count Service Credits balance if teaching
-    const result = await fetchLeaveCards(userId, 'Service Credit', 10, 0)
-    if (result.count && result.count > 0) {
-      // first index of array should be the latest and updated balance
-      const sc = result.data[0].balance
-      setScBalance(sc)
+    // Current Balances
+    const { data: balancesData } = await supabase
+      .from('hrm_leave_credits')
+      .select()
+      .eq('user_id', userId)
 
-      // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
-      const vlsl = (30 * Number(sc)) / 69
-      setVlslBalance(vlsl)
+    const balances: Array<{
+      type: string
+      balance: string
+    }> = []
+
+    if (balancesData && balancesData.length > 0) {
+      const creditsData: LeaveCreditTypes[] = balancesData
+      creditsData.forEach((credit) => {
+        balances.push({
+          type: credit.type,
+          balance: credit.credits.toString()
+        })
+      })
     }
+    // Count Service Credits balance if teaching
+    const sc =
+      balances.find((item) => item.type === 'Service Credit')?.balance ?? 0
+    setScBalance(Number(sc))
+
+    // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
+    const vlsl = (30 * Number(sc)) / 69
+    setVlslBalance(vlsl)
   }
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
@@ -791,20 +811,43 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       </label>
                     </div>
                     {isLeaveCardChecked && (
-                      <div className="ml-4 text-xs text-gray-700">
-                        <span className="text-green-700 font-bold">
-                          {Number(scBalance).toFixed(3)}
-                        </span>{' '}
-                        Service Credits will be converted to{' '}
-                        <span className="text-green-700 font-bold">
-                          {(vlslBalance / 2).toFixed(3)}
-                        </span>{' '}
-                        VL and{' '}
-                        <span className="text-green-700 font-bold">
-                          {(vlslBalance / 2).toFixed(3)}
-                        </span>{' '}
-                        SL
-                      </div>
+                      <>
+                        <div className="ml-4 mb-4 text-xs text-gray-700">
+                          <span className="text-green-700 font-bold">
+                            {Number(scBalance).toFixed(3)}
+                          </span>{' '}
+                          Service Credits will be converted to{' '}
+                          <span className="text-green-700 font-bold">
+                            {(vlslBalance / 2).toFixed(3)}
+                          </span>{' '}
+                          VL and{' '}
+                          <span className="text-green-700 font-bold">
+                            {(vlslBalance / 2).toFixed(3)}
+                          </span>{' '}
+                          SL
+                        </div>
+                        <div className="app__form_field_container">
+                          <div className="w-full">
+                            <div className="app__label_standard">
+                              Specify date of next VL/SL Increment:
+                            </div>
+                            <div>
+                              <input
+                                {...register('date_of_next_increment', {
+                                  required: true
+                                })}
+                                type="date"
+                                className="app__input_standard"
+                              />
+                              {errors.date_of_next_increment && (
+                                <div className="app__error_message">
+                                  Specify date of next VL/SL increment
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>

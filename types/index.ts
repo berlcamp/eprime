@@ -146,6 +146,7 @@ export interface Employee {
   step_increment_leave_days: string
   date_of_last_designation: string
   confirmed: string
+  date_of_next_increment: string
 }
 
 export interface LeaveCardTypes {
@@ -329,6 +330,7 @@ export interface DesignationTypes {
   hrm_offices: Office
   service_record_status: string
   confirmed: string
+  date_of_next_increment: string
 }
 
 export interface RevokeTypes {
@@ -354,6 +356,7 @@ export interface RevokeTypes {
   position_id: string
   hrm_positions: PositionTypes
   confirmed: string
+  date_of_next_increment: string
 }
 
 export interface CtoUserTypes {

@@ -4,7 +4,6 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import {
   fetchDistricts,
   fetchItems,
-  fetchLeaveCards,
   fetchOffices,
   fetchPositions,
   fetchSchools,
@@ -29,6 +28,7 @@ import type {
   DistrictTypes,
   Employee,
   ItemTypes,
+  LeaveCreditTypes,
   Office,
   PositionTypes,
   SchoolTypes
@@ -190,7 +190,10 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
 
       // Update leave if position type is changed
       if (positionTypeChange === 'Non-teaching') {
-        void handleConvertEmployeeToNonTeaching(id)
+        void handleConvertEmployeeToNonTeaching(
+          id,
+          formdata.date_of_next_increment
+        )
       }
       if (positionTypeChange === 'Teaching') {
         void handleConvertEmployeeToTeaching(id)
@@ -336,18 +339,38 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   const handleChangePositionType = async (type: string) => {
     if (!userData) return
 
-    const result = await fetchLeaveCards(id, '', 1000, 0) // fetch all
+    // Current Balances
+    const { data: balancesData } = await supabase
+      .from('hrm_leave_credits')
+      .select()
+      .eq('user_id', id)
+
+    const balances: Array<{
+      type: string
+      balance: string
+    }> = []
+
+    if (balancesData && balancesData.length > 0) {
+      const creditsData: LeaveCreditTypes[] = balancesData
+      creditsData.forEach((credit) => {
+        balances.push({
+          type: credit.type,
+          balance: credit.credits.toString()
+        })
+      })
+    }
 
     // Count Service Credits balance if teaching
-    if (type === 'Non-teaching' && userData.position_type !== 'Non-teaching') {
-      if (result.count && result.count > 0) {
-        const scList = result.data.filter(
-          (item) => item.type === 'Service Credit'
-        )
+    if (
+      (type === 'Non-teaching' || type === 'Teaching-Related') &&
+      userData.position_type === 'Teaching'
+    ) {
+      if (balances.length > 0) {
+        const scList = balances.find((item) => item.type === 'Service Credit')
 
         // first index of array should be the latest and updated balance
-        const sc = scList.length > 0 ? scList[0].balance : 0
-        setScBalance(sc)
+        const sc = scList?.balance ?? 0
+        setScBalance(Number(sc))
 
         // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
         const vlsl = (30 * Number(sc)) / 69
@@ -360,17 +383,15 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
 
     // Count VL/SL balance if non-teaching
     if (type === 'Teaching' && userData.position_type !== 'Teaching') {
-      if (result.count && result.count > 0) {
-        const vlList = result.data.filter(
-          (item) => item.type === 'Vacation Leave'
-        )
-        const slList = result.data.filter((item) => item.type === 'Sick Leave')
+      if (balances.length > 0) {
+        const vlList = balances.find((item) => item.type === 'Vacation Leave')
+        const slList = balances.find((item) => item.type === 'Sick Leave')
 
         // first index of array should be the latest and updated balance
-        const sl = slList.length > 0 ? slList[0].balance : 0
-        const vl = vlList.length > 0 ? vlList[0].balance : 0
-        setSlBalance(sl)
-        setVlBalance(vl)
+        const sl = slList?.balance ?? 0
+        const vl = vlList?.balance ?? 0
+        setSlBalance(Number(sl))
+        setVlBalance(Number(vl))
 
         // formula to convert vl/sl to sc as amended by CSC MC No.41, s. 1998
         const sc = ((Number(vl) + Number(sl)) / 30) * 69
@@ -754,6 +775,29 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                         )}
                       </div>
+                      {positionTypeChange === 'Non-teaching' && (
+                        <div className="app__form_field_container">
+                          <div className="w-full">
+                            <div className="app__label_standard">
+                              Specify date of next VL/SL Increment:
+                            </div>
+                            <div>
+                              <input
+                                {...register('date_of_next_increment', {
+                                  required: true
+                                })}
+                                type="date"
+                                className="app__input_standard"
+                              />
+                              {errors.date_of_next_increment && (
+                                <div className="app__error_message">
+                                  Specify date of next VL/SL increment
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       <div className="flex items-center">
                         <div className="flex-grow bg-gray-300 h-px"></div>
                         <div className="mx-4 my-4 text-gray-500 text-sm">
