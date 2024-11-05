@@ -16,9 +16,12 @@ export async function GET() {
   const { error: incrementError } = await supabase.rpc(
     'increment_monthly_leave_credits'
   )
+  const { error: resetError } = await supabase.rpc('reset_annual_leave_credits')
 
   if (incrementError) {
     return NextResponse.json(incrementError)
+  } else if (resetError) {
+    return NextResponse.json(resetError)
   } else {
     return NextResponse.json('Cron completed')
   }
