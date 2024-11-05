@@ -160,6 +160,51 @@ const ApplicantDetails = ({
             </div>
 
             <div className="app__modal_body">
+              <div className="p-4 text-sm text-gray-700 bg-gray-50 border space-y-2">
+                <div className="uppercase">
+                  lastname: {applicantData.lastname}
+                </div>
+                <div className="uppercase">
+                  firstname: {applicantData.firstname}
+                </div>
+                <div className="uppercase">
+                  middlename: {applicantData.middlename}
+                </div>
+                <div className="uppercase">email: {applicantData.email}</div>
+                <div className="uppercase">
+                  address: {applicantData.address}
+                </div>
+                <div className="uppercase">age: {applicantData.age}</div>
+                <div className="uppercase">sex: {applicantData.sex}</div>
+                <div className="uppercase">
+                  civil_status: {applicantData.civil_status}
+                </div>
+                <div className="uppercase">
+                  religion: {applicantData.religion}
+                </div>
+                <div className="uppercase">
+                  disability: {applicantData.disability}
+                </div>
+                <div className="uppercase">
+                  ethnicity: {applicantData.ethnicity}
+                </div>
+                <div className="uppercase">
+                  ethnicity detail: {applicantData.ethnicity_detail}
+                </div>
+                <div className="uppercase">
+                  solo parent: {applicantData.solo_parent}
+                </div>
+                <div className="uppercase">
+                  solo parent detail: {applicantData.solo_parent_detail}
+                </div>
+                <div className="uppercase">
+                  contact no: {applicantData.contact_number}
+                </div>
+                <div className="uppercase">
+                  specific major: {applicantData.specific_major}
+                </div>
+                <div className="uppercase">code: {applicantData.code}</div>
+              </div>
               <div className="p-4 bg-gray-50 border space-y-6">
                 <div className="text-center text-sm">
                   RECENT QUALIFICATION STANDARDS

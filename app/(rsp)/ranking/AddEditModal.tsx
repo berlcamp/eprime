@@ -461,7 +461,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                         {editData && editData.applicants.length > 0 ? (
                           <>
                             <div className="app__label_value">
-                              {editData.type}
+                              {editData.year}
                             </div>
                           </>
                         ) : (
@@ -586,12 +586,13 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                           <option value="">Choose</option>
                           <option value="Non-Teaching">Non-Teaching</option>
                           <option value="Elementary">Elementary</option>
-                          <option value="Junior Highschool">
-                            Junior Highschool
+                          <option value="Junior High School">
+                            Junior High School
                           </option>
-                          <option value="Senior Highschool">
-                            Senior Highschool
+                          <option value="Senior High School">
+                            Senior High School
                           </option>
+                          <option value="Secondary">Secondary</option>
                         </select>
                         {errors.department && (
                           <div className="app__error_message">

@@ -770,6 +770,20 @@ export interface ApplicantTypes {
   firstname: string
   middlename: string
   email: string
+
+  address: string
+  age: string
+  sex: string
+  civil_status: string
+  religion: string
+  disability: string
+  ethnicity: string
+  ethnicity_detail: string
+  solo_parent: string
+  solo_parent_detail: string
+  contact_number: string
+  specific_major: string
+
   deped_email: string
   retype_email: string
   ranking_id: string

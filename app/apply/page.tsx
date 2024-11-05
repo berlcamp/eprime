@@ -21,6 +21,38 @@ interface ExistingQualificationTypes {
     document_url: string
   }>
 }
+
+// Major categories and subjects
+const elementaryMajors = ['Kindergarten', 'SPED', 'General Education']
+const jhsMajors = [
+  'English',
+  'Filipino',
+  'Mathematics',
+  'Science - Major in Biology',
+  'Science - Major in Chemistry',
+  'Science - Major in General Science',
+  'Science - Major in Physics',
+  'Aralin Panlipunan',
+  'MAPEH',
+  'Social Science/Values Education',
+  'T.L.E - Home Economics',
+  'T.L.E - Agri-Fishery',
+  'T.L.E - ICT',
+  'T.L.E - Industrial Arts'
+]
+const shsMajors = [
+  'Academic Track - Accountancy, Business and Management (ABM)',
+  'Academic Track - Science, Technology, Engineering and Mathematics (STEM)',
+  'Academic Track - Humanities & Social Science (HUMSS)',
+  'Academic Track - General & Academic (GAS)',
+  'Arts and Design',
+  'Sports',
+  'TVL - Agriculture-Fishery Arts (AFA)',
+  'TVL - Home Economics (HE)',
+  'TVL - Industrial Arts (IA)',
+  'TVL - Information and Communication Technology (ICT)'
+]
+
 const Page: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -29,7 +61,6 @@ const Page: React.FC = () => {
   const [isCodeFound, setIsCodeFound] = useState(true)
   const [emailFound, setEmailFound] = useState(false)
   const [doneSearch, setDoneSearch] = useState(false)
-
   const [documents, setDocuments] = useState<File[][]>([])
   const [existingQualification, setExistingQualification] = useState<
     ExistingQualificationTypes[] | []
@@ -83,6 +114,18 @@ const Page: React.FC = () => {
       firstname: formdata.firstname,
       middlename: formdata.middlename,
       email: formdata.email,
+      address: formdata.address,
+      age: formdata.age,
+      sex: formdata.sex,
+      civil_status: formdata.civil_status,
+      religion: formdata.religion,
+      disability: formdata.disability,
+      ethnicity: formdata.ethnicity,
+      ethnicity_detail: formdata.ethnicity_detail,
+      solo_parent: formdata.solo_parent,
+      solo_parent_detail: formdata.solo_parent_detail,
+      contact_number: formdata.contact_number,
+      specific_major: formdata.specific_major,
       deped_email: formdata.deped_email,
       current_employee: emailFound ? 'Yes' : 'No',
       previous_applicant: formdata.previous_applicant,
@@ -535,6 +578,273 @@ const Page: React.FC = () => {
                               </div>
                             </div>
                           </div>
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">Address</div>
+                              <input
+                                {...register('address', {
+                                  required: 'Address is required'
+                                })}
+                                className="app__input_standard"
+                              />
+                              {errors.address && (
+                                <div className="app__error_message">
+                                  {errors.address.message}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">Age</div>
+                              <input
+                                type="number"
+                                {...register('age', {
+                                  required: 'Age is required',
+                                  min: 1
+                                })}
+                                className="app__input_standard"
+                              />
+                              {errors.age && (
+                                <div className="app__error_message">
+                                  {errors.age.message}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">Sex</div>
+                              <select
+                                {...register('sex', {
+                                  required: 'Sex is required'
+                                })}
+                                className="app__input_standard"
+                              >
+                                <option value="">Select</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                              </select>
+                              {errors.sex && (
+                                <div className="app__error_message">
+                                  {errors.sex.message}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Civil Status
+                              </div>
+                              <select
+                                {...register('civil_status', {
+                                  required: 'Civil Status is required'
+                                })}
+                                className="app__input_standard"
+                              >
+                                <option value="">Select</option>
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Widowed">Widowed</option>
+                                <option value="Divorced">Divorced</option>
+                              </select>
+                              {errors.civil_status && (
+                                <div className="app__error_message">
+                                  {errors.civil_status.message}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Religion
+                              </div>
+                              <input
+                                {...register('religion', {
+                                  required: 'Religion is required'
+                                })}
+                                className="app__input_standard"
+                              />
+                              {errors.religion && (
+                                <div className="app__error_message">
+                                  {errors.religion.message}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Disability
+                              </div>
+                              <input
+                                {...register('disability')}
+                                className="app__input_standard"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Ethnicity
+                              </div>
+                              <div>
+                                <label>
+                                  <input
+                                    type="radio"
+                                    value="Yes"
+                                    {...register('ethnicity')}
+                                  />{' '}
+                                  Yes
+                                </label>
+                                <label className="ml-4">
+                                  <input
+                                    type="radio"
+                                    value="No"
+                                    {...register('ethnicity')}
+                                  />{' '}
+                                  No
+                                </label>
+                                {watch('ethnicity') === 'Yes' && (
+                                  <input
+                                    {...register('ethnicity_detail')}
+                                    placeholder="Specify ethnicity"
+                                    className="app__input_standard mt-2"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Solo Parent
+                              </div>
+                              <div>
+                                <label>
+                                  <input
+                                    type="radio"
+                                    value="Yes"
+                                    {...register('solo_parent')}
+                                  />{' '}
+                                  Yes
+                                </label>
+                                <label className="ml-4">
+                                  <input
+                                    type="radio"
+                                    value="No"
+                                    {...register('solo_parent')}
+                                  />{' '}
+                                  No
+                                </label>
+                                {watch('solo_parent') === 'Yes' && (
+                                  <input
+                                    {...register('solo_parent_detail')}
+                                    placeholder="Specify reason"
+                                    className="app__input_standard mt-2"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Contact Number
+                              </div>
+                              <input
+                                type="tel"
+                                {...register('contact_number', {
+                                  required: 'Contact Number is required'
+                                })}
+                                className="app__input_standard"
+                              />
+                              {errors.contact_number && (
+                                <div className="app__error_message">
+                                  {errors.contact_number.message}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Specific Major Field (Dependent on selected category) */}
+                          {ranking.department !== 'Non-Teaching' && (
+                            <div className="app__form_field_container">
+                              <label className="app__label_standard">
+                                Select Specific Major
+                              </label>
+                              <select
+                                {...register('specific_major', {
+                                  required: 'Please select a specific major'
+                                })}
+                                className="app__input_standard"
+                              >
+                                <option value="">
+                                  -- Select Specific Major --
+                                </option>
+                                {ranking.department === 'Elementary' &&
+                                  elementaryMajors.map((specific_major) => (
+                                    <option
+                                      key={specific_major}
+                                      value={specific_major}
+                                    >
+                                      {specific_major}
+                                    </option>
+                                  ))}
+                                {ranking.department === 'Junior High School' &&
+                                  jhsMajors.map((specific_major) => (
+                                    <option
+                                      key={specific_major}
+                                      value={specific_major}
+                                    >
+                                      {specific_major}
+                                    </option>
+                                  ))}
+                                {ranking.department === 'Senior High School' &&
+                                  shsMajors.map((specific_major) => (
+                                    <option
+                                      key={specific_major}
+                                      value={specific_major}
+                                    >
+                                      {specific_major}
+                                    </option>
+                                  ))}
+                                {ranking.department === 'Secondary' &&
+                                  jhsMajors.map((specific_major) => (
+                                    <option
+                                      key={specific_major}
+                                      value={specific_major}
+                                    >
+                                      {specific_major}
+                                    </option>
+                                  ))}
+                                {ranking.department === 'Secondary' &&
+                                  shsMajors.map((specific_major) => (
+                                    <option
+                                      key={specific_major}
+                                      value={specific_major}
+                                    >
+                                      {specific_major}
+                                    </option>
+                                  ))}
+                              </select>
+                              {errors.specific_major && (
+                                <span className="app__error_message">
+                                  {errors.specific_major.message}
+                                </span>
+                              )}
+                            </div>
+                          )}
 
                           <div>
                             <div className="text-gray-600 text-sm">
