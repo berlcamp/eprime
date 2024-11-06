@@ -266,7 +266,7 @@ export default function Trainings({ userId }: { userId: string }) {
                         <td className="app__td">
                           {userId === session.user.id &&
                           item.status !== 'Approved' ? (
-                            <div>
+                            <div className="space-y-2">
                               <div className="flex items-start space-x-1">
                                 <span>From: </span>
                                 <input

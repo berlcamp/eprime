@@ -127,6 +127,13 @@ export default function EducationalBackground({ userId }: { userId: string }) {
     setEducationArray(updatedData)
   }
 
+  const handleInlineEdit = (index: number, newValue: string, field: string) => {
+    // Create a new array with the updated value for the specific field
+    const updatedArray = educationArray.map(
+      (item, idx) => (idx === index ? { ...item, [field]: newValue } : item) // Dynamically set the field
+    )
+    setEducationArray(updatedArray)
+  }
   useEffect(() => {
     void fetchData()
   }, [])
@@ -164,15 +171,152 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                   <tbody>
                     {educationArray.map((item, index) => (
                       <tr key={index} className="app__tr">
-                        <td className="app__td">{item.level}</td>
-                        <td className="app__td">{item.school}</td>
-                        <td className="app__td">{item.course}</td>
                         <td className="app__td">
-                          {item.from} - {item.to}
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.level}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'level'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.level}</div>
+                          )}
                         </td>
-                        <td className="app__td">{item.level_earned}</td>
-                        <td className="app__td">{item.year_graduated}</td>
-                        <td className="app__td">{item.scholarship_received}</td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.level}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'school'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.school}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.course}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'course'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.course}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.from}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'from'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.from}</div>
+                          )}
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.to}
+                                onChange={(e) =>
+                                  handleInlineEdit(index, e.target.value, 'to')
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.to}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.level_earned}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'level_earned'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.level_earned}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.year_graduated}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'year_graduated'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.year_graduated}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.scholarship_received}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'scholarship_received'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.scholarship_received}</div>
+                          )}
+                        </td>
                         <td className="app__td">
                           {userId === session.user.id && (
                             <CustomButton

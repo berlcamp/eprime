@@ -125,6 +125,14 @@ export default function Eligibility({ userId }: { userId: string }) {
     setEligibilityArray(updatedData)
   }
 
+  const handleInlineEdit = (index: number, newValue: string, field: string) => {
+    // Create a new array with the updated value for the specific field
+    const updatedArray = eligibilityArray.map(
+      (item, idx) => (idx === index ? { ...item, [field]: newValue } : item) // Dynamically set the field
+    )
+    setEligibilityArray(updatedArray)
+  }
+
   useEffect(() => {
     void fetchData()
   }, [])
@@ -163,12 +171,122 @@ export default function Eligibility({ userId }: { userId: string }) {
                   <tbody>
                     {eligibilityArray.map((item, index) => (
                       <tr key={index} className="app__tr">
-                        <td className="app__td">{item.eligibility}</td>
-                        <td className="app__td">{item.rating}</td>
-                        <td className="app__td">{item.exam_date}</td>
-                        <td className="app__td">{item.exam_place}</td>
-                        <td className="app__td">{item.license_number}</td>
-                        <td className="app__td">{item.license_validity}</td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.eligibility}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'eligibility'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.eligibility}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.rating}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'rating'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.rating}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                type="date"
+                                value={item.exam_date}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'level'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.exam_date}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.exam_place}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'exam_place'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.exam_place}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                value={item.license_number}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'license_number'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.license_number}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id ? (
+                            <div>
+                              <input
+                                type="date"
+                                value={item.license_validity}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'license_validity'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.license_validity}</div>
+                          )}
+                        </td>
                         <td className="app__td">
                           {userId === session.user.id && (
                             <CustomButton
