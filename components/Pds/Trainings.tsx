@@ -104,7 +104,7 @@ export default function Trainings({ userId }: { userId: string }) {
   const fetchData = async () => {
     setLoading(true)
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('hrm_pds')
       .select()
       .eq('user_id', userId)
