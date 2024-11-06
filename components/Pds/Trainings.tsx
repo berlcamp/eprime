@@ -118,9 +118,15 @@ export default function Trainings({ userId }: { userId: string }) {
       }
     }
 
-    if (error) console.log(error.message)
-
     setLoading(false)
+  }
+
+  const handleInlineEdit = (index: number, newValue: string, field: string) => {
+    // Create a new array with the updated value for the specific field
+    const updatedArray = trainingsArray.map(
+      (item, idx) => (idx === index ? { ...item, [field]: newValue } : item) // Dynamically set the field
+    )
+    setTrainingsArray(updatedArray)
   }
 
   const HandleRemoveItem = (item: FormRowTypes) => {
@@ -229,7 +235,24 @@ export default function Trainings({ userId }: { userId: string }) {
                             )}
                         </td>
                         <td className="app__td">
-                          <div>{item.title}</div>
+                          {userId === session.user.id &&
+                          item.status !== 'Approved' ? (
+                            <div>
+                              <input
+                                value={item.title}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'title'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.title}</div>
+                          )}
                           {item.status === 'Approved' ? (
                             <span className="text-green-600 font-medium">
                               Approved
@@ -241,13 +264,131 @@ export default function Trainings({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {format(new Date(item.from), 'MMM d, yyyy')} -{' '}
-                          {format(new Date(item.to), 'MMM d, yyyy')}
+                          {userId === session.user.id &&
+                          item.status !== 'Approved' ? (
+                            <div>
+                              <div className="flex items-start space-x-1">
+                                <span>From: </span>
+                                <input
+                                  type="date"
+                                  value={item.from}
+                                  onChange={(e) =>
+                                    handleInlineEdit(
+                                      index,
+                                      e.target.value,
+                                      'from'
+                                    )
+                                  }
+                                  className="outline-none focus:outline-none focus:ring-0 inline-flex"
+                                />
+                              </div>
+                              <div className="flex items-start space-x-1">
+                                <span>To: </span>
+                                <input
+                                  type="date"
+                                  value={item.to}
+                                  onChange={(e) =>
+                                    handleInlineEdit(
+                                      index,
+                                      e.target.value,
+                                      'to'
+                                    )
+                                  }
+                                  className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              {format(new Date(item.from), 'MMM d, yyyy')} -{' '}
+                              {format(new Date(item.to), 'MMM d, yyyy')}
+                            </div>
+                          )}
                         </td>
-                        <td className="app__td">{item.hours}</td>
-                        <td className="app__td">{item.cpd_units}</td>
-                        <td className="app__td">{item.type}</td>
-                        <td className="app__td">{item.sponsor}</td>
+                        <td className="app__td">
+                          {userId === session.user.id &&
+                          item.status !== 'Approved' ? (
+                            <div>
+                              <input
+                                type="number"
+                                step="any"
+                                value={item.hours}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'hours'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.hours}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id &&
+                          item.status !== 'Approved' ? (
+                            <div>
+                              <input
+                                type="number"
+                                step="any"
+                                value={item.cpd_units}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'cpd_units'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.cpd_units}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id &&
+                          item.status !== 'Approved' ? (
+                            <div>
+                              <input
+                                value={item.type}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'type'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.type}</div>
+                          )}
+                        </td>
+                        <td className="app__td">
+                          {userId === session.user.id &&
+                          item.status !== 'Approved' ? (
+                            <div>
+                              <input
+                                value={item.sponsor}
+                                onChange={(e) =>
+                                  handleInlineEdit(
+                                    index,
+                                    e.target.value,
+                                    'sponsor'
+                                  )
+                                }
+                                className="utline-none focus:outline-none focus:ring-0 inline-flex"
+                              />
+                            </div>
+                          ) : (
+                            <div>{item.sponsor}</div>
+                          )}
+                        </td>
                         <td className="app__td">
                           {userId === session.user.id && (
                             <CustomButton
@@ -272,7 +413,7 @@ export default function Trainings({ userId }: { userId: string }) {
                   {!showAddRow ? (
                     <CustomButton
                       containerStyles="app__btn_blue"
-                      title="Request for Approval of Training"
+                      title="Add New Training"
                       btnType="button"
                       handleClick={() => setShowAddRow(true)}
                     />
