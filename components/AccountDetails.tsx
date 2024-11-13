@@ -24,6 +24,7 @@ import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { useDispatch, useSelector } from 'react-redux'
 
 // Types
+import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import type {
   DistrictTypes,
   Employee,
@@ -33,8 +34,10 @@ import type {
   PositionTypes,
   SchoolTypes
 } from '@/types'
+import { createClient } from '@supabase/supabase-js'
 import { format, isValid, parseISO } from 'date-fns'
 import Link from 'next/link'
+import ConfirmDeleteAccount from './ConfirmDeleteAccount'
 import CustomButton from './CustomButton'
 import PlantillaDetails from './PlantillaDetails'
 
@@ -43,6 +46,16 @@ interface ModalProps {
   id: string
   shouldUpdateRedux: boolean
 }
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+const serviceRoleKey = process.env.NEXT_PUBLIC_SERVICE_ROLE_KEY ?? ''
+
+const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+})
 
 const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   const { setToast, hasAccess } = useFilter()
@@ -72,10 +85,12 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
   const [offices, setOffices] = useState<Office[] | []>([])
 
   const [showItemModal, setShowItemModal] = useState(false)
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false)
   const [item, setItem] = useState<ItemTypes | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
+  const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
   const router = useRouter()
@@ -174,7 +189,6 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
 
       // Update data in redux
       if (shouldUpdateRedux) {
-        console.log('redux updated')
         const items = [...globallist]
         const updatedDropdownData = getUpdatedDropdownData(formdata)
         const updatedData = {
@@ -210,6 +224,42 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
       hideModal()
     } catch (e) {
       console.error(e)
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      // Delete user account
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
+        id
+      )
+
+      if (deleteError) {
+        setToast('error', 'Something went wrong, please reload the page.')
+      } else {
+        setToast('success', 'Account deleted successfully.')
+
+        // Update data in redux
+        const items = [...globallist]
+        const updatedList = items.filter((item) => item.id !== id)
+        dispatch(updateList(updatedList))
+
+        // Updating showing text in redux
+        dispatch(
+          updateResultCounter({
+            showing: Number(resultsCounter.showing) - 1,
+            results: Number(resultsCounter.results) - 1
+          })
+        )
+
+        router.refresh()
+
+        // hide the modal
+        hideModal()
+      }
+    } catch (err) {
+      console.error(err)
+      setToast('error', 'Something went wrong, please reload the page.')
     }
   }
 
@@ -960,6 +1010,30 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                         </>
                       )}
+                      {shouldUpdateRedux && (
+                        <>
+                          <div className="flex items-center">
+                            <div className="flex-grow bg-gray-300 h-px"></div>
+                            <div className="mx-4 my-4 text-gray-500 text-sm">
+                              Delete Account
+                            </div>
+                            <div className="flex-grow bg-gray-300 h-px"></div>
+                          </div>
+                          <div className="app__form_field_container">
+                            <div className="w-full">
+                              <CustomButton
+                                containerStyles="app__btn_red"
+                                title="Delete User Account"
+                                isDisabled={saving}
+                                btnType="button"
+                                handleClick={() =>
+                                  setShowDeleteAccountModal(true)
+                                }
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                     {/* End Second Column */}
                   </div>
@@ -1000,6 +1074,14 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         <PlantillaDetails
           editData={item}
           hideModal={() => setShowItemModal(false)}
+        />
+      )}
+
+      {/* Item Modal */}
+      {showDeleteAccountModal && (
+        <ConfirmDeleteAccount
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteAccountModal(false)}
         />
       )}
     </>
