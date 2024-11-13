@@ -1010,7 +1010,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                         </>
                       )}
-                      {shouldUpdateRedux && (
+                      {shouldUpdateRedux && hasAccess('settings') && (
                         <>
                           <div className="flex items-center">
                             <div className="flex-grow bg-gray-300 h-px"></div>
