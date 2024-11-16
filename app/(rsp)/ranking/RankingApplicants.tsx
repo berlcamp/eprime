@@ -15,6 +15,11 @@ import { logError } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
 import CastPoints from './CastPoints'
 
+import { DisqualificationTemplate } from '@/components/Emails/DisqualificationTemplate'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_KEY)
+
 interface ModalProps {
   hideModal: () => void
   rankingId: string
@@ -108,6 +113,60 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
       return 'Qualified'
     }
     return 'Not Known'
+  }
+
+  const handleSendDisqualificationEMail = async (email: string) => {
+    // Usage
+    const header = (
+      <p>
+        Dear <strong>John Doe</strong>,
+      </p>
+    )
+    const body = (
+      <>
+        <p>
+          Congratulations! Your registration to the{' '}
+          <strong>PRIME-HRM system of DepEd Bayugan</strong> has been
+          successfully approved.
+        </p>
+        <p>
+          Click this{' '}
+          <a
+            href="https://eprime.sortbrite.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            link
+          </a>{' '}
+          to login and access your account.
+        </p>
+      </>
+    )
+
+    try {
+      const { error } = await resend.emails.send({
+        from: 'DepEd Bayugan (No-reply) <noreply@sortbrite.com>',
+        to: [email],
+        subject: 'PRIME-HRM - Application Disqualification',
+        react: DisqualificationTemplate({
+          header,
+          body
+        }) as React.ReactElement
+      })
+
+      if (error) {
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(error.message)
+      }
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   useEffect(() => {
@@ -302,6 +361,20 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                                     />
                                   )}
                               </>
+                            )}
+                            {qualificationStatus(
+                              item.applicant.applicant_documents
+                            ) === 'Not Qualified' && (
+                              <CustomButton
+                                containerStyles="app__btn_red_xs"
+                                title="Send Disqualification Email"
+                                btnType="button"
+                                handleClick={() =>
+                                  handleSendDisqualificationEMail(
+                                    item.applicant.email
+                                  )
+                                }
+                              />
                             )}
                           </div>
                         </td>

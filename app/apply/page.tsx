@@ -908,15 +908,23 @@ const Page: React.FC = () => {
                                 (qualification, index) => (
                                   <div key={qualification.id}>
                                     <h3 className="text-gray-700 text-sm font-bold">
-                                      {index + 1}. {qualification.name}
+                                      {index + 1}. {qualification.name}{' '}
+                                      {qualification.required && (
+                                        <span className="text-red-500 font-normal">
+                                          (Required)
+                                        </span>
+                                      )}
                                     </h3>
+                                    <div className="text-xs text-gray-600 pl-4">
+                                      {qualification.description}
+                                    </div>
                                     <input
                                       type="file"
                                       multiple
                                       onChange={(e) =>
                                         handleFileUpload(index, e.target.files)
                                       }
-                                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
+                                      className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
                                     />
                                   </div>
                                 )
@@ -1047,7 +1055,7 @@ const Page: React.FC = () => {
                               (qualification, index) => (
                                 <div key={qualification.id}>
                                   <h3 className="text-gray-700 text-sm font-bold">
-                                    {index + 1}. {qualification.name}
+                                    {index + 1}. {qualification.name}{' '}
                                   </h3>
                                   <input
                                     type="file"

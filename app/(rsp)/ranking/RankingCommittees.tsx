@@ -276,7 +276,7 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
                               value={item.id}
                               {...register('criteria_ids')}
                             />{' '}
-                            {item.name}
+                            {item.name} ({item.type})
                           </label>
                         ))}
                       </div>

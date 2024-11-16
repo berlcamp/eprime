@@ -78,6 +78,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       year: formdata.year,
       department: formdata.department,
       description: formdata.description,
+      days_to_comply: formdata.days_to_comply,
       status: formdata.status,
       display_on_portal: formdata.display_on_portal,
       display_on_portal_until: formdata.display_on_portal_until
@@ -112,7 +113,8 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
           return supabase.from('hrm_ranking_qualifications').insert({
             ranking_id: data[0].id,
             name: qualification.name,
-            description: qualification.description
+            description: qualification.description,
+            required: qualification.required ? true : false
           })
         }
       )
@@ -167,6 +169,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       year: formdata.year,
       department: formdata.department,
       description: formdata.description,
+      days_to_comply: formdata.days_to_comply,
       status: formdata.status,
       display_on_portal: formdata.display_on_portal,
       display_on_portal_until: formdata.display_on_portal_until
@@ -218,7 +221,8 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
           .from('hrm_ranking_qualifications')
           .update({
             name: qual.name,
-            description: qual.description
+            description: qual.description,
+            required: qual.required ? true : false
           })
           .eq('id', qual.id)
 
@@ -232,7 +236,8 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
         const newQualifications = qualificationsToInsert.map((qual) => ({
           ranking_id: editData.id,
           name: qual.name,
-          description: qual.description
+          description: qual.description,
+          required: qual.required ? true : false
         }))
 
         const { error: insertError } = await supabase
@@ -308,7 +313,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
   }
 
   const handleAddQualification = () => {
-    append({ name: '', description: '' }) // Add a blank qualification
+    append({ name: '', description: '', required: false }) // Add a blank qualification
   }
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
@@ -323,66 +328,79 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       status: editData ? editData.status : '',
       display_on_portal: editData ? editData.display_on_portal : '',
       display_on_portal_until: editData ? editData.display_on_portal_until : '',
+      days_to_comply: editData ? editData.days_to_comply : '',
       qualifications: editData
         ? editData.qualifications.map((qual) => ({
             id: qual.id, // Preserve the qualification id
             name: qual.name,
-            description: qual.description
+            description: qual.description,
+            required: qual.required
           }))
         : [
             {
               name: 'Letter of Intent',
               description:
-                'Letter of intent addressed to the Head of Office or highest human resource officer'
+                'Letter of intent addressed to the Head of Office or highest human resource officer',
+              required: true
             },
             {
               name: 'Personal Data Sheet',
               description:
-                'Duly accomplished PDS (CS Form No. 212, Revised 2017) and Work Experience Sheet, if applicable'
+                'Duly accomplished PDS (CS Form No. 212, Revised 2017) and Work Experience Sheet, if applicable',
+              required: true
             },
             {
               name: 'PRC/License ID',
               description:
-                'Photocopy of valid and updated PRC License/ID, if applicable'
+                'Photocopy of valid and updated PRC License/ID, if applicable',
+              required: false
             },
             {
               name: 'Certification of Eligibility',
               description:
-                'Photocopy of Certificate of Eligibility/Report of Rating, if applicable'
+                'Photocopy of Certificate of Eligibility/Report of Rating, if applicable',
+              required: false
             },
             {
               name: 'Scholastic/Academic Record',
               description:
-                'Photocopy of scholastic/ academic record such as but not limited to Transcript of Records (TOR) and Diploma, including completion of graduate and post-graduate units/ degrees, if available'
+                'Photocopy of scholastic/ academic record such as but not limited to Transcript of Records (TOR) and Diploma, including completion of graduate and post-graduate units/ degrees, if available',
+              required: false
             },
             {
               name: 'Certificate/s of Training',
               description:
-                'Photocopy of Certificate/s of Training, if applicable'
+                'Photocopy of Certificate/s of Training, if applicable',
+              required: false
             },
             {
               name: 'Certificate of Employment, Contract of Service, or duly signed Service Record',
               description:
-                'Photocopy of Certificate of Employment, Contract of Service, or duly signed Service Record, whichever is/are applicable'
+                'Photocopy of Certificate of Employment, Contract of Service, or duly signed Service Record, whichever is/are applicable',
+              required: false
             },
             {
               name: 'Latest Appointment,',
-              description: 'Photocopy of latest appointment, if applicable'
+              description: 'Photocopy of latest appointment, if applicable',
+              required: false
             },
             {
               name: 'Performance Ratings',
               description:
-                'Photocopy of the Performance Ratings in the last rating period(s) covering one (1) year performance prior to the deadline of submission, if applicable'
+                'Photocopy of the Performance Ratings in the last rating period(s) covering one (1) year performance prior to the deadline of submission, if applicable',
+              required: false
             },
             {
               name: 'Checklist of Requirements and Omnibus Sworn Statement',
               description:
-                'Checklist of Requirements and Omnibus Sworn Statement on the Certification on the Authenticity and Veracity (CAV) of the documents submitted and Data Privacy Consent Form'
+                'Checklist of Requirements and Omnibus Sworn Statement on the Certification on the Authenticity and Veracity (CAV) of the documents submitted and Data Privacy Consent Form',
+              required: false
             },
             {
               name: 'Other documents',
               description:
-                'Other documents as may be required for comparative assessment, such as but not limited to: Means of Verification (MOVs) showing Outstanding Accomplishments, Application of Education, and Application of Learning and Development reckoned from the date of last issuance of appointment. Photocopy of Performance Rating obtained from the relevant work experience, if performance rating in Item i) is not relevant to the position to be filled'
+                'Other documents as may be required for comparative assessment, such as but not limited to: Means of Verification (MOVs) showing Outstanding Accomplishments, Application of Education, and Application of Learning and Development reckoned from the date of last issuance of appointment. Photocopy of Performance Rating obtained from the relevant work experience, if performance rating in Item i) is not relevant to the position to be filled',
+              required: false
             }
           ]
     })
@@ -418,9 +436,9 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
-              <div className="flex flex-col lg:flex-row w-full items-start justify-between text-xs dark:text-gray-400">
+              <div className="flex flex-col lg:flex-row w-full items-start justify-start text-xs dark:text-gray-400">
                 {/* Begin First Column */}
-                <div className="w-full px-2">
+                <div className="w-full lg:w-5/12 px-2">
                   <div className="app__form_field_container">
                     <div className="w-full">
                       <div className="app__label_standard">Type</div>
@@ -625,27 +643,53 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                     </div>
                   </div>
                   {watchedDisplay === 'Yes' && (
-                    <div className="app__form_field_container">
-                      <div className="w-full">
-                        <div className="app__label_standard">
-                          Display on Job Postings Until?
-                        </div>
-                        <div>
-                          <input
-                            {...register('display_on_portal_until', {
-                              required: true
-                            })}
-                            type="date"
-                            className="app__input_standard"
-                          />
-                          {errors.display_on_portal_until && (
-                            <div className="app__error_message">
-                              This is required
-                            </div>
-                          )}
+                    <>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Display on Job Postings Until?
+                          </div>
+                          <div>
+                            <input
+                              {...register('display_on_portal_until', {
+                                required: true
+                              })}
+                              type="date"
+                              className="app__input_standard"
+                            />
+                            {errors.display_on_portal_until && (
+                              <div className="app__error_message">
+                                This is required
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                      <div className="app__form_field_container">
+                        <div className="w-full">
+                          <div className="app__label_standard">
+                            Last Day of compliance{' '}
+                            <span className="italic font-light">
+                              (For disqualified applicants)
+                            </span>
+                          </div>
+                          <div>
+                            <input
+                              {...register('days_to_comply', {
+                                required: true
+                              })}
+                              type="date"
+                              className="app__input_standard"
+                            />
+                            {errors.days_to_comply && (
+                              <div className="app__error_message">
+                                Last Day of compliance is required
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </>
                   )}
                   <div className="app__form_field_container">
                     <div className="w-full">
@@ -666,51 +710,64 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                 </div>
                 {/* End First Column */}
                 {/* Begin Second Column */}
-                <div className="w-full px-8">
+                <div className="flex-1 px-8">
                   <div className="border p-4 bg-white">
                     <div className="text-sm font-semibold text-gray-700 mb-4">
                       Qualification Standards for this Ranking
                     </div>
                     {fields.map((_q, index) => (
                       <div key={index} className="app__form_field_container">
-                        <div className="flex items-center justify-start space-x-2">
-                          <input
-                            placeholder="Qualification Name"
-                            className="app__input_standard"
-                            {...register(`qualifications.${index}.name`, {
-                              required: true
-                            })}
-                          />
-                          <input
-                            placeholder="Description"
-                            className="app__input_standard"
-                            {...register(
-                              `qualifications.${index}.description`,
-                              {
+                        <div>
+                          <div className="flex items-center justify-start space-x-2">
+                            <input
+                              placeholder="Qualification Name"
+                              className="app__input_standard"
+                              {...register(`qualifications.${index}.name`, {
                                 required: true
-                              }
+                              })}
+                            />
+                            <input
+                              placeholder="Description"
+                              className="app__input_standard"
+                              {...register(
+                                `qualifications.${index}.description`,
+                                {
+                                  required: true
+                                }
+                              )}
+                            />
+                            {fields.length > 1 && (
+                              <button
+                                type="button"
+                                className="app__btn_red_xs"
+                                onClick={() => remove(index)}
+                              >
+                                Remove
+                              </button>
                             )}
-                          />
-                          {fields.length > 1 && (
-                            <button
-                              type="button"
-                              className="app__btn_red_xs"
-                              onClick={() => remove(index)}
-                            >
-                              Remove
-                            </button>
+                          </div>
+                          <div className="mt-1">
+                            <label className="flex items-center justify-start space-x-1">
+                              <input
+                                type="checkbox"
+                                {...register(
+                                  `qualifications.${index}.required`
+                                )}
+                              />
+                              <span className="text-gray-600">Required</span>
+                            </label>
+                          </div>
+                          {errors.qualifications?.[index]?.name && (
+                            <div className="app__error_message">
+                              Qualification Name is required
+                            </div>
+                          )}
+                          {errors.qualifications?.[index]?.description && (
+                            <div className="app__error_message">
+                              Description is required
+                            </div>
                           )}
                         </div>
-                        {errors.qualifications?.[index]?.name && (
-                          <div className="app__error_message">
-                            Qualification Name is required
-                          </div>
-                        )}
-                        {errors.qualifications?.[index]?.description && (
-                          <div className="app__error_message">
-                            Description is required
-                          </div>
-                        )}
                       </div>
                     ))}
 
@@ -722,12 +779,14 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       Add Qualification
                     </button>
 
-                    <div className="app__warning_text !mx-0">
-                      <span className="font-bold">Warning:</span> Deleting a
-                      qualification standard will also permanently remove all
-                      documents uploaded by applicants for this position on
-                      Rankings.
-                    </div>
+                    {editData && (
+                      <div className="app__warning_text !mx-0">
+                        <span className="font-bold">Warning:</span> Deleting a
+                        qualification standard will also permanently remove all
+                        documents uploaded by applicants for this position on
+                        Rankings.
+                      </div>
+                    )}
                   </div>
                 </div>
                 {/* End Seocond Column */}

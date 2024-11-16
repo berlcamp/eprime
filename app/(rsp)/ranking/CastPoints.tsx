@@ -100,7 +100,7 @@ const CastPoints = ({
         name: c.criteria.name,
         commmittee_criteria_id: c.id,
         max_points: Number(c.criteria.points),
-        lense: c.criteria.lense === 'Yes',
+        lense: c.criteria.type === 'Criteria-based Rating',
         points: findPoint ? findPoint.points : ''
       })
       setCriteriasField(fields)

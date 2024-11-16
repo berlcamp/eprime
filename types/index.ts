@@ -89,6 +89,8 @@ export interface ImplementingUnitTypes {
 }
 
 export interface SignatoriesTypes {
+  prepared_by?: string
+  prepared_by_position?: string
   truly_yours?: string
   truly_yours_position?: string
   recommending_1?: string
@@ -277,6 +279,18 @@ export interface NosiTypes {
   date: string
   reason: string
   other_reason: string
+}
+
+export interface RankingExpensesSummaryTypes {
+  id: string
+  particulars: string
+  total_applicants: string
+  unit_cost: string
+  time_spent_per_applicant: string
+  amount: string
+  ranking_id: string
+  ranking: RankingTypes
+  confirmed: string
 }
 
 export interface NosaTypes {
@@ -746,8 +760,14 @@ export interface RankingTypes {
   department: string
   year: string
   description: string
+  days_to_comply: string
   has_qualification_standard: string
-  qualifications: Array<{ id?: string; name: string; description: string }>
+  qualifications: Array<{
+    id?: string
+    name: string
+    description: string
+    required: boolean
+  }>
   status: string
   display_on_portal: string
   display_on_portal_until: string
@@ -818,7 +838,7 @@ export interface RankingCriteriaTypes {
   id: string
   name: string
   points: string
-  lense: string
+  type: string
   ranking_id: string
   committees?: RankingCommitteeTypes[]
 }

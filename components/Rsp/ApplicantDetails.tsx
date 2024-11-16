@@ -15,6 +15,7 @@ interface ModalProps {
 interface QualificationTypes {
   qualification_name: string
   qualification_description: string
+  qualification_required: boolean
   documents: Array<{
     id: string
     status: string
@@ -77,6 +78,7 @@ const ApplicantDetails = ({
             acc[qualification_id] = {
               qualification_name: qualification.name,
               qualification_description: qualification.description,
+              qualification_required: qualification.required,
               documents: []
             }
           }
@@ -224,6 +226,7 @@ const ApplicantDetails = ({
                           {
                             qualification_name,
                             qualification_description,
+                            qualification_required,
                             documents
                           }
                         ],
@@ -231,7 +234,8 @@ const ApplicantDetails = ({
                       ) => (
                         <div key={qualificationId} className="mb-4">
                           <h3 className="text-gray-700 text-sm font-bold">
-                            {index + 1}. {qualification_name}
+                            {index + 1}. {qualification_name}{' '}
+                            {qualification_required && <span>(Required)</span>}
                           </h3>
                           <div className="text-xs text-gray-600 mb-2 pl-4">
                             {qualification_description}

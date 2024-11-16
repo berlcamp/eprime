@@ -3,7 +3,6 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { RankingCriteriaTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
-import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -51,7 +50,7 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
     const newData = {
       name: formdata.name,
       points: formdata.points,
-      lense: formdata.lense === 'Yes' ? 'Yes' : 'No',
+      type: formdata.type,
       ranking_id: rankingId
     }
 
@@ -172,9 +171,9 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
             <div className="app__modal_body">
               <div>
                 <form onSubmit={handleSubmit(onSubmit)}>
-                  <div className="app__label_standard">Add Criteria</div>
-                  <div className="flex items-start justify-start space-x-2 mb-4">
-                    <div>
+                  <div className="app__form_field_container">
+                    <div className="w-full md:w-1/2">
+                      <div className="app__label_standard">Criteria Name:</div>
                       <input
                         {...register('name', { required: true })}
                         placeholder="Criteria Name"
@@ -186,7 +185,10 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
                         </div>
                       )}
                     </div>
-                    <div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full md:w-1/2">
+                      <div className="app__label_standard">Points:</div>
                       <input
                         {...register('points', {
                           required: 'Points is required'
@@ -201,32 +203,76 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
                         </div>
                       )}
                     </div>
-                    <div>
-                      <label className="flex space-x-2">
-                        <input
-                          {...register('lense')}
-                          type="checkbox"
-                          value="Yes"
-                          className="app__input_standard"
-                        />
-                        <span className="text-gray-600">Lense</span>
-                      </label>
-                    </div>
-                    <div className="flex-1">
-                      <button type="submit" className="app__btn_green_sm">
-                        {saving ? 'Saving..' : 'Add'}
-                      </button>
-                    </div>
-                    <div>
-                      <span className="text-gray-700 text-sm">
-                        Total Points:
-                      </span>{' '}
-                      <span className="text-gray-700 font-bold">
-                        {totalPoints}
-                      </span>
+                  </div>
+
+                  <div className="app__form_field_container">
+                    <div className="w-full md:w-1/2">
+                      <div className="app__label_standard">Type:</div>
+                      <div className="flex items-center justify-start space-x-2 text-sm">
+                        <label className="space-x-2">
+                          <input
+                            type="radio"
+                            value="Discretionary"
+                            {...register('type', { required: true })}
+                          />
+                          <span>Discretionary</span>
+                        </label>
+
+                        <label className="space-x-2">
+                          <input
+                            type="radio"
+                            value="Criteria-based Rating"
+                            {...register('type', { required: true })}
+                          />
+                          <span>Criteria-based Rating</span>
+                        </label>
+                      </div>
+                      {errors.type && (
+                        <div className="app__error_message">
+                          Type of applicant is required
+                        </div>
+                      )}
                     </div>
                   </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full md:w-1/2">
+                      <div className="app__label_standard">Potential:</div>
+                      <div className="flex items-center justify-start space-x-2 text-sm">
+                        <label className="space-x-2">
+                          <input
+                            type="radio"
+                            value="Yes"
+                            {...register('type', { required: true })}
+                          />
+                          <span>Yes</span>
+                        </label>
+
+                        <label className="space-x-2">
+                          <input
+                            type="radio"
+                            value="No"
+                            {...register('type', { required: true })}
+                          />
+                          <span>No</span>
+                        </label>
+                      </div>
+                      {errors.type && (
+                        <div className="app__error_message">
+                          This is required
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <button type="submit" className="app__btn_green_sm">
+                      {saving ? 'Saving..' : 'Add Criteria'}
+                    </button>
+                  </div>
                 </form>
+              </div>
+              <div className="text-right">
+                <span className="text-gray-700 text-sm">Total Points:</span>{' '}
+                <span className="text-gray-700 font-bold">{totalPoints}</span>
               </div>
               <table className="app__table">
                 <thead className="app__thead">
@@ -243,9 +289,7 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
                         <th className="app__th_firstcol">
                           <div className="font-medium flex space-x-2">
                             <span>{item.name}</span>
-                            {item.lense === 'Yes' && (
-                              <MagnifyingGlassIcon className="w-5 h-5" />
-                            )}
+                            <span>({item.type})</span>
                           </div>
                         </th>
                         <td className="app__td">{item.points}</td>

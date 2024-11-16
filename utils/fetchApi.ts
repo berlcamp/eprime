@@ -868,6 +868,47 @@ export async function fetchNosi(
   }
 }
 
+export async function fetchRankingExpenses(
+  filters: {
+    filterRanking?: string
+  },
+  perPageCount: number,
+  rangeFrom: number
+) {
+  try {
+    let query = supabase
+      .from('hrm_ranking_expenses_summary')
+      .select('*, ranking:ranking_id(*, position:position_id(name))', {
+        count: 'exact'
+      })
+
+    // filter ranking
+    if (filters.filterRanking && filters.filterRanking !== '') {
+      query = query.eq('ranking_id', filters.filterRanking)
+    }
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+    return { data, count }
+  } catch (error) {
+    console.error('fetch ranking expenses error', error)
+    return { data: [], count: 0 }
+  }
+}
+
 export async function fetchNosa(
   filters: {
     filterUser?: string
