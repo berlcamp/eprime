@@ -124,8 +124,8 @@ const Page: React.FC = () => {
   return (
     <div className="app__home">
       <TopBarDark isGuest={session ? false : true} />
-      <div className="bg-gray-700 h-full pb-10 pt-32 px-6 flex items-start justify-center">
-        <div className="bg-gray-100 p-4 mb-20 rounded-lg border w-full md:w-[720px]">
+      <div className="app__single_page_wrapper1">
+        <div className="app__single_page_wrapper2">
           {isSuccess && (
             <div className="text-gray-700">
               Application successfully submitted. Your application Reference

@@ -29,11 +29,9 @@ const Page: React.FC = () => {
   return (
     <div className="app__home">
       <TopBarDark isGuest={session ? false : true} />
-      <div className="bg-gray-700 h-full pb-10 pt-32 px-6 flex items-start justify-center">
-        <div className="bg-gray-100 p-4 mb-20 rounded-lg border w-full md:w-[720px]">
-          <div className="px-4 text-lg text-center uppercase font-semibold text-gray-700">
-            Ranking Results
-          </div>
+      <div className="app__single_page_wrapper1">
+        <div className="app__single_page_wrapper2">
+          <div className="app__single_page_title">Ranking Results</div>
           {loading && <TwoColTableLoading />}
           {rankings.length > 0 &&
             rankings.map((item, index) => (
@@ -51,6 +49,9 @@ const Page: React.FC = () => {
                     </Link>
                     <Link href="#" className="app__btn_blue">
                       IER
+                    </Link>
+                    <Link href="#" className="app__btn_blue">
+                      Notice of Appointment Issued
                     </Link>
                   </div>
                 </div>

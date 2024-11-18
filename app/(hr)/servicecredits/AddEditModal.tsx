@@ -54,14 +54,15 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleCreate = async (formdata: ServiceCreditTypes) => {
-    const serviceCredits = Number(formdata.total_hours) * 0.1875
+    const perHour = !isHolidayChecked ? 0.15625 : 0.1875
+    const serviceCredits = Number(totalHours) * perHour
 
     const newData = {
       reference_code: generateReferenceCode(),
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
       to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       date_issued: new Date(formdata.date_issued),
-      total_hours: formdata.total_hours,
+      total_hours: totalHours,
       particulars: formdata.particulars,
       service_credits: serviceCredits,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
@@ -116,14 +117,15 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const handleUpdate = async (formdata: ServiceCreditTypes) => {
     if (!editData) return
 
-    const serviceCredits = Number(formdata.total_hours) * 0.1875
+    const perHour = !isHolidayChecked ? 0.15625 : 0.1875
+    const serviceCredits = Number(totalHours) * perHour
 
     const newData = {
       reference_code: generateReferenceCode(),
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
       to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       date_issued: new Date(formdata.date_issued),
-      total_hours: formdata.total_hours,
+      total_hours: totalHours,
       particulars: formdata.particulars,
       service_credits: serviceCredits
     }
@@ -311,7 +313,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                         type="checkbox"
                         className=""
                       />
-                      <span>This work done on holiday/weeked</span>
+                      <span>This work done as Overtime</span>
                     </label>
                   </div>
                 </div>
