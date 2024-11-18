@@ -394,6 +394,16 @@ const Page: React.FC = () => {
       if (data) {
         setRanking(data)
       }
+
+      // Trigger stored procedures
+      const { data: data2, error: incrementError } = await supabase.rpc(
+        'increment_monthly_leave_credits'
+      )
+      if (incrementError) {
+        console.log(incrementError)
+      } else {
+        console.log('Cron completed', data2)
+      }
     }
     void fetchData()
   }, [])

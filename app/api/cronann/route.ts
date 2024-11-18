@@ -13,14 +13,13 @@ export async function GET() {
   })
 
   // Trigger stored procedures
-  const { error: incrementError } = await supabase.rpc(
+  const { data, error: incrementError } = await supabase.rpc(
     'increment_monthly_leave_credits'
   )
-  // const { error: resetError } = await supabase.rpc('reset_annual_leave_credits')
 
   if (incrementError) {
     return NextResponse.json(incrementError)
   } else {
-    return NextResponse.json('Cron completed')
+    return NextResponse.json('Cron completed', data)
   }
 }
