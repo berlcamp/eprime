@@ -26,7 +26,7 @@ export default function Jobs() {
 
   return (
     <div className="">
-      <h4 className="text-xl font-semibold mb-6">Vacant Items:</h4>
+      <h4 className="text-xl font-semibold mb-6">Vacant Items</h4>
       {rankings.length > 0 &&
         rankings.map((item, index) => (
           <div key={index} className="flex items-start text-sm space-x-4 mb-8">

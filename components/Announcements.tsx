@@ -25,7 +25,7 @@ export default function Announcements() {
   }, [])
   return (
     <div className="">
-      <h4 className="text-xl font-semibold mb-6">Announcements:</h4>
+      <h4 className="text-xl font-semibold mb-6">Announcements</h4>
       <div className="mb-8">
         {list.length > 0 &&
           list.map((item, index) => (

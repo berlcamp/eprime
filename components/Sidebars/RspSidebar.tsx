@@ -55,6 +55,16 @@ const RspSidebar = () => {
             <span className="flex-1 ml-3 whitespace-nowrap">Ranking</span>
           </Link>
         </li>
+        <li>
+          <Link
+            href="#"
+            className={`app__menu_link ${
+              currentRoute === '/erfscreening' ? 'app_menu_link_active' : ''
+            }`}
+          >
+            <span className="flex-1 ml-3 whitespace-nowrap">ERF Screening</span>
+          </Link>
+        </li>
       </ul>
       {
         // Check access from permission settings
@@ -78,6 +88,18 @@ const RspSidebar = () => {
                 >
                   <span className="flex-1 ml-3 whitespace-nowrap">
                     Ranking Results
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className={`app__menu_link ${
+                    currentRoute === '/erfresults' ? 'app_menu_link_active' : ''
+                  }`}
+                >
+                  <span className="flex-1 ml-3 whitespace-nowrap">
+                    ERF Results
                   </span>
                 </Link>
               </li>

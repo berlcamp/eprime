@@ -26,10 +26,11 @@ import { useDispatch, useSelector } from 'react-redux'
 // Types
 import type {
   Employee,
+  LeaveCreditTypes,
   ServiceCreditTypes,
   ServiceCreditUserTypes
 } from '@/types'
-import { fetchLeaveCards, logError } from '@/utils/fetchApi'
+import { logError } from '@/utils/fetchApi'
 
 interface ModalProps {
   hideModal: () => void
@@ -176,17 +177,50 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
 
       if (error2) throw new Error(error2.message)
 
-      let sc = selectedRow.service_credits
-      // Get the previous COC balance from leave cards
-      const result = await fetchLeaveCards(
-        selectedRow.hrm_user_id,
-        'Service Credit',
-        10,
-        0
-      )
-      if (result.count && result.count > 0) {
-        // first index of array should be the latest and updated balance
-        sc = sc + Number(result.data[0].balance)
+      // Current Balances
+      const { data: balancesData } = await supabase
+        .from('hrm_leave_credits')
+        .select()
+        .eq('user_id', selectedRow.hrm_user_id)
+
+      const balances: Array<{
+        type: string
+        balance: string
+      }> = []
+
+      if (balancesData && balancesData.length > 0) {
+        const creditsData: LeaveCreditTypes[] = balancesData
+        creditsData.forEach((credit) => {
+          balances.push({
+            type: credit.type,
+            balance: credit.credits.toString()
+          })
+        })
+      }
+
+      // Current Service Credits balance
+      const scBalance =
+        balances.find((item) => item.type === 'Service Credit')?.balance ?? 0
+
+      // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
+      const sc = Number(scBalance) + Number(selectedRow.service_credits)
+
+      // Update Service Credit
+      const { error: error4 } = await supabase
+        .from('hrm_leave_credits')
+        .update({
+          credits: sc
+        })
+        .eq('user_id', selectedRow.hrm_user_id)
+        .eq('type', 'Service Credit')
+
+      if (error4) {
+        void logError(
+          'Create Service Credit Manual Adjustment',
+          'hrm_leave_credits',
+          '',
+          error4.message
+        )
       }
 
       // Update leave card

@@ -457,7 +457,16 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                             >
                               <option value="">Choose Type</option>
                               <option value="CAR-RQA">CAR-RQA</option>
-                              <option value="CAR">CAR</option>
+                              <option value="CAR-RQA (Special Items)">
+                                CAR-RQA (Special Items)
+                              </option>
+                              <option value="CAR (Teaching)">
+                                CAR (Teaching)
+                              </option>
+                              <option value="CAR (Non-teaching)">
+                                {' '}
+                                (Non-teaching)
+                              </option>
                               <option value="Reclassification">
                                 Reclassification
                               </option>
@@ -704,6 +713,20 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                             Description is required
                           </div>
                         )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">
+                        <label className="flex items-center space-x-1">
+                          <input
+                            {...register('display_eir')}
+                            type="checkbox"
+                            className=""
+                          />
+                          <span>Display EIR</span>
+                        </label>
                       </div>
                     </div>
                   </div>

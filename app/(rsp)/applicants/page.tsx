@@ -165,6 +165,9 @@ const Page: React.FC = () => {
                 <tr>
                   <th className="hidden md:table-cell app__th pl-4"></th>
                   <th className="hidden md:table-cell app__th">Applicant</th>
+                  <th className="hidden md:table-cell app__th">
+                    Application Code
+                  </th>
                   <th className="hidden md:table-cell app__th">Type</th>
                   <th className="hidden md:table-cell app__th">Ranking</th>
                   <th className="hidden md:table-cell app__th">Status</th>
@@ -260,6 +263,9 @@ const Page: React.FC = () => {
                         </div>
                         {/* End - Mobile View */}
                       </th>
+                      <td className="hidden md:table-cell app__td">
+                        {item.code}
+                      </td>
                       <td className="hidden md:table-cell app__td">
                         {item.type === 'Reclassification'
                           ? 'Reclassification'

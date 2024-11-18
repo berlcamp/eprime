@@ -760,6 +760,7 @@ export interface RankingTypes {
   department: string
   year: string
   description: string
+  display_eir: string
   days_to_comply: string
   has_qualification_standard: string
   qualifications: Array<{
@@ -780,6 +781,8 @@ export interface RankingQualifications {
   id: string
   ranking_id: string
   name: string
+  description: string
+  required: string
 }
 export interface ApplicantTypes {
   id: string
@@ -793,7 +796,7 @@ export interface ApplicantTypes {
   firstname: string
   middlename: string
   email: string
-
+  files: Array<FileList | undefined>
   address: string
   age: string
   sex: string
@@ -826,6 +829,16 @@ export interface ApplicantDocuments {
   qualification: RankingQualifications
   document_url: string
   status: string
+  remarks: string
+  created_at: string
+}
+
+export interface ApplicantIerTypes {
+  id: string
+  ranking_id: string
+  qualification_id: string
+  remarks: string
+  time: string
 }
 
 export interface AnnouncementTypes {

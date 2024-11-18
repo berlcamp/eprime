@@ -250,6 +250,9 @@
 .app__status_orange {
   @apply font-medium text-orange-700 bg-orange-100 border border-orange-500 py-px px-1 text-xs;
 }
+.app__status_gray {
+  @apply font-medium text-gray-600 bg-gray-100 border border-gray-300 py-px px-1 text-xs;
+}
 .app__status_red {
   @apply font-medium text-red-700 bg-red-100 border border-red-500 py-px px-1 text-xs;
 }

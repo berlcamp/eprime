@@ -12,7 +12,7 @@ import {
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 
 interface ExistingQualificationTypes {
   qualification_name: string
@@ -81,6 +81,7 @@ const Page: React.FC = () => {
     formState: { errors },
     watch,
     setValue,
+    control,
     handleSubmit
   } = useForm<ApplicantTypes>({
     mode: 'onSubmit'
@@ -743,7 +744,7 @@ const Page: React.FC = () => {
                           <div className="app__form_field_container mt-4">
                             <div className="w-full">
                               <div className="app__label_standard">
-                                Ethnicity
+                                Member of Ethnic Group?
                               </div>
                               <div>
                                 <label>
@@ -795,13 +796,6 @@ const Page: React.FC = () => {
                                   />{' '}
                                   No
                                 </label>
-                                {watch('solo_parent') === 'Yes' && (
-                                  <input
-                                    {...register('solo_parent_detail')}
-                                    placeholder="Specify reason"
-                                    className="app__input_standard mt-2"
-                                  />
-                                )}
                               </div>
                             </div>
                           </div>
@@ -918,7 +912,7 @@ const Page: React.FC = () => {
                                     <div className="text-xs text-gray-600 pl-4">
                                       {qualification.description}
                                     </div>
-                                    <input
+                                    {/* <input
                                       type="file"
                                       multiple
                                       onChange={(e) =>
@@ -926,6 +920,42 @@ const Page: React.FC = () => {
                                       }
                                       className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
                                     />
+                                     */}
+                                    {/* File input with react-hook-form Controller */}
+                                    <Controller
+                                      name={`files.${index}`}
+                                      control={control}
+                                      rules={{
+                                        required: qualification.required
+                                          ? 'This qualification standard is required.'
+                                          : false
+                                      }}
+                                      render={({ field }) => (
+                                        <input
+                                          type="file"
+                                          multiple
+                                          onChange={(e) => {
+                                            field.onChange(e.target.files) // Update field value
+                                            handleFileUpload(
+                                              index,
+                                              e.target.files
+                                            ) // Custom handler
+                                          }}
+                                          ref={field.ref}
+                                          className={`mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500 ${
+                                            errors?.files?.[index]
+                                              ? 'border-red-500'
+                                              : ''
+                                          }`}
+                                        />
+                                      )}
+                                    />
+                                    {/* Error message */}
+                                    {errors?.files?.[index] && (
+                                      <div className="app__error_message">
+                                        {errors.files[index]?.message}
+                                      </div>
+                                    )}
                                   </div>
                                 )
                               )}
@@ -981,7 +1011,7 @@ const Page: React.FC = () => {
                         </div>
                         <div>
                           <div className="app__label_standard">
-                            Ethnicity: {applicantDetails.ethnicity}{' '}
+                            Member of Ethnic Group? {applicantDetails.ethnicity}{' '}
                             {applicantDetails.ethnicity_detail}
                           </div>
                         </div>
@@ -1056,15 +1086,59 @@ const Page: React.FC = () => {
                                 <div key={qualification.id}>
                                   <h3 className="text-gray-700 text-sm font-bold">
                                     {index + 1}. {qualification.name}{' '}
+                                    {qualification.required && (
+                                      <span className="text-red-500 font-normal">
+                                        (Required)
+                                      </span>
+                                    )}
                                   </h3>
-                                  <input
-                                    type="file"
-                                    multiple
-                                    onChange={(e) =>
-                                      handleFileUpload(index, e.target.files)
-                                    }
-                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
+                                  <div className="text-xs text-gray-600 pl-4">
+                                    {qualification.description}
+                                  </div>
+                                  {/* <input
+                                      type="file"
+                                      multiple
+                                      onChange={(e) =>
+                                        handleFileUpload(index, e.target.files)
+                                      }
+                                      className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
+                                    />
+                                     */}
+                                  {/* File input with react-hook-form Controller */}
+                                  <Controller
+                                    name={`files.${index}`}
+                                    control={control}
+                                    rules={{
+                                      required: qualification.required
+                                        ? 'This qualification standard is required.'
+                                        : false
+                                    }}
+                                    render={({ field }) => (
+                                      <input
+                                        type="file"
+                                        multiple
+                                        onChange={(e) => {
+                                          field.onChange(e.target.files) // Update field value
+                                          handleFileUpload(
+                                            index,
+                                            e.target.files
+                                          ) // Custom handler
+                                        }}
+                                        ref={field.ref}
+                                        className={`mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500 ${
+                                          errors?.files?.[index]
+                                            ? 'border-red-500'
+                                            : ''
+                                        }`}
+                                      />
+                                    )}
                                   />
+                                  {/* Error message */}
+                                  {errors?.files?.[index] && (
+                                    <div className="app__error_message">
+                                      {errors.files[index]?.message}
+                                    </div>
+                                  )}
                                 </div>
                               )
                             )}

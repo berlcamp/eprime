@@ -15,10 +15,8 @@ import { logError } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
 import CastPoints from './CastPoints'
 
-import { DisqualificationTemplate } from '@/components/Emails/DisqualificationTemplate'
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_KEY)
+// import { Resend } from 'resend'
+// const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_KEY)
 
 interface ModalProps {
   hideModal: () => void
@@ -115,59 +113,59 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
     return 'Not Known'
   }
 
-  const handleSendDisqualificationEMail = async (email: string) => {
-    // Usage
-    const header = (
-      <p>
-        Dear <strong>John Doe</strong>,
-      </p>
-    )
-    const body = (
-      <>
-        <p>
-          Congratulations! Your registration to the{' '}
-          <strong>PRIME-HRM system of DepEd Bayugan</strong> has been
-          successfully approved.
-        </p>
-        <p>
-          Click this{' '}
-          <a
-            href="https://eprime.sortbrite.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            link
-          </a>{' '}
-          to login and access your account.
-        </p>
-      </>
-    )
+  // const handleSendDisqualificationEMail = async (email: string) => {
+  //   // Usage
+  //   const header = (
+  //     <p>
+  //       Dear <strong>John Doe</strong>,
+  //     </p>
+  //   )
+  //   const body = (
+  //     <>
+  //       <p>
+  //         Congratulations! Your registration to the{' '}
+  //         <strong>PRIME-HRM system of DepEd Bayugan</strong> has been
+  //         successfully approved.
+  //       </p>
+  //       <p>
+  //         Click this{' '}
+  //         <a
+  //           href="https://eprime.sortbrite.com"
+  //           target="_blank"
+  //           rel="noopener noreferrer"
+  //         >
+  //           link
+  //         </a>{' '}
+  //         to login and access your account.
+  //       </p>
+  //     </>
+  //   )
 
-    try {
-      const { error } = await resend.emails.send({
-        from: 'DepEd Bayugan (No-reply) <noreply@sortbrite.com>',
-        to: [email],
-        subject: 'PRIME-HRM - Application Disqualification',
-        react: DisqualificationTemplate({
-          header,
-          body
-        }) as React.ReactElement
-      })
+  //   try {
+  //     const { error } = await resend.emails.send({
+  //       from: 'DepEd Bayugan (No-reply) <noreply@sortbrite.com>',
+  //       to: [email],
+  //       subject: 'PRIME-HRM - Application Disqualification',
+  //       react: DisqualificationTemplate({
+  //         header,
+  //         body
+  //       }) as React.ReactElement
+  //     })
 
-      if (error) {
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
-      }
+  //     if (error) {
+  //       setToast(
+  //         'error',
+  //         'Saving failed, please reload the page and try again.'
+  //       )
+  //       throw new Error(error.message)
+  //     }
 
-      // pop up the success message
-      setToast('success', 'Successfully saved.')
-    } catch (e) {
-      console.error(e)
-    }
-  }
+  //     // pop up the success message
+  //     setToast('success', 'Successfully saved.')
+  //   } catch (e) {
+  //     console.error(e)
+  //   }
+  // }
 
   useEffect(() => {
     const fetchApplicantsData = async () => {
@@ -274,7 +272,7 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                             {item.applicant.middlename}
                           </div>
                           <div className="font-light">
-                            {item.applicant.email}
+                            Application Code: {item.applicant.code}
                           </div>
                           {item.applicant.current_employee === 'Yes' && (
                             <div className="font-bold">
@@ -362,7 +360,7 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                                   )}
                               </>
                             )}
-                            {qualificationStatus(
+                            {/* {qualificationStatus(
                               item.applicant.applicant_documents
                             ) === 'Not Qualified' && (
                               <CustomButton
@@ -375,7 +373,7 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                                   )
                                 }
                               />
-                            )}
+                            )} */}
                           </div>
                         </td>
                         <td className="app__td">

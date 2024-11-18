@@ -1,7 +1,13 @@
 import { CustomButton } from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { ApplicantTypes, RankingEvaluatorTypes } from '@/types'
+import {
+  ApplicantDocuments,
+  ApplicantIerTypes,
+  ApplicantTypes,
+  RankingEvaluatorTypes,
+  RankingQualifications
+} from '@/types'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
@@ -19,6 +25,20 @@ interface QualificationTypes {
   documents: Array<{
     id: string
     status: string
+    remarks: string
+    document_url: string
+    created_at: string
+  }>
+}
+
+interface QualificationTypes {
+  qualification_name: string
+  qualification_description: string
+  qualification_required: boolean
+  documents: Array<{
+    id: string
+    status: string
+    remarks: string
     document_url: string
     created_at: string
   }>
@@ -29,9 +49,13 @@ const ApplicantDetails = ({
   applicantData,
   refetch
 }: ModalProps) => {
-  const [qualification, setQualification] = useState<QualificationTypes[] | []>(
-    []
-  )
+  const [applicantQualifications, setApplicantQualifications] = useState<
+    ApplicantDocuments[] | []
+  >([])
+  const [rankingQualifications, setRankingQualifications] = useState<
+    RankingQualifications[] | []
+  >([])
+  const [iers, setIers] = useState<ApplicantIerTypes[] | []>([])
   const [previousQualification, setPreviousQualification] = useState<
     QualificationTypes[] | []
   >([])
@@ -39,6 +63,15 @@ const ApplicantDetails = ({
   const [evaluators, setEvaluators] = useState<RankingEvaluatorTypes[] | []>([])
   const { supabase, session } = useSupabase()
   const { setToast } = useFilter()
+
+  const [visibleItems, setVisibleItems] = useState<Record<number, boolean>>({})
+
+  const toggleVisibility = (index: number) => {
+    setVisibleItems((prevState) => ({
+      ...prevState,
+      [index]: !prevState[index]
+    }))
+  }
 
   const extractFilename = (url: string) => {
     return url.split('/').pop() // Get the last part of the URL which is the filename
@@ -67,27 +100,29 @@ const ApplicantDetails = ({
     const fetchQualificationsData = async () => {
       const { data } = await supabase
         .from('hrm_ranking_applicant_documents')
-        .select('*, qualification:qualification_id(*)')
+        .select()
+        .eq('applicant_id', applicantData.id)
+
+      setApplicantQualifications(data)
+    }
+
+    const fetchRankingQualificationsData = async () => {
+      const { data } = await supabase
+        .from('hrm_ranking_qualifications')
+        .select()
+        .eq('ranking_id', applicantData.ranking_id)
+
+      setRankingQualifications(data)
+    }
+
+    const fetchIerData = async () => {
+      const { data } = await supabase
+        .from('hrm_ranking_applicant_ier')
+        .select()
         .eq('applicant_id', applicantData.id)
 
       if (data) {
-        const groupedDocuments = data.reduce((acc: any, document: any) => {
-          const { qualification_id, qualification } = document
-
-          if (!acc[qualification_id]) {
-            acc[qualification_id] = {
-              qualification_name: qualification.name,
-              qualification_description: qualification.description,
-              qualification_required: qualification.required,
-              documents: []
-            }
-          }
-
-          acc[qualification_id].documents.push(document)
-          return acc
-        }, {})
-
-        setQualification(groupedDocuments)
+        setIers(data)
       }
     }
 
@@ -137,6 +172,9 @@ const ApplicantDetails = ({
     }
 
     void fetchQualificationsData()
+    void fetchRankingQualificationsData()
+
+    void fetchIerData()
     void fetchEvaluators()
 
     if (applicantData.previous_applicant === 'Yes') {
@@ -147,7 +185,7 @@ const ApplicantDetails = ({
   return (
     <>
       <div className="app__modal_wrapper">
-        <div className="app__modal_wrapper2">
+        <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
               <h5 className="app__modal_header_text">
@@ -184,6 +222,10 @@ const ApplicantDetails = ({
                     </div>
                   </div>
                   <div>
+                    <div className="app__label_standard">Application Code:</div>
+                    <div className="app__label_value">{applicantData.code}</div>
+                  </div>
+                  <div>
                     <div className="app__label_standard">Specific Major:</div>
                     <div className="app__label_value">
                       {applicantData.specific_major}
@@ -216,33 +258,28 @@ const ApplicantDetails = ({
                 </div>
                 <div>
                   <div className="p-4 bg-gray-50 border space-y-6">
-                    {Object.entries(qualification).length === 0 && (
-                      <div className="text-gray-600">No QS Uploaded</div>
-                    )}
-                    {Object.entries(qualification).map(
-                      (
-                        [
-                          qualificationId,
-                          {
-                            qualification_name,
-                            qualification_description,
-                            qualification_required,
-                            documents
-                          }
-                        ],
-                        index
-                      ) => (
-                        <div key={qualificationId} className="mb-4">
-                          <h3 className="text-gray-700 text-sm font-bold">
-                            {index + 1}. {qualification_name}{' '}
-                            {qualification_required && <span>(Required)</span>}
-                          </h3>
-                          <div className="text-xs text-gray-600 mb-2 pl-4">
-                            {qualification_description}
-                          </div>
-                          {documents.length > 0 ? (
-                            <ul>
-                              {documents.map((doc, index) => {
+                    {rankingQualifications?.map((qualification, i) => (
+                      <div key={i} className="mb-4">
+                        <h3 className="text-gray-700 text-sm font-bold">
+                          {i + 1}. {qualification.name}{' '}
+                          {qualification.required && <span>(Required)</span>}
+                        </h3>
+                        <div className="text-xs text-gray-600 mb-2 pl-4">
+                          {qualification.description}
+                        </div>
+                        {applicantQualifications?.filter(
+                          (aq) =>
+                            aq.qualification_id.toString() ===
+                            qualification.id.toString()
+                        ).length > 0 ? (
+                          <ul>
+                            {applicantQualifications
+                              ?.filter(
+                                (aq) =>
+                                  aq.qualification_id.toString() ===
+                                  qualification.id.toString()
+                              )
+                              .map((doc, index) => {
                                 const filename = extractFilename(
                                   doc.document_url
                                 )
@@ -317,19 +354,68 @@ const ApplicantDetails = ({
                                           </div>
                                         )}
                                       </div>
+                                      <div>
+                                        <RemarksInput
+                                          docId={doc.id}
+                                          remarks={doc.remarks}
+                                        />
+                                      </div>
                                     </div>
                                   </li>
                                 )
                               })}
-                            </ul>
-                          ) : (
-                            <p className="text-gray-500">
-                              No documents available.
-                            </p>
+                          </ul>
+                        ) : (
+                          <p className="text-gray-500">
+                            No documents uploaded.
+                          </p>
+                        )}
+                        {/* Ier Data */}
+                        <div>
+                          {iers?.filter(
+                            (ier) =>
+                              ier.qualification_id.toString() ===
+                              qualification.id.toString()
+                          ).length > 0 && (
+                            <div className="text-xs text-gray-600 font-medium">
+                              IER Data:
+                            </div>
                           )}
+                          {iers
+                            ?.filter(
+                              (ier) =>
+                                ier.qualification_id.toString() ===
+                                qualification.id.toString()
+                            )
+                            .map((ier, i) => (
+                              <div key={i} className="text-xs text-gray-600">
+                                {i + 1}. {ier.remarks} ({ier.time})
+                              </div>
+                            ))}
                         </div>
-                      )
-                    )}
+                        {!visibleItems[i] &&
+                          applicantQualifications?.filter(
+                            (aq) =>
+                              aq.qualification_id.toString() ===
+                              qualification.id.toString()
+                          ).length > 0 && (
+                            <button
+                              className="bg-gray-400 hover:bg-gray-600 border active:bg-gray-400 border-gray-500 font-bold px-1 py-px text-[10px] text-white rounded-sm"
+                              onClick={() => toggleVisibility(i)}
+                            >
+                              Add IER Data
+                            </button>
+                          )}
+                        {visibleItems[i] && (
+                          <IerInput
+                            refresh={() => setRefresh(!refresh)}
+                            applicantId={applicantData.id}
+                            qualificationId={qualification.id}
+                            hide={() => toggleVisibility(i)}
+                          />
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -399,6 +485,127 @@ const ApplicantDetails = ({
         </div>
       </div>
     </>
+  )
+}
+
+const IerInput = ({
+  applicantId,
+  qualificationId,
+  hide,
+  refresh
+}: {
+  applicantId: string
+  qualificationId: string
+  hide: () => void
+  refresh: () => void
+}) => {
+  const { setToast } = useFilter()
+  const { supabase } = useSupabase()
+
+  const [remarks, setRemarks] = useState('')
+  const [time, setTime] = useState('')
+
+  const handleAddIER = async () => {
+    if (remarks.trim() === '') return
+
+    const { error } = await supabase.from('hrm_ranking_applicant_ier').insert({
+      applicant_id: applicantId,
+      qualification_id: qualificationId,
+      remarks,
+      time
+    })
+    if (error) {
+      setToast('error', 'Something went wrong, please reload the page')
+    } else {
+      refresh()
+      hide()
+      setToast('success', 'Successfully saved')
+    }
+  }
+
+  return (
+    <div className="mt-4 bg-yellow-50 p-4 border text-gray-600">
+      <div className="app__form_field_container">
+        <div className="w-full">
+          <div>
+            <textarea
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              placeholder="Remarks"
+              className="app__input_standard"
+            />
+          </div>
+        </div>
+      </div>
+      <div className="app__form_field_container">
+        <div className="w-full">
+          <div>
+            <input
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              placeholder="Date / Hours (if applicable)"
+              className="app__input_standard"
+            />
+          </div>
+        </div>
+      </div>
+      <div className="space-x-2">
+        <CustomButton
+          containerStyles="app__btn_green"
+          title="Submit"
+          btnType="button"
+          handleClick={handleAddIER}
+        />
+        <CustomButton
+          containerStyles="app__btn_gray"
+          title="Hide"
+          btnType="button"
+          handleClick={hide}
+        />
+      </div>
+    </div>
+  )
+}
+const RemarksInput = ({
+  docId,
+  remarks
+}: {
+  docId: string
+  remarks: string
+}) => {
+  const [inputValue, setInputValue] = useState(remarks)
+
+  const { setToast } = useFilter()
+  const { supabase } = useSupabase()
+
+  const handleAddRemarks = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault() // Prevent default form submission behavior
+
+      const { error } = await supabase
+        .from('hrm_ranking_applicant_documents')
+        .update({
+          remarks: inputValue
+        })
+        .eq('id', docId)
+
+      if (error) {
+        setToast('error', 'Something went wrong, please reload the page.')
+      } else {
+        setToast('success', 'Remarks successfully saved.')
+      }
+    }
+  }
+
+  return (
+    <input
+      type="text"
+      placeholder="Write remarks"
+      value={inputValue}
+      onChange={(e) => setInputValue(e.target.value)}
+      onKeyDown={handleAddRemarks}
+      className="app__input_standard"
+    />
   )
 }
 

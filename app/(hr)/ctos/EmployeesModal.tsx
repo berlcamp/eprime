@@ -524,7 +524,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
         <ConfirmModal
           header="Confirm Delete"
           btnText="Confirm"
-          message="This action cannot be undone. Are you sure you want to remove this employee from this CTO?"
+          message="This action cannot be undone. Are you sure you want to remove this employee?"
           onConfirm={handleDeleteConfirmed}
           onCancel={() => setShowDeleteModal(false)}
         />
