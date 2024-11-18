@@ -32,11 +32,14 @@ export default function LeaveCard({ userId, userData }: PageProps) {
   const [list, setList] = useState<LeaveCardTypes[] | []>([])
   const [countResults, setCountResults] = useState(0)
   const [saving, setSaving] = useState(false)
-
+  console.log('userData', userData)
   const [showAdjustmentForm, setShowAdjustmentForm] = useState(false)
 
   const { supabase, session } = useSupabase()
   const { setToast, hasAccess } = useFilter()
+
+  const userPositionType =
+    userData.position_type === 'Teaching' ? 'Teaching' : 'Non-teaching'
 
   const fetchData = async () => {
     if (loading) return
@@ -224,7 +227,7 @@ export default function LeaveCard({ userId, userData }: PageProps) {
                             userData.gender.toLowerCase() ||
                             l.gender.toLowerCase() === 'all') &&
                           (l.position_type.toLowerCase() ===
-                            userData.position_type.toLowerCase() ||
+                            userPositionType.toLowerCase() ||
                             l.position_type.toLowerCase() === 'all')
                       )
                       .map((l, i) => (
