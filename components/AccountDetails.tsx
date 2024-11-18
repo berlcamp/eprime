@@ -834,14 +834,41 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                             <div>
                               <input
                                 {...register('date_of_next_increment', {
-                                  required: true
+                                  required:
+                                    'Date of next Increment is required',
+                                  validate: {
+                                    withinRange: (value) => {
+                                      const selectedDate = new Date(value) // User input date
+                                      const currentDate = new Date() // Today's date
+
+                                      // Calculate the range
+                                      const minDate = new Date()
+                                      minDate.setMonth(
+                                        currentDate.getMonth() - 5
+                                      ) // 5 months ago
+
+                                      const maxDate = new Date()
+                                      maxDate.setMonth(
+                                        currentDate.getMonth() + 1
+                                      ) // 1 month from today
+
+                                      if (selectedDate < minDate) {
+                                        return 'Date should not be older than 5 months'
+                                      }
+                                      if (selectedDate > maxDate) {
+                                        return 'Date should not be later than 1 month from today'
+                                      }
+                                      return true // Date is valid
+                                    }
+                                  }
                                 })}
                                 type="date"
+                                placeholder="Updated Balance"
                                 className="app__input_standard"
                               />
                               {errors.date_of_next_increment && (
                                 <div className="app__error_message">
-                                  Specify date of next VL/SL increment
+                                  {errors.date_of_next_increment.message}
                                 </div>
                               )}
                             </div>
