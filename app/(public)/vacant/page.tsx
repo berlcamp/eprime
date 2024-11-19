@@ -59,7 +59,7 @@ const Page: React.FC = () => {
                       href={`/rankingapplicantresults/ier?ref=${item.id}`}
                       className="app__btn_blue"
                     >
-                      IER
+                      Initial Evaluation Report
                     </Link>
                   </div>
                 </div>
