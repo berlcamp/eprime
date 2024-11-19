@@ -46,7 +46,7 @@ const Page: React.FC = () => {
                   <div>
                     {item.status === 'Closed' && (
                       <span className="text-gray-600 italic">
-                        This ranking is already Closed
+                        The application for this ranking is already Closed
                       </span>
                     )}
                   </div>
