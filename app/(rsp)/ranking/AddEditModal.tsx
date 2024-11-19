@@ -740,7 +740,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                             type="checkbox"
                             className=""
                           />
-                          <span>Display EIR</span>
+                          <span>Display IER</span>
                         </label>
                       </div>
                     </div>
