@@ -94,18 +94,24 @@ export default function LeaveCard({ userId, userData }: PageProps) {
     if (saving) return
 
     setSaving(true)
+    let particulars = ''
+    if (formdata.type === 'Sick Leave' || formdata.type === 'Vacation Leave') {
+      particulars = `${
+        formdata.type
+      } Manual Adjustment (Next increment set to ${format(
+        new Date(formdata.date_of_next_increment),
+        'MMM dd, yyyy'
+      )})`
+    } else {
+      particulars = `${formdata.type} manual adjustment`
+    }
     try {
       const newData = {
         type: formdata.type,
         balance: formdata.balance,
         remarks: formdata.remarks,
         user_id: userId,
-        particulars: `${
-          formdata.type
-        } Manual Adjustment (Next increment set to ${format(
-          new Date(formdata.date_of_next_increment),
-          'MMM dd, yyyy'
-        )})`,
+        particulars,
         updated_by: session.user.id
       }
 
@@ -158,12 +164,7 @@ export default function LeaveCard({ userId, userData }: PageProps) {
       const newList = [
         {
           adjustment_date: format(new Date(), 'MMM dd, yyyy'),
-          particulars: `${
-            formdata.type
-          } Manual Adjustment (Next increment set to ${format(
-            new Date(formdata.date_of_next_increment),
-            'MMM dd, yyyy'
-          )})`,
+          particulars,
           credits_used: '',
           credits_earned: '',
           balance: formdata.balance,

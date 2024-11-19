@@ -20,8 +20,9 @@ const Page: React.FC = () => {
       const { data } = await supabase
         .from('hrm_rankings')
         .select('*, position:position_id(name)')
-        .eq('display_on_portal', 'Yes')
-        .gte('display_on_portal_until', today)
+        .eq('display_on_portal', true)
+        .gte('display_on_portal_from', today)
+        .lte('display_on_portal_until', today)
         .eq('status', 'Open')
 
       setRankings(data)

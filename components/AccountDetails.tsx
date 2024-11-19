@@ -951,10 +951,31 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                             ) : (
                               <div>
                                 <input
-                                  {...register('date_of_next_step_increment')}
+                                  {...register('date_of_next_step_increment', {
+                                    validate: (value) => {
+                                      if (!value) return true // Allow empty values (not required)
+
+                                      const selectedDate = new Date(value)
+                                      const currentDate = new Date()
+
+                                      // Remove time part from current date for comparison
+                                      currentDate.setHours(0, 0, 0, 0)
+
+                                      if (selectedDate <= currentDate) {
+                                        return 'Date must be greater than today'
+                                      }
+
+                                      return true // Validation passed
+                                    }
+                                  })}
                                   type="date"
                                   className="app__input_standard"
                                 />
+                                {errors.date_of_next_step_increment && (
+                                  <div className="app__error_message">
+                                    {errors.date_of_next_step_increment.message}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

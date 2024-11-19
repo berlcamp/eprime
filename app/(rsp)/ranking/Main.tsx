@@ -211,7 +211,7 @@ const Page: React.FC = () => {
                   <th className="hidden md:table-cell app__th">Position</th>
                   <th className="hidden md:table-cell app__th">Type</th>
                   <th className="hidden md:table-cell app__th">
-                    Display On Job Postings
+                    Display On Website
                   </th>
                   <th className="hidden md:table-cell app__th">Chairman</th>
                   <th className="hidden md:table-cell app__th">Status</th>
@@ -329,13 +329,22 @@ const Page: React.FC = () => {
                               <span className="app_td_mobile_label">
                                 Display On Job Postings:
                               </span>{' '}
-                              {item.display_on_portal === 'Yes' ? 'Yes' : 'No'}
-                              (Until{' '}
-                              {format(
-                                new Date(item.display_on_portal_until),
-                                'MMM d, yyyy'
+                              {item.display_on_portal ? (
+                                <span>
+                                  Displayed from{' '}
+                                  {format(
+                                    new Date(item.display_on_portal_from),
+                                    'MMM d, yyyy'
+                                  )}{' '}
+                                  until{' '}
+                                  {format(
+                                    new Date(item.display_on_portal_until),
+                                    'MMM d, yyyy'
+                                  )}
+                                </span>
+                              ) : (
+                                'No'
                               )}
-                              )
                             </div>
                             <div>
                               <span className="app_td_mobile_label">
@@ -357,9 +366,14 @@ const Page: React.FC = () => {
                         {item.type} - {item.year}
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        {item.display_on_portal === 'Yes' ? (
+                        {item.display_on_portal ? (
                           <span>
-                            Displayed until{' '}
+                            Displayed from{' '}
+                            {format(
+                              new Date(item.display_on_portal_from),
+                              'MMM d, yyyy'
+                            )}{' '}
+                            until{' '}
                             {format(
                               new Date(item.display_on_portal_until),
                               'MMM d, yyyy'

@@ -19,6 +19,7 @@ const Page: React.FC = () => {
         .from('hrm_rankings')
         .select('*, position:position_id(name)')
         .eq('status', 'Closed')
+        .eq('display_on_portal', true)
 
       setRankings(data)
       setLoading(false)

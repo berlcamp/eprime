@@ -42,7 +42,6 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
     setValue,
     clearErrors,
     control,
-    watch,
     handleSubmit
   } = useForm<RankingTypes>({
     mode: 'onSubmit',
@@ -50,8 +49,6 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       chairman_id: ''
     }
   })
-
-  const watchedDisplay = watch('display_on_portal')
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -81,6 +78,9 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       days_to_comply: formdata.days_to_comply,
       status: formdata.status,
       display_on_portal: formdata.display_on_portal,
+      display_on_portal_from: formdata.display_on_portal_from
+        ? formdata.display_on_portal_from
+        : null,
       display_on_portal_until: formdata.display_on_portal_until
         ? formdata.display_on_portal_until
         : null,
@@ -172,7 +172,12 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       days_to_comply: formdata.days_to_comply,
       status: formdata.status,
       display_on_portal: formdata.display_on_portal,
+      display_on_portal_from: formdata.display_on_portal_from
+        ? formdata.display_on_portal_from
+        : null,
       display_on_portal_until: formdata.display_on_portal_until
+        ? formdata.display_on_portal_until
+        : null
     }
 
     try {
@@ -327,6 +332,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       description: editData ? editData.description : '',
       status: editData ? editData.status : '',
       display_on_portal: editData ? editData.display_on_portal : '',
+      display_on_portal_from: editData ? editData.display_on_portal_from : '',
       display_on_portal_until: editData ? editData.display_on_portal_until : '',
       days_to_comply: editData ? editData.days_to_comply : '',
       qualifications: editData
@@ -629,21 +635,21 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       </div>
                     </div>
                   </div>
+
                   <div className="app__form_field_container">
                     <div className="w-full">
                       <div className="app__label_standard">
-                        Display on Job Postings?
+                        Display on Job Postings From?
                       </div>
                       <div>
-                        <select
-                          {...register('display_on_portal', { required: true })}
-                          className="app__select_standard"
-                        >
-                          <option value="">Choose</option>
-                          <option value="Yes">Yes</option>
-                          <option value="No">No</option>
-                        </select>
-                        {errors.display_on_portal && (
+                        <input
+                          {...register('display_on_portal_from', {
+                            required: true
+                          })}
+                          type="date"
+                          className="app__input_standard"
+                        />
+                        {errors.display_on_portal_from && (
                           <div className="app__error_message">
                             This is required
                           </div>
@@ -651,55 +657,51 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       </div>
                     </div>
                   </div>
-                  {watchedDisplay === 'Yes' && (
-                    <>
-                      <div className="app__form_field_container">
-                        <div className="w-full">
-                          <div className="app__label_standard">
-                            Display on Job Postings Until?
-                          </div>
-                          <div>
-                            <input
-                              {...register('display_on_portal_until', {
-                                required: true
-                              })}
-                              type="date"
-                              className="app__input_standard"
-                            />
-                            {errors.display_on_portal_until && (
-                              <div className="app__error_message">
-                                This is required
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">
+                        Display on Job Postings Until?
                       </div>
-                      <div className="app__form_field_container">
-                        <div className="w-full">
-                          <div className="app__label_standard">
-                            Last Day of compliance{' '}
-                            <span className="italic font-light">
-                              (For disqualified applicants)
-                            </span>
+                      <div>
+                        <input
+                          {...register('display_on_portal_until', {
+                            required: true
+                          })}
+                          type="date"
+                          className="app__input_standard"
+                        />
+                        {errors.display_on_portal_until && (
+                          <div className="app__error_message">
+                            This is required
                           </div>
-                          <div>
-                            <input
-                              {...register('days_to_comply', {
-                                required: true
-                              })}
-                              type="date"
-                              className="app__input_standard"
-                            />
-                            {errors.days_to_comply && (
-                              <div className="app__error_message">
-                                Last Day of compliance is required
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        )}
                       </div>
-                    </>
-                  )}
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">
+                        Last Day of compliance{' '}
+                        <span className="italic font-light">
+                          (For disqualified applicants)
+                        </span>
+                      </div>
+                      <div>
+                        <input
+                          {...register('days_to_comply', {
+                            required: true
+                          })}
+                          type="date"
+                          className="app__input_standard"
+                        />
+                        {errors.days_to_comply && (
+                          <div className="app__error_message">
+                            Last Day of compliance is required
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   <div className="app__form_field_container">
                     <div className="w-full">
                       <div className="app__label_standard">Description</div>
@@ -726,6 +728,20 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                             className=""
                           />
                           <span>Display EIR</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">
+                        <label className="flex items-center space-x-1">
+                          <input
+                            {...register('display_on_portal')}
+                            type="checkbox"
+                            className=""
+                          />
+                          <span>Display on Website</span>
                         </label>
                       </div>
                     </div>

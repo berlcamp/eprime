@@ -279,7 +279,7 @@ const Page: React.FC = () => {
                       </td>
                     </tr>
                   ))}
-                {loading && <TableRowLoading cols={4} rows={2} />}
+                {loading && <TableRowLoading cols={6} rows={2} />}
               </tbody>
             </table>
             {!loading && isDataEmpty && (

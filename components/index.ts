@@ -3,8 +3,6 @@ import Announcements from './Announcements'
 import ConfirmModal from './ConfirmModal'
 import CustomButton from './CustomButton'
 import DeleteModal from './DeleteModal'
-import Jobs from './Jobs'
-import LandingPage from './LandingPage'
 import LeaveBalanceBoxes from './LeaveCard/LeaveBalanceBoxes'
 import OneColLayoutLoading from './Loading/OneColLayoutLoading'
 import TableRowLoading from './Loading/TableRowLoading'
@@ -29,7 +27,6 @@ import TopBarDark from './TopBarDark'
 import StatusFlow from './Tracker/StatusFlow'
 import Unauthorized from './Unauthorized'
 import UserBlock from './UserBlock'
-
 export {
   AccountDetails,
   Announcements,
@@ -37,8 +34,6 @@ export {
   CustomButton,
   DeleteModal,
   EmployeesSideBar,
-  Jobs,
-  LandingPage,
   LeaveBalanceBoxes,
   LoginBox,
   MainMenu,
