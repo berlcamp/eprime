@@ -65,6 +65,12 @@ const Page: React.FC = () => {
                         'CAR'}
                     </Link>
                     <Link
+                      href={`/rankingapplicantresults/ier?ref=${item.id}`}
+                      className="app__btn_blue"
+                    >
+                      IER
+                    </Link>
+                    <Link
                       href={`/rankingapplicantresults/nai?ref=${item.id}`}
                       className="app__btn_blue"
                     >
