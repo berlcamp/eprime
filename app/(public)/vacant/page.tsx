@@ -4,7 +4,6 @@ import Footer from '@/components/Footer'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { RankingTypes } from '@/types'
-import { format } from 'date-fns'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
@@ -15,15 +14,11 @@ const Page: React.FC = () => {
 
   useEffect(() => {
     setLoading(true)
-    const today = format(new Date(), 'yyyy-MM-dd')
     const fetchRankins = async () => {
       const { data } = await supabase
         .from('hrm_rankings')
         .select('*, position:position_id(name)')
         .eq('display_on_portal', true)
-        .gte('display_on_portal_from', today)
-        .lte('display_on_portal_until', today)
-        .eq('status', 'Open')
 
       setRankings(data)
       setLoading(false)
@@ -48,13 +43,30 @@ const Page: React.FC = () => {
                 <div className="flex flex-col space-y-1">
                   <div className="font-bold">{item.position?.name}</div>
                   <div>{item.description}</div>
+                  <div>
+                    {item.status === 'Closed' && (
+                      <span className="text-gray-600 italic">
+                        This ranking is already Closed
+                      </span>
+                    )}
+                  </div>
                   <div className="pt-2 space-x-2">
-                    <Link
-                      href={`/apply?ref=${item.id}`}
-                      className="app__btn_green"
-                    >
-                      Apply Now
-                    </Link>
+                    {item.status === 'Open' && (
+                      <Link
+                        href={`/apply?ref=${item.id}`}
+                        className="app__btn_green"
+                      >
+                        Apply Now
+                      </Link>
+                    )}
+                    {item.display_ier && (
+                      <Link
+                        href={`/rankingapplicantresults/ier?ref=${item.id}`}
+                        className="app__btn_blue"
+                      >
+                        Initial Evaluation Result
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>

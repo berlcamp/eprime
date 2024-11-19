@@ -68,14 +68,6 @@ const Page: React.FC = () => {
                           'Comparative Assestment Result'}
                       </Link>
                     )}
-                    {item.display_ier && (
-                      <Link
-                        href={`/rankingapplicantresults/ier?ref=${item.id}`}
-                        className="app__btn_blue"
-                      >
-                        Initial Evaluation Result
-                      </Link>
-                    )}
                     {item.display_nai && (
                       <Link
                         href={`/rankingapplicantresults/nai?ref=${item.id}`}
