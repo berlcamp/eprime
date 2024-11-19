@@ -760,7 +760,10 @@ export interface RankingTypes {
   department: string
   year: string
   description: string
-  display_eir: string
+  display_ier: string
+  display_rqa: string
+  display_ranklist: string
+  display_nai: string
   days_to_comply: string
   has_qualification_standard: string
   qualifications: Array<{

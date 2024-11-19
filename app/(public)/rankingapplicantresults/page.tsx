@@ -31,7 +31,7 @@ const Page: React.FC = () => {
     <div className="app__home">
       <TopBarDark isGuest={session ? false : true} />
       <div className="app__single_page_wrapper1">
-        <div className="app__single_page_wrapper2">
+        <div className="app__single_page_wrapper2_large">
           <div className="app__single_page_title">Ranking Results</div>
           {loading && <TwoColTableLoading />}
           {rankings.length > 0 &&
@@ -47,35 +47,43 @@ const Page: React.FC = () => {
                   </div>
                   <div>{item.description}</div>
                   <div className="pt-2 space-x-2">
-                    <Link
-                      href={`/rankingapplicantresults/ranklist?ref=${item.id}`}
-                      className="app__btn_blue"
-                    >
-                      Rank List
-                    </Link>
-                    <Link
-                      href={`/rankingapplicantresults/rqa?ref=${item.id}`}
-                      className="app__btn_blue"
-                    >
-                      {(item.type === 'CAR-RQA' ||
-                        item.type === 'CAR-RQA (Special Items)') &&
-                        'RQA'}
-                      {(item.type === 'CAR (Teaching)' ||
-                        item.type === 'CAR (Non-Teaching)') &&
-                        'CAR'}
-                    </Link>
-                    <Link
-                      href={`/rankingapplicantresults/ier?ref=${item.id}`}
-                      className="app__btn_blue"
-                    >
-                      IER
-                    </Link>
-                    <Link
-                      href={`/rankingapplicantresults/nai?ref=${item.id}`}
-                      className="app__btn_blue"
-                    >
-                      Notice of Appointment Issued
-                    </Link>
+                    {item.display_ranklist && (
+                      <Link
+                        href={`/rankingapplicantresults/ranklist?ref=${item.id}`}
+                        className="app__btn_blue"
+                      >
+                        Rank List
+                      </Link>
+                    )}
+                    {item.display_rqa && (
+                      <Link
+                        href={`/rankingapplicantresults/rqa?ref=${item.id}`}
+                        className="app__btn_blue"
+                      >
+                        {(item.type === 'CAR-RQA' ||
+                          item.type === 'CAR-RQA (Special Items)') &&
+                          'Registry of Quallified Applicants'}
+                        {(item.type === 'CAR (Teaching)' ||
+                          item.type === 'CAR (Non-Teaching)') &&
+                          'Comparative Assestment Result'}
+                      </Link>
+                    )}
+                    {item.display_ier && (
+                      <Link
+                        href={`/rankingapplicantresults/ier?ref=${item.id}`}
+                        className="app__btn_blue"
+                      >
+                        Initial Evaluation Result
+                      </Link>
+                    )}
+                    {item.display_nai && (
+                      <Link
+                        href={`/rankingapplicantresults/nai?ref=${item.id}`}
+                        className="app__btn_blue"
+                      >
+                        Notice of Appointment Issued
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>

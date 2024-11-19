@@ -277,3 +277,6 @@
 .app__single_page_wrapper2 {
   @apply bg-gray-100 p-4 mb-20 rounded-lg border w-full md:w-[720px];
 }
+.app__single_page_wrapper2_large {
+  @apply bg-gray-100 p-4 mb-20 rounded-lg border w-full md:mx-20;
+}

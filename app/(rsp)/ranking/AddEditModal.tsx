@@ -79,6 +79,10 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       passing_score: formdata.passing_score,
       days_to_comply: formdata.days_to_comply,
       status: formdata.status,
+      display_ier: formdata.display_ier,
+      display_rqa: formdata.display_rqa,
+      display_ranklist: formdata.display_ranklist,
+      display_nai: formdata.display_nai,
       display_on_portal: formdata.display_on_portal,
       display_on_portal_from: formdata.display_on_portal_from
         ? formdata.display_on_portal_from
@@ -174,6 +178,10 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       passing_score: formdata.passing_score,
       days_to_comply: formdata.days_to_comply,
       status: formdata.status,
+      display_ier: formdata.display_ier,
+      display_rqa: formdata.display_rqa,
+      display_ranklist: formdata.display_ranklist,
+      display_nai: formdata.display_nai,
       display_on_portal: formdata.display_on_portal,
       display_on_portal_from: formdata.display_on_portal_from
         ? formdata.display_on_portal_from
@@ -335,6 +343,10 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       description: editData ? editData.description : '',
       status: editData ? editData.status : '',
       passing_score: editData ? editData.passing_score : '',
+      display_ier: editData ? editData.display_ier : '',
+      display_rqa: editData ? editData.display_rqa : '',
+      display_ranklist: editData ? editData.display_ranklist : '',
+      display_nai: editData ? editData.display_nai : '',
       display_on_portal: editData ? editData.display_on_portal : '',
       display_on_portal_from: editData ? editData.display_on_portal_from : '',
       display_on_portal_until: editData ? editData.display_on_portal_until : '',
@@ -736,11 +748,28 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       <div className="app__label_standard">
                         <label className="flex items-center space-x-1">
                           <input
-                            {...register('display_eir')}
+                            {...register('display_on_portal')}
                             type="checkbox"
                             className=""
                           />
-                          <span>Display IER</span>
+                          <span>Display on Website</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="text-sm text-gray-600">
+                      When ranking is closed, display the following buttons:
+                    </div>
+                    <div className="w-full">
+                      <div className="app__label_standard">
+                        <label className="flex items-center space-x-1">
+                          <input
+                            {...register('display_ranklist')}
+                            type="checkbox"
+                            className=""
+                          />
+                          <span>Display Rank List</span>
                         </label>
                       </div>
                     </div>
@@ -750,11 +779,39 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       <div className="app__label_standard">
                         <label className="flex items-center space-x-1">
                           <input
-                            {...register('display_on_portal')}
+                            {...register('display_ier')}
                             type="checkbox"
                             className=""
                           />
-                          <span>Display on Website</span>
+                          <span>Display Initial Evaluation Result</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">
+                        <label className="flex items-center space-x-1">
+                          <input
+                            {...register('display_rqa')}
+                            type="checkbox"
+                            className=""
+                          />
+                          <span>Display RQA/CAR</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">
+                        <label className="flex items-center space-x-1">
+                          <input
+                            {...register('display_nai')}
+                            type="checkbox"
+                            className=""
+                          />
+                          <span>Display Notice of Appointment Issued</span>
                         </label>
                       </div>
                     </div>

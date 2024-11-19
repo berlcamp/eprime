@@ -104,9 +104,14 @@ const Page: React.FC = () => {
   // Filter data by Display
   useEffect(() => {
     setLoading(true)
+    const passingScore = rankingDetails?.passing_score ?? 50
+
     const filteredList = rankList.filter((item) => {
       const status = qualificationStatus(item.applicant.applicant_documents)
-      return status === 'Qualified'
+      return (
+        Number(item.overall_score) < Number(passingScore) &&
+        status === 'Qualified'
+      )
     })
     setList(filteredList)
 

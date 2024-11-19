@@ -55,12 +55,6 @@ const Page: React.FC = () => {
                     >
                       Apply Now
                     </Link>
-                    <Link
-                      href={`/rankingapplicantresults/ier?ref=${item.id}`}
-                      className="app__btn_blue"
-                    >
-                      Initial Evaluation Report
-                    </Link>
                   </div>
                 </div>
               </div>
