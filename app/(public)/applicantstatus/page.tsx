@@ -159,7 +159,7 @@ const Page: React.FC = () => {
     const { data } = await supabase
       .from('hrm_ranking_applicants')
       .select(
-        '*, ranking:ranking_id(days_to_comply,type,year,position:position_id(name),qualifications:hrm_ranking_qualifications(*)),applicant_documents:hrm_ranking_applicant_documents(*, qualification:qualification_id(*))'
+        '*, ranking:ranking_id(status,days_to_comply,type,year,position:position_id(name),qualifications:hrm_ranking_qualifications(*)),applicant_documents:hrm_ranking_applicant_documents(*, qualification:qualification_id(*))'
       )
       .eq('code', inputValue)
       .maybeSingle()
@@ -301,7 +301,14 @@ const Page: React.FC = () => {
               </div>
             </div>
 
-            {applicantDetails && (
+            {applicantDetails &&
+              applicantDetails.ranking.status === 'Closed' && (
+                <div className="mb-8 app__error_message">
+                  Ranking already closed for this application code
+                </div>
+              )}
+
+            {applicantDetails && applicantDetails.ranking.status === 'Open' && (
               <div className="mb-8 text-sm">
                 <div>
                   <span className="text-gray-600">Applicant: </span>
@@ -358,6 +365,7 @@ const Page: React.FC = () => {
 
             {!loading &&
               applicantDetails &&
+              applicantDetails.ranking.status === 'Open' &&
               isDateInPast(applicantDetails.ranking.days_to_comply) && (
                 <div className="text-red-500 text-sm font-medium">
                   The compliance due date has passed. Deadline:{' '}
@@ -369,6 +377,7 @@ const Page: React.FC = () => {
               )}
             {!loading &&
               applicantDetails &&
+              applicantDetails.ranking.status === 'Open' &&
               !isDateInPast(applicantDetails.ranking.days_to_comply) && (
                 <div className="grid gap-4">
                   <div>
@@ -500,7 +509,7 @@ const Page: React.FC = () => {
               )}
 
             <hr className="my-6" />
-            {applicantDetails && (
+            {applicantDetails && applicantDetails.ranking.status === 'Open' && (
               <>
                 <div className="w-full">
                   <div className="app__label_standard">

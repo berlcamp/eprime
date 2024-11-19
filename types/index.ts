@@ -770,6 +770,7 @@ export interface RankingTypes {
     required: boolean
   }>
   status: string
+  passing_score: string
   display_on_portal: string
   display_on_portal_from: string
   display_on_portal_until: string

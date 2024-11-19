@@ -211,7 +211,7 @@ const Page: React.FC = () => {
                   <th className="hidden md:table-cell app__th">Position</th>
                   <th className="hidden md:table-cell app__th">Type</th>
                   <th className="hidden md:table-cell app__th">
-                    Display On Website
+                    Duration of Posting
                   </th>
                   <th className="hidden md:table-cell app__th">Chairman</th>
                   <th className="hidden md:table-cell app__th">Status</th>
@@ -327,11 +327,11 @@ const Page: React.FC = () => {
                             </div>
                             <div>
                               <span className="app_td_mobile_label">
-                                Display On Job Postings:
+                                Duration of Posting:
                               </span>{' '}
                               {item.display_on_portal ? (
                                 <span>
-                                  Displayed from{' '}
+                                  From{' '}
                                   {format(
                                     new Date(item.display_on_portal_from),
                                     'MMM d, yyyy'
@@ -368,7 +368,7 @@ const Page: React.FC = () => {
                       <td className="hidden md:table-cell app__td">
                         {item.display_on_portal ? (
                           <span>
-                            Displayed from{' '}
+                            From{' '}
                             {format(
                               new Date(item.display_on_portal_from),
                               'MMM d, yyyy'

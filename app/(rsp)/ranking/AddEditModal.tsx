@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import type { Employee, PositionTypes, RankingTypes } from '@/types'
 
 // Redux imports
+import { rankingTypes } from '@/constants'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { useFieldArray, useForm } from 'react-hook-form'
@@ -75,6 +76,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       year: formdata.year,
       department: formdata.department,
       description: formdata.description,
+      passing_score: formdata.passing_score,
       days_to_comply: formdata.days_to_comply,
       status: formdata.status,
       display_on_portal: formdata.display_on_portal,
@@ -169,6 +171,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       year: formdata.year,
       department: formdata.department,
       description: formdata.description,
+      passing_score: formdata.passing_score,
       days_to_comply: formdata.days_to_comply,
       status: formdata.status,
       display_on_portal: formdata.display_on_portal,
@@ -331,6 +334,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       department: editData ? editData.department : '',
       description: editData ? editData.description : '',
       status: editData ? editData.status : '',
+      passing_score: editData ? editData.passing_score : '',
       display_on_portal: editData ? editData.display_on_portal : '',
       display_on_portal_from: editData ? editData.display_on_portal_from : '',
       display_on_portal_until: editData ? editData.display_on_portal_until : '',
@@ -462,20 +466,11 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                               className="app__select_standard"
                             >
                               <option value="">Choose Type</option>
-                              <option value="CAR-RQA">CAR-RQA</option>
-                              <option value="CAR-RQA (Special Items)">
-                                CAR-RQA (Special Items)
-                              </option>
-                              <option value="CAR (Teaching)">
-                                CAR (Teaching)
-                              </option>
-                              <option value="CAR (Non-teaching)">
-                                {' '}
-                                (Non-teaching)
-                              </option>
-                              <option value="Reclassification">
-                                Reclassification
-                              </option>
+                              {rankingTypes.map((rt, i) => (
+                                <option key={i} value={rt}>
+                                  {rt}
+                                </option>
+                              ))}
                             </select>
                             {errors.type && (
                               <div className="app__error_message">
@@ -530,8 +525,9 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                               {editData.position?.name}
                             </div>
                             <div className="app__warning_text !mx-0">
-                              Position can no longer be edited as there are
-                              already applicants for this ranking.
+                              Type, Calendar Year and Position can no longer be
+                              edited as there are already applicants for this
+                              ranking.
                             </div>
                           </>
                         ) : (
@@ -639,7 +635,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                   <div className="app__form_field_container">
                     <div className="w-full">
                       <div className="app__label_standard">
-                        Display on Job Postings From?
+                        Duration of Posting (From)
                       </div>
                       <div>
                         <input
@@ -660,7 +656,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                   <div className="app__form_field_container">
                     <div className="w-full">
                       <div className="app__label_standard">
-                        Display on Job Postings Until?
+                        Duration of Posting (To)
                       </div>
                       <div>
                         <input
@@ -697,6 +693,23 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                         {errors.days_to_comply && (
                           <div className="app__error_message">
                             Last Day of compliance is required
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">Passing Score</div>
+                      <div>
+                        <input
+                          {...register('passing_score', { required: true })}
+                          type="number"
+                          className="app__input_standard"
+                        />
+                        {errors.passing_score && (
+                          <div className="app__error_message">
+                            Passing Score is required
                           </div>
                         )}
                       </div>

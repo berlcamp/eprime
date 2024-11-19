@@ -16,7 +16,7 @@ import React, { Fragment, useEffect, useState } from 'react'
 import Filters from './Filters'
 
 // Types
-import type { ApplicantTypes } from '@/types'
+import type { ApplicantTypes, RankingTypes } from '@/types'
 
 import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
@@ -45,7 +45,10 @@ const Page: React.FC = () => {
   const [filterKeyword, setFilterKeyword] = useState<string>('')
   const [filterRanking, setFilterRanking] = useState<string>('')
   const [filterDisplay, setFilterDisplay] = useState<string>('')
-  const [filterPassingScore, setFilterPassingScore] = useState<string>('50')
+
+  const [rankingDetails, setRankingDetails] = useState<RankingTypes | null>(
+    null
+  )
 
   const { hasAccess, setToast } = useFilter()
   const { supabase } = useSupabase()
@@ -57,7 +60,7 @@ const Page: React.FC = () => {
       let query = supabase
         .from('hrm_ranking_applicants')
         .select(
-          '*, ranking:ranking_id(committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          '*, ranking:ranking_id(type,passing_score,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
           {
             count: 'exact'
           }
@@ -107,6 +110,9 @@ const Page: React.FC = () => {
 
           setList(structguredData)
           setRankList(structguredData)
+
+          // get the ranking details so we can use the passing score
+          setRankingDetails(structguredData[0].applicant.ranking)
         }
       }
     } catch (e) {
@@ -167,17 +173,19 @@ const Page: React.FC = () => {
   // Filter data by Display
   useEffect(() => {
     setLoading(true)
+    const passingScore = rankingDetails?.passing_score ?? 50
+
     if (filterDisplay === 'RQA') {
       const filteredList = rankList.filter(
-        (item) => Number(item.overall_score) > Number(filterPassingScore)
+        (item) => Number(item.overall_score) > Number(passingScore)
       )
       setList(filteredList)
     } else {
       setList(rankList)
     }
-    console.log(filterDisplay, filterPassingScore)
+
     setLoading(false)
-  }, [filterDisplay, filterPassingScore])
+  }, [filterDisplay, rankingDetails])
 
   // Fetch data
   useEffect(() => {
@@ -224,21 +232,19 @@ const Page: React.FC = () => {
                 />
                 <CustomButton
                   containerStyles="app__btn_blue"
-                  title="Display RQA"
+                  title={`Display ${
+                    rankingDetails?.type.includes('RQA') ? 'RQA' : 'CAR'
+                  }`}
                   btnType="button"
                   handleClick={() => setFilterDisplay('RQA')}
                 />
               </div>
               <div className="app__filter_container">
                 <CheckIcon className="w-4 h-4 mr-1" />
-                <div className="text-xs mr-1">RQA Passing Score:</div>
-                <input
-                  value={filterPassingScore}
-                  type="number"
-                  step="any"
-                  onChange={(e) => setFilterPassingScore(e.target.value)}
-                  className="app__filter_input !w-20"
-                />
+                <div className="text-xs">
+                  {rankingDetails?.type.includes('RQA') ? 'RQA' : 'CAR'} Passing
+                  Score: {rankingDetails?.passing_score}
+                </div>
               </div>
             </div>
           )}

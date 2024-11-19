@@ -106,6 +106,14 @@ export const leaveCreditTypes = [
   }
 ]
 
+export const rankingTypes = [
+  'CAR-RQA',
+  'CAR-RQA (Special Items)',
+  'CAR (Teaching)',
+  'CAR (Non-teaching)',
+  'Reclassification'
+]
+
 export const majors = {
   Elementary: ['Kindergarten', 'SPED', 'General Education'],
   'Junior High School': [

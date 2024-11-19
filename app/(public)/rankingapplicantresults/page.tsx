@@ -42,16 +42,32 @@ const Page: React.FC = () => {
               >
                 <div>{index + 1}.</div>
                 <div className="flex flex-col space-y-1">
-                  <div className="font-bold">{item.position?.name}</div>
+                  <div className="font-bold">
+                    {item.position?.name} - {item.year}
+                  </div>
                   <div>{item.description}</div>
                   <div className="pt-2 space-x-2">
-                    <Link href="#" className="app__btn_blue">
+                    <Link
+                      href={`/rankingapplicantresults/ranklist?ref=${item.id}`}
+                      className="app__btn_blue"
+                    >
                       Rank List
                     </Link>
-                    <Link href="#" className="app__btn_blue">
-                      IER
+                    <Link
+                      href={`/rankingapplicantresults/rqa?ref=${item.id}`}
+                      className="app__btn_blue"
+                    >
+                      {(item.type === 'CAR-RQA' ||
+                        item.type === 'CAR-RQA (Special Items)') &&
+                        'RQA'}
+                      {(item.type === 'CAR (Teaching)' ||
+                        item.type === 'CAR (Non-Teaching)') &&
+                        'CAR'}
                     </Link>
-                    <Link href="#" className="app__btn_blue">
+                    <Link
+                      href={`/rankingapplicantresults/nai?ref=${item.id}`}
+                      className="app__btn_blue"
+                    >
                       Notice of Appointment Issued
                     </Link>
                   </div>

@@ -48,12 +48,18 @@ const Page: React.FC = () => {
                 <div className="flex flex-col space-y-1">
                   <div className="font-bold">{item.position?.name}</div>
                   <div>{item.description}</div>
-                  <div className="pt-2">
+                  <div className="pt-2 space-x-2">
                     <Link
                       href={`/apply?ref=${item.id}`}
                       className="app__btn_green"
                     >
                       Apply Now
+                    </Link>
+                    <Link
+                      href={`/rankingapplicantresults/ier?ref=${item.id}`}
+                      className="app__btn_blue"
+                    >
+                      IER
                     </Link>
                   </div>
                 </div>
