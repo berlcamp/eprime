@@ -55,7 +55,7 @@ export default function SearchUserInput({
       if (excludedIds?.some((id) => id === user.id.toString())) return false
 
       // filter only Non Teaching
-      if (nonTeachingOnly && user.position_type !== 'Non-teaching') return false
+      if (nonTeachingOnly && user.position_type === 'Teaching') return false
 
       // filter only Teaching
       if (teachingOnly && user.position_type !== 'Teaching') return false

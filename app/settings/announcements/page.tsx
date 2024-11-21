@@ -231,7 +231,7 @@ const Page: React.FC = () => {
           {showDeleteModal && (
             <DeleteModal
               id={selectedId}
-              table="sws_announcements"
+              table="hrm_announcements"
               hideModal={() => setShowDeleteModal(false)}
             />
           )}
