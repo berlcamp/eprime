@@ -239,7 +239,9 @@ export interface ItemTypes {
   implementing_unit_id?: string
   implementing_unit: ImplementingUnitTypes
   school_id?: string
+  office_id?: string
   hrm_school: SchoolTypes
+  office: Office
   hrm_position: PositionTypes
   hrm_user: Employee
   salary_grade: string
@@ -261,6 +263,7 @@ export interface ItemTypes {
   vacancy_type: string
   track: string
   strand: string
+  assigned_to: string
 }
 
 export interface NosiTypes {

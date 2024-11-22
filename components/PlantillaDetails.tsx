@@ -8,6 +8,7 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
   fetchImplementingUnits,
+  fetchOffices,
   fetchPositions,
   fetchSalaryGrades,
   fetchSchools,
@@ -21,6 +22,7 @@ import type {
   Employee,
   ImplementingUnitTypes,
   ItemTypes,
+  Office,
   PdsPersonalInfomationTypes,
   PositionTypes,
   SalaryGradeTypes,
@@ -51,14 +53,12 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     editData ? editData.hrm_user : null
   )
 
-  const [selectedImplementingUnit, setSelectedImplementingUnit] = useState(
-    editData ? editData.implementing_unit_id : ''
-  )
   const [selectedSchool, setSelectedSchool] = useState('')
   const [selectedPosition, setSelectedPosition] = useState('')
 
   const [salaryGrades, setSalaryGrades] = useState<SalaryGradeTypes[] | []>([])
   const [schools, setSchools] = useState<SchoolTypes[] | []>([])
+  const [offices, setOffices] = useState<Office[] | []>([])
   const [positions, setPositions] = useState<PositionTypes[] | []>([])
   const [implementingUnits, setImplementingUnits] = useState<
     ImplementingUnitTypes[] | []
@@ -114,10 +114,12 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       position_id: formdata.position_id,
       item_number: formdata.item_number,
       vacancy_type: formdata.vacancy_type,
+      assigned_to: formdata.assigned_to,
       track: formdata.track,
       strand: formdata.strand,
       implementing_unit_id: formdata.implementing_unit_id,
       school_id: formdata.school_id ? formdata.school_id : null,
+      office_id: formdata.office_id !== '' ? formdata.office_id : null,
       salary_grade: formdata.salary_grade,
       vice: formdata.vice,
       sex: formdata.sex,
@@ -125,10 +127,12 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
         ? format(new Date(formdata.birthday), 'MM/dd/yyyy')
         : null,
       eligibility: formdata.eligibility,
-      date_of_last_promotion: new Date(formdata.date_of_last_promotion),
-      date_of_original_appointment: new Date(
-        formdata.date_of_original_appointment
-      ),
+      date_of_last_promotion: formdata.date_of_last_promotion
+        ? format(new Date(formdata.date_of_last_promotion), 'MM/dd/yyyy')
+        : null,
+      date_of_original_appointment: formdata.date_of_original_appointment
+        ? format(new Date(formdata.date_of_original_appointment), 'MM/dd/yyyy')
+        : null,
       status: formdata.status,
       authorized_annual_salary: formdata.authorized_annual_salary,
       actual_annual_salary: formdata.actual_annual_salary,
@@ -236,10 +240,12 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       position_id: formdata.position_id,
       item_number: formdata.item_number,
       vacancy_type: formdata.vacancy_type,
+      assigned_to: formdata.assigned_to,
       track: formdata.track,
       strand: formdata.strand,
       implementing_unit_id: formdata.implementing_unit_id,
       school_id: formdata.school_id !== '' ? formdata.school_id : null,
+      office_id: formdata.office_id !== '' ? formdata.office_id : null,
       salary_grade: formdata.salary_grade,
       vice: formdata.vice,
       sex: formdata.sex,
@@ -247,8 +253,12 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
         ? format(new Date(formdata.birthday), 'MM/dd/yyyy')
         : null,
       eligibility: formdata.eligibility,
-      date_of_last_promotion: formdata.date_of_last_promotion,
-      date_of_original_appointment: formdata.date_of_original_appointment,
+      date_of_last_promotion: formdata.date_of_last_promotion
+        ? format(new Date(formdata.date_of_last_promotion), 'MM/dd/yyyy')
+        : null,
+      date_of_original_appointment: formdata.date_of_original_appointment
+        ? format(new Date(formdata.date_of_original_appointment), 'MM/dd/yyyy')
+        : null,
       status: formdata.status,
       authorized_annual_salary: formdata.authorized_annual_salary,
       actual_annual_salary: formdata.actual_annual_salary,
@@ -503,43 +513,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  // manually set the defaultValues of use-form-hook whenever the component receives new props.
   useEffect(() => {
-    // display the default values of dynamic dropdowns
-    if (editData) {
-      setSelectedSchool(editData.school_id ?? '')
-      setSelectedPosition(editData.position_id ?? '')
-    }
-
-    reset({
-      implementing_unit_id: editData ? editData.implementing_unit_id : '',
-      school_id: editData ? editData.school_id : '',
-      position_id: editData ? editData.position_id : '',
-      item_number: editData ? editData.item_number : '',
-      vacancy_type: editData ? editData.vacancy_type : '',
-      track: editData ? editData.track : '',
-      strand: editData ? editData.strand : '',
-      salary_grade: editData ? editData.salary_grade : '',
-      vice: editData ? editData.vice : '',
-      sex: editData ? editData.sex : '',
-      birthday: editData ? editData.birthday : '',
-      eligibility: editData ? editData.eligibility : '',
-      date_of_last_promotion: editData ? editData.date_of_last_promotion : '',
-      date_of_original_appointment: editData
-        ? editData.date_of_original_appointment
-        : '',
-      status: editData ? editData.status : '',
-      authorized_annual_salary: editData
-        ? editData.authorized_annual_salary
-        : '',
-      actual_annual_salary: editData ? editData.actual_annual_salary : '',
-      area_code: editData ? editData.area_code : '',
-      area_type: editData ? editData.area_type : '',
-      level: editData ? editData.level : '',
-      tin_no: editData ? editData.tin_no : '',
-      umid_no: editData ? editData.umid_no : ''
-    })
-
     const fetchPositionsData = async () => {
       const result = await fetchPositions('', 500, 0)
       setPositions(result.data.length > 0 ? result.data : [])
@@ -548,6 +522,11 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     const fetchSchoolsData = async () => {
       const result = await fetchSchools({}, 500, 0)
       setSchools(result.data.length > 0 ? result.data : [])
+    }
+
+    const fetchOfficesData = async () => {
+      const result = await fetchOffices('', 500, 0)
+      setOffices(result.data.length > 0 ? result.data : [])
     }
 
     const fetchIus = async () => {
@@ -564,7 +543,61 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     void fetchIus()
     void fetchPositionsData()
     void fetchSchoolsData()
-  }, [editData, reset])
+    void fetchOfficesData()
+  }, [])
+
+  // manually set the defaultValues of use-form-hook whenever the component receives new props.
+  useEffect(() => {
+    // display the default values of dynamic dropdowns
+    if (editData) {
+      setSelectedSchool(editData.school_id ?? '')
+      setSelectedPosition(editData.position_id ?? '')
+    }
+
+    reset({
+      implementing_unit_id: editData ? editData.implementing_unit_id : '',
+      school_id: editData ? editData.school_id : '',
+      office_id: editData ? editData.office_id : '',
+      position_id: editData ? editData.position_id : '',
+      item_number: editData ? editData.item_number : '',
+      assigned_to: editData ? editData.assigned_to : 'school',
+      vacancy_type: editData ? editData.vacancy_type : '',
+      track: editData ? editData.track : '',
+      strand: editData ? editData.strand : '',
+      salary_grade: editData ? editData.salary_grade : '',
+      vice: editData ? editData.vice : '',
+      sex: editData ? editData.sex : '',
+      birthday: editData
+        ? editData.birthday
+          ? format(new Date(editData.birthday), 'yyyy-MM-dd')
+          : ''
+        : '',
+      eligibility: editData ? editData.eligibility : '',
+      date_of_last_promotion: editData
+        ? editData.date_of_last_promotion
+          ? format(new Date(editData.date_of_last_promotion), 'yyyy-MM-dd')
+          : ''
+        : '',
+      date_of_original_appointment: editData
+        ? editData.date_of_original_appointment
+          ? format(
+              new Date(editData.date_of_original_appointment),
+              'yyyy-MM-dd'
+            )
+          : ''
+        : '',
+      status: editData ? editData.status : '',
+      authorized_annual_salary: editData
+        ? editData.authorized_annual_salary
+        : '',
+      actual_annual_salary: editData ? editData.actual_annual_salary : '',
+      area_code: editData ? editData.area_code : '',
+      area_type: editData ? editData.area_type : '',
+      level: editData ? editData.level : '',
+      tin_no: editData ? editData.tin_no : '',
+      umid_no: editData ? editData.umid_no : ''
+    })
+  }, [editData, salaryGrades, implementingUnits, positions, schools, offices])
 
   return (
     <>
@@ -788,10 +821,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                             {...register('implementing_unit_id', {
                               required: true
                             })}
-                            value={selectedImplementingUnit}
-                            onChange={(e) =>
-                              setSelectedImplementingUnit(e.target.value)
-                            }
                             className="app__input_standard"
                           >
                             <option value="">Choose</option>
@@ -834,6 +863,33 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                       <div className="app__form_field_container">
                         <div className="w-full">
                           <div className="app__label_standard">Assigned To</div>
+                          <div className="mt-3 flex items-start justify-start space-x-2 text-sm">
+                            <label className="space-x-2">
+                              <input
+                                type="radio"
+                                value="school"
+                                checked={watch('assigned_to') === 'school'}
+                                {...register('assigned_to', {
+                                  required: true
+                                })}
+                              />
+                              <span>School</span>
+                            </label>
+
+                            <label className="space-x-2">
+                              <input
+                                type="radio"
+                                value="office"
+                                checked={watch('assigned_to') === 'office'}
+                                {...register('assigned_to', {
+                                  required: true
+                                })}
+                              />
+                              <span>Division Office</span>
+                            </label>
+                          </div>
+                        </div>
+                        {watch('assigned_to') === 'school' && (
                           <div>
                             <select
                               {...register('school_id')}
@@ -843,7 +899,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                               }
                               className="app__input_standard"
                             >
-                              <option value="">Division</option>
+                              <option value="">Choose School</option>
                               {schools.map((school, index) => (
                                 <option key={index} value={school.id}>
                                   {school.name}
@@ -851,7 +907,22 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                               ))}
                             </select>
                           </div>
-                        </div>
+                        )}
+                        {watch('assigned_to') === 'office' && (
+                          <div>
+                            <select
+                              {...register('office_id')}
+                              className="app__input_standard"
+                            >
+                              <option value="">Choose Division Office</option>
+                              {offices.map((office, index) => (
+                                <option key={index} value={office.id}>
+                                  {office.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
                       </div>
                       <div className="app__form_field_container">
                         <div className="w-full">
