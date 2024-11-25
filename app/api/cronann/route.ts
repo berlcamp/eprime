@@ -19,7 +19,13 @@ export async function GET() {
 
   if (incrementError) {
     return NextResponse.json(incrementError)
-  } else {
-    return NextResponse.json('Cron completed', data)
   }
+
+  const { error: ctoError } = await supabase.rpc('automated_cto_expiration')
+
+  if (ctoError) {
+    return NextResponse.json(ctoError)
+  }
+
+  return NextResponse.json('Cron completed', data)
 }

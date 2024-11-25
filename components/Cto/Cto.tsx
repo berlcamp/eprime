@@ -27,6 +27,7 @@ export default function Cto({ userId }: { userId: string }) {
   const [list, setList] = useState<CtoUserTypes[]>([])
   const [editData, setEditData] = useState<CtoUserTypes | null>(null)
 
+  const [balance, setBalance] = useState(0)
   const [showUploadModal, setShowUploadModal] = useState(false)
 
   const [perPageCount, setPerPageCount] = useState<number>(10)
@@ -103,6 +104,22 @@ export default function Cto({ userId }: { userId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perPageCount])
 
+  useEffect(() => {
+    void (async () => {
+      const result = await fetchMyCtos({ userId }, 999, 0)
+      let bal = 0
+      if (result.data) {
+        const ctos: CtoUserTypes[] = result.data
+        ctos.forEach((cto) => {
+          if (cto.status !== 'Expired') {
+            bal += cto.coc
+          }
+        })
+      }
+      setBalance(bal)
+    })()
+  }, [])
+
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
   return (
@@ -110,6 +127,12 @@ export default function Cto({ userId }: { userId: string }) {
       <div>
         <div className="app__title">
           <Title title="CTOs" />
+        </div>
+
+        <div className="mt-2 mx-4 text-right">
+          <span className="app__status_container_green">
+            Active COC Balance: {balance}
+          </span>
         </div>
 
         <div className="app__warning_text">

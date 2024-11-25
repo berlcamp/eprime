@@ -28,7 +28,7 @@ export default function ServiceRecords({ userId }: { userId: string }) {
 
     try {
       const result = await fetchServiceRecords(userId, perPageCount, 0)
-      console.log('result.data', result.data)
+
       // update the list in redux
       dispatch(updateList(result.data))
 

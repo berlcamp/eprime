@@ -584,6 +584,15 @@ export interface FollowersTypes {
   user_id: string
 }
 
+export interface LeaveCocTypes {
+  id: string
+  tracker_id: string
+  tracker: DocumentTypes
+  use_coc: string
+  user_cto_id: string
+  user_cto: CtoUserTypes
+}
+
 export interface DocumentTypes {
   id: string
   type: string
@@ -621,6 +630,7 @@ export interface DocumentTypes {
   leave_credit_use_maternity: string
   leave_days_with_pay: string
   leave_days_without_pay: string
+  leave_cocs: LeaveCocTypes[]
 
   locator_slip_purpose: string
   locator_slip_type: string

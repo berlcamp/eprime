@@ -1,7 +1,12 @@
 'use client'
 
 import { useSupabase } from '@/context/SupabaseProvider'
-import type { Employee, LeaveCreditTypes } from '@/types'
+import type {
+  CtoUserTypes,
+  DocumentTypes,
+  Employee,
+  LeaveCreditTypes
+} from '@/types'
 import { useEffect, useState } from 'react'
 
 interface ModalProps {
@@ -58,6 +63,65 @@ export default function LeaveBalanceBoxes({ user }: ModalProps) {
             }
           })
         }
+
+        // Get COC balance
+        const { data: ctos } = await supabase
+          .from('hrm_cto_users')
+          .select()
+          .eq('hrm_user_id', user.id)
+          .gte('expiration', new Date().toISOString())
+          .gt('coc', 0)
+
+        if (ctos) {
+          ctos.forEach((cto: CtoUserTypes) => {
+            if (cto.status !== 'Expired') {
+              balances.push({
+                type: `COC (Exp. ${cto.expiration})`,
+                balance: cto.coc.toString()
+              })
+            }
+          })
+        }
+
+        // Get force leave if month is december
+        const now = new Date()
+        const currentYear = now.getFullYear()
+        const currentMonth = now.getMonth() + 1 // Months are zero-based, so December is 11 + 1 = 12
+
+        // Only perform the query if the current month is December
+        if (currentMonth >= 11 && user.position_type !== 'Teaching') {
+          // Fetch the data
+          const { data: leaveRequests } = await supabase
+            .from('hrm_request_trackers')
+            .select('leave_credit_use_vl, leave_from')
+            .eq('created_by', user.id)
+            .eq('type', 'Leave')
+            .eq('current_status', 'Approved')
+            .gte('leave_from', `${currentYear}-01-01`) // Start of the year
+            .lte('leave_from', `${currentYear}-12-31`) // End of the year
+
+          if (leaveRequests) {
+            // Calculate the sum
+            const totalVlUsed = leaveRequests.reduce(
+              (sum: number, record: DocumentTypes) =>
+                sum + (Number(record.leave_credit_use_vl) || 0),
+              0
+            )
+
+            if (totalVlUsed <= 5) {
+              balances.push({
+                type: 'Force Leave',
+                balance: (5 - Number(totalVlUsed)).toString()
+              })
+            }
+          } else {
+            balances.push({
+              type: 'Force Leave',
+              balance: '5'
+            })
+          }
+        }
+
         setBalanceBoxes(balances)
       } catch (e) {
         console.error(e)

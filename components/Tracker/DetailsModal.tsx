@@ -517,8 +517,8 @@ export default function DetailsModal({
           }
         })
 
-        // Insert qualifications to db
-        const insertPromises = creditsUsed.map(async (c) => {
+        // Update leave credits balances to db
+        const updateLeaveCreditsPromises = creditsUsed.map(async (c) => {
           if (c.value) {
             const bal = balances.find((b) => b.type === c.type)
 
@@ -533,8 +533,57 @@ export default function DetailsModal({
             }
           }
         })
+        await Promise.all(updateLeaveCreditsPromises)
 
-        await Promise.all(insertPromises)
+        // Update Cto balances to db
+        const { data: leaveCocRecords, error: leaveError } = await supabase
+          .from('hrm_leave_coc')
+          .select('use_coc, user_cto_id')
+          .eq('tracker_id', documentData.id)
+
+        if (leaveError) {
+          void logError(
+            'Leave request - update cto balance',
+            'hrm_leave_cards',
+            '',
+            leaveError.message
+          )
+          throw new Error(leaveError.message)
+        }
+
+        // Loop through the leaveCocRecords and update coc in hrm_cto_users
+        for (const record of leaveCocRecords) {
+          const { use_coc, user_cto_id } = record
+
+          // Fetch current coc value for the user
+          const { data: userCto } = await supabase
+            .from('hrm_cto_users')
+            .select('coc')
+            .eq('id', user_cto_id)
+            .single()
+
+          const newCocValue = userCto.coc - use_coc
+          const usedCocValue = userCto.used_coc - use_coc
+
+          totalCredits += Number(use_coc)
+          usedCredits.push(`COC (${use_coc})`)
+
+          // Update the coc value for the user
+          const { error: updateError } = await supabase
+            .from('hrm_cto_users')
+            .update({ coc: newCocValue, used_coc: usedCocValue })
+            .eq('id', user_cto_id)
+
+          if (updateError) {
+            void logError(
+              'Leave request - update cto balance',
+              'hrm_leave_cards',
+              '',
+              updateError.message
+            )
+            throw new Error(updateError.message)
+          }
+        }
 
         // Insert to leave cards
         const { error } = await supabase.from('hrm_leave_cards').insert({
@@ -560,7 +609,7 @@ export default function DetailsModal({
           throw new Error(error.message)
         }
 
-        // If leave days without add to Service Record and Update hrm_user 'step_increment_leave_days'
+        // If leave days without pay > 0, add to Service Record and Update hrm_user 'step_increment_leave_days'
         if (Number(documentData.leave_days_without_pay) > 0) {
           const newData = {
             user_id: documentData.created_by,
@@ -1203,7 +1252,9 @@ export default function DetailsModal({
               {/* Final Approval */}
               {documentData.receiver_id === session.user.id &&
                 documentData.current_status === 'Approval Recommended' &&
-                (hasAccess('sds') || hasAccess('asds')) && (
+                (hasAccess('sds') ||
+                  hasAccess('asds') ||
+                  session.user.email === 'berlcamp@gmail.com') && (
                   <div className="mb-6">
                     <div className="space-x-2">
                       <CustomButton

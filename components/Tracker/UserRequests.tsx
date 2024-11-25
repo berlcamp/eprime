@@ -1,22 +1,35 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { PerPage, TableRowLoading, CustomButton, ShowMore, UserBlock, Title } from '@/components'
+import {
+  CustomButton,
+  PerPage,
+  ShowMore,
+  TableRowLoading,
+  Title,
+  UserBlock
+} from '@/components'
 import DetailsModal from '@/components/Tracker/DetailsModal'
 import { format } from 'date-fns'
+import { useEffect, useState } from 'react'
 
 // Types
 import type { DocumentTypes } from '@/types'
 
 // Redux imports
-import { useSelector, useDispatch } from 'react-redux'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
+import AddDocumentModal from '@/app/(hr)/tracker/AddDocumentModal'
+import { requestTypes } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { TagIcon } from '@heroicons/react/20/solid'
-import { requestTypes } from '@/constants'
-import AddDocumentModal from '@/app/(hr)/tracker/AddDocumentModal'
+import { useDispatch, useSelector } from 'react-redux'
 
-export default function UserRequests ({ forDashboard, userId }: { forDashboard: boolean, userId: string }) {
+export default function UserRequests({
+  forDashboard,
+  userId
+}: {
+  forDashboard: boolean
+  userId: string
+}) {
   const [loading, setLoading] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState<DocumentTypes | null>(null)
@@ -42,7 +55,10 @@ export default function UserRequests ({ forDashboard, userId }: { forDashboard: 
     try {
       let query = supabase
         .from('hrm_request_trackers')
-        .select('*,creator:created_by(id,firstname,lastname,middlename,avatar_url,position_type),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)', { count: 'exact' })
+        .select(
+          '*, leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+          { count: 'exact' }
+        )
 
       if (!clear) {
         // Filter type
@@ -97,7 +113,10 @@ export default function UserRequests ({ forDashboard, userId }: { forDashboard: 
     try {
       let query = supabase
         .from('hrm_request_trackers')
-        .select('*,creator:created_by(id,firstname,lastname,middlename,avatar_url,position_type),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)', { count: 'exact' })
+        .select(
+          '*,creator:created_by(id,firstname,lastname,middlename,avatar_url,position_type),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+          { count: 'exact' }
+        )
         .eq('created_by', userId)
 
       // Filter type
@@ -153,7 +172,7 @@ export default function UserRequests ({ forDashboard, userId }: { forDashboard: 
   useEffect(() => {
     setList([])
     void fetchData()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perPageCount, clear])
 
   // Update list whenever list in redux updates
@@ -169,181 +188,212 @@ export default function UserRequests ({ forDashboard, userId }: { forDashboard: 
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
   return (
-    <div className='mt-4'>
-      {
-        !forDashboard &&
-          <>
-          <div className='app__title'>
-            <Title title='Requests'/>
-            {
-              userId === session.user.id &&
-                <CustomButton
-                  containerStyles='app__btn_green'
-                  title='Create New Request'
-                  btnType='button'
-                  handleClick={() => setShowAddModal(true)}
-                />
-            }
+    <div className="mt-4">
+      {!forDashboard && (
+        <>
+          <div className="app__title">
+            <Title title="Requests" />
+            {userId === session.user.id && (
+              <CustomButton
+                containerStyles="app__btn_green"
+                title="Create New Request"
+                btnType="button"
+                handleClick={() => setShowAddModal(true)}
+              />
+            )}
           </div>
 
-          <div className='app__warning_text'>You can create your request here such as Leave Request, Travel Authority, Pass Slips, Undertime Permit, Locator Slip, and Service Record Print Request.</div>
+          <div className="app__warning_text">
+            You can create your request here such as Leave Request, Travel
+            Authority, Pass Slips, Undertime Permit, Locator Slip, and Service
+            Record Print Request.
+          </div>
 
           {/* Filters */}
-          <div className='app__filters'>
-            <div className=''>
-              <div className='items-center space-y-2 space-x-1'>
-                <form onSubmit={fetchData} className='inline-flex items-center app__filter_field_container'>
-                  <div className='items-center space-y-1'>
-                    <div className='app__filter_container'>
-                      <TagIcon className="w-4 h-4 mr-1"/>
+          <div className="app__filters">
+            <div className="">
+              <div className="items-center space-y-2 space-x-1">
+                <form
+                  onSubmit={fetchData}
+                  className="inline-flex items-center app__filter_field_container"
+                >
+                  <div className="items-center space-y-1">
+                    <div className="app__filter_container">
+                      <TagIcon className="w-4 h-4 mr-1" />
                       <select
                         value={filterType}
-                        onChange={e => setFilterType(e.target.value)}
-                        className='app__filter_select'>
-                          <option value=''>Type:</option>
-                          {
-                            requestTypes.map((type, index) => <option key={index} value={type}>{type}</option>)
-                          }
+                        onChange={(e) => setFilterType(e.target.value)}
+                        className="app__filter_select"
+                      >
+                        <option value="">Type:</option>
+                        {requestTypes.map((type, index) => (
+                          <option key={index} value={type}>
+                            {type}
+                          </option>
+                        ))}
                       </select>
                     </div>
-                    <div className='app__filter_container'>
-                      <TagIcon className="w-4 h-4 mr-1"/>
+                    <div className="app__filter_container">
+                      <TagIcon className="w-4 h-4 mr-1" />
                       <select
                         value={filterStatus}
-                        onChange={e => setFilterStatus(e.target.value)}
-                        className='app__filter_select'>
-                          <option value=''>Status:</option>
-                          <option value='Approved'>Approved</option>
-                          <option value='Approval Recommended'>Approval Recommended</option>
-                          <option value='For Verification'>For Verification</option>
-                          <option value='Disapproved'>Disapproved</option>
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="app__filter_select"
+                      >
+                        <option value="">Status:</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Approval Recommended">
+                          Approval Recommended
+                        </option>
+                        <option value="For Verification">
+                          For Verification
+                        </option>
+                        <option value="Disapproved">Disapproved</option>
                       </select>
                     </div>
                   </div>
                 </form>
               </div>
-              <div className='flex items-center space-x-2 mt-4'>
+              <div className="flex items-center space-x-2 mt-4">
                 <CustomButton
-                      containerStyles='app__btn_green'
-                      title='Apply Filter'
-                      btnType='button'
-                      handleClick={fetchData}
-                    />
+                  containerStyles="app__btn_green"
+                  title="Apply Filter"
+                  btnType="button"
+                  handleClick={fetchData}
+                />
                 <CustomButton
-                    containerStyles='app__btn_gray'
-                    title='Clear Filter'
-                    btnType='button'
-                    handleClick={handleClear}
-                  />
+                  containerStyles="app__btn_gray"
+                  title="Clear Filter"
+                  btnType="button"
+                  handleClick={handleClear}
+                />
               </div>
             </div>
           </div>
-          </>
-      }
+        </>
+      )}
 
       {/* Per Page */}
       <PerPage
         showingCount={showingCount}
         resultsCount={resultsCount}
         perPageCount={perPageCount}
-        setPerPageCount={setPerPageCount}/>
+        setPerPageCount={setPerPageCount}
+      />
 
       {/* Main Content */}
       <div>
         <table className="app__table">
           <thead className="app__thead">
-              <tr>
-                    <th className="app__th pl-4"></th>
-                    <th className="app__th w-16">
-                    </th>
-                    <th className="app__th">
-                      Reference Code
-                    </th>
-                    <th className="app__th">
-                      Request Type
-                    </th>
-                    <th className="hidden sm:table-cell app__th">
-                      Details
-                    </th>
-                    <th className="hidden sm:table-cell app__th">
-                      Requester
-                    </th>
-                    <th className="hidden sm:table-cell app__th">
-                      Current Status
-                    </th>
-              </tr>
+            <tr>
+              <th className="app__th pl-4"></th>
+              <th className="app__th w-16"></th>
+              <th className="app__th">Reference Code</th>
+              <th className="app__th">Request Type</th>
+              <th className="hidden sm:table-cell app__th">Details</th>
+              <th className="hidden sm:table-cell app__th">Requester</th>
+              <th className="hidden sm:table-cell app__th">Current Status</th>
+            </tr>
           </thead>
           <tbody>
-            {
-              !isDataEmpty && list.map((item: DocumentTypes, index: number) => (
-                <tr key={index} className='app__tr'>
-                  <td className='w-6 pl-4 app__td'>
-                  </td>
-                  <td className='pl-4 app__td'>
+            {!isDataEmpty &&
+              list.map((item: DocumentTypes, index: number) => (
+                <tr key={index} className="app__tr">
+                  <td className="w-6 pl-4 app__td"></td>
+                  <td className="pl-4 app__td">
                     <div>
                       <button
                         onClick={() => handleShowDetailsModal(item)}
                         className="bg-emerald-500 hover:bg-emerald-600 border border-emerald-600 font-medium px-1 py-px text-xs text-white rounded-sm"
-                        >Request&nbsp;Details</button>
+                      >
+                        Request&nbsp;Details
+                      </button>
                     </div>
                   </td>
-                  <td className='app__td'>
-                    <div className='font-medium'>{item.reference_code}</div>
+                  <td className="app__td">
+                    <div className="font-medium">{item.reference_code}</div>
                   </td>
-                  <td className='app__td'>
-                    <div className='font-medium'>{item.type}</div>
+                  <td className="app__td">
+                    <div className="font-medium">{item.type}</div>
                   </td>
-                  <td className='hidden sm:table-cell app__td'>
-                    {
-                      (item.particulars && item.particulars.trim() !== '') &&
-                        <div><span className='font-light'>Particulars:</span> <span className='font-medium'>{item.particulars}</span></div>
-                    }
-                    <div><span className='font-light'>Date Requested:</span> <span className='font-medium'>{format(new Date(item.created_at), 'MMM dd, yyyy h:mm a')}</span></div>
+                  <td className="hidden sm:table-cell app__td">
+                    {item.particulars && item.particulars.trim() !== '' && (
+                      <div>
+                        <span className="font-light">Particulars:</span>{' '}
+                        <span className="font-medium">{item.particulars}</span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-light">Date Requested:</span>{' '}
+                      <span className="font-medium">
+                        {format(
+                          new Date(item.created_at),
+                          'MMM dd, yyyy h:mm a'
+                        )}
+                      </span>
+                    </div>
                   </td>
-                  <td className='hidden sm:table-cell app__td'>
-                      {item.creator && <UserBlock user={item.creator}/>}
+                  <td className="hidden sm:table-cell app__td">
+                    {item.creator && <UserBlock user={item.creator} />}
                   </td>
-                  <td className='hidden sm:table-cell app__td'>
-                    {item.current_status === 'Cancelled' && <span className='text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium'>{item.current_status}</span>}
-                    {item.current_status === 'Approval Recommended' && <span className='text-green-700 px-1 bg-green-100 border border-green-500 font-medium'>{item.current_status}</span>}
-                    {item.current_status === 'Approved' && <span className='text-green-900 px-1 bg-green-300 border border-green-700 font-medium'>{item.current_status}</span>}
-                    {item.current_status === 'Disapproved' && <span className='text-red-700 px-1 bg-red-100 border border-red-500 font-medium'>{item.current_status}</span>}
-                    {item.current_status === 'For Verification' && <span className='text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium'>{item.current_status}</span>}
-                    {item.approver && <div className='mt-1'>by {item.approver.firstname} {item.approver.middlename} {item.approver.lastname}</div>}
+                  <td className="hidden sm:table-cell app__td">
+                    {item.current_status === 'Cancelled' && (
+                      <span className="text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium">
+                        {item.current_status}
+                      </span>
+                    )}
+                    {item.current_status === 'Approval Recommended' && (
+                      <span className="text-green-700 px-1 bg-green-100 border border-green-500 font-medium">
+                        {item.current_status}
+                      </span>
+                    )}
+                    {item.current_status === 'Approved' && (
+                      <span className="text-green-900 px-1 bg-green-300 border border-green-700 font-medium">
+                        {item.current_status}
+                      </span>
+                    )}
+                    {item.current_status === 'Disapproved' && (
+                      <span className="text-red-700 px-1 bg-red-100 border border-red-500 font-medium">
+                        {item.current_status}
+                      </span>
+                    )}
+                    {item.current_status === 'For Verification' && (
+                      <span className="text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium">
+                        {item.current_status}
+                      </span>
+                    )}
+                    {item.approver && (
+                      <div className="mt-1">
+                        by {item.approver.firstname} {item.approver.middlename}{' '}
+                        {item.approver.lastname}
+                      </div>
+                    )}
                   </td>
                 </tr>
-              ))
-            }
-            { loading && <TableRowLoading cols={7} rows={2}/> }
+              ))}
+            {loading && <TableRowLoading cols={7} rows={2} />}
           </tbody>
         </table>
-        {
-          (!loading && isDataEmpty) &&
-            <div className='app__norecordsfound'>No records found.</div>
-        }
+        {!loading && isDataEmpty && (
+          <div className="app__norecordsfound">No records found.</div>
+        )}
       </div>
 
       {/* Show More */}
-      {
-        (resultsCount > showingCount && !loading) &&
-          <ShowMore
-            handleShowMore={handleShowMore}/>
-      }
+      {resultsCount > showingCount && !loading && (
+        <ShowMore handleShowMore={handleShowMore} />
+      )}
       {/* Details Modal */}
-      {
-        (showDetailsModal && selectedItem) && (
-          <DetailsModal
-            documentData={selectedItem}
-            hideModal={() => setShowDetailsModal(false)}/>
-        )
-      }
+      {showDetailsModal && selectedItem && (
+        <DetailsModal
+          documentData={selectedItem}
+          hideModal={() => setShowDetailsModal(false)}
+        />
+      )}
       {/* Add Document Modal */}
-      {
-        showAddModal && (
-          <AddDocumentModal
-            hideModal={() => setShowAddModal(false)}/>
-        )
-      }
+      {showAddModal && (
+        <AddDocumentModal hideModal={() => setShowAddModal(false)} />
+      )}
     </div>
   )
 }

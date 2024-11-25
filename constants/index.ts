@@ -95,12 +95,6 @@ export const leaveCreditTypes = [
   {
     position_type: 'Non-teaching',
     gender: 'All',
-    type: 'Compensatory Overtime Credit',
-    credits: 0
-  },
-  {
-    position_type: 'Non-teaching',
-    gender: 'All',
     type: 'Vacation Leave',
     credits: 0
   }

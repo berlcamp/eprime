@@ -25,7 +25,7 @@ import { useDispatch, useSelector } from 'react-redux'
 
 // Types
 import type { CtoTypes, CtoUserTypes, Employee } from '@/types'
-import { fetchLeaveCards, logError } from '@/utils/fetchApi'
+import { logError } from '@/utils/fetchApi'
 
 interface ModalProps {
   hideModal: () => void
@@ -151,8 +151,6 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
     if (!selectedRow) return
 
     try {
-      const refCode = ctoData.reference_code
-
       const { error } = await supabase
         .from('hrm_cto_users')
         .update({ is_approved: true })
@@ -163,7 +161,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       // insert to notifications
       const { error2 } = await supabase.from('hrm_notifications').insert({
         message: 'Your <b>CTO</b> has been approved.',
-        url: `/myctos/${refCode}`,
+        url: `/profile/${selectedRow.hrm_user_id}?page=ctos`,
         type: 'cto',
         user_id: selectedRow.hrm_user_id,
         cto_id: ctoData.id,
@@ -172,23 +170,9 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
 
       if (error2) throw new Error(error2.message)
 
-      let coc = selectedRow.coc
-      // Get the previous COC balance from leave cards
-      const result = await fetchLeaveCards(
-        selectedRow.hrm_user_id,
-        'Compensatory Overtime Credit',
-        10,
-        0
-      )
-      if (result.count && result.count > 0) {
-        // first index of array should be the latest and updated balance
-        coc = coc + Number(result.data[0].balance)
-      }
-
       // Update leave card
       const newData = {
         type: 'Compensatory Overtime Credit',
-        balance: coc,
         remarks: '',
         credits_earned: ctoData.coc,
         user_id: selectedRow.hrm_user_id,

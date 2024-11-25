@@ -37,7 +37,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
       middlename: formdata.middlename,
       lastname: formdata.lastname,
       ext: formdata.ext,
-      birthday: formdata.birthday,
+      birthday: formdata.birthday ?? null,
       place_of_birth: formdata.place_of_birth,
       gender: formdata.gender,
       civil_status: formdata.civil_status,
