@@ -1,13 +1,18 @@
-import { CustomButton, LeaveBalanceBoxes } from '@/components'
+import {
+  CustomButton,
+  LeaveBalanceBoxes,
+  TwoColTableLoading
+} from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { CtoUserTypes, DocumentTypes, LeaveCreditTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
+import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 
 interface PropTypes {
-  documentData: DocumentTypes
+  requestData: DocumentTypes
 }
 
 interface boxes {
@@ -17,6 +22,7 @@ interface boxes {
 
 interface CtosTypes {
   id: string
+  cto_user_id: string
   coc: number
   use_coc: string
   expiration: string
@@ -25,7 +31,6 @@ interface CtosTypes {
 interface FormTypes {
   vl: string
   sl: string
-  coc: string
   sc: string
   adoption: string
   vawc: string
@@ -40,10 +45,13 @@ interface FormTypes {
   cocs: CtosTypes[]
 }
 
-export default function CreditsCertification({ documentData }: PropTypes) {
+export default function CreditsCertification({ requestData }: PropTypes) {
   const { supabase, session } = useSupabase()
   const { setToast, hasAccess } = useFilter()
+  const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [documentData, setDocumentData] = useState<DocumentTypes>(requestData)
+  const [refresh, setRefresh] = useState(false)
 
   const [creditsUsed, setCreditsUsed] = useState<boxes[] | []>([])
   const [leaveCreditBalances, setLeaveCreditBalances] = useState<
@@ -73,7 +81,6 @@ export default function CreditsCertification({ documentData }: PropTypes) {
   const [
     vl,
     sl,
-    coc,
     sc,
     adoption,
     vawc,
@@ -89,7 +96,6 @@ export default function CreditsCertification({ documentData }: PropTypes) {
   ] = watch([
     'vl',
     'sl',
-    'coc',
     'sc',
     'adoption',
     'vawc',
@@ -103,6 +109,12 @@ export default function CreditsCertification({ documentData }: PropTypes) {
     'maternity',
     'cocs'
   ])
+
+  // Watch the `use_coc` values
+  const watchedCocs = useWatch({
+    control,
+    name: 'cocs' // Watches the `cocs` field array
+  })
 
   const onSubmit = async (formdata: FormTypes) => {
     if (saving) return
@@ -118,8 +130,6 @@ export default function CreditsCertification({ documentData }: PropTypes) {
         formdata.vl && Number(formdata.vl) > 0 ? formdata.vl : null,
       leave_credit_use_sl:
         formdata.sl && Number(formdata.sl) > 0 ? formdata.sl : null,
-      leave_credit_use_coc:
-        formdata.coc && Number(formdata.coc) > 0 ? formdata.coc : null,
       leave_credit_use_sc:
         formdata.sc && Number(formdata.sc) > 0 ? formdata.sc : null,
 
@@ -178,13 +188,17 @@ export default function CreditsCertification({ documentData }: PropTypes) {
       }
 
       // Prepare data for table update Leave CTO
-      const updatedCtoData = formdata.cocs.map(
-        (field: { id: string; use_coc: string }) => ({
+      const updatedCtoData = formdata.cocs
+        .filter(
+          (field: { use_coc: string }) =>
+            field.use_coc && parseFloat(field.use_coc) > 0
+        )
+        .map((field: { id: string; use_coc: string }) => ({
           tracker_id: documentData.id,
           user_cto_id: field.id,
           use_coc: field.use_coc
-        })
-      )
+        }))
+
       await supabase
         .from('hrm_leave_coc')
         .delete()
@@ -210,8 +224,12 @@ export default function CreditsCertification({ documentData }: PropTypes) {
 
       // pop up the success message
       setToast('success', 'Successfully saved.')
+
+      setRefresh(!refresh)
     } catch (e) {
       console.error(e)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -222,9 +240,6 @@ export default function CreditsCertification({ documentData }: PropTypes) {
     }
     if (Number(vl) > 0) {
       balances.push({ type: 'VL', balance: Number(vl) })
-    }
-    if (Number(coc) > 0) {
-      balances.push({ type: 'COC', balance: Number(coc) })
     }
     if (Number(sc) > 0) {
       balances.push({ type: 'Service Credit', balance: Number(sc) })
@@ -261,7 +276,6 @@ export default function CreditsCertification({ documentData }: PropTypes) {
     }
 
     setCreditsUsed(balances)
-    console.log('balances', balances)
 
     let withpay = 0
     balances.forEach((b) => {
@@ -281,7 +295,6 @@ export default function CreditsCertification({ documentData }: PropTypes) {
   }, [
     vl,
     sl,
-    coc,
     sc,
     adoption,
     vawc,
@@ -293,6 +306,7 @@ export default function CreditsCertification({ documentData }: PropTypes) {
     rehab,
     paternity,
     maternity,
+    watchedCocs,
     cocs
   ])
 
@@ -304,9 +318,6 @@ export default function CreditsCertification({ documentData }: PropTypes) {
         : '',
       sl: documentData.leave_credit_use_sl
         ? documentData.leave_credit_use_sl
-        : '',
-      coc: documentData.leave_credit_use_coc
-        ? documentData.leave_credit_use_coc
         : '',
       sc: documentData.leave_credit_use_sc
         ? documentData.leave_credit_use_sc
@@ -349,18 +360,45 @@ export default function CreditsCertification({ documentData }: PropTypes) {
       const { data } = await supabase
         .from('hrm_leave_credits')
         .select()
-        .eq('user_id', documentData.creator.id)
+        .eq('user_id', documentData.creator?.id)
       setLeaveCreditBalances(data)
     }
     void fetchBalances()
   }, [])
 
   useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('hrm_request_trackers')
+          .select(
+            '*, leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,position_type,hrm_positions:position_id(name),hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+            { count: 'exact' }
+          )
+          .eq('id', requestData.id)
+          .single()
+
+        if (error) {
+          throw new Error(error.message)
+        }
+
+        setDocumentData(data)
+      } catch (error) {
+        console.error('fetch error xx', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    void fetchData()
+  }, [refresh])
+
+  useEffect(() => {
     void (async () => {
       const { data } = await supabase
         .from('hrm_cto_users')
-        .select()
-        .eq('hrm_user_id', documentData.creator.id)
+        .select('*')
+        .eq('hrm_user_id', documentData.creator?.id)
         .gte('expiration', new Date().toISOString())
         .gt('coc', 0)
       const bal: CtosTypes[] = []
@@ -368,30 +406,31 @@ export default function CreditsCertification({ documentData }: PropTypes) {
       if (data) {
         const ctos: CtoUserTypes[] = data
         ctos.forEach((cto) => {
-          if (cto.status !== 'Expired') {
-            bal.push({
-              id: cto.id,
-              coc: cto.coc,
-              expiration: cto.expiration,
-              use_coc: ''
-            })
-          }
+          bal.push({
+            id: cto.id,
+            cto_user_id: cto.id,
+            coc: cto.coc,
+            expiration: cto.expiration,
+            use_coc: ''
+          })
         })
       }
       // Populate dynamic fields in the form
       const cocsValues = bal.map((item) => ({
         id: item.id,
+        cto_user_id: item.id,
         coc: item.coc,
         use_coc:
           documentData.leave_cocs?.find(
-            (lcoc) => lcoc.user_cto_id.toString() === item.id.toString()
+            (lcoc) =>
+              lcoc.user_cto_id.toString() === item.cto_user_id.toString()
           )?.use_coc ?? '',
         expiration: item.expiration
       }))
 
       setValue('cocs', cocsValues)
     })()
-  }, [])
+  }, [documentData])
 
   return (
     <div className="w-full px-4">
@@ -402,509 +441,557 @@ export default function CreditsCertification({ documentData }: PropTypes) {
         </div>
         <div className="flex-grow bg-gray-300 h-px"></div>
       </div>
-      <div className="app__form_field_container">
-        <div className="w-full">
-          {
-            // Only display if leave request is not yet approved, disapproved or cancelled
-            documentData.current_status !== 'Approved' &&
+      {loading && <TwoColTableLoading />}
+      {!loading && (
+        <div className="app__form_field_container">
+          <div className="w-full">
+            {
+              // Only display if leave request is not yet approved, disapproved or cancelled
+              documentData.current_status !== 'Approved' &&
+                documentData.current_status !== 'Disapproved' &&
+                documentData.current_status !== 'Cancelled' && (
+                  <>
+                    <div className="text-gray-600 text-xs">
+                      Requester current balance:
+                    </div>
+                    <div className="mt-2">
+                      <LeaveBalanceBoxes user={documentData.creator} />
+                    </div>
+                  </>
+                )
+            }
+            {hasAccess('certify_leave_credits') &&
+              documentData.receiver_id === session.user.id &&
               documentData.current_status !== 'Disapproved' &&
+              documentData.current_status !== 'Approved' &&
               documentData.current_status !== 'Cancelled' && (
-                <>
-                  <div className="text-gray-600 text-xs">
-                    Requester current balance:
+                <form onSubmit={handleSubmit(onSubmit)}>
+                  <div className="text-gray-600 text-xs mt-4 mb-2">
+                    Use the following credits for this Leave:
                   </div>
-                  <div className="mt-2">
-                    <LeaveBalanceBoxes user={documentData.creator} />
-                  </div>
-                </>
-              )
-          }
-          {hasAccess('certify_leave_credits') &&
-            documentData.receiver_id === session.user.id &&
-            documentData.current_status !== 'Disapproved' &&
-            documentData.current_status !== 'Approved' &&
-            documentData.current_status !== 'Cancelled' && (
-              <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="text-gray-600 text-xs mt-4 mb-2">
-                  Use the following credits for this Leave:
-                </div>
-                <div className="text-gray-600 text-xs space-y-2">
-                  {documentData.creator.position_type !== 'Teaching' && (
-                    <>
-                      {fields.map((field, index) => (
-                        <div
-                          key={index}
-                          className="flex space-x-2 items-center"
-                        >
-                          <span className="font-bold">
-                            CTO (COC Balance: {field.coc}, Exp.{' '}
-                            {field.expiration}):
-                          </span>
+                  <div className="text-gray-600 text-xs space-y-2">
+                    {documentData.creator?.position_type !== 'Teaching' && (
+                      <>
+                        {fields.map((field, index) => (
+                          <div
+                            key={index}
+                            className="flex space-x-2 items-center"
+                          >
+                            <span className="font-bold">
+                              COC (Balance: {field.coc}, Exp.{' '}
+                              {format(
+                                new Date(field.expiration),
+                                'MMM d, yyyy'
+                              )}
+                              ):
+                            </span>
+                            <input
+                              {...register(`cocs.${index}.use_coc`, {
+                                max: {
+                                  value: field.coc,
+                                  message: `Cannot exceed ${field.coc}`
+                                },
+                                min: {
+                                  value: 0,
+                                  message: 'Invalid Input'
+                                }
+                              })}
+                              type="number"
+                              step="any"
+                              className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                            />
+                            <input
+                              {...register(`cocs.${index}.id`)}
+                              value={field.cto_user_id}
+                              type="hidden" // Hidden input to preserve the ID
+                            />
+                            {errors.cocs?.[index]?.use_coc?.message && (
+                              <div className="app__error_message">
+                                {errors.cocs?.[index]?.use_coc?.message}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        <div className="flex space-x-2 items-center">
+                          <span className="font-bold">Vacation Leave:</span>
                           <input
-                            {...register(`cocs.${index}.use_coc`, {
+                            {...register('vl', {
                               max: {
-                                value: field.coc,
-                                message: `Cannot exceed ${field.coc}`
+                                value:
+                                  leaveCreditBalances.find(
+                                    (b) => b.type === 'Vacation Leave'
+                                  )?.credits ?? 0,
+                                message: `Cannot exceed ${
+                                  leaveCreditBalances.find(
+                                    (b) => b.type === 'Vacation Leave'
+                                  )?.credits ?? '0'
+                                }`
+                              },
+                              min: {
+                                value: 0,
+                                message: 'Invalid Input'
                               }
                             })}
                             type="number"
                             step="any"
                             className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                           />
-                          <input
-                            {...field}
-                            type="hidden" // Hidden input to preserve the ID
-                          />
-                          {errors.cocs?.[index]?.use_coc?.message && (
+                          {errors.vl?.message && (
                             <div className="app__error_message">
-                              {errors.cocs?.[index]?.use_coc?.message}
+                              {errors.vl.message}
                             </div>
                           )}
                         </div>
-                      ))}
+                        <div className="flex space-x-2 items-center">
+                          <span className="font-bold">Sick Leave:</span>
+                          <input
+                            {...register('sl', {
+                              max: {
+                                value:
+                                  leaveCreditBalances.find(
+                                    (b) => b.type === 'Sick Leave'
+                                  )?.credits ?? 0,
+                                message: `Cannot exceed ${
+                                  leaveCreditBalances.find(
+                                    (b) => b.type === 'Sick Leave'
+                                  )?.credits ?? '0'
+                                }`
+                              },
+                              min: {
+                                value: 0,
+                                message: 'Invalid Input'
+                              }
+                            })}
+                            type="number"
+                            step="any"
+                            className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                          />
+                          {errors.sl?.message && (
+                            <div className="app__error_message">
+                              {errors.sl.message}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                    {documentData.creator?.position_type === 'Teaching' && (
                       <div className="flex space-x-2 items-center">
-                        <span className="font-bold">Vacation Leave:</span>
+                        <span className="font-bold">Service Credit:</span>
                         <input
-                          {...register('vl', {
+                          {...register('sc', {
                             max: {
                               value:
                                 leaveCreditBalances.find(
-                                  (b) => b.type === 'Vacation Leave'
+                                  (b) => b.type === 'Service Credit'
                                 )?.credits ?? 0,
                               message: `Cannot exceed ${
                                 leaveCreditBalances.find(
-                                  (b) => b.type === 'Vacation Leave'
-                                )?.credits
+                                  (b) => b.type === 'Service Credit'
+                                )?.credits ?? '0'
                               }`
+                            },
+                            min: {
+                              value: 0,
+                              message: 'Invalid Input'
                             }
                           })}
                           type="number"
                           step="any"
                           className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                         />
-                        {errors.vl?.message && (
+                        {errors.sc?.message && (
                           <div className="app__error_message">
-                            {errors.vl.message}
+                            {errors.sc.message}
                           </div>
                         )}
                       </div>
-                      <div className="flex space-x-2 items-center">
-                        <span className="font-bold">Sick Leave:</span>
-                        <input
-                          {...register('sl', {
-                            max: {
-                              value:
-                                leaveCreditBalances.find(
-                                  (b) => b.type === 'Sick Leave'
-                                )?.credits ?? 0,
-                              message: `Cannot exceed ${
-                                leaveCreditBalances.find(
-                                  (b) => b.type === 'Sick Leave'
-                                )?.credits
-                              }`
-                            }
-                          })}
-                          type="number"
-                          step="any"
-                          className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                        />
-                        {errors.sl?.message && (
-                          <div className="app__error_message">
-                            {errors.sl.message}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex space-x-2 items-center">
-                        <span className="font-bold">COC Leave:</span>
-                        <input
-                          {...register('coc', {
-                            max: {
-                              value:
-                                leaveCreditBalances.find(
-                                  (b) =>
-                                    b.type === 'Compensatory Overtime Credit'
-                                )?.credits ?? 0,
-                              message: `Cannot exceed ${
-                                leaveCreditBalances.find(
-                                  (b) =>
-                                    b.type === 'Compensatory Overtime Credit'
-                                )?.credits
-                              }`
-                            }
-                          })}
-                          type="number"
-                          step="any"
-                          className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                        />
-                        {errors.coc?.message && (
-                          <div className="app__error_message">
-                            {errors.coc.message}
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-                  {documentData.creator.position_type === 'Teaching' && (
+                    )}
                     <div className="flex space-x-2 items-center">
-                      <span className="font-bold">Service Credit:</span>
+                      <span className="font-bold">Adoption Leave:</span>
                       <input
-                        {...register('sc', {
+                        {...register('adoption', {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Service Credit'
+                                (b) => b.type === 'Adoption Leave'
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Service Credit'
-                              )?.credits
+                                (b) => b.type === 'Adoption Leave'
+                              )?.credits ?? '0'
                             }`
+                          },
+                          min: {
+                            value: 0,
+                            message: 'Invalid Input'
                           }
                         })}
                         type="number"
                         step="any"
                         className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
                       />
-                      {errors.sc?.message && (
+                      {errors.adoption?.message && (
                         <div className="app__error_message">
-                          {errors.sc.message}
+                          {errors.adoption.message}
                         </div>
                       )}
                     </div>
-                  )}
-                  <div className="flex space-x-2 items-center">
-                    <span className="font-bold">Adoption Leave:</span>
-                    <input
-                      {...register('adoption', {
-                        max: {
-                          value:
-                            leaveCreditBalances.find(
-                              (b) => b.type === 'Adoption Leave'
-                            )?.credits ?? 0,
-                          message: `Cannot exceed ${
-                            leaveCreditBalances.find(
-                              (b) => b.type === 'Adoption Leave'
-                            )?.credits
-                          }`
-                        }
-                      })}
-                      type="number"
-                      step="any"
-                      className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                    />
-                    {errors.adoption?.message && (
-                      <div className="app__error_message">
-                        {errors.adoption.message}
-                      </div>
+
+                    {/* Female */}
+                    {documentData.creator?.gender.toLowerCase() ===
+                      'female' && (
+                      <>
+                        <div className="flex space-x-2 items-center">
+                          <span className="font-bold">VAWC Leave:</span>
+                          <input
+                            {...register('vawc', {
+                              max: {
+                                value:
+                                  leaveCreditBalances.find(
+                                    (b) => b.type === '10-Day VAWC Leave'
+                                  )?.credits ?? 0,
+                                message: `Cannot exceed ${
+                                  leaveCreditBalances.find(
+                                    (b) => b.type === '10-Day VAWC Leave'
+                                  )?.credits ?? '0'
+                                }`
+                              },
+                              min: {
+                                value: 0,
+                                message: 'Invalid Input'
+                              }
+                            })}
+                            type="number"
+                            step="any"
+                            className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                          />
+                          {errors.vawc?.message && (
+                            <div className="app__error_message">
+                              {errors.vawc.message}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex space-x-2 items-center">
+                          <span className="font-bold">
+                            Special Leave Benefits for Women Leave:
+                          </span>
+                          <input
+                            {...register('slbw', {
+                              max: {
+                                value:
+                                  leaveCreditBalances.find(
+                                    (b) =>
+                                      b.type ===
+                                      'Special Leave Benefits For Women'
+                                  )?.credits ?? 0,
+                                message: `Cannot exceed ${
+                                  leaveCreditBalances.find(
+                                    (b) =>
+                                      b.type ===
+                                      'Special Leave Benefits For Women'
+                                  )?.credits ?? '0'
+                                }`
+                              },
+                              min: {
+                                value: 0,
+                                message: 'Invalid Input'
+                              }
+                            })}
+                            type="number"
+                            step="any"
+                            className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                          />
+                          {errors.slbw?.message && (
+                            <div className="app__error_message">
+                              {errors.slbw.message}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex space-x-2 items-center">
+                          <span className="font-bold">Maternity Leave:</span>
+                          <input
+                            {...register('maternity', {
+                              max: {
+                                value:
+                                  leaveCreditBalances.find(
+                                    (b) => b.type === 'Maternity Leave'
+                                  )?.credits ?? 0,
+                                message: `Cannot exceed ${
+                                  leaveCreditBalances.find(
+                                    (b) => b.type === 'Maternity Leave'
+                                  )?.credits ?? '0'
+                                }`
+                              },
+                              min: {
+                                value: 0,
+                                message: 'Invalid Input'
+                              }
+                            })}
+                            type="number"
+                            step="any"
+                            className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                          />
+                          {errors.maternity?.message && (
+                            <div className="app__error_message">
+                              {errors.maternity.message}
+                            </div>
+                          )}
+                        </div>
+                      </>
                     )}
+
+                    {/* Male */}
+                    {documentData.creator?.gender.toLowerCase() === 'male' && (
+                      <>
+                        <div className="flex space-x-2 items-center">
+                          <span className="font-bold">Paternity Leave:</span>
+                          <input
+                            {...register('paternity', {
+                              max: {
+                                value:
+                                  leaveCreditBalances.find(
+                                    (b) => b.type === 'Paternity Leave'
+                                  )?.credits ?? 0,
+                                message: `Cannot exceed ${
+                                  leaveCreditBalances.find(
+                                    (b) => b.type === 'Paternity Leave'
+                                  )?.credits ?? '0'
+                                }`
+                              },
+                              min: {
+                                value: 0,
+                                message: 'Invalid Input'
+                              }
+                            })}
+                            type="number"
+                            step="any"
+                            className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                          />
+                          {errors.paternity?.message && (
+                            <div className="app__error_message">
+                              {errors.paternity.message}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    <div className="flex space-x-2 items-center">
+                      <span className="font-bold">
+                        Special Emergency Leave:
+                      </span>
+                      <input
+                        {...register('emergency', {
+                          max: {
+                            value:
+                              leaveCreditBalances.find(
+                                (b) =>
+                                  b.type ===
+                                  'Special Emergency (Calamity) Leave'
+                              )?.credits ?? 0,
+                            message: `Cannot exceed ${
+                              leaveCreditBalances.find(
+                                (b) =>
+                                  b.type ===
+                                  'Special Emergency (Calamity) Leave'
+                              )?.credits ?? '0'
+                            }`
+                          },
+                          min: {
+                            value: 0,
+                            message: 'Invalid Input'
+                          }
+                        })}
+                        type="number"
+                        step="any"
+                        className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                      />
+                      {errors.emergency?.message && (
+                        <div className="app__error_message">
+                          {errors.emergency.message}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex space-x-2 items-center">
+                      <span className="font-bold">Study Leave:</span>
+                      <input
+                        {...register('study', {
+                          max: {
+                            value:
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Study Leave'
+                              )?.credits ?? 0,
+                            message: `Cannot exceed ${
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Study Leave'
+                              )?.credits ?? '0'
+                            }`
+                          },
+                          min: {
+                            value: 0,
+                            message: 'Invalid Input'
+                          }
+                        })}
+                        type="number"
+                        step="any"
+                        className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                      />
+                      {errors.study?.message && (
+                        <div className="app__error_message">
+                          {errors.study.message}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex space-x-2 items-center">
+                      <span className="font-bold">Solo Parent Leave:</span>
+                      <input
+                        {...register('soloparent', {
+                          max: {
+                            value:
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Solo Parent Leave'
+                              )?.credits ?? 0,
+                            message: `Cannot exceed ${
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Solo Parent Leave'
+                              )?.credits ?? '0'
+                            }`
+                          },
+                          min: {
+                            value: 0,
+                            message: 'Invalid Input'
+                          }
+                        })}
+                        type="number"
+                        step="any"
+                        className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                      />
+                      {errors.soloparent?.message && (
+                        <div className="app__error_message">
+                          {errors.soloparent.message}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex space-x-2 items-center">
+                      <span className="font-bold">
+                        Special Privilege Leave:
+                      </span>
+                      <input
+                        {...register('spl', {
+                          max: {
+                            value:
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Special Privilege Leave'
+                              )?.credits ?? 0,
+                            message: `Cannot exceed ${
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Special Privilege Leave'
+                              )?.credits ?? '0'
+                            }`
+                          },
+                          min: {
+                            value: 0,
+                            message: 'Invalid Input'
+                          }
+                        })}
+                        type="number"
+                        step="any"
+                        className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                      />
+                      {errors.spl?.message && (
+                        <div className="app__error_message">
+                          {errors.spl.message}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex space-x-2 items-center">
+                      <span className="font-bold">Rehabilitation Leave:</span>
+                      <input
+                        {...register('rehab', {
+                          max: {
+                            value:
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Rehabilitation Leave'
+                              )?.credits ?? 0,
+                            message: `Cannot exceed ${
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Rehabilitation Leave'
+                              )?.credits ?? '0'
+                            }`
+                          },
+                          min: {
+                            value: 0,
+                            message: 'Invalid Input'
+                          }
+                        })}
+                        type="number"
+                        step="any"
+                        className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                      />
+                      {errors.rehab?.message && (
+                        <div className="app__error_message">
+                          {errors.rehab.message}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Female */}
-                  {documentData.creator.gender.toLowerCase() === 'female' && (
-                    <>
-                      <div className="flex space-x-2 items-center">
-                        <span className="font-bold">VAWC Leave:</span>
-                        <input
-                          {...register('vawc', {
-                            max: {
-                              value:
-                                leaveCreditBalances.find(
-                                  (b) => b.type === '10-Day VAWC Leave'
-                                )?.credits ?? 0,
-                              message: `Cannot exceed ${
-                                leaveCreditBalances.find(
-                                  (b) => b.type === '10-Day VAWC Leave'
-                                )?.credits
-                              }`
-                            }
-                          })}
-                          type="number"
-                          step="any"
-                          className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                        />
-                        {errors.vawc?.message && (
-                          <div className="app__error_message">
-                            {errors.vawc.message}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex space-x-2 items-center">
-                        <span className="font-bold">
-                          Special Leave Benefits for Women Leave:
-                        </span>
-                        <input
-                          {...register('slbw', {
-                            max: {
-                              value:
-                                leaveCreditBalances.find(
-                                  (b) =>
-                                    b.type ===
-                                    'Special Leave Benefits For Women'
-                                )?.credits ?? 0,
-                              message: `Cannot exceed ${
-                                leaveCreditBalances.find(
-                                  (b) =>
-                                    b.type ===
-                                    'Special Leave Benefits For Women'
-                                )?.credits
-                              }`
-                            }
-                          })}
-                          type="number"
-                          step="any"
-                          className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                        />
-                        {errors.slbw?.message && (
-                          <div className="app__error_message">
-                            {errors.slbw.message}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex space-x-2 items-center">
-                        <span className="font-bold">Maternity Leave:</span>
-                        <input
-                          {...register('maternity', {
-                            max: {
-                              value:
-                                leaveCreditBalances.find(
-                                  (b) => b.type === 'Maternity Leave'
-                                )?.credits ?? 0,
-                              message: `Cannot exceed ${
-                                leaveCreditBalances.find(
-                                  (b) => b.type === 'Maternity Leave'
-                                )?.credits
-                              }`
-                            }
-                          })}
-                          type="number"
-                          step="any"
-                          className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                        />
-                        {errors.maternity?.message && (
-                          <div className="app__error_message">
-                            {errors.maternity.message}
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  {/* Male */}
-                  {documentData.creator.gender.toLowerCase() === 'male' && (
-                    <>
-                      <div className="flex space-x-2 items-center">
-                        <span className="font-bold">Paternity Leave:</span>
-                        <input
-                          {...register('paternity', {
-                            max: {
-                              value:
-                                leaveCreditBalances.find(
-                                  (b) => b.type === 'Paternity Leave'
-                                )?.credits ?? 0,
-                              message: `Cannot exceed ${
-                                leaveCreditBalances.find(
-                                  (b) => b.type === 'Paternity Leave'
-                                )?.credits
-                              }`
-                            }
-                          })}
-                          type="number"
-                          step="any"
-                          className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                        />
-                        {errors.paternity?.message && (
-                          <div className="app__error_message">
-                            {errors.paternity.message}
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  <div className="flex space-x-2 items-center">
-                    <span className="font-bold">Special Emergency Leave:</span>
-                    <input
-                      {...register('emergency', {
-                        max: {
-                          value:
-                            leaveCreditBalances.find(
-                              (b) =>
-                                b.type === 'Special Emergency (Calamity) Leave'
-                            )?.credits ?? 0,
-                          message: `Cannot exceed ${
-                            leaveCreditBalances.find(
-                              (b) =>
-                                b.type === 'Special Emergency (Calamity) Leave'
-                            )?.credits
-                          }`
-                        }
-                      })}
-                      type="number"
-                      step="any"
-                      className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                    />
-                    {errors.emergency?.message && (
-                      <div className="app__error_message">
-                        {errors.emergency.message}
-                      </div>
-                    )}
+                  <CustomButton
+                    containerStyles="app__btn_green mt-2"
+                    title="Save Changes"
+                    isDisabled={
+                      saving || withPay > Number(documentData.leave_days)
+                    }
+                    btnType="submit"
+                  />
+                </form>
+              )}
+            <div className="text-gray-600 text-xs mt-4">
+              Credits used for this Leave:
+            </div>
+            <div className="text-gray-600 text-xs mt-1 font-bold mb-2 space-y-1">
+              {documentData.leave_cocs &&
+                documentData.leave_cocs.length > 0 &&
+                documentData.leave_cocs.map((coc, index) => (
+                  <div
+                    key={index}
+                    className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2"
+                  >
+                    COC: {coc.use_coc} {/* Display the current input value */}
                   </div>
-
-                  <div className="flex space-x-2 items-center">
-                    <span className="font-bold">Study Leave:</span>
-                    <input
-                      {...register('study', {
-                        max: {
-                          value:
-                            leaveCreditBalances.find(
-                              (b) => b.type === 'Study Leave'
-                            )?.credits ?? 0,
-                          message: `Cannot exceed ${
-                            leaveCreditBalances.find(
-                              (b) => b.type === 'Study Leave'
-                            )?.credits
-                          }`
-                        }
-                      })}
-                      type="number"
-                      step="any"
-                      className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                    />
-                    {errors.study?.message && (
-                      <div className="app__error_message">
-                        {errors.study.message}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex space-x-2 items-center">
-                    <span className="font-bold">Solo Parent Leave:</span>
-                    <input
-                      {...register('soloparent', {
-                        max: {
-                          value:
-                            leaveCreditBalances.find(
-                              (b) => b.type === 'Solo Parent Leave'
-                            )?.credits ?? 0,
-                          message: `Cannot exceed ${
-                            leaveCreditBalances.find(
-                              (b) => b.type === 'Solo Parent Leave'
-                            )?.credits
-                          }`
-                        }
-                      })}
-                      type="number"
-                      step="any"
-                      className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                    />
-                    {errors.soloparent?.message && (
-                      <div className="app__error_message">
-                        {errors.soloparent.message}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex space-x-2 items-center">
-                    <span className="font-bold">Special Privilege Leave:</span>
-                    <input
-                      {...register('spl', {
-                        max: {
-                          value:
-                            leaveCreditBalances.find(
-                              (b) => b.type === 'Special Privilege Leave'
-                            )?.credits ?? 0,
-                          message: `Cannot exceed ${
-                            leaveCreditBalances.find(
-                              (b) => b.type === 'Special Privilege Leave'
-                            )?.credits
-                          }`
-                        }
-                      })}
-                      type="number"
-                      step="any"
-                      className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                    />
-                    {errors.spl?.message && (
-                      <div className="app__error_message">
-                        {errors.spl.message}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex space-x-2 items-center">
-                    <span className="font-bold">Rehabilitation Leave:</span>
-                    <input
-                      {...register('rehab', {
-                        max: {
-                          value:
-                            leaveCreditBalances.find(
-                              (b) => b.type === 'Rehabilitation Leave'
-                            )?.credits ?? 0,
-                          message: `Cannot exceed ${
-                            leaveCreditBalances.find(
-                              (b) => b.type === 'Rehabilitation Leave'
-                            )?.credits
-                          }`
-                        }
-                      })}
-                      type="number"
-                      step="any"
-                      className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                    />
-                    {errors.rehab?.message && (
-                      <div className="app__error_message">
-                        {errors.rehab.message}
-                      </div>
-                    )}
-                  </div>
+                ))}
+              {creditsUsed.map((credit, index) => (
+                <div
+                  key={index}
+                  className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2"
+                >
+                  {credit.type}: {credit.balance}
                 </div>
-
-                <CustomButton
-                  containerStyles="app__btn_green mt-2"
-                  title="Save Changes"
-                  isDisabled={
-                    saving || withPay > Number(documentData.leave_days)
-                  }
-                  btnType="submit"
-                />
-              </form>
-            )}
-          <div className="text-gray-600 text-xs mt-4">
-            Credits used for this Leave:
-          </div>
-          <div className="text-gray-600 text-xs mt-1 font-bold mb-2 space-y-1">
-            {fields.map((_field, index) => (
-              <div
-                key={index}
-                className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2"
-              >
-                COC: {cocs?.[index]?.use_coc || 0}{' '}
-                {/* Display the current input value */}
-              </div>
-            ))}
-            {creditsUsed.map((credit, index) => (
-              <div
-                key={index}
-                className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2"
-              >
-                {credit.type}: {credit.balance}
-              </div>
-            ))}
-          </div>
-          <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-            Absence with Pay: {withPay}{' '}
-            {withPay > Number(documentData.leave_days) && (
-              <span className="text-red-500">
-                (Exceeds to actual number of leave days)
-              </span>
-            )}
-          </div>
-          <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-            Absence without Pay: {withoutPay}
+              ))}
+            </div>
+            <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
+              Absence with Pay:{' '}
+              {Number.isInteger(withPay) ? withPay : withPay.toFixed(2)}
+              {withPay > Number(documentData.leave_days) && (
+                <span className="text-red-500">
+                  (Exceeds to actual number of leave days)
+                </span>
+              )}
+            </div>
+            <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
+              Absence without Pay:{' '}
+              {Number.isInteger(withoutPay)
+                ? withoutPay
+                : withoutPay.toFixed(2)}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

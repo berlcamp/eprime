@@ -458,10 +458,6 @@ export default function DetailsModal({
             value: documentData.leave_credit_use_sl
           },
           {
-            type: 'Compensatory Overtime Credit',
-            value: documentData.leave_credit_use_coc
-          },
-          {
             type: 'Service Credit',
             value: documentData.leave_credit_use_sc
           },
@@ -1826,7 +1822,7 @@ export default function DetailsModal({
                   </table>
                   {/* Certification of leave credits */}
                   {documentData.type === 'Leave' && (
-                    <CreditsCertification documentData={documentData} />
+                    <CreditsCertification requestData={documentData} />
                   )}
                 </div>
               </div>

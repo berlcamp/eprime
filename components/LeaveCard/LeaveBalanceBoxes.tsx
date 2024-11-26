@@ -89,7 +89,7 @@ export default function LeaveBalanceBoxes({ user }: ModalProps) {
         const currentMonth = now.getMonth() + 1 // Months are zero-based, so December is 11 + 1 = 12
 
         // Only perform the query if the current month is December
-        if (currentMonth >= 11 && user.position_type !== 'Teaching') {
+        if (currentMonth === 12 && user.position_type !== 'Teaching') {
           // Fetch the data
           const { data: leaveRequests } = await supabase
             .from('hrm_request_trackers')

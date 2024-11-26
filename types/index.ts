@@ -616,7 +616,6 @@ export interface DocumentTypes {
   leave_commutation: string
   leave_credit_use_vl: string
   leave_credit_use_sl: string
-  leave_credit_use_coc: string
   leave_credit_use_sc: string
   leave_credit_use_adoption: string
   leave_credit_use_vawc: string

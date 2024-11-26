@@ -56,7 +56,7 @@ export default function UserRequests({
       let query = supabase
         .from('hrm_request_trackers')
         .select(
-          '*, leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+          '*, leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,position_type,hrm_positions:position_id(name),hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
           { count: 'exact' }
         )
 
@@ -114,18 +114,28 @@ export default function UserRequests({
       let query = supabase
         .from('hrm_request_trackers')
         .select(
-          '*,creator:created_by(id,firstname,lastname,middlename,avatar_url,position_type),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+          '*, leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
           { count: 'exact' }
         )
-        .eq('created_by', userId)
 
-      // Filter type
-      if (filterType !== '') {
-        query = query.eq('type', filterType)
+      if (!clear) {
+        // Filter type
+        if (filterType !== '') {
+          query = query.eq('type', filterType)
+        }
+
+        if (filterStatus !== '') {
+          query = query.eq('current_status', filterStatus)
+        }
       }
 
-      if (filterStatus !== '') {
-        query = query.eq('current_status', filterStatus)
+      if (forDashboard) {
+        query = query.eq('receiver_id', userId)
+        query = query.neq('current_status', 'Approved')
+        query = query.neq('current_status', 'Cancelled')
+        query = query.neq('current_status', 'Disapproved')
+      } else {
+        query = query.eq('created_by', userId)
       }
 
       // Per Page from context
