@@ -394,8 +394,16 @@ export default function LeaveCard({ userId, userData }: PageProps) {
                   <td className="app__td">{item.credits_used}</td>
                   <td className="app__td">{item.credits_earned}</td>
                   <td className="app__td">{item.balance}</td>
-                  <td className="app__td">{item.absence_without_pay}</td>
-                  <td className="app__td">{item.absence_with_pay}</td>
+                  <td className="app__td">
+                    {Number.isInteger(item.absence_without_pay)
+                      ? item.absence_without_pay
+                      : Number(item.absence_without_pay).toFixed(2)}
+                  </td>
+                  <td className="app__td">
+                    {Number.isInteger(item.absence_with_pay)
+                      ? item.absence_with_pay
+                      : Number(item.absence_with_pay).toFixed(2)}
+                  </td>
                   <td className="app__td">
                     <div>{item.remarks}</div>
                     {item.updater && (
