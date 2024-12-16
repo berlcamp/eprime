@@ -1,4 +1,4 @@
-import { CustomButton, LeaveBalanceBoxes, SearchUserInput } from '@/components'
+import { CustomButton, SearchUserInput } from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { generateReferenceCode } from '@/utils/text-helper'
@@ -68,7 +68,6 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     register,
     formState: { errors },
     reset,
-    watch,
     handleSubmit
   } = useForm<LeaveTypes>({
     mode: 'onSubmit'
@@ -448,32 +447,25 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
               </div>
             )}
             {leaveType === 'Others' && (
-              <>
-                <div className="app__form_field_container">
-                  <div className="w-full">
-                    <div className="app__label_standard">
-                      Other Purpose (Optional)
-                    </div>
-                    <div>
-                      <select
-                        {...register('other_purpose')}
-                        className="app__select_standard"
-                      >
-                        <option value="">Choose</option>
-                        <option value="Monetization of Leave Credits">
-                          Monetization of Leave Credits
-                        </option>
-                        <option value="Terminal Leave">Terminal Leave</option>
-                      </select>
-                    </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">
+                    Other Purpose (Optional)
+                  </div>
+                  <div>
+                    <select
+                      {...register('other_purpose')}
+                      className="app__select_standard"
+                    >
+                      <option value="">Choose</option>
+                      <option value="Monetization of Leave Credits">
+                        Monetization of Leave Credits
+                      </option>
+                      <option value="Terminal Leave">Terminal Leave</option>
+                    </select>
                   </div>
                 </div>
-                {watch('other_purpose') !== '' && (
-                  <div className="app__form_field_container">
-                    <LeaveBalanceBoxes user={currentUser} />
-                  </div>
-                )}
-              </>
+              </div>
             )}
             <div className="app__form_field_container">
               <div className="w-full">

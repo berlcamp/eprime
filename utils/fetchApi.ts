@@ -678,7 +678,12 @@ export async function fetchRankings(
 export async function fetchRankingApplicants(
   filters: {
     filterKeyword?: string
+    filterCode?: string
     filterRanking?: string
+    filterSchool?: string
+    filterOffice?: string
+    filterStatus?: string
+    filterType?: string
   },
   perPageCount: number,
   rangeFrom: number
@@ -686,9 +691,12 @@ export async function fetchRankingApplicants(
   try {
     let query = supabase
       .from('hrm_ranking_applicants')
-      .select('*, ranking:ranking_id(*,position:position_id(*))', {
-        count: 'exact'
-      })
+      .select(
+        '*, employee:user_id(*),ranking:ranking_id(*,position:position_id(*)),approver:current_approver_id(*)',
+        {
+          count: 'exact'
+        }
+      )
 
     // filter ranking
     if (filters.filterRanking && filters.filterRanking !== '') {
@@ -700,6 +708,31 @@ export async function fetchRankingApplicants(
       query = query.or(
         `lastname.ilike.%${filters.filterKeyword}%,firstname.ilike.%${filters.filterKeyword}%,middlename.ilike.%${filters.filterKeyword}%`
       )
+    }
+
+    // filter code
+    if (filters.filterCode && filters.filterCode !== '') {
+      query = query.eq('code', filters.filterCode)
+    }
+
+    // filter school
+    if (filters.filterSchool && filters.filterSchool !== '') {
+      query = query.eq('school_id', filters.filterSchool)
+    }
+
+    // filter office
+    if (filters.filterOffice && filters.filterOffice !== '') {
+      query = query.eq('office_id', filters.filterOffice)
+    }
+
+    // filter status
+    if (filters.filterStatus && filters.filterStatus !== '') {
+      query = query.eq('status', filters.filterStatus)
+    }
+
+    // filter type
+    if (filters.filterType && filters.filterType !== '') {
+      query = query.eq('type', filters.filterType)
     }
 
     // Per Page from context

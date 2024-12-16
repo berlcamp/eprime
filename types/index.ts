@@ -804,8 +804,10 @@ export interface RankingQualifications {
 export interface ApplicantTypes {
   id: string
   type: string
+  created_at: string
   user_id: string
   employee: Employee
+  approver: Employee
   current_employee: string
   previous_applicant: string
   previous_applicant_code: string
@@ -826,6 +828,27 @@ export interface ApplicantTypes {
   solo_parent_detail: string
   contact_number: string
   specific_major: string
+  current_approver_id: string
+
+  // for reclass
+  professional_study: string
+  professional_study_file_path: string
+  professional_study_units: string
+  teaching_public_school: string
+  teaching_public_school_file_path: string
+  teaching_public_school_units: string
+  teaching_private_school: string
+  teaching_private_school_file_path: string
+  teaching_private_school_units: string
+  supervisory_public_school: string
+  supervisory_public_school_file_path: string
+  supervisory_public_school_units: string
+  supervisory_private_school: string
+  supervisory_private_school_file_path: string
+  supervisory_private_school_units: string
+  seminars: string
+  seminars_file_path: string
+  seminars_units: string
 
   deped_email: string
   retype_email: string

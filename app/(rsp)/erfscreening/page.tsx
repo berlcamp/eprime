@@ -7,12 +7,12 @@ import {
   TableRowLoading,
   Title,
   TopBar,
-  Unauthorized
+  UserBlock
 } from '@/components'
-import { useFilter } from '@/context/FilterContext'
 import { fetchRankingApplicants } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { format } from 'date-fns'
 import React, { Fragment, useEffect, useState } from 'react'
 import Filters from './Filters'
 
@@ -20,24 +20,26 @@ import Filters from './Filters'
 import type { ApplicantTypes } from '@/types'
 
 // Redux imports
-import ApplicantDetails from '@/components/Rsp/ApplicantDetails'
-import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { ArrowUpRight, EyeIcon } from 'lucide-react'
+import RspSidebar from '@/components/Sidebars/RspSidebar'
+import { ArrowUpRight } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
+import DetailsModal from './DetailsModal'
 import MoveRanking from './MoveRanking'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
-  const [showMoveModal, setShowMoveModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showMoveModal, setShowMoveModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
 
-  const [list, setList] = useState<ApplicantTypes[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
-  const [filterRanking, setFilterRanking] = useState<string>('')
+  const [filterSchool, setFilterSchool] = useState<string>('')
+  const [filterOffice, setFilterOffice] = useState<string>('')
+  const [filterStatus, setFilterStatus] = useState<string>('')
 
+  const [list, setList] = useState<ApplicantTypes[]>([])
   const [perPageCount, setPerPageCount] = useState<number>(10)
 
   // Redux staff
@@ -45,14 +47,18 @@ const Page: React.FC = () => {
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { hasAccess } = useFilter()
-
   const fetchData = async () => {
     setLoading(true)
 
     try {
       const result = await fetchRankingApplicants(
-        { filterRanking, filterKeyword },
+        {
+          filterSchool,
+          filterOffice,
+          filterStatus,
+          filterKeyword,
+          filterType: 'Reclassification'
+        },
         perPageCount,
         0
       )
@@ -80,7 +86,13 @@ const Page: React.FC = () => {
 
     try {
       const result = await fetchRankingApplicants(
-        { filterRanking, filterKeyword },
+        {
+          filterKeyword,
+          filterSchool,
+          filterOffice,
+          filterStatus,
+          filterType: 'Reclassification'
+        },
         perPageCount,
         list.length
       )
@@ -108,13 +120,14 @@ const Page: React.FC = () => {
     setSelectedItem(item)
   }
 
-  const handleViewDetails = (item: ApplicantTypes) => {
+  const handleShowDetailsModal = (item: ApplicantTypes) => {
     setShowDetailsModal(true)
     setSelectedItem(item)
   }
 
   // Update list whenever list in redux updates
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     setList(globallist)
   }, [globallist])
 
@@ -123,30 +136,29 @@ const Page: React.FC = () => {
     setList([])
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPageCount, filterRanking, filterKeyword])
+  }, [filterKeyword, filterSchool, filterOffice, filterStatus, perPageCount])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
-
-  // Check access from permission settings or Super Admins
-  if (!hasAccess('rsp_manager')) return <Unauthorized />
-
   return (
     <>
       <Sidebar>
         <RspSidebar />
       </Sidebar>
-      <TopBar />
       <div className="app__main">
         <div>
+          {/* Header */}
+          <TopBar />
           <div className="app__title">
-            <Title title="Applicants" />
+            <Title title="ERF " />
           </div>
 
           {/* Filters */}
           <div className="app__filters">
             <Filters
-              setFilterRanking={setFilterRanking}
               setFilterKeyword={setFilterKeyword}
+              setFilterSchool={setFilterSchool}
+              setFilterOffice={setFilterOffice}
+              setFilterStatus={setFilterStatus}
             />
           </div>
 
@@ -163,19 +175,18 @@ const Page: React.FC = () => {
             <table className="app__table">
               <thead className="app__thead">
                 <tr>
-                  <th className="hidden md:table-cell app__th pl-4"></th>
-                  <th className="hidden md:table-cell app__th">Applicant</th>
-                  <th className="hidden md:table-cell app__th">
-                    Application Code
-                  </th>
-                  <th className="hidden md:table-cell app__th">Type</th>
-                  <th className="hidden md:table-cell app__th">Ranking</th>
-                  <th className="hidden md:table-cell app__th">Status</th>
+                  <th className="app__th pl-4"></th>
+                  <th className="app__th w-16"></th>
+                  <th className="app__th">Reference Code</th>
+                  <th className="app__th">Applicant</th>
+                  <th className="app__th">Date Applied</th>
+                  <th className="app__th">Current Status</th>
+                  <th className="app__th">Forwarded To</th>
                 </tr>
               </thead>
               <tbody>
                 {!isDataEmpty &&
-                  list.map((item: ApplicantTypes, index) => (
+                  list.map((item: ApplicantTypes, index: number) => (
                     <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td">
                         <Menu as="div" className="app__menu_container">
@@ -205,16 +216,7 @@ const Page: React.FC = () => {
                                     className="app__dropdown_item"
                                   >
                                     <ArrowUpRight className="w-4 h-4" />
-                                    <span>Move to Another Ranking</span>
-                                  </div>
-                                </Menu.Item>
-                                <Menu.Item>
-                                  <div
-                                    onClick={() => handleViewDetails(item)}
-                                    className="app__dropdown_item"
-                                  >
-                                    <EyeIcon className="w-4 h-4" />
-                                    <span>View Applicant Details</span>
+                                    <span>Move to Ranking</span>
                                   </div>
                                 </Menu.Item>
                               </div>
@@ -222,59 +224,32 @@ const Page: React.FC = () => {
                           </Transition>
                         </Menu>
                       </td>
-                      <th className="app__th_firstcol">
-                        <div className="font-medium">
-                          {item.lastname}, {item.firstname} {item.middlename}
-                        </div>
-                        <div className="font-light">{item.email}</div>
-                        {item.current_employee === 'Yes' && (
-                          <div className="font-bold">
-                            (Current DepEd Employee)
-                          </div>
-                        )}
-                        {item.previous_applicant === 'Yes' && (
-                          <div className="font-bold">(Previous Applicant)</div>
-                        )}
-
-                        {/* Mobile View */}
+                      <td className="pl-4 app__td">
                         <div>
-                          <div className="md:hidden app__td_mobile">
-                            <div>
-                              <span className="app_td_mobile_label">Type:</span>{' '}
-                              <span>
-                                {item.type === 'Reclassification'
-                                  ? 'Reclassification'
-                                  : item.ranking?.type}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="app_td_mobile_label">
-                                Ranking:
-                              </span>{' '}
-                              <span>{item.ranking?.position?.name}</span>
-                            </div>
-                            <div>
-                              <span className="app_td_mobile_label">
-                                Status
-                              </span>{' '}
-                              {item.ranking?.status}
-                            </div>
-                          </div>
+                          <button
+                            onClick={() => handleShowDetailsModal(item)}
+                            className="bg-emerald-500 hover:bg-emerald-600 border border-emerald-600 font-medium px-1 py-px text-xs text-white rounded-sm"
+                          >
+                            View&nbsp;Details
+                          </button>
                         </div>
-                        {/* End - Mobile View */}
-                      </th>
-                      <td className="hidden md:table-cell app__td">
-                        {item.code}
                       </td>
-                      <td className="hidden md:table-cell app__td">
-                        {item.type === 'Reclassification'
-                          ? 'Reclassification'
-                          : item.ranking?.type}
+                      <td className="app__td">
+                        <div className="font-medium">{item.code}</div>
                       </td>
-                      <td className="hidden md:table-cell app__td">
-                        {item.ranking?.position?.name}
+                      <td className="app__td">
+                        <UserBlock user={item.employee} />
                       </td>
-                      <td className="hidden md:table-cell app__td">
+                      <td className="app__td">
+                        <span className="font-medium">
+                          {format(
+                            new Date(item.created_at),
+                            'MMM dd, yyyy h:mm a'
+                          )}
+                        </span>
+                      </td>
+
+                      <td className="app__td">
                         {item.status === 'For AO Verification' && (
                           <span className="app__status_orange">
                             {item.status}
@@ -285,15 +260,18 @@ const Page: React.FC = () => {
                             {item.status}
                           </span>
                         )}
-                        {item.status === 'Verified by HR' && (
+                        {item.status === 'Verified By HR' && (
                           <span className="app__status_green">
                             {item.status}
                           </span>
                         )}
                       </td>
+                      <td className="app__td">
+                        <UserBlock user={item.approver} />
+                      </td>
                     </tr>
                   ))}
-                {loading && <TableRowLoading cols={6} rows={2} />}
+                {loading && <TableRowLoading cols={7} rows={2} />}
               </tbody>
             </table>
             {!loading && isDataEmpty && (
@@ -306,7 +284,7 @@ const Page: React.FC = () => {
             <ShowMore handleShowMore={handleShowMore} />
           )}
 
-          {/* Show Criterias Modal */}
+          {/* Show Move to ranking Modal */}
           {selectedItem && showMoveModal && (
             <MoveRanking
               applicantData={selectedItem}
@@ -314,13 +292,10 @@ const Page: React.FC = () => {
             />
           )}
 
-          {/* Show Details Modal */}
-          {selectedItem && showDetailsModal && (
-            <ApplicantDetails
-              refetch={() => {
-                return false
-              }}
-              applicantData={selectedItem}
+          {/* Details Modal */}
+          {showDetailsModal && selectedItem && (
+            <DetailsModal
+              documentData={selectedItem}
               hideModal={() => setShowDetailsModal(false)}
             />
           )}

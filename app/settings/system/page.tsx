@@ -97,6 +97,12 @@ const Page: React.FC = () => {
                 />
                 <ChooseUsers
                   multiple={false}
+                  type="hr"
+                  users={users}
+                  title="HR Head"
+                />
+                <ChooseUsers
+                  multiple={false}
                   type="sds"
                   users={users}
                   title="Current SDS"

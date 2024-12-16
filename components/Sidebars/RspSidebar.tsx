@@ -57,7 +57,7 @@ const RspSidebar = () => {
         </li>
         <li>
           <Link
-            href="#"
+            href="/erfscreening"
             className={`app__menu_link ${
               currentRoute === '/erfscreening' ? 'app_menu_link_active' : ''
             }`}
@@ -88,18 +88,6 @@ const RspSidebar = () => {
                 >
                   <span className="flex-1 ml-3 whitespace-nowrap">
                     Ranking Results
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#"
-                  className={`app__menu_link ${
-                    currentRoute === '/erfresults' ? 'app_menu_link_active' : ''
-                  }`}
-                >
-                  <span className="flex-1 ml-3 whitespace-nowrap">
-                    ERF Results
                   </span>
                 </Link>
               </li>
@@ -143,6 +131,15 @@ const RspSidebar = () => {
           </>
         )
       }
+      <ul className="mt-8 space-y-2 border-gray-700">
+        <li>
+          <div className="mx-2">
+            <Link href="/applyreclassification" className="app__btn_green">
+              Apply for Reclassification
+            </Link>
+          </div>
+        </li>
+      </ul>
     </>
   )
 }
