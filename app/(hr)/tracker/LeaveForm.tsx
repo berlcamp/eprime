@@ -6,13 +6,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 // Types
-import type { Employee, LeaveTypes } from '@/types'
+import type { Employee, LeaveTypes, SalaryGradeTypes } from '@/types'
 
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { leaveTypes } from '@/constants'
-import { logError } from '@/utils/fetchApi'
+import { fetchSalaryGrades, logError } from '@/utils/fetchApi'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 import { useDropzone, type FileWithPath } from 'react-dropzone'
 import { useDispatch, useSelector } from 'react-redux'
@@ -24,6 +24,8 @@ interface ModalProps {
 const LeaveForm = ({ hideModal }: ModalProps) => {
   const { setToast } = useFilter()
   const { supabase, session, systemUsers } = useSupabase()
+  const [salaryGrades, setSalaryGrades] = useState<SalaryGradeTypes[] | []>([])
+  const [monetizationAmount, setMonetizationAmount] = useState('')
 
   const [selectedImages, setSelectedImages] = useState<any>([])
   const [saving, setSaving] = useState(false)
@@ -73,6 +75,9 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   } = useForm<LeaveTypes>({
     mode: 'onSubmit'
   })
+
+  const watchedOtherPurpose = watch('other_purpose')
+  const watchedDays = watch('days')
 
   const onSubmit = async (formdata: LeaveTypes) => {
     if (!user) {
@@ -203,6 +208,27 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     setSaving(false)
   }
 
+  useEffect(() => {
+    if (watchedOtherPurpose !== '') {
+      const salary = salaryGrades.find(
+        (s) =>
+          s.grade.toString() === currentUser.salary_grade.toString() &&
+          s.step.toString() === currentUser.salary_step.toString()
+      )
+      if (salary) {
+        const moneyValue = Number(salary.salary) * Number(watchedDays)
+        // setMonetizationAmount(moneyValue.toFixed(2).toString())
+        setMonetizationAmount(
+          moneyValue.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })
+        )
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedOtherPurpose, watchedDays])
+
   const handleNotifyReceiver = async (
     trackerId: string,
     receiverId: string,
@@ -276,6 +302,15 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileRejections])
+
+  useEffect(() => {
+    const fetchSalaryGradesData = async () => {
+      const result = await fetchSalaryGrades(999, 0)
+      setSalaryGrades(result.data.length > 0 ? result.data : [])
+    }
+
+    void fetchSalaryGradesData()
+  }, [])
 
   return (
     <>
@@ -492,6 +527,16 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </div>
             </div>
+            {watch('other_purpose') !== '' && (
+              <div className="app__form_field_container">
+                <span className="app__label_standard">
+                  Money Value:{' '}
+                  <span className="font-bold text-green-700">
+                    P {monetizationAmount}
+                  </span>
+                </span>
+              </div>
+            )}
           </div>
           {/* End First Column */}
           {/* Begin Second Column */}

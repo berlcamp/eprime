@@ -247,15 +247,17 @@ const Page: React.FC = () => {
                           >
                             <Menu.Items className="app__dropdown_items">
                               <div className="py-1">
-                                <Menu.Item>
-                                  <div
-                                    onClick={() => handlePrint(item)}
-                                    className="app__dropdown_item"
-                                  >
-                                    <PrinterIcon className="w-4 h-4" />
-                                    <span>Print Form</span>
-                                  </div>
-                                </Menu.Item>
+                                {item.type === 'Leave' && (
+                                  <Menu.Item>
+                                    <div
+                                      onClick={() => handlePrint(item)}
+                                      className="app__dropdown_item"
+                                    >
+                                      <PrinterIcon className="w-4 h-4" />
+                                      <span>Print Form</span>
+                                    </div>
+                                  </Menu.Item>
+                                )}
                               </div>
                             </Menu.Items>
                           </Transition>
