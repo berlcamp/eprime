@@ -1222,7 +1222,7 @@ export default function DetailsModal({
                 documentData.current_status !== 'Approved' &&
                 documentData.current_status !== 'Disapproved' &&
                 documentData.current_status !== 'Cancelled' &&
-                !(hasAccess('sds') || hasAccess('asds')) && (
+                !hasAccess('sds') && (
                   <div className="mb-6">
                     <div className="space-x-2">
                       <CustomButton
