@@ -79,11 +79,11 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       passing_score: formdata.passing_score,
       days_to_comply: formdata.days_to_comply,
       status: formdata.status,
-      display_ier: formdata.display_ier,
-      display_rqa: formdata.display_rqa,
-      display_ranklist: formdata.display_ranklist,
-      display_nai: formdata.display_nai,
-      display_on_portal: formdata.display_on_portal,
+      display_ier: formdata.display_ier ? true : false,
+      display_rqa: formdata.display_rqa ? true : false,
+      display_ranklist: formdata.display_ranklist ? true : false,
+      display_nai: formdata.display_nai ? true : false,
+      display_on_portal: formdata.display_on_portal ? true : false,
       display_on_portal_from: formdata.display_on_portal_from
         ? formdata.display_on_portal_from
         : null,
@@ -178,11 +178,11 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       passing_score: formdata.passing_score,
       days_to_comply: formdata.days_to_comply,
       status: formdata.status,
-      display_ier: formdata.display_ier,
-      display_rqa: formdata.display_rqa,
-      display_ranklist: formdata.display_ranklist,
-      display_nai: formdata.display_nai,
-      display_on_portal: formdata.display_on_portal,
+      display_ier: formdata.display_ier ? true : false,
+      display_rqa: formdata.display_rqa ? true : false,
+      display_ranklist: formdata.display_ranklist ? true : false,
+      display_nai: formdata.display_nai ? true : false,
+      display_on_portal: formdata.display_on_portal ? true : false,
       display_on_portal_from: formdata.display_on_portal_from
         ? formdata.display_on_portal_from
         : null,
