@@ -190,6 +190,9 @@ export default function Page({ params }: { params: { ref: string } }) {
                             {item.status}
                           </span>
                         )}
+                        {item.status === 'Not Qualified' && (
+                          <span className="app__status_red">{item.status}</span>
+                        )}
                       </td>
                       <td className="app__td">
                         <UserBlock user={item.approver} />

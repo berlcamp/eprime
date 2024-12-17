@@ -39,7 +39,7 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
 
   const { systemUsers, session, supabase } = useSupabase()
 
-  const { setToast, hasAccess } = useFilter()
+  const { setToast } = useFilter()
 
   const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -92,6 +92,9 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
     if (action === 'Verified By HR') {
       setConfirmMessage('Are you sure you want to perform this action?')
     }
+    if (action === 'Not Qualified') {
+      setConfirmMessage('Are you sure you want to perform this action?')
+    }
     if (action === 'Forward') {
       if (!selectedUser) {
         return
@@ -113,6 +116,9 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
     if (showConfirmModal === 'Verified By HR') {
       void handleVerifiedHR()
     }
+    if (showConfirmModal === 'Not Qualified') {
+      void handleNotQualified()
+    }
 
     setShowConfirmModal('')
     setConfirmMessage('')
@@ -123,6 +129,82 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
     // hide the modal
     setShowConfirmModal('')
     setConfirmMessage('')
+  }
+
+  const handleNotQualified = async () => {
+    if (saving) return
+
+    setSaving(true)
+
+    const newData = {
+      status: 'Not Qualified'
+    }
+    try {
+      const { error } = await supabase
+        .from('hrm_ranking_applicants')
+        .update(newData)
+        .eq('id', documentData.id)
+
+      if (error) {
+        void logError(
+          'Not Qualified',
+          'hrm_ranking_applicants',
+          JSON.stringify(newData),
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(error.message)
+      }
+
+      // Status flow
+      const { error: error2 } = await supabase
+        .from('hrm_ranking_applicant_flow')
+        .insert({
+          applicant_id: documentData.id,
+          user_id: user.id,
+          receiver_id: user.id,
+          status: 'Not Qualified'
+        })
+
+      if (error2) {
+        void logError(
+          'Not Qualified',
+          'hrm_ranking_applicant_flow',
+          '',
+          error2.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(error2.message)
+      }
+
+      // Update data in redux
+      const items = [...globallist]
+      const updatedData = {
+        ...newData,
+        id: documentData.id
+      }
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
+      items[foundIndex] = { ...items[foundIndex], ...updatedData }
+      dispatch(updateList(items))
+
+      // pop up the success message
+      setToast('success', 'Successfully saved.')
+
+      setUpdateStatusFlow(!updateStatusFlow)
+
+      // Notify requester and follower
+      void handleNotify(items[foundIndex], 'Not Qualified')
+
+      setSaving(false)
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const handleVerifiedHR = async () => {
@@ -151,6 +233,30 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
           'Saving failed, please reload the page and try again.'
         )
         throw new Error(error.message)
+      }
+
+      // Status flow
+      const { error: error2 } = await supabase
+        .from('hrm_ranking_applicant_flow')
+        .insert({
+          applicant_id: documentData.id,
+          user_id: user.id,
+          receiver_id: user.id,
+          status: 'Verified By HR'
+        })
+
+      if (error2) {
+        void logError(
+          'Forward Request Flow',
+          'hrm_ranking_applicant_flow',
+          '',
+          error2.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(error2.message)
       }
 
       // Update data in redux
@@ -193,7 +299,7 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
 
       if (error) {
         void logError(
-          'Verified By HR',
+          'Verified By AO',
           'hrm_ranking_applicants',
           JSON.stringify(newData),
           error.message
@@ -203,6 +309,30 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
           'Saving failed, please reload the page and try again.'
         )
         throw new Error(error.message)
+      }
+
+      // Status flow
+      const { error: error2 } = await supabase
+        .from('hrm_ranking_applicant_flow')
+        .insert({
+          applicant_id: documentData.id,
+          user_id: user.id,
+          receiver_id: user.id,
+          status: 'Verified By AO'
+        })
+
+      if (error2) {
+        void logError(
+          'Forwarded Request Flow',
+          'hrm_ranking_applicant_flow',
+          '',
+          error2.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(error2.message)
       }
 
       // Update data in redux
@@ -259,6 +389,7 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
         throw new Error(error.message)
       }
 
+      // Status flow
       const { error: error2 } = await supabase
         .from('hrm_ranking_applicant_flow')
         .insert({
@@ -346,43 +477,47 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
           </div>
           <div className="flex space-x-2 items-center justify-between border-b p-4 bg-orange-50">
             <div className="w-full">
-              {/* Verified by AO */}
-              {documentData.current_approver_id === session.user.id &&
-                documentData.status === 'For AO Verification' && (
-                  <div className="mb-6">
-                    <div className="space-x-2">
+              {/* Verify button */}
+              {documentData.current_approver_id === session.user.id && (
+                <div className="mb-6">
+                  <div className="space-x-2">
+                    {documentData.status === 'For AO Verification' && (
                       <CustomButton
                         containerStyles="app__btn_green"
                         title={saving ? 'Saving...' : 'Mark as Verified By AO'}
                         btnType="button"
                         handleClick={() => HandleConfirm('Verified By AO')}
                       />
-                    </div>
-                    <div className="text-[10px] mt-1 text-gray-600">
-                      By clicking verifiy, you acknowledge that all information
-                      is accurate and cannot be modified after submission.
-                    </div>
-                  </div>
-                )}
-              {/* Verified by HR */}
-              {documentData.current_approver_id === session.user.id &&
-                hasAccess('hr') &&
-                documentData.status === 'Verified By AO' && (
-                  <div className="mb-6">
-                    <div className="space-x-2">
+                    )}
+                    {documentData.status === 'Verified By AO' && (
                       <CustomButton
                         containerStyles="app__btn_green"
                         title={saving ? 'Saving...' : 'Mark as Verified By HR'}
                         btnType="button"
                         handleClick={() => HandleConfirm('Verified By HR')}
                       />
-                    </div>
-                    <div className="text-[10px] mt-1 text-gray-600">
-                      By clicking verifiy, you acknowledge that all information
-                      is accurate and cannot be modified after submission.
-                    </div>
+                    )}
+                    {documentData.status !== 'Verified By AO' &&
+                      documentData.status !== 'Verified By HR' && (
+                        <>
+                          <CustomButton
+                            containerStyles="app__btn_red"
+                            title={
+                              saving ? 'Saving...' : 'Mark as Not Qualified'
+                            }
+                            btnType="button"
+                            handleClick={() => HandleConfirm('Not Qualified')}
+                          />
+                          <div className="text-[10px] mt-1 text-gray-600">
+                            By clicking verifiy, you acknowledge that all
+                            information is accurate and cannot be modified after
+                            submission.
+                          </div>
+                        </>
+                      )}
                   </div>
-                )}
+                </div>
+              )}
 
               {/* Forward */}
               {documentData.current_approver_id === session.user.id && (
@@ -439,6 +574,11 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
                           )}
                           {documentData.status === 'Verified By HR' && (
                             <span className="app__status_green">
+                              {documentData.status}
+                            </span>
+                          )}
+                          {documentData.status === 'Not Qualified' && (
+                            <span className="app__status_red">
                               {documentData.status}
                             </span>
                           )}

@@ -216,7 +216,8 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
           s.step.toString() === currentUser.salary_step.toString()
       )
       if (salary) {
-        const moneyValue = Number(salary.salary) * Number(watchedDays)
+        const moneyValue =
+          Number(salary.salary) * Number(watchedDays) * 0.0478087
         // setMonetizationAmount(moneyValue.toFixed(2).toString())
         setMonetizationAmount(
           moneyValue.toLocaleString('en-US', {

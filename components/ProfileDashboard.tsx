@@ -207,12 +207,6 @@ export default function ProfileDashboard({
                         <th className="text-xs text-left text-gray-600 font-medium">
                           Inclusive Days
                         </th>
-                        <th className="text-xs text-left text-gray-600 font-medium">
-                          Days with Pay
-                        </th>
-                        <th className="text-xs text-left text-gray-600 font-medium">
-                          Days without Pay
-                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -228,12 +222,6 @@ export default function ProfileDashboard({
                             )}{' '}
                             -{' '}
                             {format(new Date(leave.leave_to), 'MMMM dd, yyyy')}
-                          </td>
-                          <td className="text-xs text-gray-600 font-normal">
-                            0
-                          </td>
-                          <td className="text-xs text-gray-600 font-normal">
-                            0
                           </td>
                         </tr>
                       ))}
