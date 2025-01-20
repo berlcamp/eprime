@@ -23,6 +23,8 @@ import type { ApplicantTypes } from '@/types'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
+import { useFilter } from '@/context/FilterContext'
+import { useSupabase } from '@/context/SupabaseProvider'
 import { ArrowUpRight } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import DetailsModal from './DetailsModal'
@@ -41,6 +43,9 @@ const Page: React.FC = () => {
 
   const [list, setList] = useState<ApplicantTypes[]>([])
   const [perPageCount, setPerPageCount] = useState<number>(10)
+
+  const { session } = useSupabase()
+  const { hasAccess } = useFilter()
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -127,8 +132,20 @@ const Page: React.FC = () => {
 
   // Update list whenever list in redux updates
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setList(globallist)
+    // Filter only allowed data
+    if (globallist) {
+      if (hasAccess('rsp_manager') || hasAccess('hr')) {
+        setList(globallist)
+      } else {
+        const filteredList = globallist.filter(
+          (d: ApplicantTypes) =>
+            d.current_approver_id || d.user_id === session.user.id
+        )
+        setList(filteredList)
+      }
+    } else {
+      setList(globallist)
+    }
   }, [globallist])
 
   // Featch data
@@ -189,40 +206,42 @@ const Page: React.FC = () => {
                   list.map((item: ApplicantTypes, index: number) => (
                     <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td">
-                        <Menu as="div" className="app__menu_container">
-                          <div>
-                            <Menu.Button className="app__dropdown_btn">
-                              <ChevronDownIcon
-                                className="h-5 w-5"
-                                aria-hidden="true"
-                              />
-                            </Menu.Button>
-                          </div>
+                        {(hasAccess('rsp_manager') || hasAccess('hr')) && (
+                          <Menu as="div" className="app__menu_container">
+                            <div>
+                              <Menu.Button className="app__dropdown_btn">
+                                <ChevronDownIcon
+                                  className="h-5 w-5"
+                                  aria-hidden="true"
+                                />
+                              </Menu.Button>
+                            </div>
 
-                          <Transition
-                            as={Fragment}
-                            enter="transition ease-out duration-100"
-                            enterFrom="transform opacity-0 scale-95"
-                            enterTo="transform opacity-100 scale-100"
-                            leave="transition ease-in duration-75"
-                            leaveFrom="transform opacity-100 scale-100"
-                            leaveTo="transform opacity-0 scale-95"
-                          >
-                            <Menu.Items className="app__dropdown_items">
-                              <div className="py-1">
-                                <Menu.Item>
-                                  <div
-                                    onClick={() => handleMoveToRanking(item)}
-                                    className="app__dropdown_item"
-                                  >
-                                    <ArrowUpRight className="w-4 h-4" />
-                                    <span>Move to Ranking</span>
-                                  </div>
-                                </Menu.Item>
-                              </div>
-                            </Menu.Items>
-                          </Transition>
-                        </Menu>
+                            <Transition
+                              as={Fragment}
+                              enter="transition ease-out duration-100"
+                              enterFrom="transform opacity-0 scale-95"
+                              enterTo="transform opacity-100 scale-100"
+                              leave="transition ease-in duration-75"
+                              leaveFrom="transform opacity-100 scale-100"
+                              leaveTo="transform opacity-0 scale-95"
+                            >
+                              <Menu.Items className="app__dropdown_items">
+                                <div className="py-1">
+                                  <Menu.Item>
+                                    <div
+                                      onClick={() => handleMoveToRanking(item)}
+                                      className="app__dropdown_item"
+                                    >
+                                      <ArrowUpRight className="w-4 h-4" />
+                                      <span>Move to Ranking</span>
+                                    </div>
+                                  </Menu.Item>
+                                </div>
+                              </Menu.Items>
+                            </Transition>
+                          </Menu>
+                        )}
                       </td>
                       <td className="pl-4 app__td">
                         <div>

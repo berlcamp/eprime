@@ -449,8 +449,8 @@ export interface LeaveTypes {
   study_purpose: string
   other_purpose: string
   days: string
-  from: string
-  to: string
+  leave_dates: string
+  leave_from: string
   commutation: string
   confirmed: string
 }
@@ -611,8 +611,8 @@ export interface DocumentTypes {
   leave_study_purpose: string
   leave_other_purpose: string
   leave_days: string
+  leave_dates: string
   leave_from: string
-  leave_to: string
   leave_commutation: string
   leave_credit_use_vl: string
   leave_credit_use_sl: string
@@ -630,6 +630,11 @@ export interface DocumentTypes {
   leave_days_with_pay: string
   leave_days_without_pay: string
   leave_cocs: LeaveCocTypes[]
+  credits_used: Array<{
+    type: string
+    balance: number
+    original_balance: number
+  }>
 
   locator_slip_purpose: string
   locator_slip_type: string
@@ -655,6 +660,7 @@ export interface DocumentTypes {
   undertime_permit_reason: string
   particulars: string
   date_received: string
+  certification_as_of: string
   created_at: string
   created_by: string
   hrm_remarks: RemarksTypes[]
@@ -663,6 +669,12 @@ export interface DocumentTypes {
   approver: Employee
   hrm_tracker_followers: FollowersTypes[]
   hrm_request_tracker_stickies: StickiesTypes[]
+  recommended_by: string
+  recommender: Employee
+  certified_by: string
+  certifier: Employee
+  approved_by: string
+  finalapprover: Employee
 }
 
 export interface RemarksTypes {

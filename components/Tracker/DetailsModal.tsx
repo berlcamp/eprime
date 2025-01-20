@@ -372,7 +372,8 @@ export default function DetailsModal({
 
     const newData = {
       current_status: 'Approved',
-      current_approver_id: session.user.id
+      current_approver_id: session.user.id,
+      approved_by: session.user.id
     }
     try {
       const { error } = await supabase
@@ -610,8 +611,7 @@ export default function DetailsModal({
           const newData = {
             user_id: documentData.created_by,
             org_id: process.env.NEXT_PUBLIC_ORG_ID,
-            from: documentData.leave_from,
-            to: documentData.leave_to,
+            from: documentData.leave_dates,
             designation: documentData.creator.hrm_positions?.name,
             days_without_pay: documentData.leave_days_without_pay,
             remarks: documentData.leave_type,
@@ -768,7 +768,8 @@ export default function DetailsModal({
 
     const newData = {
       current_status: 'Approval Recommended',
-      current_approver_id: session.user.id
+      current_approver_id: session.user.id,
+      recommended_by: session.user.id
     }
     try {
       const { error } = await supabase
@@ -1384,9 +1385,7 @@ export default function DetailsModal({
                             </td>
                           </tr>
                           {documentData.leave_days &&
-                            documentData.leave_to &&
-                            documentData.leave_days.trim() !== '' &&
-                            documentData.leave_to.trim() !== '' && (
+                            documentData.leave_days.trim() !== '' && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Number of working days applied for:
@@ -1396,24 +1395,14 @@ export default function DetailsModal({
                                 </td>
                               </tr>
                             )}
-                          {documentData.leave_from &&
-                            documentData.leave_to &&
-                            documentData.leave_from.trim() !== '' &&
-                            documentData.leave_to.trim() !== '' && (
+                          {documentData.leave_dates &&
+                            documentData.leave_dates.trim() !== '' && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Inclusive Dates:
                                 </td>
                                 <td className="text-sm font-medium">
-                                  {format(
-                                    new Date(documentData.leave_from),
-                                    'MMMM dd, yyyy'
-                                  )}{' '}
-                                  to{' '}
-                                  {format(
-                                    new Date(documentData.leave_to),
-                                    'MMMM dd, yyyy'
-                                  )}
+                                  {documentData.leave_dates}
                                 </td>
                               </tr>
                             )}

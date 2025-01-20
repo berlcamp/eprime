@@ -10,8 +10,14 @@ import {
 } from '@/components'
 import DetailsModal from '@/components/Tracker/DetailsModal'
 import { format } from 'date-fns'
-import { useEffect, useState } from 'react'
 
+import { Menu, Transition } from '@headlessui/react'
+import {
+  ChevronDownIcon,
+  PrinterIcon,
+  TagIcon
+} from '@heroicons/react/20/solid'
+import React, { Fragment, useEffect, useState } from 'react'
 // Types
 import type { DocumentTypes } from '@/types'
 
@@ -20,8 +26,10 @@ import { updateList } from '@/GlobalRedux/Features/listSlice'
 import AddDocumentModal from '@/app/(hr)/tracker/AddDocumentModal'
 import { requestTypes } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { TagIcon } from '@heroicons/react/20/solid'
 import { useDispatch, useSelector } from 'react-redux'
+import { useReactToPrint } from 'react-to-print'
+import { PrintLeaveForm } from '../Printables/PrintLeaveForm'
+import { PrintPassSlipForm } from '../Printables/PrintPassSlipForm'
 
 export default function UserRequests({
   forDashboard,
@@ -45,6 +53,12 @@ export default function UserRequests({
 
   const { supabase, session } = useSupabase()
 
+  const componentRef = React.useRef(null)
+  const printFn = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: 'request-form'
+  })
+
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const dispatch = useDispatch()
@@ -56,7 +70,7 @@ export default function UserRequests({
       let query = supabase
         .from('hrm_request_trackers')
         .select(
-          '*, leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,position_type,hrm_positions:position_id(name),hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+          '*,leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url),certifier:certified_by(id,firstname,lastname,middlename,avatar_url),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
           { count: 'exact' }
         )
 
@@ -114,7 +128,7 @@ export default function UserRequests({
       let query = supabase
         .from('hrm_request_trackers')
         .select(
-          '*, leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+          '*,leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url),certifier:certified_by(id,firstname,lastname,middlename,avatar_url),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
           { count: 'exact' }
         )
 
@@ -163,6 +177,16 @@ export default function UserRequests({
       console.error('fetch error xx', error)
     }
     setLoading(false)
+  }
+
+  const handlePrint = (item: DocumentTypes) => {
+    setSelectedItem(null) // Temporarily set selectedItem to null to unmount the content
+    setTimeout(() => {
+      setSelectedItem(item) // Set the new item after a short delay
+      setTimeout(() => {
+        printFn() // Trigger the print function after re-rendering the new content
+      }, 100) // Adjust this delay if needed
+    }, 100) // This delay ensures the unmounting and re-rendering are separated
   }
 
   const handleShowDetailsModal = (item: DocumentTypes) => {
@@ -309,7 +333,56 @@ export default function UserRequests({
             {!isDataEmpty &&
               list.map((item: DocumentTypes, index: number) => (
                 <tr key={index} className="app__tr">
-                  <td className="w-6 pl-4 app__td"></td>
+                  <td className="w-6 pl-4 app__td">
+                    <Menu as="div" className="app__menu_container">
+                      <div>
+                        <Menu.Button className="app__dropdown_btn">
+                          <ChevronDownIcon
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          />
+                        </Menu.Button>
+                      </div>
+
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-100"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <Menu.Items className="app__dropdown_items">
+                          <div className="py-1">
+                            {item.type === 'Leave' &&
+                              item.current_status === 'Approved' && (
+                                <Menu.Item>
+                                  <div
+                                    onClick={() => handlePrint(item)}
+                                    className="app__dropdown_item"
+                                  >
+                                    <PrinterIcon className="w-4 h-4" />
+                                    <span>Print Form 6</span>
+                                  </div>
+                                </Menu.Item>
+                              )}
+                            {item.type === 'Pass Slip' && (
+                              <Menu.Item>
+                                <div
+                                  onClick={() => handlePrint(item)}
+                                  className="app__dropdown_item"
+                                >
+                                  <PrinterIcon className="w-4 h-4" />
+                                  <span>Print Pass SLip</span>
+                                </div>
+                              </Menu.Item>
+                            )}
+                          </div>
+                        </Menu.Items>
+                      </Transition>
+                    </Menu>
+                  </td>
                   <td className="pl-4 app__td">
                     <div>
                       <button
@@ -403,6 +476,14 @@ export default function UserRequests({
       {/* Add Document Modal */}
       {showAddModal && (
         <AddDocumentModal hideModal={() => setShowAddModal(false)} />
+      )}
+      {/* Print Container */}
+      {selectedItem && selectedItem.type === 'Leave' && (
+        <PrintLeaveForm selectedItem={selectedItem} ref={componentRef} />
+      )}
+      {/* Print Container */}
+      {selectedItem && selectedItem.type === 'Pass Slip' && (
+        <PrintPassSlipForm selectedItem={selectedItem} ref={componentRef} />
       )}
     </div>
   )

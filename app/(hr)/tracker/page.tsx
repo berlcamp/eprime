@@ -58,7 +58,7 @@ const Page: React.FC = () => {
   const componentRef = React.useRef(null)
   const printFn = useReactToPrint({
     contentRef: componentRef,
-    documentTitle: 'AwesomeFileName'
+    documentTitle: 'request-form'
   })
 
   // Redux staff
@@ -247,17 +247,18 @@ const Page: React.FC = () => {
                           >
                             <Menu.Items className="app__dropdown_items">
                               <div className="py-1">
-                                {item.type === 'Leave' && (
-                                  <Menu.Item>
-                                    <div
-                                      onClick={() => handlePrint(item)}
-                                      className="app__dropdown_item"
-                                    >
-                                      <PrinterIcon className="w-4 h-4" />
-                                      <span>Print Form</span>
-                                    </div>
-                                  </Menu.Item>
-                                )}
+                                {item.type === 'Leave' &&
+                                  item.current_status === 'Approved' && (
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() => handlePrint(item)}
+                                        className="app__dropdown_item"
+                                      >
+                                        <PrinterIcon className="w-4 h-4" />
+                                        <span>Print Form</span>
+                                      </div>
+                                    </Menu.Item>
+                                  )}
                               </div>
                             </Menu.Items>
                           </Transition>

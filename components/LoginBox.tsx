@@ -23,33 +23,44 @@ export default function LoginBox() {
 
     setSigningIn(true)
 
-    // Check if the user is on hrm_users table
-    const { data: user, error: userError } = await supabase
-      .from('hrm_users')
-      .select()
-      .eq('email', email)
-      .eq('status', 'Active')
-      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
 
-    if (userError) console.error(userError)
-
-    if (user.length > 0) {
-      const { data: signInData, error } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password
-        })
-
-      if (error) {
-        setError('Credentials provided is incorrect.')
-        setSigningIn(false)
-      } else {
-        router.push(`/profile/${signInData.user.id}`)
-      }
-    } else {
-      setError('This is account is currently inactive.')
+    if (error) {
+      setError(error.message)
       setSigningIn(false)
+    } else {
+      router.push(`/profile/${signInData.user.id}`)
     }
+
+    // Check if the user is on hrm_users table
+    // const { data: user, error: userError } = await supabase
+    //   .from('hrm_users')
+    //   .select()
+    //   .eq('email', email)
+    //   .maybeSingle()
+
+    // if (userError) console.error(userError)
+
+    // if (user && user.status === 'Active') {
+    //   const { data: signInData, error } =
+    //     await supabase.auth.signInWithPassword({
+    //       email,
+    //       password
+    //     })
+
+    //   if (error) {
+    //     setError(error.message)
+    //     setSigningIn(false)
+    //   } else {
+    //     router.push(`/profile/${signInData.user.id}`)
+    //   }
+    // } else {
+    //   setError('This is account is currently inactive.')
+    //   setSigningIn(false)
+    // }
   }
 
   return (

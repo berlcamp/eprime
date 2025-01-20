@@ -164,7 +164,10 @@ export default function CreditsCertification({ requestData }: PropTypes) {
           ? formdata.maternity
           : null,
       leave_days_with_pay: withPay,
-      leave_days_without_pay: withoutPay
+      leave_days_without_pay: withoutPay,
+      certification_as_of: format(new Date(), 'MMMM d, yyyy'),
+      certified_by: session.user.id,
+      credits_used: creditsUsed
     }
 
     try {
@@ -234,45 +237,128 @@ export default function CreditsCertification({ requestData }: PropTypes) {
   }
 
   useEffect(() => {
-    const balances: Array<{ type: string; balance: number }> = []
+    const balances: Array<{
+      type: string
+      balance: number
+      original_balance: number
+    }> = []
     if (Number(sl) > 0) {
-      balances.push({ type: 'SL', balance: Number(sl) })
+      balances.push({
+        type: 'SL',
+        balance: Number(sl),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === 'Sick Leave')?.credits ?? 0
+      })
     }
     if (Number(vl) > 0) {
-      balances.push({ type: 'VL', balance: Number(vl) })
+      balances.push({
+        type: 'VL',
+        balance: Number(vl),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === 'Vacation Leave')
+            ?.credits ?? 0
+      })
     }
     if (Number(sc) > 0) {
-      balances.push({ type: 'Service Credit', balance: Number(sc) })
+      balances.push({
+        type: 'Service Credit',
+        balance: Number(sc),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === 'Service Credit')
+            ?.credits ?? 0
+      })
     }
     if (Number(adoption) > 0) {
-      balances.push({ type: 'adoption', balance: Number(adoption) })
+      balances.push({
+        type: 'adoption',
+        balance: Number(adoption),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === 'Adoption Leave')
+            ?.credits ?? 0
+      })
     }
     if (Number(vawc) > 0) {
-      balances.push({ type: 'vawc', balance: Number(vawc) })
+      balances.push({
+        type: 'vawc',
+        balance: Number(vawc),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === '10-Day VAWC Leave')
+            ?.credits ?? 0
+      })
     }
     if (Number(emergency) > 0) {
-      balances.push({ type: 'emergency', balance: Number(emergency) })
+      balances.push({
+        type: 'emergency',
+        balance: Number(emergency),
+        original_balance:
+          leaveCreditBalances.find(
+            (c) => c.type === 'Special Emergency (Calamity) Leave'
+          )?.credits ?? 0
+      })
     }
     if (Number(study) > 0) {
-      balances.push({ type: 'study', balance: Number(study) })
+      balances.push({
+        type: 'study',
+        balance: Number(study),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === 'Study Leave')?.credits ??
+          0
+      })
     }
     if (Number(soloparent) > 0) {
-      balances.push({ type: 'soloparent', balance: Number(soloparent) })
+      balances.push({
+        type: 'soloparent',
+        balance: Number(soloparent),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === 'Solo Parent Leave')
+            ?.credits ?? 0
+      })
     }
     if (Number(slbw) > 0) {
-      balances.push({ type: 'slbw', balance: Number(slbw) })
+      balances.push({
+        type: 'slbw',
+        balance: Number(slbw),
+        original_balance:
+          leaveCreditBalances.find(
+            (c) => c.type === 'Special Leave Benefits For Women'
+          )?.credits ?? 0
+      })
     }
     if (Number(spl) > 0) {
-      balances.push({ type: 'spl', balance: Number(spl) })
+      balances.push({
+        type: 'spl',
+        balance: Number(spl),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === 'Special Privilege Leave')
+            ?.credits ?? 0
+      })
     }
     if (Number(rehab) > 0) {
-      balances.push({ type: 'rehab', balance: Number(rehab) })
+      balances.push({
+        type: 'rehab',
+        balance: Number(rehab),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === 'Rehabilitation Leave')
+            ?.credits ?? 0
+      })
     }
     if (Number(paternity) > 0) {
-      balances.push({ type: 'paternity', balance: Number(paternity) })
+      balances.push({
+        type: 'paternity',
+        balance: Number(paternity),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === 'Paternity Leave')
+            ?.credits ?? 0
+      })
     }
     if (Number(maternity) > 0) {
-      balances.push({ type: 'maternity', balance: Number(maternity) })
+      balances.push({
+        type: 'maternity',
+        balance: Number(maternity),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === 'Maternity Leave')
+            ?.credits ?? 0
+      })
     }
 
     setCreditsUsed(balances)

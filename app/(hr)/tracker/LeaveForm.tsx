@@ -3,6 +3,7 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { generateReferenceCode } from '@/utils/text-helper'
 import { useCallback, useEffect, useState } from 'react'
+import 'react-calendar/dist/Calendar.css'
 import { useForm } from 'react-hook-form'
 
 // Types
@@ -29,7 +30,6 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
 
   const [selectedImages, setSelectedImages] = useState<any>([])
   const [saving, setSaving] = useState(false)
-  const [leaveType, setLeaveType] = useState('')
   const [approverError, setApproverError] = useState('')
 
   // selected approver
@@ -76,8 +76,9 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     mode: 'onSubmit'
   })
 
-  const watchedOtherPurpose = watch('other_purpose')
-  const watchedDays = watch('days')
+  const watchedType = watch('type') || ''
+  const watchedOtherPurpose = watch('other_purpose') || ''
+  const watchedDays = watch('days') || ''
 
   const onSubmit = async (formdata: LeaveTypes) => {
     if (!user) {
@@ -106,8 +107,8 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         leave_study_purpose: formdata.study_purpose,
         leave_other_purpose: formdata.other_purpose,
         leave_days: formdata.days,
-        leave_from: formdata.from,
-        leave_to: formdata.to,
+        leave_dates: formdata.leave_dates,
+        leave_from: formdata.leave_from,
         leave_commutation: formdata.commutation,
         created_by: session.user.id,
         current_approver_id: session.user.id,
@@ -218,7 +219,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
       if (salary) {
         const moneyValue =
           Number(salary.salary) * Number(watchedDays) * 0.0478087
-        // setMonetizationAmount(moneyValue.toFixed(2).toString())
+        //
         setMonetizationAmount(
           moneyValue.toLocaleString('en-US', {
             minimumFractionDigits: 2,
@@ -228,7 +229,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchedOtherPurpose, watchedDays])
+  }, [watchedOtherPurpose, watchedDays, watchedType])
 
   const handleNotifyReceiver = async (
     trackerId: string,
@@ -325,8 +326,6 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 <div>
                   <select
                     {...register('type', { required: true })}
-                    value={leaveType}
-                    onChange={(e) => setLeaveType(e.target.value)}
                     className="app__select_standard"
                   >
                     <option value="">Choose</option>
@@ -342,8 +341,8 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </div>
             </div>
-            {(leaveType === 'Vacation Leave' ||
-              leaveType === 'Special Privilege Leave') && (
+            {(watchedType === 'Vacation Leave' ||
+              watchedType === 'Special Privilege Leave') && (
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
@@ -388,7 +387,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </>
             )}
-            {leaveType === 'Sick Leave' && (
+            {watchedType === 'Sick Leave' && (
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
@@ -431,7 +430,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </>
             )}
-            {leaveType === 'Special Leave Benefits for Women' && (
+            {watchedType === 'Special Leave Benefits for Women' && (
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
@@ -445,7 +444,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                         type="text"
                         className="app__select_standard"
                       />
-                      {errors.illness && (
+                      {errors.women_illness && (
                         <div className="app__error_message">
                           Please specify illness
                         </div>
@@ -455,7 +454,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </>
             )}
-            {leaveType === 'Study Leave' && (
+            {watchedType === 'Study Leave' && (
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">
@@ -483,7 +482,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </div>
             )}
-            {leaveType === 'Others' && (
+            {watchedType === 'Others' && (
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
@@ -504,7 +503,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                     </div>
                   </div>
                 </div>
-                {watch('other_purpose') !== '' && (
+                {watchedType === 'Others' && watchedOtherPurpose !== '' && (
                   <div className="app__form_field_container">
                     <LeaveBalanceBoxes user={currentUser} />
                   </div>
@@ -514,7 +513,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
             <div className="app__form_field_container">
               <div className="w-full">
                 <div className="app__label_standard">
-                  Number of working days applied for
+                  Total Number of working days applied for
                 </div>
                 <div>
                   <input
@@ -528,14 +527,20 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </div>
             </div>
-            {watch('other_purpose') !== '' && (
-              <div className="app__form_field_container">
-                <span className="app__label_standard">
+            {watchedType === 'Others' && watchedOtherPurpose !== '' && (
+              <div className="">
+                <div className="app__label_standard mb-0!">
                   Money Value:{' '}
                   <span className="font-bold text-green-700">
                     P {monetizationAmount}
                   </span>
-                </span>
+                </div>
+                <div>
+                  <span className="italic text-xs">
+                    (Actual amount may vary, please refer to HR for actual
+                    Amount)
+                  </span>
+                </div>
               </div>
             )}
           </div>
@@ -544,16 +549,16 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
           <div className="w-full px-4">
             <div className="app__form_field_container">
               <div className="w-full">
-                <div className="app__label_standard">Start Date</div>
+                <div className="app__label_standard">Inclusive Date/s</div>
                 <div>
                   <input
-                    {...register('from', { required: true })}
-                    type="date"
-                    className="app__select_standard"
+                    {...register('leave_dates', { required: true })}
+                    placeholder="E.g. January 2,3,5 2025"
+                    className="app__input_standard"
                   />
-                  {errors.from && (
+                  {errors.leave_dates && (
                     <div className="app__error_message">
-                      Start Date is required
+                      Inclusive Date/s is required
                     </div>
                   )}
                 </div>
@@ -561,16 +566,16 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
             </div>
             <div className="app__form_field_container">
               <div className="w-full">
-                <div className="app__label_standard">End Date</div>
-                <div>
+                <div className="app__label_standard">
+                  Specify the first day of the Inclusive Date/s
                   <input
-                    {...register('to', { required: true })}
+                    {...register('leave_from', { required: true })}
                     type="date"
-                    className="app__select_standard"
+                    className="app__input_standard"
                   />
-                  {errors.to && (
+                  {errors.leave_from && (
                     <div className="app__error_message">
-                      End Date is required
+                      Please specify the first day of the Inclusive Date/s
                     </div>
                   )}
                 </div>

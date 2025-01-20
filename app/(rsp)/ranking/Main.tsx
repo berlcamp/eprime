@@ -24,8 +24,8 @@ import type { RankingTypes } from '@/types'
 // Redux imports
 import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
+import { updateSlowList } from '@/GlobalRedux/Features/slowListSlice'
 import { format } from 'date-fns'
 import { TableIcon, User2Icon, UsersIcon } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -52,7 +52,7 @@ const Page: React.FC = () => {
   const [editData, setEditData] = useState<RankingTypes | null>(null)
 
   // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
+  const globallist = useSelector((state: any) => state.slowList.value)
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
@@ -74,7 +74,7 @@ const Page: React.FC = () => {
       )
 
       // update the list in redux
-      dispatch(updateList(result.data))
+      dispatch(updateSlowList(result.data))
 
       // Updating showing text in redux
       dispatch(
@@ -107,7 +107,7 @@ const Page: React.FC = () => {
 
       // update the list in redux
       const newList = [...list, ...result.data]
-      dispatch(updateList(newList))
+      dispatch(updateSlowList(newList))
 
       // Updating showing text in redux
       dispatch(

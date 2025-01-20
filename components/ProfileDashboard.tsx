@@ -216,12 +216,7 @@ export default function ProfileDashboard({
                             {leave.leave_type}
                           </td>
                           <td className="text-xs text-gray-600 font-normal">
-                            {format(
-                              new Date(leave.leave_from),
-                              'MMMM dd, yyyy'
-                            )}{' '}
-                            -{' '}
-                            {format(new Date(leave.leave_to), 'MMMM dd, yyyy')}
+                            {leave.leave_dates}
                           </td>
                         </tr>
                       ))}

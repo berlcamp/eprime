@@ -706,7 +706,7 @@ export async function fetchRankingApplicants(
     // filter keyword
     if (filters.filterKeyword && filters.filterKeyword !== '') {
       query = query.or(
-        `lastname.ilike.%${filters.filterKeyword}%,firstname.ilike.%${filters.filterKeyword}%,middlename.ilike.%${filters.filterKeyword}%`
+        `code.eq.${filters.filterKeyword},lastname.ilike.%${filters.filterKeyword}%,firstname.ilike.%${filters.filterKeyword}%,middlename.ilike.%${filters.filterKeyword}%`
       )
     }
 
@@ -1613,7 +1613,7 @@ export async function fetchDocuments(
     let query = supabase
       .from('hrm_request_trackers')
       .select(
-        '*, leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+        '*,leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url),certifier:certified_by(id,firstname,lastname,middlename,avatar_url),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
         { count: 'exact' }
       )
 

@@ -1,7 +1,14 @@
+import { FilterProvider } from '@/context/FilterContext'
+import SupabaseProvider from '@/context/SupabaseProvider'
+import { Providers } from '@/GlobalRedux/provider'
+import SupabaseListener from '@/utils/supabase-listener'
+import { createServerClient } from '@/utils/supabase-server'
+import { Toaster } from 'react-hot-toast'
 import 'server-only'
 import './globals.css'
 
-import Footer from '@/components/Footer'
+import type { Employee, Office, SchoolTypes, UserAccessTypes } from '@/types'
+import { logError } from '@/utils/fetchApi'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -12,21 +19,111 @@ export const metadata: Metadata = {
 // do not cache this layout
 export const revalidate = 0
 
-export default async function RootLayout() {
+export default async function RootLayout({
+  children
+}: {
+  children: React.ReactNode
+}) {
+  const supabase = createServerClient()
+
+  const {
+    data: { session }
+  } = await supabase.auth.getSession()
+
+  let sysUsers: Employee[] | null = []
+  let sysAccess: UserAccessTypes[] | null = []
+  let sysSchools: SchoolTypes[] | null = []
+  let sysOffices: Office[] | null = []
+
+  if (session) {
+    try {
+      const { data: systemAccess, error } = await supabase
+        .from('hrm_system_access')
+        .select('*, hrm_user:user_id(id,firstname,lastname,middlename)')
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+      if (error) {
+        void logError(
+          'root layout system access',
+          'hrm_system_access',
+          '',
+          error.message
+        )
+        throw new Error(error.message)
+      }
+
+      const { data: systemUsers, error: error2 } = await supabase
+        .from('hrm_users')
+        .select()
+        .eq('status', 'Active')
+
+      if (error2) {
+        void logError('root layout hrm users', 'hrm_users', '', error2.message)
+        throw new Error(error2.message)
+      }
+
+      const { data: schools, error: error3 } = await supabase
+        .from('hrm_schools')
+        .select()
+        .not('head_user_id', 'is', null)
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+      if (error3) {
+        void logError(
+          'root layout hrm schools',
+          'hrm_schools',
+          '',
+          error3.message
+        )
+        throw new Error(error3.message)
+      }
+
+      const { data: offices, error: error4 } = await supabase
+        .from('hrm_offices')
+        .select()
+        .not('head_user_id', 'is', null)
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+
+      if (error4) {
+        void logError(
+          'root layout hrm offices',
+          'hrm_schools',
+          '',
+          error4.message
+        )
+        throw new Error(error4.message)
+      }
+
+      sysAccess = systemAccess
+      sysUsers = systemUsers
+      sysSchools = schools
+      sysOffices = offices
+    } catch (err) {
+      return 'Something went wrong, please contact the system administrator.'
+    }
+  }
+
   return (
     <html lang="en">
-      <body className="relative bg-gray-100">
-        <div className="app__home">
-          <div className="bg-gray-700 h-screen pb-10 pt-32 px-6 md:flex items-start md:space-x-4 justify-center">
-            <div className="md:w-[720px] md:max-w-[720px] space-y-4">
-              <div className="bg-gray-100 p-4 rounded-lg border ">
-                The system is currently down for maintenance. We apologize for
-                the inconvenience.
-              </div>
-            </div>
-          </div>
-          <Footer />
-        </div>
+      <body className={`relative ${session ? 'bg-white' : 'bg-gray-100'}`}>
+        <SupabaseProvider
+          systemAccess={sysAccess}
+          session={session}
+          systemUsers={sysUsers}
+          systemSchools={sysSchools}
+          systemOffices={sysOffices}
+        >
+          <SupabaseListener serverAccessToken={session?.access_token} />
+          {!session && <>{children}</>}
+          {session && (
+            <Providers>
+              <FilterProvider>
+                <Toaster />
+                {children}
+              </FilterProvider>
+            </Providers>
+          )}
+        </SupabaseProvider>
       </body>
     </html>
   )
