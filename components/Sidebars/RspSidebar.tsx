@@ -15,7 +15,7 @@ const RspSidebar = () => {
     <>
       {
         // Check access from permission settings
-        (hasAccess('rsp_manager') || hasAccess('hr')) && (
+        hasAccess('rsp_manager') && (
           <ul className="pt-8 mt-4 space-y-2 border-gray-700">
             <li>
               <div className="flex items-center text-gray-500 items-centers space-x-1 px-2">
@@ -45,6 +45,7 @@ const RspSidebar = () => {
             <span>Selection</span>
           </div>
         </li>
+
         <li>
           <Link
             href="/ranking"
@@ -55,16 +56,21 @@ const RspSidebar = () => {
             <span className="flex-1 ml-3 whitespace-nowrap">Ranking</span>
           </Link>
         </li>
-        <li>
-          <Link
-            href="/erfscreening"
-            className={`app__menu_link ${
-              currentRoute === '/erfscreening' ? 'app_menu_link_active' : ''
-            }`}
-          >
-            <span className="flex-1 ml-3 whitespace-nowrap">ERF Screening</span>
-          </Link>
-        </li>
+
+        {(hasAccess('rsp_manager') || hasAccess('hr')) && (
+          <li>
+            <Link
+              href="/erfscreening"
+              className={`app__menu_link ${
+                currentRoute === '/erfscreening' ? 'app_menu_link_active' : ''
+              }`}
+            >
+              <span className="flex-1 ml-3 whitespace-nowrap">
+                ERF Screening
+              </span>
+            </Link>
+          </li>
+        )}
       </ul>
       {
         // Check access from permission settings
