@@ -538,7 +538,7 @@ export async function fetchItems(
     query = query.range(from, to)
 
     // Order By
-    query = query.order('id', { ascending: false })
+    query = query.order('user_id', { ascending: false })
 
     const { data: assignmentsData, error, count } = await query
 
