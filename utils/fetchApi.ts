@@ -300,6 +300,9 @@ export async function fetchEmployees(
         query = query.neq('salary_step', '8')
         query = query.is('date_of_next_step_increment', null)
       }
+      if (filters.filterSetupStatus === 'No Plantilla') {
+        query = query.is('item_id', null)
+      }
     }
 
     // Per Page from context

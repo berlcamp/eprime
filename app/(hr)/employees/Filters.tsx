@@ -232,6 +232,7 @@ const Filters = ({
                 <option value="No date of next increment">
                   No date of next increment
                 </option>
+                <option value="No Plantilla">No Plantilla</option>
               </select>
             </div>
           </div>
