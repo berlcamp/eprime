@@ -7,7 +7,12 @@ import 'react-calendar/dist/Calendar.css'
 import { useForm } from 'react-hook-form'
 
 // Types
-import type { Employee, LeaveTypes, SalaryGradeTypes } from '@/types'
+import type {
+  Employee,
+  LeaveCreditTypes,
+  LeaveTypes,
+  SalaryGradeTypes
+} from '@/types'
 
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
@@ -27,6 +32,19 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   const { supabase, session, systemUsers } = useSupabase()
   const [salaryGrades, setSalaryGrades] = useState<SalaryGradeTypes[] | []>([])
   const [monetizationAmount, setMonetizationAmount] = useState('')
+
+  const [withPay, setWithPay] = useState(0)
+  const [withoutPay, setWithoutPay] = useState(0)
+
+  const [leaveCreditBalances, setLeaveCreditBalances] = useState<
+    LeaveCreditTypes[] | []
+  >([])
+
+  const [balances, setBalances] = useState<{
+    type: string
+    balance: string
+    original_balance: number
+  }>()
 
   const [selectedImages, setSelectedImages] = useState<any>([])
   const [saving, setSaving] = useState(false)
@@ -95,7 +113,46 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     const refCode = generateReferenceCode()
 
     try {
+      const creditsUsed = {
+        leave_credit_use_vl:
+          balances?.type === 'Vacation Leave' ? balances?.balance : null,
+        leave_credit_use_sl:
+          balances?.type === 'Sick Leave' ? balances?.balance : null,
+        leave_credit_use_sc:
+          balances?.type === 'Service Credit' ? balances?.balance : null,
+        leave_credit_use_adoption:
+          balances?.type === 'Adoption Leave' ? balances?.balance : null,
+        leave_credit_use_vawc:
+          balances?.type === '10-Day VAWC Leave' ? balances?.balance : null,
+        leave_credit_use_emergency:
+          balances?.type === 'Special Emergency (Calamity) Leave'
+            ? balances?.balance
+            : null,
+        leave_credit_use_study:
+          balances?.type === 'Study Leave' ? balances?.balance : null,
+        leave_credit_use_soloparent:
+          balances?.type === 'Solo Parent Leave' ? balances?.balance : null,
+        leave_credit_use_slbw:
+          balances?.type === 'Special Leave Benefits For Women'
+            ? balances?.balance
+            : null,
+        leave_credit_use_spl:
+          balances?.type === 'Special Privilege Leave'
+            ? balances?.balance
+            : null,
+        leave_credit_use_rehab:
+          balances?.type === 'Rehabilitation Leave' ? balances?.balance : null,
+        leave_credit_use_paternity:
+          balances?.type === 'Paternity Leave' ? balances?.balance : null,
+        leave_credit_use_maternity:
+          balances?.type === 'Maternity Leave' ? balances?.balance : null,
+        leave_days_with_pay: withPay,
+        leave_days_without_pay: withoutPay,
+        credits_used: balances
+      }
+
       const newData = {
+        ...creditsUsed,
         type: 'Leave',
         reference_code: refCode,
         leave_type: formdata.type,
@@ -306,11 +363,49 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   }, [fileRejections])
 
   useEffect(() => {
+    let type = watchedType
+    if (
+      currentUser.position_type === 'Teaching' &&
+      [
+        'Vacation Leave',
+        'Sick Leave',
+        'Others',
+        'Mandatory/Forced Leave'
+      ].includes(watchedType)
+    ) {
+      type = 'Service Credit'
+    }
+
+    const origBal =
+      leaveCreditBalances.find((c) => c.type === type)?.credits ?? 0
+    setBalances({
+      type,
+      balance: watchedDays,
+      original_balance: origBal
+    })
+
+    const withpayAmount =
+      origBal >= Number(watchedDays) ? Number(watchedDays) : Math.floor(origBal)
+    const withoutpayAmount = Number(watchedDays) - withpayAmount
+
+    setWithPay(withpayAmount)
+    setWithoutPay(withoutpayAmount)
+  }, [watchedType, watchedDays])
+
+  useEffect(() => {
     const fetchSalaryGradesData = async () => {
       const result = await fetchSalaryGrades(999, 0)
       setSalaryGrades(result.data.length > 0 ? result.data : [])
     }
+    const fetchBalances = async () => {
+      const { data } = await supabase
+        .from('hrm_leave_credits')
+        .select()
+        .eq('user_id', session.user.id)
+      setLeaveCreditBalances(data)
+    }
 
+    void fetchBalances()
     void fetchSalaryGradesData()
   }, [])
 

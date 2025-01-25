@@ -722,6 +722,66 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                         </div>
                       )}
                     </div>
+                    <div className="flex space-x-2 items-center">
+                      <span className="font-bold">Maternity Leave:</span>
+                      <input
+                        {...register('maternity', {
+                          max: {
+                            value:
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Maternity Leave'
+                              )?.credits ?? 0,
+                            message: `Cannot exceed ${
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Maternity Leave'
+                              )?.credits ?? '0'
+                            }`
+                          },
+                          min: {
+                            value: 0,
+                            message: 'Invalid Input'
+                          }
+                        })}
+                        type="number"
+                        step="any"
+                        className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                      />
+                      {errors.maternity?.message && (
+                        <div className="app__error_message">
+                          {errors.maternity.message}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex space-x-2 items-center">
+                      <span className="font-bold">Paternity Leave:</span>
+                      <input
+                        {...register('paternity', {
+                          max: {
+                            value:
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Paternity Leave'
+                              )?.credits ?? 0,
+                            message: `Cannot exceed ${
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Paternity Leave'
+                              )?.credits ?? '0'
+                            }`
+                          },
+                          min: {
+                            value: 0,
+                            message: 'Invalid Input'
+                          }
+                        })}
+                        type="number"
+                        step="any"
+                        className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                      />
+                      {errors.paternity?.message && (
+                        <div className="app__error_message">
+                          {errors.paternity.message}
+                        </div>
+                      )}
+                    </div>
 
                     {/* Female */}
                     {documentData.creator?.gender.toLowerCase() ===
@@ -791,73 +851,6 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                           {errors.slbw?.message && (
                             <div className="app__error_message">
                               {errors.slbw.message}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex space-x-2 items-center">
-                          <span className="font-bold">Maternity Leave:</span>
-                          <input
-                            {...register('maternity', {
-                              max: {
-                                value:
-                                  leaveCreditBalances.find(
-                                    (b) => b.type === 'Maternity Leave'
-                                  )?.credits ?? 0,
-                                message: `Cannot exceed ${
-                                  leaveCreditBalances.find(
-                                    (b) => b.type === 'Maternity Leave'
-                                  )?.credits ?? '0'
-                                }`
-                              },
-                              min: {
-                                value: 0,
-                                message: 'Invalid Input'
-                              }
-                            })}
-                            type="number"
-                            step="any"
-                            className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                          />
-                          {errors.maternity?.message && (
-                            <div className="app__error_message">
-                              {errors.maternity.message}
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-
-                    {/* Male */}
-                    {documentData.creator?.gender.toLowerCase() === 'male' && (
-                      <>
-                        <div className="flex space-x-2 items-center">
-                          <span className="font-bold">Paternity Leave:</span>
-                          <input
-                            {...register('paternity', {
-                              max: {
-                                value:
-                                  leaveCreditBalances.find(
-                                    (b) => b.type === 'Paternity Leave'
-                                  )?.credits ?? 0,
-                                message: `Cannot exceed ${
-                                  leaveCreditBalances.find(
-                                    (b) => b.type === 'Paternity Leave'
-                                  )?.credits ?? '0'
-                                }`
-                              },
-                              min: {
-                                value: 0,
-                                message: 'Invalid Input'
-                              }
-                            })}
-                            type="number"
-                            step="any"
-                            className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
-                          />
-                          {errors.paternity?.message && (
-                            <div className="app__error_message">
-                              {errors.paternity.message}
                             </div>
                           )}
                         </div>
@@ -1029,7 +1022,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
 
                   <CustomButton
                     containerStyles="app__btn_green mt-2"
-                    title="Save Changes"
+                    title="Certify"
                     isDisabled={
                       saving || withPay > Number(documentData.leave_days)
                     }
