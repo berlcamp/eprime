@@ -225,6 +225,37 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         throw new Error(insertCtoError.message)
       }
 
+      // Added log to latest tracker flow
+      const { data } = await supabase
+        .from('hrm_tracker_flow')
+        .select()
+        .eq('tracker_id', documentData.id)
+        .order('id', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (data) {
+        const newData = {
+          message: 'Leave Credits Certified',
+          tracker_flow_id: data.id,
+          user_id: session.user.id
+        }
+
+        const { error: error2 } = await supabase
+          .from('hrm_tracker_logs')
+          .insert(newData)
+          .eq('id', documentData.id)
+
+        if (error2) {
+          void logError(
+            'Leave Credits Certified Flow Logs',
+            'hrm_tracker_flow',
+            '',
+            error2.message
+          )
+        }
+      }
+
       // pop up the success message
       setToast('success', 'Successfully saved.')
 

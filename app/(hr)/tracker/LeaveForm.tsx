@@ -148,7 +148,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
           balances?.type === 'Maternity Leave' ? balances?.balance : null,
         leave_days_with_pay: withPay,
         leave_days_without_pay: withoutPay,
-        credits_used: balances
+        credits_used: [balances]
       }
 
       const newData = {
