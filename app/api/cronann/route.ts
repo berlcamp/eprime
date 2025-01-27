@@ -12,33 +12,49 @@ export async function GET() {
     }
   })
 
-  // Monthly VL/SL increments
-  const { data, error: incrementError } = await supabase.rpc(
-    'increment_monthly_leave_credits'
-  )
-  if (incrementError) {
-    return NextResponse.json(incrementError)
-  }
+  try {
+    // Monthly VL/SL increments
+    const { data, error: incrementError } = await supabase.rpc(
+      'increment_monthly_leave_credits'
+    )
 
-  // CTO expiration cron
-  const { error: ctoError } = await supabase.rpc('automate_cto_expiration')
-  if (ctoError) {
-    return NextResponse.json(ctoError)
-  }
+    if (incrementError) {
+      throw new Error(incrementError.message)
+    }
 
-  // Reset annualy credits
-  const { error: resetYearlyCreditsError } = await supabase.rpc(
-    'reset_annual_leave_credits'
-  )
-  if (resetYearlyCreditsError) {
-    return NextResponse.json(resetYearlyCreditsError)
-  }
+    if (data[0].status === 'Error') {
+      throw new Error(`Increment failed: ${data[0].status}`)
+    }
 
-  // NOSI
-  const { error: nosiCronError } = await supabase.rpc('process_nosi')
-  if (nosiCronError) {
-    return NextResponse.json(nosiCronError)
-  }
+    // CTO expiration cron
+    const { error: ctoError } = await supabase.rpc('automate_cto_expiration')
+    if (ctoError) {
+      throw new Error(ctoError.message)
+    }
 
-  return NextResponse.json('Cron completed', data)
+    // Reset annual leave credits
+    const { error: resetYearlyCreditsError } = await supabase.rpc(
+      'reset_annual_leave_credits'
+    )
+    if (resetYearlyCreditsError) {
+      throw new Error(resetYearlyCreditsError.message)
+    }
+
+    // NOSI cron
+    const { error: nosiCronError } = await supabase.rpc('process_nosi')
+    if (nosiCronError) {
+      throw new Error(nosiCronError.message)
+    }
+
+    return NextResponse.json('Cron completed', { status: 200 })
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    } else {
+      return NextResponse.json(
+        { error: 'An unknown error occurred' },
+        { status: 500 }
+      )
+    }
+  }
 }

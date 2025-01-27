@@ -1,27 +1,39 @@
 'use client'
 import { CustomButton, SettingsSideBar, Sidebar, Title } from '@/components'
 import TopBar from '@/components/TopBar'
-import { useSupabase } from '@/context/SupabaseProvider'
-import React from 'react'
-
-import { logError } from '@/utils/fetchApi'
+import React, { useState } from 'react'
 
 const Page: React.FC = () => {
-  const { supabase } = useSupabase()
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleRunNosiNosa = async () => {
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+
+  const handleRunAllCron = async () => {
+    setIsLoading(true) // Set loading to true when the request starts
     try {
-      const { error } = await supabase
-        .from('hrm_system_access')
-        .select('*, hrm_user:user_id(id,firstname,lastname,middlename)')
-        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+      const response = await fetch('/api/cronann', {
+        method: 'GET', // or 'POST', depending on your API implementation
+        headers: {
+          'Content-Type': 'application/json' // if your API expects JSON
+        }
+      })
 
-      if (error) {
-        void logError('system access', 'system_access', '', error.message)
-        throw new Error(error.message)
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.message || 'Failed to run cron jobs.')
+        setMessage(null) // clear success message if there’s an error
+        return
       }
-    } catch (err) {
-      console.error(err)
+
+      setMessage('Cron jobs ran successfully!')
+      setError(null) // clear any previous error message
+    } catch (error) {
+      setError('An error occurred while running cron jobs.')
+      setMessage(null) // clear success message if there’s an error
+    } finally {
+      setIsLoading(false) // Set loading to false once the request finishes
     }
   }
 
@@ -40,14 +52,25 @@ const Page: React.FC = () => {
           <div className="app__content pb-20">
             <CustomButton
               containerStyles="app__btn_green"
-              title="Run NOSI/NOSA Cron"
+              title={isLoading ? 'Running cron..' : 'Run All Cron'}
               btnType="button"
-              handleClick={handleRunNosiNosa}
+              isDisabled={isLoading}
+              handleClick={handleRunAllCron}
             />
+
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="mt-4 text-blue-500">Loading...</div> // You can replace this with a spinner or loading animation
+            )}
+
+            {message && <div className="mt-4 text-green-500">{message}</div>}
+
+            {error && <div className="mt-4 text-red-500">{error}</div>}
           </div>
         </div>
       </div>
     </>
   )
 }
+
 export default Page
