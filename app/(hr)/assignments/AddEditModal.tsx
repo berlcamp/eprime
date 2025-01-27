@@ -286,6 +286,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       assignment_id: newId,
       org_id: process.env.NEXT_PUBLIC_ORG_ID,
       from: formdata.from,
+      to: 'Present',
       designation: hrmPosition?.name,
       status: formdata.service_record_status,
       salary: '',

@@ -233,6 +233,9 @@ const Filters = ({
                   No date of next increment
                 </option>
                 <option value="No Plantilla">No Plantilla</option>
+                <option value="No Preset Record on Service Records">
+                  No Preset Record on Service Records
+                </option>
               </select>
             </div>
           </div>

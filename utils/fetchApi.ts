@@ -305,12 +305,18 @@ export async function fetchEmployees(
       }
     }
 
-    // Per Page from context
-    const from = rangeFrom
-    const to = from + (perPageCount - 1)
-
-    // Per Page from context
-    query = query.range(from, to)
+    if (filters.filterSetupStatus === 'No Preset Record on Service Records') {
+      const from = 0
+      const to = 9999
+      // Per Page from context
+      query = query.range(from, to)
+    } else {
+      // Per Page from context
+      const from = rangeFrom
+      const to = from + (perPageCount - 1)
+      // Per Page from context
+      query = query.range(from, to)
+    }
 
     // Order By
     query = query.order('id', { ascending: false })

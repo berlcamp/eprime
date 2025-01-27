@@ -20,12 +20,18 @@ import React, { useEffect, useState } from 'react'
 import Filters from './Filters'
 
 // Types
-import type { AssignmentTypes, DesignationTypes, Employee } from '@/types'
+import type {
+  AssignmentTypes,
+  DesignationTypes,
+  Employee,
+  ServiceRecordTypes
+} from '@/types'
 
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { superAdmins } from '@/constants'
+import { useSupabase } from '@/context/SupabaseProvider'
 import Link from 'next/link'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -50,6 +56,7 @@ const Page: React.FC = () => {
   const dispatch = useDispatch()
 
   const { hasAccess, session } = useFilter()
+  const { supabase } = useSupabase()
 
   const fetchData = async () => {
     setLoading(true)
@@ -114,10 +121,43 @@ const Page: React.FC = () => {
 
   // Update list whenever list in redux updates
   useEffect(() => {
-    setList(globallist)
+    if (filterSetupStatus === 'No Preset Record on Service Records') {
+      const filterData = async () => {
+        setLoading(true)
+        const list = globallist
+        // Step 1: Get all user IDs with 'to = present'
+        const { data: presentRecords, error: presentError } = await supabase
+          .from('hrm_service_records')
+          .select('*')
+          .ilike('to', '%present%')
+
+        if (!presentError) {
+          // Extract user IDs
+          const presentUserIds = presentRecords.map(
+            (record: ServiceRecordTypes) => record.user_id
+          )
+          const filteredListed = list.filter(
+            (emp: Employee) => !presentUserIds.includes(emp.id)
+          )
+          setList(filteredListed)
+          setLoading(false)
+
+          // Updating showing text in redux
+          dispatch(
+            updateResultCounter({
+              showing: filteredListed.length,
+              results: filteredListed.length
+            })
+          )
+        }
+      }
+      void filterData()
+    } else {
+      setList(globallist)
+    }
   }, [globallist])
 
-  // Featch data
+  // Fetch data
   useEffect(() => {
     setList([])
     void fetchData()
