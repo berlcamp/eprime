@@ -427,7 +427,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         setVlslBalance(vlsl)
 
         // display the change to the UI
-        setPositionTypeChange('Non-teaching')
+        setPositionTypeChange(type)
       }
     }
 
