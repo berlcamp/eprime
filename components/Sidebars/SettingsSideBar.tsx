@@ -119,6 +119,16 @@ const SettingsSideBar = () => {
             <span className="flex-1 ml-3 whitespace-nowrap">System Access</span>
           </Link>
         </li>
+        <li>
+          <Link
+            href="/settings/cron"
+            className={`app__menu_link ${
+              currentRoute === '/settings/cron' ? 'app_menu_link_active' : ''
+            }`}
+          >
+            <span className="flex-1 ml-3 whitespace-nowrap">Cron Jobs</span>
+          </Link>
+        </li>
         {session.user.email === 'berlcamp@gmail.com' && (
           <li>
             <Link

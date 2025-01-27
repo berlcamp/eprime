@@ -12,19 +12,32 @@ export async function GET() {
     }
   })
 
-  // Trigger stored procedures
+  // Monthly VL/SL increments
   const { data, error: incrementError } = await supabase.rpc(
     'increment_monthly_leave_credits'
   )
-
   if (incrementError) {
     return NextResponse.json(incrementError)
   }
 
-  const { error: ctoError } = await supabase.rpc('automated_cto_expiration')
-
+  // CTO expiration cron
+  const { error: ctoError } = await supabase.rpc('automate_cto_expiration')
   if (ctoError) {
     return NextResponse.json(ctoError)
+  }
+
+  // Reset annualy credits
+  const { error: resetYearlyCreditsError } = await supabase.rpc(
+    'reset_annual_leave_credits'
+  )
+  if (resetYearlyCreditsError) {
+    return NextResponse.json(resetYearlyCreditsError)
+  }
+
+  // NOSI
+  const { error: nosiCronError } = await supabase.rpc('process_nosi')
+  if (nosiCronError) {
+    return NextResponse.json(nosiCronError)
   }
 
   return NextResponse.json('Cron completed', data)
