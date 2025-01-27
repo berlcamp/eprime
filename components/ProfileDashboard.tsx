@@ -216,7 +216,39 @@ export default function ProfileDashboard({
                             {leave.leave_type}
                           </td>
                           <td className="text-xs text-gray-600 font-normal">
-                            {leave.leave_dates}
+                            <div className="text-xs">
+                              {leave.leave_dates?.length > 10 ? (
+                                <span>
+                                  From{' '}
+                                  <span className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2">
+                                    {format(
+                                      new Date(leave.leave_dates[0].date),
+                                      'MMM d, yyyy'
+                                    )}
+                                  </span>
+                                  to{' '}
+                                  <span className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2">
+                                    {format(
+                                      new Date(
+                                        leave.leave_dates[
+                                          leave.leave_dates.length - 1
+                                        ].date
+                                      ),
+                                      'MMM d, yyyy'
+                                    )}
+                                  </span>
+                                </span>
+                              ) : (
+                                leave.leave_dates?.map((day) => (
+                                  <span
+                                    className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2"
+                                    key={day.id}
+                                  >
+                                    {format(new Date(day.date), 'MMM d, yyyy')}
+                                  </span>
+                                ))
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}

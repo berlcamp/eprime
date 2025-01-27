@@ -4,7 +4,7 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import { generateReferenceCode } from '@/utils/text-helper'
 import { useCallback, useEffect, useState } from 'react'
 import 'react-calendar/dist/Calendar.css'
-import { useForm } from 'react-hook-form'
+import { useFieldArray, useForm } from 'react-hook-form'
 
 // Types
 import type {
@@ -20,6 +20,7 @@ import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { leaveTypes } from '@/constants'
 import { fetchSalaryGrades, logError } from '@/utils/fetchApi'
 import { XMarkIcon } from '@heroicons/react/20/solid'
+import { eachDayOfInterval, format } from 'date-fns'
 import { useDropzone, type FileWithPath } from 'react-dropzone'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -48,6 +49,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
 
   const [selectedImages, setSelectedImages] = useState<any>([])
   const [saving, setSaving] = useState(false)
+
   const [approverError, setApproverError] = useState('')
 
   // selected approver
@@ -89,14 +91,32 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     formState: { errors },
     reset,
     watch,
+    setValue,
+    getValues,
+    control,
     handleSubmit
   } = useForm<LeaveTypes>({
-    mode: 'onSubmit'
+    mode: 'onSubmit',
+    defaultValues: {
+      leave_dates: [
+        {
+          date: ''
+        }
+      ]
+    }
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'leave_dates'
   })
 
   const watchedType = watch('type') || ''
   const watchedOtherPurpose = watch('other_purpose') || ''
   const watchedDays = watch('days') || ''
+  const watchedLeaveFrom = watch('leave_from')
+  const watchedLeaveTo = watch('leave_to')
+  const watchedLeaveDates = watch('leave_dates') || []
 
   const onSubmit = async (formdata: LeaveTypes) => {
     if (!user) {
@@ -164,8 +184,8 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         leave_study_purpose: formdata.study_purpose,
         leave_other_purpose: formdata.other_purpose,
         leave_days: formdata.days,
-        leave_dates: formdata.leave_dates,
         leave_from: formdata.leave_from,
+        leave_to: formdata.leave_to,
         leave_commutation: formdata.commutation,
         created_by: session.user.id,
         current_approver_id: session.user.id,
@@ -191,6 +211,41 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
           'Saving failed, please reload the page and try again.'
         )
         throw new Error(error.message)
+      }
+
+      // Generate an array of all dates in the range
+      let dateRange = []
+      if (formdata.leave_from !== '' && formdata.leave_to !== '') {
+        dateRange = eachDayOfInterval({
+          start: new Date(formdata.leave_from),
+          end: new Date(formdata.leave_to)
+        })
+      } else {
+        dateRange = formdata.leave_dates
+          .filter((item) => item.date) // Ensure the date is valid (not blank)
+          .map((item) => new Date(item.date))
+          .sort((a, b) => a.getTime() - b.getTime())
+      }
+
+      // Map the dates to the required format
+      const insertArray = dateRange.map((date, index) => ({
+        tracker_id: data[0].id,
+        date: format(date, 'yyyy-MM-dd'),
+        is_paid: index < withPay // Mark as paid if within the withPay limit
+      }))
+
+      // Store each leave dates
+      const { error: datesError } = await supabase
+        .from('hrm_leave_dates')
+        .insert(insertArray)
+
+      if (datesError) {
+        void logError('Leave Days', 'hrm_leave_dates', '', datesError.message)
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(datesError.message)
       }
 
       const { error: error2 } = await supabase.from('hrm_tracker_flow').insert([
@@ -288,6 +343,37 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedOtherPurpose, watchedDays, watchedType])
 
+  useEffect(() => {
+    if (watchedLeaveFrom && watchedLeaveTo) {
+      const startDate = new Date(watchedLeaveFrom).getTime()
+      const endDate = new Date(watchedLeaveTo).getTime()
+
+      if (!isNaN(startDate) && !isNaN(endDate) && endDate >= startDate) {
+        const days = Math.ceil(
+          (endDate - startDate) / (1000 * 60 * 60 * 24) + 1
+        )
+        setValue('days', days.toString())
+      } else {
+        setValue('days', '') // Reset totalDays if leave_to is before leave_from
+      }
+    }
+  }, [watchedLeaveFrom, watchedLeaveTo])
+
+  useEffect(() => {
+    // reset date values
+    setValue('leave_from', '')
+    setValue('leave_to', '')
+    setValue('leave_dates', [
+      {
+        date: ''
+      }
+    ])
+  }, [watchedType])
+
+  useEffect(() => {
+    setValue('days', watchedLeaveDates.length.toString())
+  }, [watchedLeaveDates])
+
   const handleNotifyReceiver = async (
     trackerId: string,
     receiverId: string,
@@ -355,6 +441,10 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     }
   }
 
+  const handleAddDate = () => {
+    append({ date: '' }) // Add a blank date
+  }
+
   useEffect(() => {
     if (fileRejections.length > 0) {
       setSelectedImages([])
@@ -378,9 +468,11 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
 
     const origBal =
       leaveCreditBalances.find((c) => c.type === type)?.credits ?? 0
+    const balance = origBal >= Number(watchedDays) ? watchedDays : origBal
+
     setBalances({
       type,
-      balance: watchedDays,
+      balance: balance.toString(),
       original_balance: origBal
     })
 
@@ -605,23 +697,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 )}
               </>
             )}
-            <div className="app__form_field_container">
-              <div className="w-full">
-                <div className="app__label_standard">
-                  Total Number of working days applied for
-                </div>
-                <div>
-                  <input
-                    {...register('days', { required: true })}
-                    type="number"
-                    className="app__select_standard"
-                  />
-                  {errors.days && (
-                    <div className="app__error_message">Days is required</div>
-                  )}
-                </div>
-              </div>
-            </div>
+
             {watchedType === 'Others' && watchedOtherPurpose !== '' && (
               <div className="">
                 <div className="app__label_standard mb-0!">
@@ -646,15 +722,75 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
               <div className="w-full">
                 <div className="app__label_standard">Inclusive Date/s</div>
                 <div>
-                  <input
-                    {...register('leave_dates', { required: true })}
-                    placeholder="E.g. January 2,3,5 2025"
-                    className="app__input_standard"
-                  />
-                  {errors.leave_dates && (
-                    <div className="app__error_message">
-                      Inclusive Date/s is required
-                    </div>
+                  {![
+                    'Maternity Leave',
+                    'Study Leave',
+                    'Rehabilitation Leave'
+                  ].includes(watchedType) ? (
+                    <>
+                      {fields.map((_q, index) => (
+                        <div key={index} className="app__form_field_container">
+                          <div>
+                            <div className="flex items-center justify-start space-x-2">
+                              <input
+                                type="date"
+                                className="app__input_standard"
+                                {...register(`leave_dates.${index}.date`, {
+                                  required: true
+                                })}
+                              />
+                              {fields.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="app__btn_red_xs"
+                                  onClick={() => remove(index)}
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                            {errors.leave_dates?.[index]?.date && (
+                              <div className="app__error_message">
+                                Date is required
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        className="app__btn_blue_xs"
+                        onClick={handleAddDate}
+                      >
+                        Add Date
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex space-x-2">
+                        <input
+                          {...register('leave_from', { required: true })}
+                          type="date"
+                          className="app__input_standard"
+                        />
+                        <input
+                          {...register('leave_to', { required: true })}
+                          type="date"
+                          className="app__input_standard"
+                        />
+                      </div>
+                      {errors.leave_from && (
+                        <div className="app__error_message">
+                          Date (From) is required
+                        </div>
+                      )}
+                      {errors.leave_to && (
+                        <div className="app__error_message">
+                          Date (To) is required
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -662,15 +798,20 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
             <div className="app__form_field_container">
               <div className="w-full">
                 <div className="app__label_standard">
-                  Specify the first day of the Inclusive Date/s
+                  Total Days:{' '}
+                  <span className="font-bold text-black">
+                    {getValues('days')}
+                  </span>
+                </div>
+                <div>
                   <input
-                    {...register('leave_from', { required: true })}
-                    type="date"
-                    className="app__input_standard"
+                    {...register('days', { required: true })}
+                    type="hidden"
+                    className="app__select_standard"
                   />
-                  {errors.leave_from && (
+                  {errors.days && (
                     <div className="app__error_message">
-                      Please specify the first day of the Inclusive Date/s
+                      Please choose dates to get Total Days
                     </div>
                   )}
                 </div>

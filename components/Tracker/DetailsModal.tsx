@@ -611,7 +611,7 @@ export default function DetailsModal({
           const newData = {
             user_id: documentData.created_by,
             org_id: process.env.NEXT_PUBLIC_ORG_ID,
-            from: documentData.leave_dates,
+            from: documentData.leave_dates[0]?.date ?? '',
             designation: documentData.creator.hrm_positions?.name,
             days_without_pay: documentData.leave_days_without_pay,
             remarks: documentData.leave_type,
@@ -1395,17 +1395,51 @@ export default function DetailsModal({
                                 </td>
                               </tr>
                             )}
-                          {documentData.leave_dates &&
-                            documentData.leave_dates.trim() !== '' && (
-                              <tr>
-                                <td className="px-2 py-2 font-light text-right">
-                                  Inclusive Dates:
-                                </td>
-                                <td className="text-sm font-medium">
-                                  {documentData.leave_dates}
-                                </td>
-                              </tr>
-                            )}
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Inclusive Dates:
+                            </td>
+                            <td className="text-sm font-medium">
+                              <div className="text-xs">
+                                {documentData.leave_dates?.length > 10 ? (
+                                  <span>
+                                    From{' '}
+                                    <span className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2">
+                                      {format(
+                                        new Date(
+                                          documentData.leave_dates[0].date
+                                        ),
+                                        'MMM d, yyyy'
+                                      )}
+                                    </span>
+                                    to{' '}
+                                    <span className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2">
+                                      {format(
+                                        new Date(
+                                          documentData.leave_dates[
+                                            documentData.leave_dates.length - 1
+                                          ].date
+                                        ),
+                                        'MMM d, yyyy'
+                                      )}
+                                    </span>
+                                  </span>
+                                ) : (
+                                  documentData.leave_dates?.map((day) => (
+                                    <span
+                                      className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2"
+                                      key={day.id}
+                                    >
+                                      {format(
+                                        new Date(day.date),
+                                        'MMM d, yyyy'
+                                      )}
+                                    </span>
+                                  ))
+                                )}
+                              </div>
+                            </td>
+                          </tr>
                           {documentData.leave_location &&
                             documentData.leave_location.trim() !== '' && (
                               <tr>

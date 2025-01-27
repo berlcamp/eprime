@@ -449,8 +449,14 @@ export interface LeaveTypes {
   study_purpose: string
   other_purpose: string
   days: string
-  leave_dates: string
+  // leave_dates: string
   leave_from: string
+  leave_to: string
+  leave_dates: Array<{
+    id?: string
+    date: string
+    is_paid?: boolean
+  }>
   commutation: string
   confirmed: string
 }
@@ -503,6 +509,7 @@ export interface LocatorSlipTypes {
 export interface ServiceRecordTypes {
   id: string
   user_id: string
+  employee: Employee
   org_id: string
   from: string
   to: string
@@ -611,8 +618,8 @@ export interface DocumentTypes {
   leave_study_purpose: string
   leave_other_purpose: string
   leave_days: string
-  leave_dates: string
   leave_from: string
+  leave_to: string
   leave_commutation: string
   leave_credit_use_vl: string
   leave_credit_use_sl: string
@@ -634,6 +641,11 @@ export interface DocumentTypes {
     type: string
     balance: number
     original_balance: number
+  }>
+  leave_dates: Array<{
+    id?: string
+    date: string
+    is_paid?: boolean
   }>
 
   locator_slip_purpose: string

@@ -38,6 +38,9 @@ export default function Page() {
   const [editData, setEditData] = useState<ServiceRecordTypes | null>(null)
   const [selectedId, setSelectedId] = useState('')
 
+  // const [noPresent, setNoPresent] = useState<Employee[] | []>([])
+  // const { supabase } = useSupabase()
+
   const [list, setList] = useState<ServiceRecordTypes[]>([])
 
   const [user, setUser] = useState<Employee | null>(null)
@@ -140,6 +143,43 @@ export default function Page() {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perPageCount])
+
+  // Featch data
+  // useEffect(() => {
+  //   const fetchNoPresentData = async () => {
+  //     // Step 1: Get all user IDs with 'to = present'
+  //     const { data: presentRecords, error: presentError } = await supabase
+  //       .from('hrm_service_records')
+  //       .select('user_id')
+  //       .ilike('to', '%present%')
+
+  //     if (presentError) {
+  //       console.error('Error fetching present records:', presentError)
+  //       return []
+  //     }
+
+  //     // Extract user IDs
+  //     const presentUserIds = presentRecords.map(
+  //       (record: ServiceRecordTypes) => record.user_id
+  //     )
+  //     const formattedIds = `(${presentUserIds.join(',')})`
+
+  //     // Step 2: Fetch users excluding those with 'to = present'
+  //     const { data: users, error: usersError } = await supabase
+  //       .from('hrm_users')
+  //       .select('*')
+  //       .not('id', 'in', formattedIds)
+
+  //     if (usersError) {
+  //       console.error('Error fetching users:', usersError)
+  //     } else {
+  //       setNoPresent(users)
+  //     }
+  //   }
+  //   void fetchNoPresentData()
+
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [])
 
   // Featch data
   useEffect(() => {
@@ -410,6 +450,30 @@ export default function Page() {
               )}
             </>
           )}
+
+          {/* <div className="text-gray-600 text-center mt-10">
+            <button className="app__btn_blue">
+              View Employees without Present Record
+            </button>
+          </div>
+          <div className="text-gray-600 text-center mt-2">
+            <table className="app__table">
+              <thead className="app__thead">
+                <tr>
+                  <th>Employees</th>
+                </tr>
+              </thead>
+              <tbody>
+                {noPresent?.map((emp, index) => (
+                  <tr key={index} className="app__tr">
+                    <td className="app__td">
+                      <UserBlock user={emp} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div> */}
         </div>
       </div>
       {/* Add/Edit Modal */}

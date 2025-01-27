@@ -31,6 +31,7 @@ export default function LeaveCard({ userId, userData }: PageProps) {
   const [loading, setLoading] = useState(false)
   const [list, setList] = useState<LeaveCardTypes[] | []>([])
   const [countResults, setCountResults] = useState(0)
+  const [refresh, setRefresh] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const [showAdjustmentForm, setShowAdjustmentForm] = useState(false)
@@ -193,7 +194,7 @@ export default function LeaveCard({ userId, userData }: PageProps) {
 
       // reset all form fields
       reset()
-
+      setRefresh(!refresh)
       setSaving(false)
     } catch (error) {
       console.error('error', error)
@@ -364,7 +365,7 @@ export default function LeaveCard({ userId, userData }: PageProps) {
       )}
       <div className="flex justify-end mt-2 mb-2 px-4">
         <div className="space-x-1">
-          <LeaveBalanceBoxes user={userData} />
+          <LeaveBalanceBoxes refresh={refresh} user={userData} />
         </div>
       </div>
 

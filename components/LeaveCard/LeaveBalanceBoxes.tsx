@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react'
 
 interface ModalProps {
   user: Employee
+  refresh?: boolean
 }
 
 interface boxes {
@@ -18,7 +19,7 @@ interface boxes {
   balance: string
 }
 
-export default function LeaveBalanceBoxes({ user }: ModalProps) {
+export default function LeaveBalanceBoxes({ user, refresh }: ModalProps) {
   const [balanceBoxes, setBalanceBoxes] = useState<boxes[] | []>([])
   const { supabase } = useSupabase()
 
@@ -127,7 +128,7 @@ export default function LeaveBalanceBoxes({ user }: ModalProps) {
         console.error(e)
       }
     })()
-  }, [])
+  }, [refresh])
 
   return (
     <div className="space-y-2">
