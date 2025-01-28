@@ -1250,6 +1250,8 @@ export default function DetailsModal({
               {documentData.receiver_id === session.user.id &&
                 (documentData.current_status === 'Approval Recommended' ||
                   hasAccess('sds') ||
+                  hasAccess('asds')) &&
+                (hasAccess('sds') ||
                   hasAccess('asds') ||
                   session.user.email === 'berlcamp@gmail.com') && (
                   <div className="mb-6">

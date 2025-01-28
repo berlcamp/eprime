@@ -34,7 +34,7 @@ const ReportsSidebar = () => {
               currentRoute === '/reports-leave' ? 'app_menu_link_active' : ''
             }`}
           >
-            <span className="flex-1 ml-3 whitespace-nowrap">Dashboard</span>
+            <span className="flex-1 ml-3 whitespace-nowrap">Leave</span>
           </Link>
         </li>
       </ul>
