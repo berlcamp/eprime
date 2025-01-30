@@ -132,7 +132,7 @@ export default function Signature({ userId }: { userId: string }) {
                     htmlFor="fileUpload"
                     className="cursor-pointer text-gray-600 flex items-start space-x-2 p-2 border border-dashed"
                   >
-                    <span>Select Scanned Signature File</span>
+                    <span>Select (100px X 100px) Scanned Signature File</span>
                     <PaperclipIcon className="w-4 h-4" />
                   </label>
 
