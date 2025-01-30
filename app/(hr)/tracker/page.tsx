@@ -332,6 +332,15 @@ const Page: React.FC = () => {
                             </span>
                           )}
                         </div>
+                        <div className="mt-1">
+                          {item.current_status !== 'For Verification' && (
+                            <span>
+                              Forwarded to {item.receiver.firstname}{' '}
+                              {item.receiver.middlename}{' '}
+                              {item.receiver.lastname}
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

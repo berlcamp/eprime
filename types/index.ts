@@ -149,6 +149,7 @@ export interface Employee {
   date_of_last_designation: string
   confirmed: string
   date_of_next_increment: string
+  signature_path: string
 }
 
 export interface LeaveCardTypes {

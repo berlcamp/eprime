@@ -15,6 +15,7 @@ import ProfileDashboard from '@/components/ProfileDashboard'
 import Promotions from '@/components/Promotions/Promotions'
 import ServiceCredits from '@/components/ServiceCredits/ServiceCredits'
 import ServiceRecords from '@/components/ServiceRecords/page'
+import Signature from '@/components/Signature/Signature'
 import UserRequests from '@/components/Tracker/UserRequests'
 import { superAdmins } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -418,6 +419,18 @@ export default function Page({ params }: { params: { id: string } }) {
                     </span>
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    href={`/profile/${userId}?page=signature`}
+                    className={`app__profile_menu_link ${
+                      page === 'signature' ? 'bg-gray-700' : ''
+                    }`}
+                  >
+                    <span className="flex-1 ml-3 whitespace-nowrap">
+                      Scanned Signature
+                    </span>
+                  </Link>
+                </li>
                 {(superAdmins.includes(session.user.email) ||
                   userId === session.user.id) && (
                   <li>
@@ -482,6 +495,7 @@ export default function Page({ params }: { params: { id: string } }) {
             )}
             {page && page === 'promotions' && <Promotions userId={userId} />}
             {page && page === 'pdf' && <Pdf userId={userId} />}
+            {page && page === 'signature' && <Signature userId={userId} />}
             {page && page === 'plantilla' && <Plantilla userId={userId} />}
             {page &&
               page === 'loginsettings' &&
