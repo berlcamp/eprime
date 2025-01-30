@@ -57,6 +57,12 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
   const dispatch = useDispatch()
 
   const handleAddEmployee = async () => {
+    if (saving) {
+      return
+    }
+
+    setSaving(true)
+
     if (!ctoData) return
 
     if (!user) {
