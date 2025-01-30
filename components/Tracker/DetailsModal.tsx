@@ -912,6 +912,9 @@ export default function DetailsModal({
         }
       }
 
+      // from leave days
+      await deleteleaveDays()
+
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
@@ -959,6 +962,7 @@ export default function DetailsModal({
         throw new Error(error.message)
       }
 
+      // add to tracker flow
       const { error: error2 } = await supabase.from('hrm_tracker_flow').insert({
         tracker_id: documentData.id,
         user_id: session.user.id,
@@ -973,6 +977,9 @@ export default function DetailsModal({
         )
         throw new Error(error2.message)
       }
+
+      // from leave days
+      await deleteleaveDays()
 
       // Update data in redux
       const items: DocumentTypes[] = [...globallist]
@@ -995,6 +1002,24 @@ export default function DetailsModal({
       setSaving(false)
     } catch (e) {
       console.error(e)
+    }
+  }
+
+  const deleteleaveDays = async () => {
+    // from leave days
+    const { error: error3 } = await supabase
+      .from('hrm_leave_dates')
+      .delete()
+      .eq('tracker_id', documentData.id)
+
+    if (error3) {
+      void logError(
+        'Disapproved - delete leave dates',
+        'hrm_leave_days',
+        '',
+        error3.message
+      )
+      setToast('error', 'Saving failed, please reload the page and try again.')
     }
   }
 
@@ -1857,9 +1882,11 @@ export default function DetailsModal({
                     </tbody>
                   </table>
                   {/* Certification of leave credits */}
-                  {documentData.type === 'Leave' && (
-                    <CreditsCertification requestData={documentData} />
-                  )}
+                  {documentData.type === 'Leave' &&
+                    documentData.current_status !== 'Cancelled' &&
+                    documentData.current_status !== 'Disapproved' && (
+                      <CreditsCertification requestData={documentData} />
+                    )}
                 </div>
               </div>
             </div>

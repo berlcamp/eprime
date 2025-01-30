@@ -256,6 +256,48 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         }
       }
 
+      // delete existing leave dates first
+      const { error: deleteDatesError } = await supabase
+        .from('hrm_leave_dates')
+        .delete()
+        .eq('tracker_id', documentData.id)
+
+      if (deleteDatesError) {
+        void logError(
+          'delete Leave Days',
+          'hrm_leave_dates',
+          '',
+          deleteDatesError.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(deleteDatesError.message)
+      }
+
+      console.log('documentData.leave_dates', documentData.leave_dates)
+      // Map the dates to the required format
+      const insertArray = documentData.leave_dates.map((d, index) => ({
+        tracker_id: documentData.id,
+        date: d.date,
+        is_paid: index < withPay // Mark as paid if within the withPay limit
+      }))
+
+      // Store each leave dates
+      const { error: datesError } = await supabase
+        .from('hrm_leave_dates')
+        .insert(insertArray)
+
+      if (datesError) {
+        void logError('Leave Days', 'hrm_leave_dates', '', datesError.message)
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(datesError.message)
+      }
+
       // pop up the success message
       setToast('success', 'Successfully saved.')
 
@@ -490,7 +532,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         const { data, error } = await supabase
           .from('hrm_request_trackers')
           .select(
-            '*, leave_cocs:hrm_leave_coc(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,position_type,hrm_positions:position_id(name),hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+            '*,leave_cocs:hrm_leave_coc(*), leave_dates:hrm_leave_dates(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,signature_path,hrm_offices:office_id(*),hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url,signature_path),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url,signature_path),certifier:certified_by(id,firstname,lastname,middlename,avatar_url,signature_path),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url,signature_path),hrm_remarks(*)',
             { count: 'exact' }
           )
           .eq('id', requestData.id)

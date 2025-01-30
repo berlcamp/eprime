@@ -1608,7 +1608,7 @@ export async function fetchDocuments(
   rangeFrom: number
 ) {
   try {
-    // Get Department ID within Tracker Flow
+    // Get ID within Tracker Flow
     const { data: trackerFlow } = await supabase
       .from('hrm_tracker_flow')
       .select()
