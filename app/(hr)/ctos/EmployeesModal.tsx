@@ -26,6 +26,7 @@ import { useDispatch, useSelector } from 'react-redux'
 // Types
 import type { CtoTypes, CtoUserTypes, Employee } from '@/types'
 import { logError } from '@/utils/fetchApi'
+import ConfirmApproveModal from './ConfirmApproveModal'
 
 interface ModalProps {
   hideModal: () => void
@@ -48,6 +49,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
   const [showApproveModal, setShowApproveModal] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | ''>('')
 
+  const [expirationDate, setExpirationDate] = useState('')
   const [list, setList] = useState<CtoUserTypes[]>([])
 
   // Redux staff
@@ -515,10 +517,11 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       )}
       {/* Confirm Approve Modal */}
       {showApproveModal && (
-        <ConfirmModal
+        <ConfirmApproveModal
           header="Confirm Approve"
           btnText="Confirm"
           message="This action cannot be undone. Are you sure you want to approve this employee?"
+          setExpirationDate={setExpirationDate}
           onConfirm={handleApproveConfirmed}
           onCancel={() => setShowApproveModal(false)}
         />

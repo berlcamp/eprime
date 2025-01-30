@@ -1158,9 +1158,12 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                 </div>
               </div>
               <div className="app__modal_footer">
-                <button type="submit" className="app__btn_green_sm">
-                  {saving ? 'Saving..' : 'Save'}
-                </button>
+                <CustomButton
+                  btnType="submit"
+                  isDisabled={saving}
+                  title={saving ? 'Saving...' : 'Save'}
+                  containerStyles="app__btn_green"
+                />
               </div>
             </form>
           </div>

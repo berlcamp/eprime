@@ -24,12 +24,12 @@ export default function Signature({ userId }: { userId: string }) {
   }
 
   const handleUpload = async () => {
-    setSaving(true)
-
     if (!file) {
       setToast('error', 'Please select file')
       return
     }
+
+    setSaving(true)
 
     try {
       let filePath: string | null = null
