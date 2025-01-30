@@ -26,6 +26,7 @@ import { useDispatch, useSelector } from 'react-redux'
 // Types
 import type { CtoTypes, CtoUserTypes, Employee } from '@/types'
 import { logError } from '@/utils/fetchApi'
+import { format } from 'date-fns'
 import ConfirmApproveModal from './ConfirmApproveModal'
 
 interface ModalProps {
@@ -49,7 +50,6 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
   const [showApproveModal, setShowApproveModal] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | ''>('')
 
-  const [expirationDate, setExpirationDate] = useState('')
   const [list, setList] = useState<CtoUserTypes[]>([])
 
   // Redux staff
@@ -147,7 +147,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
     setShowAttachmentsModal(true)
   }
 
-  const handleApproveConfirmed = async () => {
+  const handleApproveConfirmed = async (expDate: string) => {
     if (!ctoData) return
 
     if (!selectedRow) return
@@ -155,7 +155,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
     try {
       const { error } = await supabase
         .from('hrm_cto_users')
-        .update({ is_approved: true })
+        .update({ is_approved: true, expiration: expDate })
         .eq('id', selectedRow.id)
 
       if (error) throw new Error(error.message)
@@ -375,7 +375,11 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                       <th className="hidden md:table-cell app__th">
                         Employees
                       </th>
+                      <th className="hidden md:table-cell app__th">COC</th>
                       <th className="hidden md:table-cell app__th">Status</th>
+                      <th className="hidden md:table-cell app__th">
+                        Expiration
+                      </th>
                       <th className="hidden md:table-cell app__th">
                         Attachments
                       </th>
@@ -458,6 +462,9 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                             {/* End - Mobile View */}
                           </th>
                           <td className="hidden md:table-cell app__td">
+                            {item.coc}
+                          </td>
+                          <td className="hidden md:table-cell app__td">
                             {item.is_approved ? (
                               <span className="app__status_container_green">
                                 Approved
@@ -467,6 +474,9 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                                 Pending Approval
                               </span>
                             )}
+                          </td>
+                          <td className="hidden md:table-cell app__td">
+                            {format(new Date(item.expiration), 'MMMM dd, yyyy')}
                           </td>
                           <td className="hidden md:table-cell app__td">
                             <div>
@@ -494,7 +504,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                           </td>
                         </tr>
                       ))}
-                    {loading && <TableRowLoading cols={5} rows={2} />}
+                    {loading && <TableRowLoading cols={7} rows={2} />}
                   </tbody>
                 </table>
                 {!loading && isDataEmpty && (
@@ -521,7 +531,6 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
           header="Confirm Approve"
           btnText="Confirm"
           message="This action cannot be undone. Are you sure you want to approve this employee?"
-          setExpirationDate={setExpirationDate}
           onConfirm={handleApproveConfirmed}
           onCancel={() => setShowApproveModal(false)}
         />

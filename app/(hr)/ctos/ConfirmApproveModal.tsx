@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
+import { addYears, format } from 'date-fns'
 import { useEffect, useRef, useState } from 'react'
 
 interface ModalProps {
   onCancel: () => void
-  onConfirm: () => void
-  setExpirationDate: (date: string) => void
+  onConfirm: (expDate: string) => void
   message: string
   header: string
   btnText: string
@@ -14,7 +14,6 @@ interface ModalProps {
 
 export default function ConfirmApproveModal({
   onConfirm,
-  setExpirationDate,
   header,
   btnText,
   message,
@@ -22,14 +21,20 @@ export default function ConfirmApproveModal({
 }: ModalProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
 
-  const [expDate, setExpDate] = useState(new Date())
+  const [expDate, setExpDate] = useState(
+    format(addYears(new Date(), 1), 'yyyy-MM-dd')
+  )
+
+  const handleConfirm = () => {
+    onConfirm(expDate)
+  }
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
       onCancel()
     }
     if (event.key === 'Enter') {
-      onConfirm()
+      onConfirm(expDate)
     }
   }
 
@@ -55,6 +60,7 @@ export default function ConfirmApproveModal({
                 </div>
               </div>
               <div className="w-full">
+                <div className="app__label_standard">Expiration Date:</div>
                 <input
                   type="date"
                   value={expDate}
@@ -66,7 +72,7 @@ export default function ConfirmApproveModal({
 
             <div className="app__modal_footer">
               <button
-                onClick={onConfirm}
+                onClick={handleConfirm}
                 type="button"
                 className="flex items-center bg-emerald-500 hover:bg-emerald-600 border border-emerald-600 font-medium px-2 py-1 text-sm text-white rounded-sm"
               >
