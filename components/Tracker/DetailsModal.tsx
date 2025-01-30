@@ -375,7 +375,8 @@ export default function DetailsModal({
     const newData = {
       current_status: 'Approved',
       current_approver_id: session.user.id,
-      approved_by: session.user.id
+      approved_by: session.user.id,
+      date_approved: format(new Date(), 'yyyy-MM-dd')
     }
     try {
       const { error } = await supabase
@@ -773,7 +774,8 @@ export default function DetailsModal({
     const newData = {
       current_status: 'Approval Recommended',
       current_approver_id: session.user.id,
-      recommended_by: session.user.id
+      recommended_by: session.user.id,
+      date_recommeded: format(new Date(), 'yyyy-MM-dd')
     }
     try {
       const { error } = await supabase
@@ -1222,34 +1224,39 @@ export default function DetailsModal({
                   </div>
                 )}
               {/* Recommending Approval */}
-              {documentData.current_approver_id !== session.user.id &&
+              {
+                // documentData.current_approver_id !== session.user.id &&
                 documentData.receiver_id === session.user.id &&
-                documentData.current_status !== 'Approved' &&
-                documentData.current_status !== 'Disapproved' &&
-                documentData.current_status !== 'Cancelled' &&
-                !hasAccess('sds') && (
-                  <div className="mb-6">
-                    <div className="space-x-2">
-                      <CustomButton
-                        containerStyles="app__btn_green"
-                        title={saving ? 'Saving...' : 'Recommend Approval'}
-                        btnType="button"
-                        handleClick={() => HandleConfirm('Recommend Approval')}
-                      />
-                      <CustomButton
-                        containerStyles="app__btn_red"
-                        title={saving ? 'Saving...' : 'Disapprove'}
-                        btnType="button"
-                        handleClick={() => HandleConfirm('Disapprove')}
-                      />
+                  documentData.current_status !== 'Approval Recommended' &&
+                  documentData.current_status !== 'Approved' &&
+                  documentData.current_status !== 'Disapproved' &&
+                  documentData.current_status !== 'Cancelled' &&
+                  !hasAccess('sds') && (
+                    <div className="mb-6">
+                      <div className="space-x-2">
+                        <CustomButton
+                          containerStyles="app__btn_green"
+                          title={saving ? 'Saving...' : 'Recommend Approval'}
+                          btnType="button"
+                          handleClick={() =>
+                            HandleConfirm('Recommend Approval')
+                          }
+                        />
+                        <CustomButton
+                          containerStyles="app__btn_red"
+                          title={saving ? 'Saving...' : 'Disapprove'}
+                          btnType="button"
+                          handleClick={() => HandleConfirm('Disapprove')}
+                        />
+                      </div>
+                      <div className="text-[10px] mt-1 text-gray-600">
+                        By clicking &apos;Approve&apos;, you are authorizing and
+                        granting permission to the requester to proceed with the
+                        specified request.
+                      </div>
                     </div>
-                    <div className="text-[10px] mt-1 text-gray-600">
-                      By clicking &apos;Approve&apos;, you are authorizing and
-                      granting permission to the requester to proceed with the
-                      specified request.
-                    </div>
-                  </div>
-                )}
+                  )
+              }
               {/* Final Approval */}
               {documentData.receiver_id === session.user.id &&
                 (documentData.current_status === 'Approval Recommended' ||

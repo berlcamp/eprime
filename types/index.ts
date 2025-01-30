@@ -610,6 +610,8 @@ export interface DocumentTypes {
   receiver_id: string
   current_approver_id: string
   date_created: string
+  date_approved: string
+  date_recommended: string
   leave_type: string
   leave_location: string
   leave_specify_location: string

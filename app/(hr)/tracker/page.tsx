@@ -32,6 +32,8 @@ import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { PrintLeaveForm } from '@/components/Printables/PrintLeaveForm'
 import { PrintLocatorSlipForm } from '@/components/Printables/PrintLocatorSlipForm'
 import { PrintPassSlipForm } from '@/components/Printables/PrintPassSlipForm'
+import { PrintTravelForm } from '@/components/Printables/PrintTravelForm'
+import { PrintUndertimeForm } from '@/components/Printables/PrintUndertimeForm'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { useSearchParams } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
@@ -254,7 +256,9 @@ const Page: React.FC = () => {
                                 {[
                                   'Leave',
                                   'Locator Slip',
-                                  'Pass Slip'
+                                  'Pass Slip',
+                                  'Undertime Permit',
+                                  'Travel Authority'
                                 ].includes(item.type) &&
                                   item.current_status === 'Approved' && (
                                     <Menu.Item>
@@ -339,13 +343,10 @@ const Page: React.FC = () => {
                           )}
                         </div>
                         <div className="mt-1">
-                          {item.current_status !== 'For Verification' && (
-                            <span>
-                              Forwarded to {item.receiver.firstname}{' '}
-                              {item.receiver.middlename}{' '}
-                              {item.receiver.lastname}
-                            </span>
-                          )}
+                          <span>
+                            Forwarded to {item.receiver.firstname}{' '}
+                            {item.receiver.middlename} {item.receiver.lastname}
+                          </span>
                         </div>
                       </td>
                     </tr>
@@ -394,6 +395,17 @@ const Page: React.FC = () => {
           {/* Print Pass Slip */}
           {selectedItem && selectedItem.type === 'Pass Slip' && (
             <PrintPassSlipForm selectedItem={selectedItem} ref={componentRef} />
+          )}
+          {/* Print Undertime Permit */}
+          {selectedItem && selectedItem.type === 'Undertime Permit' && (
+            <PrintUndertimeForm
+              selectedItem={selectedItem}
+              ref={componentRef}
+            />
+          )}
+          {/* Print Travel Form */}
+          {selectedItem && selectedItem.type === 'Travel Authority' && (
+            <PrintTravelForm selectedItem={selectedItem} ref={componentRef} />
           )}
         </div>
       </div>

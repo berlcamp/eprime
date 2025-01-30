@@ -419,32 +419,35 @@ export default function Page({ params }: { params: { id: string } }) {
                     </span>
                   </Link>
                 </li>
-                <li>
-                  <Link
-                    href={`/profile/${userId}?page=signature`}
-                    className={`app__profile_menu_link ${
-                      page === 'signature' ? 'bg-gray-700' : ''
-                    }`}
-                  >
-                    <span className="flex-1 ml-3 whitespace-nowrap">
-                      Scanned Signature
-                    </span>
-                  </Link>
-                </li>
                 {(superAdmins.includes(session.user.email) ||
                   userId === session.user.id) && (
-                  <li>
-                    <Link
-                      href={`/profile/${userId}?page=loginsettings`}
-                      className={`app__profile_menu_link ${
-                        page === 'loginsettings' ? 'bg-gray-700' : ''
-                      }`}
-                    >
-                      <span className="flex-1 ml-3 whitespace-nowrap">
-                        Login Settings
-                      </span>
-                    </Link>
-                  </li>
+                  <>
+                    <li>
+                      <Link
+                        href={`/profile/${userId}?page=signature`}
+                        className={`app__profile_menu_link ${
+                          page === 'signature' ? 'bg-gray-700' : ''
+                        }`}
+                      >
+                        <span className="flex-1 ml-3 whitespace-nowrap">
+                          Scanned Signature
+                        </span>
+                      </Link>
+                    </li>
+
+                    <li>
+                      <Link
+                        href={`/profile/${userId}?page=loginsettings`}
+                        className={`app__profile_menu_link ${
+                          page === 'loginsettings' ? 'bg-gray-700' : ''
+                        }`}
+                      >
+                        <span className="flex-1 ml-3 whitespace-nowrap">
+                          Login Settings
+                        </span>
+                      </Link>
+                    </li>
+                  </>
                 )}
               </ul>
             </div>
