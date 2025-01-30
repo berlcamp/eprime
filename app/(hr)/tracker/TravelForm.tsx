@@ -287,7 +287,7 @@ const TravelForm = ({ hideModal }: ModalProps) => {
                     className="app__select_standard"
                   >
                     <option value="">Choose</option>
-                    <option value="Personal Travel">Personall Travel</option>
+                    <option value="Personal Travel">Personal Travel</option>
                     <option value="Official Travel">Official Travel</option>
                   </select>
                   {errors.type && (
