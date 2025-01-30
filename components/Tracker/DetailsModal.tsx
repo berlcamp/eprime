@@ -41,6 +41,7 @@ import CreditsCertification from './CreditsCertification'
 
 interface ModalProps {
   hideModal: () => void
+  refresh?: () => void
   documentData: DocumentTypes
 }
 
@@ -90,7 +91,8 @@ function Attachment({ id, file }: { id: string; file: string }) {
 
 export default function DetailsModal({
   hideModal,
-  documentData: originalData
+  documentData: originalData,
+  refresh
 }: ModalProps) {
   const [documentData, setDocumentData] = useState<DocumentTypes>(originalData)
   const [attachments, setAttachments] = useState<AttachmentTypes[] | []>([])
@@ -669,6 +671,8 @@ export default function DetailsModal({
 
       // Recount sidebar counter
       dispatch(recount())
+
+      refresh?.()
 
       setUpdateStatusFlow(!updateStatusFlow)
       setSaving(false)
@@ -1251,9 +1255,7 @@ export default function DetailsModal({
                 (documentData.current_status === 'Approval Recommended' ||
                   hasAccess('sds') ||
                   hasAccess('asds')) &&
-                (hasAccess('sds') ||
-                  hasAccess('asds') ||
-                  session.user.email === 'berlcamp@gmail.com') && (
+                (hasAccess('sds') || hasAccess('asds')) && (
                   <div className="mb-6">
                     <div className="space-x-2">
                       <CustomButton

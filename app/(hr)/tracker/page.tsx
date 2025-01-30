@@ -39,6 +39,7 @@ import StickiesModal from './StickiesModal'
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [refresh, setRefresh] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showStickiesModal, setShowStickiesModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState<DocumentTypes | null>(null)
@@ -154,7 +155,8 @@ const Page: React.FC = () => {
     filterStatus,
     perPageCount,
     filterRequester,
-    searchParams
+    searchParams,
+    refresh
   ])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
@@ -290,50 +292,46 @@ const Page: React.FC = () => {
                           </div>
                         )}
                         <div>
-                          <span className="font-light">Date Requested:</span>{' '}
-                          <span className="font-medium">
+                          <div className="font-light">Date Requested:</div>{' '}
+                          <div className="font-medium">
                             {format(
                               new Date(item.created_at),
                               'MMM dd, yyyy h:mm a'
                             )}
-                          </span>
+                          </div>
                         </div>
                       </td>
                       <td className="hidden sm:table-cell app__td">
                         <UserBlock user={item.creator} />
                       </td>
                       <td className="hidden sm:table-cell app__td">
-                        {item.current_status === 'Cancelled' && (
-                          <span className="text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium">
-                            {item.current_status}
-                          </span>
-                        )}
-                        {item.current_status === 'Approval Recommended' && (
-                          <span className="text-green-700 px-1 bg-green-100 border border-green-500 font-medium">
-                            {item.current_status}
-                          </span>
-                        )}
-                        {item.current_status === 'Approved' && (
-                          <span className="text-green-900 px-1 bg-green-300 border border-green-700 font-medium">
-                            {item.current_status}
-                          </span>
-                        )}
-                        {item.current_status === 'Disapproved' && (
-                          <span className="text-red-700 px-1 bg-red-100 border border-red-500 font-medium">
-                            {item.current_status}
-                          </span>
-                        )}
-                        {item.current_status === 'For Verification' && (
-                          <span className="text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium">
-                            {item.current_status}
-                          </span>
-                        )}
-                        {item.approver && (
-                          <div className="mt-1">
-                            by {item.approver.firstname}{' '}
-                            {item.approver.middlename} {item.approver.lastname}
-                          </div>
-                        )}
+                        <div>
+                          {item.current_status === 'Cancelled' && (
+                            <span className="text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium">
+                              {item.current_status}
+                            </span>
+                          )}
+                          {item.current_status === 'Approval Recommended' && (
+                            <span className="text-green-700 px-1 bg-green-100 border border-green-500 font-medium">
+                              {item.current_status}
+                            </span>
+                          )}
+                          {item.current_status === 'Approved' && (
+                            <span className="text-green-900 px-1 bg-green-300 border border-green-700 font-medium">
+                              {item.current_status}
+                            </span>
+                          )}
+                          {item.current_status === 'Disapproved' && (
+                            <span className="text-red-700 px-1 bg-red-100 border border-red-500 font-medium">
+                              {item.current_status}
+                            </span>
+                          )}
+                          {item.current_status === 'For Verification' && (
+                            <span className="text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium">
+                              {item.current_status}
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -359,6 +357,7 @@ const Page: React.FC = () => {
           {showDetailsModal && selectedItem && (
             <DetailsModal
               documentData={selectedItem}
+              refresh={() => setRefresh(!refresh)}
               hideModal={() => setShowDetailsModal(false)}
             />
           )}

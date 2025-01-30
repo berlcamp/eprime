@@ -687,6 +687,7 @@ export interface DocumentTypes {
   certifier: Employee
   approved_by: string
   finalapprover: Employee
+  hrm_tracker_flow: FlowListTypes[]
 }
 
 export interface RemarksTypes {
