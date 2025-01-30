@@ -1,5 +1,6 @@
 import { DocumentTypes } from '@/types'
 import { SquareCheckIcon, SquareIcon } from 'lucide-react'
+import Image from 'next/image'
 import * as React from 'react'
 
 interface ComponentToPrintProps {
@@ -120,7 +121,19 @@ export const PrintLocatorSlipForm = React.forwardRef<
               <td colSpan={2} className="text-xs border border-black px-1">
                 <div className="mt-14 pb-4 flex items-start justify-evenly space-x-1">
                   <div className="text-center">
-                    <div className="font-bold underline">
+                    <div className="flex items-center justify-center">
+                      {selectedItem.creator?.signature_path ? (
+                        <Image
+                          src={selectedItem.creator?.signature_path}
+                          alt=""
+                          width={75}
+                          height={75}
+                        />
+                      ) : (
+                        <span>SGD</span>
+                      )}
+                    </div>
+                    <div className="font-bold border-t border-t-black">
                       {selectedItem.creator.lastname},{' '}
                       {selectedItem.creator.firstname}{' '}
                       {selectedItem.creator.middlename}
@@ -128,10 +141,24 @@ export const PrintLocatorSlipForm = React.forwardRef<
                     <div>Name and Signature of Requesting Employee</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-bold underline">
-                      MA. TERESA M. REAL
+                    <div className="flex items-center justify-center">
+                      {selectedItem.approver?.signature_path ? (
+                        <Image
+                          src={selectedItem.approver?.signature_path}
+                          alt=""
+                          width={75}
+                          height={75}
+                        />
+                      ) : (
+                        <span>SGD</span>
+                      )}
                     </div>
-                    <div>OIC/ Schools Division Superintendent</div>
+                    <div className="font-bold border-t border-t-black">
+                      {selectedItem.approver?.lastname},{' '}
+                      {selectedItem.approver?.firstname}{' '}
+                      {selectedItem.approver?.middlename}
+                    </div>
+                    <div>OIC / Schools Division Superintendent</div>
                   </div>
                 </div>
               </td>

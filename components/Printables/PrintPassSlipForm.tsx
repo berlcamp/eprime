@@ -1,6 +1,7 @@
 import { DocumentTypes } from '@/types'
 import { format } from 'date-fns'
 import { SquareCheckIcon, SquareIcon } from 'lucide-react'
+import Image from 'next/image'
 import * as React from 'react'
 
 interface ComponentToPrintProps {
@@ -172,7 +173,18 @@ export const PrintPassSlipForm = React.forwardRef<
                 <hr className="mt-2 border-black" />
                 <div className="mt-1">Noted by:</div>
                 <div className="text-center w-1/2">
-                  <div className="font-bold">(SGD)</div>
+                  <div className="flex items-center justify-center">
+                    {selectedItem.recommender?.signature_path ? (
+                      <Image
+                        src={selectedItem.recommender?.signature_path}
+                        alt=""
+                        width={75}
+                        height={75}
+                      />
+                    ) : (
+                      <span>SGD</span>
+                    )}
+                  </div>
                   <div className="font-bold border-t border-t-black">
                     {selectedItem.recommender?.lastname},{' '}
                     {selectedItem.recommender?.firstname}{' '}
@@ -182,7 +194,18 @@ export const PrintPassSlipForm = React.forwardRef<
                 </div>
                 <div className="mt-1">Approve by:</div>
                 <div className="text-center">
-                  <div className="font-bold">(SGD)</div>
+                  <div className="flex items-center justify-center">
+                    {selectedItem.approver?.signature_path ? (
+                      <Image
+                        src={selectedItem.approver?.signature_path}
+                        alt=""
+                        width={75}
+                        height={75}
+                      />
+                    ) : (
+                      <span>SGD</span>
+                    )}
+                  </div>
                   <div className="font-bold border-t border-t-black">
                     {selectedItem.approver?.lastname},{' '}
                     {selectedItem.approver?.firstname}{' '}

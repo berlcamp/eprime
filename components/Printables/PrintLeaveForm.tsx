@@ -529,7 +529,18 @@ export const PrintLeaveForm = React.forwardRef<
                   </div>
                 </div>
                 <div className="w-full flex flex-col items-center justify-center">
-                  <div className="font-bold">(SGD)</div>
+                  <div className="flex items-center justify-center">
+                    {selectedItem.creator?.signature_path ? (
+                      <Image
+                        src={selectedItem.creator?.signature_path}
+                        alt=""
+                        width={75}
+                        height={75}
+                      />
+                    ) : (
+                      <span>SGD</span>
+                    )}
+                  </div>
                   <div className="font-bold border-t border-t-black">
                     {selectedItem.creator.lastname},{' '}
                     {selectedItem.creator.firstname}{' '}
@@ -614,8 +625,19 @@ export const PrintLeaveForm = React.forwardRef<
                     </tbody>
                   </table>
                 </div>
-                <div className="w-full mt-6 flex flex-col items-center justify-center">
-                  <div className="font-bold">(SGD)</div>
+                <div className="w-full mt-2 flex flex-col items-center justify-center">
+                  <div className="font-bold">
+                    {selectedItem.certifier?.signature_path ? (
+                      <Image
+                        src={selectedItem.certifier?.signature_path}
+                        alt=""
+                        width={75}
+                        height={75}
+                      />
+                    ) : (
+                      <span>SGD</span>
+                    )}
+                  </div>
                   <div className="font-bold border-t border-t-black">
                     {selectedItem.certifier?.lastname},{' '}
                     {selectedItem.certifier?.firstname}{' '}
@@ -638,8 +660,19 @@ export const PrintLeaveForm = React.forwardRef<
                   <div>______________________________________________</div>
                   <div>______________________________________________</div>
                 </div>
-                <div className="w-full mt-6 flex flex-col items-center justify-center">
-                  <div className="font-bold">(SGD)</div>
+                <div className="w-full mt-2 flex flex-col items-center justify-center">
+                  <div className="font-bold">
+                    {selectedItem.recommender?.signature_path ? (
+                      <Image
+                        src={selectedItem.recommender?.signature_path}
+                        alt=""
+                        width={75}
+                        height={75}
+                      />
+                    ) : (
+                      <span>SGD</span>
+                    )}
+                  </div>
                   <div className="font-bold border-t border-t-black">
                     {selectedItem.recommender?.lastname},{' '}
                     {selectedItem.recommender?.firstname}{' '}
@@ -678,8 +711,19 @@ export const PrintLeaveForm = React.forwardRef<
             </tr>
             <tr className="border-b-2 border-l-2 border-r-2 border-black">
               <td colSpan={2} className="align-top p-1 text-xs">
-                <div className="w-full mt-4 flex flex-col items-center justify-center">
-                  <div className="font-bold">(SGD)</div>
+                <div className="w-full flex flex-col items-center justify-center">
+                  <div className="font-bold">
+                    {selectedItem.finalapprover?.signature_path ? (
+                      <Image
+                        src={selectedItem.finalapprover?.signature_path}
+                        alt=""
+                        width={75}
+                        height={75}
+                      />
+                    ) : (
+                      <span>SGD</span>
+                    )}
+                  </div>
                   <div className="font-bold border-t border-t-black">
                     {selectedItem.finalapprover?.lastname},{' '}
                     {selectedItem.finalapprover?.firstname}{' '}

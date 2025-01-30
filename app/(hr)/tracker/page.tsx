@@ -30,6 +30,8 @@ import type { DocumentTypes } from '@/types'
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { PrintLeaveForm } from '@/components/Printables/PrintLeaveForm'
+import { PrintLocatorSlipForm } from '@/components/Printables/PrintLocatorSlipForm'
+import { PrintPassSlipForm } from '@/components/Printables/PrintPassSlipForm'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { useSearchParams } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
@@ -249,7 +251,11 @@ const Page: React.FC = () => {
                           >
                             <Menu.Items className="app__dropdown_items">
                               <div className="py-1">
-                                {item.type === 'Leave' &&
+                                {[
+                                  'Leave',
+                                  'Locator Slip',
+                                  'Pass Slip'
+                                ].includes(item.type) &&
                                   item.current_status === 'Approved' && (
                                     <Menu.Item>
                                       <div
@@ -374,9 +380,20 @@ const Page: React.FC = () => {
           {showStickiesModal && (
             <StickiesModal hideModal={() => setShowStickiesModal(false)} />
           )}
-          {/* Print Container */}
-          {selectedItem && (
+          {/* Print Leave */}
+          {selectedItem && selectedItem.type === 'Leave' && (
             <PrintLeaveForm selectedItem={selectedItem} ref={componentRef} />
+          )}
+          {/* Print Locator Slip */}
+          {selectedItem && selectedItem.type === 'Locator Slip' && (
+            <PrintLocatorSlipForm
+              selectedItem={selectedItem}
+              ref={componentRef}
+            />
+          )}
+          {/* Print Pass Slip */}
+          {selectedItem && selectedItem.type === 'Pass Slip' && (
+            <PrintPassSlipForm selectedItem={selectedItem} ref={componentRef} />
           )}
         </div>
       </div>
