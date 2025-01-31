@@ -29,7 +29,10 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import { useDispatch, useSelector } from 'react-redux'
 import { useReactToPrint } from 'react-to-print'
 import { PrintLeaveForm } from '../Printables/PrintLeaveForm'
+import { PrintLocatorSlipForm } from '../Printables/PrintLocatorSlipForm'
 import { PrintPassSlipForm } from '../Printables/PrintPassSlipForm'
+import { PrintTravelForm } from '../Printables/PrintTravelForm'
+import { PrintUndertimeForm } from '../Printables/PrintUndertimeForm'
 
 export default function UserRequests({
   forDashboard,
@@ -48,6 +51,7 @@ export default function UserRequests({
   const [perPageCount, setPerPageCount] = useState<number>(10)
   const [showingCount, setShowingCount] = useState<number>(0)
   const [resultsCount, setResultsCount] = useState<number>(0)
+  const [refresh, setRefresh] = useState(false)
 
   const [showAddModal, setShowAddModal] = useState(false)
 
@@ -218,7 +222,7 @@ export default function UserRequests({
   useEffect(() => {
     setList([])
     void fetchData()
-  }, [])
+  }, [refresh])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
   return (
@@ -469,6 +473,7 @@ export default function UserRequests({
       {/* Details Modal */}
       {showDetailsModal && selectedItem && (
         <DetailsModal
+          refresh={() => setRefresh(!refresh)}
           documentData={selectedItem}
           hideModal={() => setShowDetailsModal(false)}
         />
@@ -477,13 +482,25 @@ export default function UserRequests({
       {showAddModal && (
         <AddDocumentModal hideModal={() => setShowAddModal(false)} />
       )}
-      {/* Print Container */}
+      {/* Print Leave */}
       {selectedItem && selectedItem.type === 'Leave' && (
         <PrintLeaveForm selectedItem={selectedItem} ref={componentRef} />
       )}
-      {/* Print Container */}
+      {/* Print Locator Slip */}
+      {selectedItem && selectedItem.type === 'Locator Slip' && (
+        <PrintLocatorSlipForm selectedItem={selectedItem} ref={componentRef} />
+      )}
+      {/* Print Pass Slip */}
       {selectedItem && selectedItem.type === 'Pass Slip' && (
         <PrintPassSlipForm selectedItem={selectedItem} ref={componentRef} />
+      )}
+      {/* Print Undertime Permit */}
+      {selectedItem && selectedItem.type === 'Undertime Permit' && (
+        <PrintUndertimeForm selectedItem={selectedItem} ref={componentRef} />
+      )}
+      {/* Print Travel Form */}
+      {selectedItem && selectedItem.type === 'Travel Authority' && (
+        <PrintTravelForm selectedItem={selectedItem} ref={componentRef} />
       )}
     </div>
   )

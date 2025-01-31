@@ -34,7 +34,10 @@ export default function ProfileDashboard({
     try {
       const { data, error } = await supabase
         .from('hrm_request_trackers')
-        .select()
+        .select(
+          '*,leave_cocs:hrm_leave_coc(*), leave_dates:hrm_leave_dates(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url),certifier:certified_by(id,firstname,lastname,middlename,avatar_url),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
+          { count: 'exact' }
+        )
         .eq('created_by', userId)
         .neq('current_status', 'Cancelled')
 
@@ -201,7 +204,7 @@ export default function ProfileDashboard({
                   <table className="w-full">
                     <thead>
                       <tr>
-                        <th className="text-xs text-left text-gray-600 font-medium">
+                        <th className="text-xs text-left text-gray-600 font-medium w-52">
                           Type
                         </th>
                         <th className="text-xs text-left text-gray-600 font-medium">

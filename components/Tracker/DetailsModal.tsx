@@ -41,7 +41,7 @@ import CreditsCertification from './CreditsCertification'
 
 interface ModalProps {
   hideModal: () => void
-  refresh?: () => void
+  refresh: () => void
   documentData: DocumentTypes
 }
 

@@ -357,56 +357,58 @@ const Page: React.FC = () => {
             {!loading && isDataEmpty && (
               <div className="app__norecordsfound">No records found.</div>
             )}
+            {/* Show More */}
+            {resultsCount > showingCount && !loading && (
+              <ShowMore handleShowMore={handleShowMore} />
+            )}
+
+            {/* Add Document Modal */}
+            {showAddModal && (
+              <AddDocumentModal hideModal={() => setShowAddModal(false)} />
+            )}
+
+            {/* Details Modal */}
+            {showDetailsModal && selectedItem && (
+              <DetailsModal
+                documentData={selectedItem}
+                refresh={() => setRefresh(!refresh)}
+                hideModal={() => setShowDetailsModal(false)}
+              />
+            )}
+            {/* Stickies Modal */}
+            {showStickiesModal && (
+              <StickiesModal hideModal={() => setShowStickiesModal(false)} />
+            )}
+            {/* Print Leave */}
+            {selectedItem && selectedItem.type === 'Leave' && (
+              <PrintLeaveForm selectedItem={selectedItem} ref={componentRef} />
+            )}
+            {/* Print Locator Slip */}
+            {selectedItem && selectedItem.type === 'Locator Slip' && (
+              <PrintLocatorSlipForm
+                selectedItem={selectedItem}
+                ref={componentRef}
+              />
+            )}
+            {/* Print Pass Slip */}
+            {selectedItem && selectedItem.type === 'Pass Slip' && (
+              <PrintPassSlipForm
+                selectedItem={selectedItem}
+                ref={componentRef}
+              />
+            )}
+            {/* Print Undertime Permit */}
+            {selectedItem && selectedItem.type === 'Undertime Permit' && (
+              <PrintUndertimeForm
+                selectedItem={selectedItem}
+                ref={componentRef}
+              />
+            )}
+            {/* Print Travel Form */}
+            {selectedItem && selectedItem.type === 'Travel Authority' && (
+              <PrintTravelForm selectedItem={selectedItem} ref={componentRef} />
+            )}
           </div>
-
-          {/* Show More */}
-          {resultsCount > showingCount && !loading && (
-            <ShowMore handleShowMore={handleShowMore} />
-          )}
-
-          {/* Add Document Modal */}
-          {showAddModal && (
-            <AddDocumentModal hideModal={() => setShowAddModal(false)} />
-          )}
-
-          {/* Details Modal */}
-          {showDetailsModal && selectedItem && (
-            <DetailsModal
-              documentData={selectedItem}
-              refresh={() => setRefresh(!refresh)}
-              hideModal={() => setShowDetailsModal(false)}
-            />
-          )}
-          {/* Stickies Modal */}
-          {showStickiesModal && (
-            <StickiesModal hideModal={() => setShowStickiesModal(false)} />
-          )}
-          {/* Print Leave */}
-          {selectedItem && selectedItem.type === 'Leave' && (
-            <PrintLeaveForm selectedItem={selectedItem} ref={componentRef} />
-          )}
-          {/* Print Locator Slip */}
-          {selectedItem && selectedItem.type === 'Locator Slip' && (
-            <PrintLocatorSlipForm
-              selectedItem={selectedItem}
-              ref={componentRef}
-            />
-          )}
-          {/* Print Pass Slip */}
-          {selectedItem && selectedItem.type === 'Pass Slip' && (
-            <PrintPassSlipForm selectedItem={selectedItem} ref={componentRef} />
-          )}
-          {/* Print Undertime Permit */}
-          {selectedItem && selectedItem.type === 'Undertime Permit' && (
-            <PrintUndertimeForm
-              selectedItem={selectedItem}
-              ref={componentRef}
-            />
-          )}
-          {/* Print Travel Form */}
-          {selectedItem && selectedItem.type === 'Travel Authority' && (
-            <PrintTravelForm selectedItem={selectedItem} ref={componentRef} />
-          )}
         </div>
       </div>
     </>

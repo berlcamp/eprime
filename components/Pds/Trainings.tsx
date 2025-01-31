@@ -487,15 +487,10 @@ export default function Trainings({ userId }: { userId: string }) {
                       <div className="mb-2 w-full">
                         <div className="app__label_standard">CPD Units:</div>
                         <input
-                          {...register('cpd_units', { required: true })}
+                          {...register('cpd_units')}
                           type="number"
                           className="app__input_standard"
                         />
-                        {errors.cpd_units && (
-                          <div className="app__error_message">
-                            CPD Units is required
-                          </div>
-                        )}
                       </div>
                       <div className="mb-2 w-full">
                         <div className="app__label_standard">
