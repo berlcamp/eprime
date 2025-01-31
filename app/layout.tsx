@@ -105,7 +105,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`relative ${session ? 'bg-white' : 'bg-gray-100'}`}>
+      <body className={`relative ${session ? 'bg-white' : 'bg-gray-200'}`}>
         <SupabaseProvider
           systemAccess={sysAccess}
           session={session}

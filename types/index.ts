@@ -854,6 +854,9 @@ export interface ApplicantTypes {
   ethnicity_detail: string
   solo_parent: string
   solo_parent_detail: string
+  latin_honor: string
+  special_program_beneficiary: string
+  special_skills: string
   contact_number: string
   specific_major: string
   current_approver_id: string
@@ -920,6 +923,7 @@ export interface RankingCriteriaTypes {
   name: string
   points: string
   type: string
+  potential: string
   ranking_id: string
   committees?: RankingCommitteeTypes[]
 }

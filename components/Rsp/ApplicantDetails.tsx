@@ -244,6 +244,26 @@ const ApplicantDetails = ({
                     </div>
                   </div>
                   <div>
+                    <div className="app__label_standard">Latin Honor:</div>
+                    <div className="app__label_value">
+                      {applicantData.latin_honor}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="app__label_standard">
+                      Special Program Beneficiary:
+                    </div>
+                    <div className="app__label_value">
+                      {applicantData.special_program_beneficiary}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="app__label_standard">Special Skills:</div>
+                    <div className="app__label_value">
+                      {applicantData.special_skills}
+                    </div>
+                  </div>
+                  <div>
                     <div className="app__label_standard">Solo Parent:</div>
                     <div className="app__label_value">
                       {applicantData.solo_parent}{' '}

@@ -1,12 +1,17 @@
 export default function Footer() {
   return (
-    <div className="mt-auto bg-gray-800 p-4 text-white fixed bottom-0 w-full">
-      <div className="text-white text-center text-sm">
-        {/* Are you qualified for reclassification?{' '}
-        <Link href="/applyreclassification" className="app__btn_green">
-          Apply for Reclassification Now
-        </Link> */}
+    <div className="text-center bg-gray-200 text-xs py-2">
+      <div className="font-bold">PRIME-HRM System</div>
+      <div className="font-bold">
+        (HR Records Management with CSC HRM-PRIME)
       </div>
+      <div>
+        Copyright &copy; 2025 |{' '}
+        <span className="font-bold">DepEd-Bayugan City Division</span>. All
+        rights reserved.
+      </div>
+      <div>Developed & powered by: KERI Software Development Services</div>
+      <div className="mt-4">Privacy Policy</div>
     </div>
   )
 }

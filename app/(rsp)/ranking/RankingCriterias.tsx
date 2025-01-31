@@ -51,6 +51,7 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
       name: formdata.name,
       points: formdata.points,
       type: formdata.type,
+      potential: formdata.potential,
       ranking_id: rankingId
     }
 
@@ -242,7 +243,7 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
                           <input
                             type="radio"
                             value="Yes"
-                            {...register('type', { required: true })}
+                            {...register('potential', { required: true })}
                           />
                           <span>Yes</span>
                         </label>
@@ -251,12 +252,12 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
                           <input
                             type="radio"
                             value="No"
-                            {...register('type', { required: true })}
+                            {...register('potential', { required: true })}
                           />
                           <span>No</span>
                         </label>
                       </div>
-                      {errors.type && (
+                      {errors.potential && (
                         <div className="app__error_message">
                           This is required
                         </div>
@@ -290,6 +291,7 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
                           <div className="font-medium flex space-x-2">
                             <span>{item.name}</span>
                             <span>({item.type})</span>
+                            <span>({item.potential})</span>
                           </div>
                         </th>
                         <td className="app__td">{item.points}</td>

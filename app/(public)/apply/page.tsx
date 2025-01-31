@@ -155,6 +155,18 @@ const Page: React.FC = () => {
         formdata.type === 'New Applicant'
           ? formdata.ethnicity
           : applicantDetails?.ethnicity,
+      latin_honor:
+        formdata.type === 'New Applicant'
+          ? formdata.latin_honor
+          : applicantDetails?.latin_honor,
+      special_program_beneficiary:
+        formdata.type === 'New Applicant'
+          ? formdata.special_program_beneficiary
+          : applicantDetails?.special_program_beneficiary,
+      special_skills:
+        formdata.type === 'New Applicant'
+          ? formdata.special_skills
+          : applicantDetails?.special_skills,
       ethnicity_detail:
         formdata.type === 'New Applicant'
           ? formdata.ethnicity_detail
@@ -770,6 +782,52 @@ const Page: React.FC = () => {
                                     className="app__input_standard mt-2"
                                   />
                                 )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                With Latin Honor? if Yes specify
+                              </div>
+                              <div>
+                                <input
+                                  {...register('latin_honor')}
+                                  placeholder="Specify Latin Honor (optional)"
+                                  className="app__input_standard mt-2"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Special Program Beneficiary? (4ps, SPIMS, DOST)
+                                if yes, specify
+                              </div>
+                              <div>
+                                <input
+                                  {...register('special_program_beneficiary')}
+                                  placeholder="Special Program Beneficiary (optional)"
+                                  className="app__input_standard mt-2"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="app__form_field_container mt-4">
+                            <div className="w-full">
+                              <div className="app__label_standard">
+                                Special Skills? if yes, specify
+                              </div>
+                              <div>
+                                <input
+                                  {...register('special_skills')}
+                                  placeholder="Special Skills (optional)"
+                                  className="app__input_standard mt-2"
+                                />
                               </div>
                             </div>
                           </div>
