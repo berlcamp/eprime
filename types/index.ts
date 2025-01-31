@@ -854,7 +854,9 @@ export interface ApplicantTypes {
   ethnicity_detail: string
   solo_parent: string
   solo_parent_detail: string
+  latin_honor_yesno: string
   latin_honor: string
+  special_program_beneficiary_yesno: string
   special_program_beneficiary: string
   special_skills: string
   contact_number: string

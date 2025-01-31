@@ -789,14 +789,32 @@ const Page: React.FC = () => {
                           <div className="app__form_field_container mt-4">
                             <div className="w-full">
                               <div className="app__label_standard">
-                                With Latin Honor? if Yes specify
+                                With Latin Honor?
                               </div>
                               <div>
-                                <input
-                                  {...register('latin_honor')}
-                                  placeholder="Specify Latin Honor (optional)"
-                                  className="app__input_standard mt-2"
-                                />
+                                <label>
+                                  <input
+                                    type="radio"
+                                    value="Yes"
+                                    {...register('latin_honor_yesno')}
+                                  />{' '}
+                                  Yes
+                                </label>
+                                <label className="ml-4">
+                                  <input
+                                    type="radio"
+                                    value="No"
+                                    {...register('latin_honor_yesno')}
+                                  />{' '}
+                                  No
+                                </label>
+                                {watch('latin_honor_yesno') === 'Yes' && (
+                                  <input
+                                    {...register('latin_honor')}
+                                    placeholder="Specify Latin Honor"
+                                    className="app__input_standard mt-2"
+                                  />
+                                )}
                               </div>
                             </div>
                           </div>
@@ -805,14 +823,36 @@ const Page: React.FC = () => {
                             <div className="w-full">
                               <div className="app__label_standard">
                                 Special Program Beneficiary? (4ps, SPIMS, DOST)
-                                if yes, specify
                               </div>
                               <div>
-                                <input
-                                  {...register('special_program_beneficiary')}
-                                  placeholder="Special Program Beneficiary (optional)"
-                                  className="app__input_standard mt-2"
-                                />
+                                <label>
+                                  <input
+                                    type="radio"
+                                    value="Yes"
+                                    {...register(
+                                      'special_program_beneficiary_yesno'
+                                    )}
+                                  />{' '}
+                                  Yes
+                                </label>
+                                <label className="ml-4">
+                                  <input
+                                    type="radio"
+                                    value="No"
+                                    {...register(
+                                      'special_program_beneficiary_yesno'
+                                    )}
+                                  />{' '}
+                                  No
+                                </label>
+                                {watch('special_program_beneficiary_yesno') ===
+                                  'Yes' && (
+                                  <input
+                                    {...register('special_program_beneficiary')}
+                                    placeholder="Special Program Beneficiary"
+                                    className="app__input_standard mt-2"
+                                  />
+                                )}
                               </div>
                             </div>
                           </div>
@@ -820,13 +860,13 @@ const Page: React.FC = () => {
                           <div className="app__form_field_container mt-4">
                             <div className="w-full">
                               <div className="app__label_standard">
-                                Special Skills? if yes, specify
+                                Special Skills:
                               </div>
                               <div>
                                 <input
                                   {...register('special_skills')}
-                                  placeholder="Special Skills (optional)"
-                                  className="app__input_standard mt-2"
+                                  placeholder="Special Skills"
+                                  className="app__input_standard"
                                 />
                               </div>
                             </div>
