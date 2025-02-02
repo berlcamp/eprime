@@ -143,7 +143,7 @@ export const majors = {
 export const leaveTypes = [
   'Vacation Leave',
   'Sick Leave',
-  'Mandatory/Forced Leave',
+  // 'Mandatory/Forced Leave',
   'Maternity Leave',
   'Paternity Leave',
   'Special Privilege Leave',

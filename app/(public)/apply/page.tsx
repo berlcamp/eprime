@@ -1292,9 +1292,12 @@ const Page: React.FC = () => {
                         </div>
                       </div>
                       <div className="app__modal_footer">
-                        <button type="submit" className="app__btn_green_sm">
-                          {saving ? 'Saving..' : 'Submit'}
-                        </button>
+                        <CustomButton
+                          btnType="submit"
+                          isDisabled={saving}
+                          title={saving ? 'Saving...' : 'Submit'}
+                          containerStyles="app__btn_green"
+                        />
                       </div>
                     </>
                   )}

@@ -140,6 +140,7 @@ export interface Employee {
   hrm_designations: DesignationTypes[]
   hrm_leave_cards: LeaveCardTypes[]
   hrm_positions?: PositionTypes
+  pds?: PdsPersonalInfomationTypes
   hrm_item?: ItemTypes
   joining_date: string
   birthday: string
@@ -459,6 +460,8 @@ export interface LeaveTypes {
     is_paid?: boolean
   }>
   commutation: string
+  weekend: boolean
+  date_type: string
   confirmed: string
 }
 
@@ -691,6 +694,9 @@ export interface DocumentTypes {
   approved_by: string
   finalapprover: Employee
   hrm_tracker_flow: FlowListTypes[]
+
+  print_place_of_birth?: string
+  print_service_records?: ServiceRecordTypes[]
 }
 
 export interface RemarksTypes {

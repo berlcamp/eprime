@@ -280,3 +280,36 @@
 .app__single_page_wrapper2_large {
   @apply bg-gray-100 p-4 mb-20 rounded-lg border w-full md:mx-20;
 }
+
+@media print {
+  /* Ensure content fits well on multiple pages */
+  .print-page {
+    page-break-before: always;
+    page-break-inside: avoid;
+  }
+
+  /* Footer for page numbers */
+  .print-footer {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 10px;
+  }
+
+  /* Page breaks */
+  .print-break {
+    page-break-before: always;
+  }
+
+  /* Adding a page number on each page */
+  @page {
+    margin: 20mm;
+    counter-increment: page;
+  }
+
+  .print-footer::after {
+    content: 'Page ' counter(page);
+  }
+}

@@ -112,6 +112,8 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   })
 
   const watchedType = watch('type') || ''
+  const watchedDateType = watch('date_type')
+  const watchedWeeked = watch('weekend')
   const watchedOtherPurpose = watch('other_purpose') || ''
   const watchedDays = watch('days') || ''
   const watchedLeaveFrom = watch('leave_from')
@@ -216,10 +218,17 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
       // Generate an array of all dates in the range
       let dateRange = []
       if (formdata.leave_from !== '' && formdata.leave_to !== '') {
+        // dateRange = eachDayOfInterval({
+        //   start: new Date(formdata.leave_from),
+        //   end: new Date(formdata.leave_to)
+        // })
         dateRange = eachDayOfInterval({
           start: new Date(formdata.leave_from),
           end: new Date(formdata.leave_to)
-        })
+        }).filter(
+          (date) =>
+            watchedWeeked || (date.getDay() !== 0 && date.getDay() !== 6)
+        ) // Exclude weekends if watchedWeeked is false
       } else {
         dateRange = formdata.leave_dates
           .filter((item) => item.date) // Ensure the date is valid (not blank)
@@ -345,19 +354,33 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
 
   useEffect(() => {
     if (watchedLeaveFrom && watchedLeaveTo) {
-      const startDate = new Date(watchedLeaveFrom).getTime()
-      const endDate = new Date(watchedLeaveTo).getTime()
+      const startDate = new Date(watchedLeaveFrom)
+      const endDate = new Date(watchedLeaveTo)
 
-      if (!isNaN(startDate) && !isNaN(endDate) && endDate >= startDate) {
-        const days = Math.ceil(
-          (endDate - startDate) / (1000 * 60 * 60 * 24) + 1
-        )
-        setValue('days', days.toString())
+      if (
+        !isNaN(startDate.getTime()) &&
+        !isNaN(endDate.getTime()) &&
+        endDate >= startDate
+      ) {
+        let totalDays = 0
+        let currentDate = new Date(startDate)
+
+        while (currentDate <= endDate) {
+          const dayOfWeek = currentDate.getDay() // 0 = Sunday, 6 = Saturday
+
+          if (watchedWeeked || (dayOfWeek !== 0 && dayOfWeek !== 6)) {
+            totalDays++
+          }
+
+          currentDate = new Date(currentDate.getTime() + 86400000) // Add 1 day (1000 * 60 * 60 * 24)
+        }
+
+        setValue('days', totalDays.toString())
       } else {
         setValue('days', '') // Reset totalDays if leave_to is before leave_from
       }
     }
-  }, [watchedLeaveFrom, watchedLeaveTo])
+  }, [watchedLeaveFrom, watchedLeaveTo, watchedWeeked])
 
   useEffect(() => {
     // reset date values
@@ -368,6 +391,21 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         date: ''
       }
     ])
+
+    if (
+      [
+        'Maternity Leave',
+        'Adoption Leave',
+        'Special Leave Benefits For Women',
+        'Rehabilitation Leave',
+        'Study Leave'
+      ].includes(watchedType)
+    ) {
+      setValue('date_type', 'Date Range')
+      setValue('weekend', true)
+    } else {
+      setValue('weekend', false)
+    }
   }, [watchedType])
 
   useEffect(() => {
@@ -500,6 +538,15 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     void fetchBalances()
     void fetchSalaryGradesData()
   }, [])
+
+  // Disable fields if condition is met
+  const isDisabled = [
+    'Maternity Leave',
+    'Adoption Leave',
+    'Special Leave Benefits For Women',
+    'Rehabilitation Leave',
+    'Study Leave'
+  ].includes(watchedType)
 
   return (
     <>
@@ -721,12 +768,31 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
             <div className="app__form_field_container">
               <div className="w-full">
                 <div className="app__label_standard">Inclusive Date/s</div>
-                <div>
-                  {![
-                    'Maternity Leave',
-                    'Study Leave',
-                    'Rehabilitation Leave'
-                  ].includes(watchedType) ? (
+                <div className="w-full">
+                  <div className="mt-3 flex items-start justify-start space-x-2 text-sm">
+                    <label className="space-x-2">
+                      <input
+                        type="radio"
+                        value="Custom Dates"
+                        disabled={isDisabled}
+                        {...register('date_type')}
+                      />
+                      <span>Custom Dates</span>
+                    </label>
+
+                    <label className="space-x-2">
+                      <input
+                        type="radio"
+                        value="Date Range"
+                        disabled={isDisabled}
+                        {...register('date_type')}
+                      />
+                      <span>Date Range</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="mt-2">
+                  {watchedDateType === 'Custom Dates' && (
                     <>
                       {fields.map((_q, index) => (
                         <div key={index} className="app__form_field_container">
@@ -766,8 +832,9 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                         Add Date
                       </button>
                     </>
-                  ) : (
-                    <>
+                  )}
+                  {watchedDateType === 'Date Range' && (
+                    <div className="w-full">
                       <div className="flex space-x-2">
                         <input
                           {...register('leave_from', { required: true })}
@@ -780,17 +847,29 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                           className="app__input_standard"
                         />
                       </div>
-                      {errors.leave_from && (
-                        <div className="app__error_message">
-                          Date (From) is required
-                        </div>
-                      )}
-                      {errors.leave_to && (
-                        <div className="app__error_message">
-                          Date (To) is required
-                        </div>
-                      )}
-                    </>
+                      <div className="app__label_standard">
+                        <label className="flex items-center space-x-1">
+                          <input
+                            {...register('weekend')}
+                            disabled={isDisabled}
+                            type="checkbox"
+                            className=""
+                          />
+                          <span>Include weekend</span>
+                        </label>
+
+                        {errors.leave_from && (
+                          <div className="app__error_message">
+                            Date (From) is required
+                          </div>
+                        )}
+                        {errors.leave_to && (
+                          <div className="app__error_message">
+                            Date (To) is required
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -905,7 +984,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
           <CustomButton
             btnType="submit"
             isDisabled={saving}
-            title={saving ? 'Saving...' : 'Save'}
+            title={saving ? 'Saving...' : 'Submit'}
             containerStyles="app__btn_green"
           />
         </div>

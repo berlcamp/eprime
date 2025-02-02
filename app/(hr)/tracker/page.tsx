@@ -25,13 +25,18 @@ import AddDocumentModal from './AddDocumentModal'
 import Filters from './Filters'
 
 // Types
-import type { DocumentTypes } from '@/types'
+import type {
+  DocumentTypes,
+  PdsPersonalInfomationTypes,
+  ServiceRecordTypes
+} from '@/types'
 
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { PrintLeaveForm } from '@/components/Printables/PrintLeaveForm'
 import { PrintLocatorSlipForm } from '@/components/Printables/PrintLocatorSlipForm'
 import { PrintPassSlipForm } from '@/components/Printables/PrintPassSlipForm'
+import { PrintServiceRecord } from '@/components/Printables/PrintServiceRecord'
 import { PrintTravelForm } from '@/components/Printables/PrintTravelForm'
 import { PrintUndertimeForm } from '@/components/Printables/PrintUndertimeForm'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -58,7 +63,7 @@ const Page: React.FC = () => {
 
   const searchParams = useSearchParams()
 
-  const { session } = useSupabase()
+  const { session, supabase } = useSupabase()
 
   const componentRef = React.useRef(null)
   const printFn = useReactToPrint({
@@ -127,10 +132,36 @@ const Page: React.FC = () => {
   const handleAdd = () => {
     setShowAddModal(true)
   }
-  const handlePrint = (item: DocumentTypes) => {
+  const handlePrint = async (item: DocumentTypes) => {
     setSelectedItem(null) // Temporarily set selectedItem to null to unmount the content
+
+    let pdsData: PdsPersonalInfomationTypes | null = null
+    let serviceRecordsData: ServiceRecordTypes[] | [] = []
+
+    if (item.type === 'Service Record Print Request') {
+      // place of birthday data
+      const { data: pds } = await supabase
+        .from('hrm_pds')
+        .select('place_of_birth')
+        .eq('user_id', item.created_by)
+        .maybeSingle()
+
+      // Service
+      const { data: sr } = await supabase
+        .from('hrm_service_records')
+        .select()
+        .eq('user_id', item.created_by)
+
+      pdsData = pds
+      serviceRecordsData = sr
+    }
+
     setTimeout(() => {
-      setSelectedItem(item) // Set the new item after a short delay
+      setSelectedItem({
+        ...item,
+        print_place_of_birth: pdsData ? pdsData.place_of_birth : '',
+        print_service_records: serviceRecordsData
+      }) // Set the new item after a short delay
       setTimeout(() => {
         printFn() // Trigger the print function after re-rendering the new content
       }, 100) // Adjust this delay if needed
@@ -258,6 +289,7 @@ const Page: React.FC = () => {
                                   'Locator Slip',
                                   'Pass Slip',
                                   'Undertime Permit',
+                                  'Service Record Print Request',
                                   'Travel Authority'
                                 ].includes(item.type) &&
                                   item.current_status === 'Approved' && (
@@ -408,6 +440,15 @@ const Page: React.FC = () => {
             {selectedItem && selectedItem.type === 'Travel Authority' && (
               <PrintTravelForm selectedItem={selectedItem} ref={componentRef} />
             )}
+
+            {/* Print Service Record */}
+            {selectedItem &&
+              selectedItem.type === 'Service Record Print Request' && (
+                <PrintServiceRecord
+                  selectedItem={selectedItem}
+                  ref={componentRef}
+                />
+              )}
           </div>
         </div>
       </div>
