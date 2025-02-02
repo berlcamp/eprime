@@ -88,7 +88,7 @@ export const PrintTravelForm = React.forwardRef<
             </tr>
             <tr>
               <td className="text-xs border border-black px-1 font-bold">
-                Permanent Station
+                Current Station
               </td>
               <td className="text-center text-xs border border-black px-1">
                 <div>
@@ -135,7 +135,7 @@ export const PrintTravelForm = React.forwardRef<
               <td className="text-center text-xs border border-black px-1">
                 <div className="flex items-start justify-center space-x-1">
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.travel_type === 'Official' ? (
+                    {selectedItem.travel_type === 'Official Travel' ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
@@ -143,7 +143,7 @@ export const PrintTravelForm = React.forwardRef<
                     <span>Official </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.travel_type === 'Personal' ? (
+                    {selectedItem.travel_type === 'Personal Travel' ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />

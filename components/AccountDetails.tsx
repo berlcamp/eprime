@@ -795,7 +795,8 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                             Service Credit or Service Credit to VL/SL)
                           </div>
                         </div>
-                        {positionTypeChange === 'Non-teaching' && (
+                        {(positionTypeChange === 'Non-teaching' ||
+                          positionTypeChange === 'Teaching-Related') && (
                           <div className="ml-4 text-xs text-gray-700">
                             <span className="text-green-700 font-bold">
                               {Number(scBalance).toFixed(3)}
@@ -825,7 +826,8 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                         )}
                       </div>
-                      {positionTypeChange === 'Non-teaching' && (
+                      {(positionTypeChange === 'Non-teaching' ||
+                        positionTypeChange === 'Teaching-Related') && (
                         <div className="app__form_field_container">
                           <div className="w-full">
                             <div className="app__label_standard">
