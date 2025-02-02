@@ -576,8 +576,7 @@ const Page: React.FC = () => {
                     <>
                       {!emailFound && watchedCurrentEmployee === 'Yes' && (
                         <div className="text-red-500 text-sm font-light">
-                          No matching records found. Please Fill up the forms
-                          below:
+                          No matching records found.
                         </div>
                       )}
                       {(watchedCurrentEmployee === 'No' ||
