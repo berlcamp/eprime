@@ -59,6 +59,7 @@ const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [searching, setSearching] = useState(false)
   const [isCodeFound, setIsCodeFound] = useState(true)
+  const [isCodeOld, setIsCodeOld] = useState(false)
   const [emailFound, setEmailFound] = useState(false)
   const [doneSearch, setDoneSearch] = useState(false)
   const [documents, setDocuments] = useState<File[][]>([])
@@ -84,7 +85,10 @@ const Page: React.FC = () => {
     control,
     handleSubmit
   } = useForm<ApplicantTypes>({
-    mode: 'onSubmit'
+    mode: 'onSubmit',
+    defaultValues: {
+      type: 'New Applicant'
+    }
   })
 
   const watchedType = watch('type')
@@ -98,14 +102,14 @@ const Page: React.FC = () => {
       return
     }
 
-    setSaving(true)
-
     void handleCreate(formdata)
   }
 
   const handleCreate = async (formdata: ApplicantTypes) => {
     const randomCode = generateRandomAlphaNumber(5)
     setRefCode(randomCode)
+
+    setSaving(true)
 
     const newData = {
       ranking_id,
@@ -304,24 +308,27 @@ const Page: React.FC = () => {
     const { data } = await supabase
       .from('hrm_ranking_applicants')
       .select(
-        '*, applicant_documents:hrm_ranking_applicant_documents(*, qualification:qualification_id(*))'
+        '*, ranking:ranking_id(*),applicant_documents:hrm_ranking_applicant_documents(*, qualification:qualification_id(*))'
       )
       .neq('ranking_id', ranking_id)
       .eq('code', value)
       .maybeSingle()
 
-    if (data) {
-      setIsCodeFound(true)
-      setApplicantDetails(data)
+    const rkData: ApplicantTypes = data
 
-      setValue('lastname', data.lastname)
-      setValue('firstname', data.firstname)
-      setValue('middlename', data.middlename)
-      setValue('email', data.email)
+    if (rkData && rkData.ranking.year !== new Date().getFullYear().toString()) {
+      setIsCodeFound(true)
+      setIsCodeOld(false)
+      setApplicantDetails(rkData)
+
+      setValue('lastname', rkData.lastname)
+      setValue('firstname', rkData.firstname)
+      setValue('middlename', rkData.middlename)
+      setValue('email', rkData.email)
       setValue('previous_applicant', 'Yes')
       setValue('previous_applicant_code', value)
 
-      const groupedDocuments = data.applicant_documents.reduce(
+      const groupedDocuments = rkData.applicant_documents.reduce(
         (acc: any, document: any) => {
           const { qualification_id, qualification } = document
 
@@ -338,7 +345,13 @@ const Page: React.FC = () => {
         {}
       )
       setExistingQualification(groupedDocuments)
+    } else if (
+      rkData &&
+      rkData.ranking.year === new Date().getFullYear().toString()
+    ) {
+      setIsCodeOld(true)
     } else {
+      setIsCodeOld(false)
       setIsCodeFound(false)
       setApplicantDetails(null)
     }
@@ -446,10 +459,14 @@ const Page: React.FC = () => {
                         <label className="space-x-2">
                           <input
                             type="radio"
+                            disabled
                             value="Old Applicant"
                             {...register('type', { required: true })}
                           />
-                          <span>Use data from previous application</span>
+                          <span>Old Applicant</span>
+                          <span className="text-xs italic text-gray-500">
+                            (Not available for current Ranking Year)
+                          </span>
                         </label>
 
                         {errors.type && (
@@ -563,7 +580,8 @@ const Page: React.FC = () => {
                           below:
                         </div>
                       )}
-                      {watchedType === 'New Applicant' && (
+                      {(watchedCurrentEmployee === 'No' ||
+                        (watchedCurrentEmployee === 'Yes' && emailFound)) && (
                         <>
                           <div className="app__form_field_container mt-4">
                             <div className="w-full">
@@ -1072,6 +1090,12 @@ const Page: React.FC = () => {
                         No matching application for this code.
                       </div>
                     )}
+                  {!loading && watchedType === 'Old Applicant' && isCodeOld && (
+                    <div className="text-red-500 bg-red-100 border border-red-500 text-xs p-1">
+                      You can only use application codes that was applied from
+                      last year.
+                    </div>
+                  )}
                   {!loading &&
                     watchedType === 'Old Applicant' &&
                     applicantDetails && (
