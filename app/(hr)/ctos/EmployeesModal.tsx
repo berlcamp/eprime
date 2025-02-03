@@ -61,8 +61,6 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       return
     }
 
-    setSaving(true)
-
     if (!ctoData) return
 
     if (!user) {
@@ -74,6 +72,8 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
     if (list.some((item) => user.id === item.hrm_user_id)) {
       return
     }
+
+    setSaving(true)
 
     const refCode = ctoData.reference_code
 
@@ -153,7 +153,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
     setShowAttachmentsModal(true)
   }
 
-  const handleApproveConfirmed = async (expDate: string) => {
+  const handleApproveConfirmed = async (expDate: string, cocBal: string) => {
     if (!ctoData) return
 
     if (!selectedRow) return
@@ -161,7 +161,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
     try {
       const { error } = await supabase
         .from('hrm_cto_users')
-        .update({ is_approved: true, expiration: expDate })
+        .update({ is_approved: true, expiration: expDate, coc: cocBal })
         .eq('id', selectedRow.id)
 
       if (error) throw new Error(error.message)
@@ -182,7 +182,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       const newData = {
         type: 'Compensatory Overtime Credit',
         remarks: '',
-        credits_earned: ctoData.coc,
+        credits_earned: cocBal,
         user_id: selectedRow.hrm_user_id,
         particulars: 'Earned Compensatory Overtime Credit'
       }
@@ -209,7 +209,12 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       // Update list
       const updatedData = list.map((item) => {
         if (item.id === selectedRow?.id) {
-          return { ...item, is_approved: true }
+          return {
+            ...item,
+            is_approved: true,
+            coc: Number(cocBal),
+            expiration: expDate
+          }
         }
         return item
       })
@@ -482,7 +487,11 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                             )}
                           </td>
                           <td className="hidden md:table-cell app__td">
-                            {format(new Date(item.expiration), 'MMMM dd, yyyy')}
+                            {item.expiration &&
+                              format(
+                                new Date(item.expiration),
+                                'MMMM dd, yyyy'
+                              )}
                           </td>
                           <td className="hidden md:table-cell app__td">
                             <div>
@@ -534,6 +543,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       {/* Confirm Approve Modal */}
       {showApproveModal && (
         <ConfirmApproveModal
+          coc={ctoData.coc}
           header="Confirm Approve"
           btnText="Confirm"
           message="This action cannot be undone. Are you sure you want to approve this employee?"

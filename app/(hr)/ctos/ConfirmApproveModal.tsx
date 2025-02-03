@@ -6,10 +6,11 @@ import { useEffect, useRef, useState } from 'react'
 
 interface ModalProps {
   onCancel: () => void
-  onConfirm: (expDate: string) => void
+  onConfirm: (expDate: string, cocBal: string) => void
   message: string
   header: string
   btnText: string
+  coc: string
 }
 
 export default function ConfirmApproveModal({
@@ -17,16 +18,18 @@ export default function ConfirmApproveModal({
   header,
   btnText,
   message,
-  onCancel
+  onCancel,
+  coc
 }: ModalProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   const [expDate, setExpDate] = useState(
     format(addYears(new Date(), 1), 'yyyy-MM-dd')
   )
+  const [cocBal, setCocBal] = useState(coc)
 
   const handleConfirm = () => {
-    onConfirm(expDate)
+    onConfirm(expDate, cocBal)
   }
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -34,7 +37,7 @@ export default function ConfirmApproveModal({
       onCancel()
     }
     if (event.key === 'Enter') {
-      onConfirm(expDate)
+      onConfirm(expDate, cocBal)
     }
   }
 
@@ -67,6 +70,27 @@ export default function ConfirmApproveModal({
                   onChange={(e) => setExpDate(e.target.value)}
                   className="app__select_standard"
                 />
+              </div>
+              <div className="w-full">
+                <div className="app__label_standard">COC:</div>
+                <input
+                  value={cocBal}
+                  onChange={(e) => setCocBal(e.target.value)}
+                  className="app__select_standard"
+                />
+              </div>
+              <div className="w-full text-xs text-gray-500">
+                <div className="app__label_standard italic">Calculation:</div>
+                <div>
+                  Holiday/Weekend:{' '}
+                  <span className="font-medium">
+                    COC = Total Hours * 0.1875
+                  </span>
+                </div>
+                <div>
+                  Non-holiday:{' '}
+                  <span className="font-medium">COC = Total Hours * 0.125</span>
+                </div>
               </div>
             </div>
 

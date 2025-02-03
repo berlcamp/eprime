@@ -304,12 +304,12 @@
   }
 
   /* Adding a page number on each page */
-  @page {
+  /* @page {
     margin: 20mm;
     counter-increment: page;
-  }
+  } */
 
-  .print-footer::after {
+  /* .print-footer::after {
     content: 'Page ' counter(page);
-  }
+  } */
 }
