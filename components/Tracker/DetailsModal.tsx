@@ -1813,6 +1813,9 @@ export default function DetailsModal({
                             )}
                           </div>
                           <UserBlock user={documentData.creator} />
+                          <div className="mt-1 text-gray-600 pl-6">
+                            {documentData.creator.hrm_positions?.name}
+                          </div>
                         </td>
                       </tr>
                       <tr>
