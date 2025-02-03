@@ -9,6 +9,7 @@ import {
   generateRandomAlphaNumber,
   generateReferenceCode
 } from '@/utils/text-helper'
+import axios from 'axios'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -82,6 +83,7 @@ const Page: React.FC = () => {
     formState: { errors },
     watch,
     setValue,
+    setError,
     control,
     handleSubmit
   } = useForm<ApplicantTypes>({
@@ -102,11 +104,37 @@ const Page: React.FC = () => {
       return
     }
 
+    const emailExists = await checkEmailExists(formdata.email)
+
+    if (emailExists) {
+      setError('email', {
+        type: 'manual',
+        message: 'This email already applied for this Ranking.'
+      })
+      return
+    }
+
     void handleCreate(formdata)
+  }
+
+  const checkEmailExists = async (email: string) => {
+    const { data, error } = await supabase
+      .from('hrm_ranking_applicants') // Change to your actual table name
+      .select('id')
+      .eq('email', email)
+      .eq('ranking_id', ranking_id)
+      .maybeSingle() // Use maybeSingle() to get a single record or null
+
+    if (error) {
+      console.error('Supabase error:', error.message)
+      return false
+    }
+    return data ? true : false
   }
 
   const handleCreate = async (formdata: ApplicantTypes) => {
     const randomCode = generateRandomAlphaNumber(5)
+
     setRefCode(randomCode)
 
     setSaving(true)
@@ -115,82 +143,25 @@ const Page: React.FC = () => {
       ranking_id,
       type: formdata.type,
       code: randomCode,
-      lastname:
-        formdata.type === 'New Applicant'
-          ? formdata.lastname
-          : applicantDetails?.lastname,
-      firstname:
-        formdata.type === 'New Applicant'
-          ? formdata.firstname
-          : applicantDetails?.firstname,
-      middlename:
-        formdata.type === 'New Applicant'
-          ? formdata.middlename
-          : applicantDetails?.middlename,
-      email:
-        formdata.type === 'New Applicant'
-          ? formdata.email
-          : applicantDetails?.email,
-      address:
-        formdata.type === 'New Applicant'
-          ? formdata.address
-          : applicantDetails?.address,
-      age:
-        formdata.type === 'New Applicant'
-          ? formdata.age
-          : applicantDetails?.age,
-      sex:
-        formdata.type === 'New Applicant'
-          ? formdata.sex
-          : applicantDetails?.sex,
-      civil_status:
-        formdata.type === 'New Applicant'
-          ? formdata.civil_status
-          : applicantDetails?.civil_status,
-      religion:
-        formdata.type === 'New Applicant'
-          ? formdata.religion
-          : applicantDetails?.religion,
-      disability:
-        formdata.type === 'New Applicant'
-          ? formdata.disability
-          : applicantDetails?.disability,
-      ethnicity:
-        formdata.type === 'New Applicant'
-          ? formdata.ethnicity
-          : applicantDetails?.ethnicity,
-      latin_honor:
-        formdata.type === 'New Applicant'
-          ? formdata.latin_honor
-          : applicantDetails?.latin_honor,
-      special_program_beneficiary:
-        formdata.type === 'New Applicant'
-          ? formdata.special_program_beneficiary
-          : applicantDetails?.special_program_beneficiary,
-      special_skills:
-        formdata.type === 'New Applicant'
-          ? formdata.special_skills
-          : applicantDetails?.special_skills,
-      ethnicity_detail:
-        formdata.type === 'New Applicant'
-          ? formdata.ethnicity_detail
-          : applicantDetails?.ethnicity_detail,
-      solo_parent:
-        formdata.type === 'New Applicant'
-          ? formdata.solo_parent
-          : applicantDetails?.solo_parent,
-      solo_parent_detail:
-        formdata.type === 'New Applicant'
-          ? formdata.solo_parent_detail
-          : applicantDetails?.solo_parent_detail,
-      contact_number:
-        formdata.type === 'New Applicant'
-          ? formdata.contact_number
-          : applicantDetails?.contact_number,
-      specific_major:
-        formdata.type === 'New Applicant'
-          ? formdata.specific_major
-          : applicantDetails?.specific_major,
+      lastname: formdata.lastname,
+      firstname: formdata.firstname,
+      middlename: formdata.middlename,
+      email: formdata.email,
+      address: formdata.address,
+      age: formdata.age,
+      sex: formdata.sex,
+      civil_status: formdata.civil_status,
+      religion: formdata.religion,
+      disability: formdata.disability,
+      ethnicity: formdata.ethnicity,
+      latin_honor: formdata.latin_honor,
+      special_program_beneficiary: formdata.special_program_beneficiary,
+      special_skills: formdata.special_skills,
+      ethnicity_detail: formdata.ethnicity_detail,
+      solo_parent: formdata.solo_parent,
+      solo_parent_detail: formdata.solo_parent_detail,
+      contact_number: formdata.contact_number,
+      specific_major: formdata.specific_major,
       deped_email: formdata.deped_email,
       current_employee: emailFound ? 'Yes' : 'No',
       previous_applicant: formdata.previous_applicant,
@@ -264,6 +235,36 @@ const Page: React.FC = () => {
           console.error('Error during file upload:', error)
         }
       }
+
+      // Email the applicant on the server side
+      axios
+        .post('/api/applicantemail', {
+          position: ranking?.position?.name,
+          email: formdata.email,
+          code: randomCode,
+          firstname: formdata.firstname,
+          middlename: formdata.middlename,
+          lastname: formdata.lastname
+        })
+        .then(function () {
+          //
+        })
+        .catch(function (error) {
+          void logError(
+            'Approving registration',
+            'hrm_registrations',
+            JSON.stringify({
+              position: ranking?.position?.name,
+              email: formdata.email,
+              code: randomCode,
+              firstname: formdata.firstname,
+              middlename: formdata.middlename,
+              lastname: formdata.lastname
+            }),
+            JSON.stringify(error)
+          )
+          console.error(error)
+        })
 
       setIsSuccess(true)
 
@@ -388,6 +389,7 @@ const Page: React.FC = () => {
     if (data) {
       const employeeData: Employee = data
       setEmailFound(true)
+
       setValue('lastname', employeeData.lastname)
       setValue('firstname', employeeData.firstname)
       setValue('middlename', employeeData.middlename)
@@ -422,6 +424,49 @@ const Page: React.FC = () => {
     }
     void fetchData()
   }, [])
+
+  const sendEmails = async () => {
+    // Remove this after running one time
+    const { data: applicantsListData } = await supabase
+      .from('hrm_ranking_applicants')
+      .select('*, ranking:ranking_id(*,position:position_id(*))')
+      .gte('id', 148)
+      .lte('id', 150)
+
+    const applicantsList: ApplicantTypes[] = applicantsListData
+
+    // Send emails concurrently using Promise.all
+    await Promise.all(
+      applicantsList.map(async (a) => {
+        try {
+          await axios.post('/api/applicantemail', {
+            position: a.ranking?.position?.name,
+            email: a.email,
+            code: a.code,
+            firstname: a.firstname,
+            middlename: a.middlename,
+            lastname: a.lastname
+          })
+        } catch (error) {
+          await logError(
+            'Sending applicant email',
+            'hrm_ranking_applicants',
+            JSON.stringify({
+              position: a.ranking?.position?.name,
+              email: a.email,
+              code: a.code,
+              firstname: a.firstname,
+              middlename: a.middlename,
+              lastname: a.lastname
+            }),
+            JSON.stringify(error)
+          )
+          console.error('Error sending email to', a.email, error)
+        }
+      })
+    )
+  }
+
   return (
     <div className="app__home">
       <TopBarDark isGuest={session ? false : true} />
@@ -644,15 +689,15 @@ const Page: React.FC = () => {
                               <div>
                                 <input
                                   type="email"
+                                  className="app__input_standard"
                                   {...register('email', {
                                     required: 'Email is required'
                                   })}
-                                  className="app__input_standard"
                                 />
                                 {errors.email && (
-                                  <span className="app__error_message">
-                                    Email is required
-                                  </span>
+                                  <div className="app__error_message">
+                                    {errors.email.message}
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -1291,6 +1336,18 @@ const Page: React.FC = () => {
                           )}
                         </div>
                       </div>
+                      <div className="mt-4">
+                        {/* Display all form errors */}
+                        {Object.values(errors).length > 0 && (
+                          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-3">
+                            <ul className="list-disc list-inside">
+                              <li>
+                                Some fields have errors, please check above
+                              </li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                       <div className="app__modal_footer">
                         <CustomButton
                           btnType="submit"
@@ -1298,6 +1355,15 @@ const Page: React.FC = () => {
                           title={saving ? 'Saving...' : 'Submit'}
                           containerStyles="app__btn_green"
                         />
+                        {session.user.email === 'berlcamp@gmail.com' && (
+                          <CustomButton
+                            btnType="button"
+                            isDisabled={saving}
+                            title={saving ? 'Saving...' : 'Send Emails'}
+                            handleClick={sendEmails}
+                            containerStyles="app__btn_green"
+                          />
+                        )}
                       </div>
                     </>
                   )}

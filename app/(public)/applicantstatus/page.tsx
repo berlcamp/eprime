@@ -12,16 +12,6 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
-interface ExistingQualificationTypes {
-  qualification_name: string
-  documents: Array<{
-    id: string
-    document_url: string
-    status: string
-    remarks: string
-  }>
-}
-
 const Page: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -31,9 +21,6 @@ const Page: React.FC = () => {
   const [selectedUrl, setSelectedUrl] = useState<string>('')
   const [isCodeFound, setIsCodeFound] = useState(true)
   const [documents, setDocuments] = useState<File[][]>([])
-  const [existingQualification, setExistingQualification] = useState<
-    ExistingQualificationTypes[] | []
-  >([])
 
   const [applicantDetails, setApplicantDetails] =
     useState<ApplicantTypes | null>(null)
@@ -167,24 +154,6 @@ const Page: React.FC = () => {
     if (data) {
       setIsCodeFound(true)
       setApplicantDetails(data)
-
-      const groupedDocuments = data.applicant_documents.reduce(
-        (acc: any, document: any) => {
-          const { qualification_id, qualification } = document
-
-          if (!acc[qualification_id]) {
-            acc[qualification_id] = {
-              qualification_name: qualification.name,
-              documents: []
-            }
-          }
-
-          acc[qualification_id].documents.push(document)
-          return acc
-        },
-        {}
-      )
-      setExistingQualification(groupedDocuments)
     } else {
       setIsCodeFound(false)
       setApplicantDetails(null)
@@ -381,100 +350,6 @@ const Page: React.FC = () => {
               !isDateInPast(applicantDetails.ranking.days_to_comply) && (
                 <div className="grid gap-4">
                   <div>
-                    <div className="p-4 bg-gray-50 border space-y-6">
-                      <div className="text-center text-sm">
-                        SUBMITTED QUALIFICATION STANDARDS
-                      </div>
-                      {Object.entries(existingQualification).map(
-                        (
-                          [qualificationId, { qualification_name, documents }],
-                          index
-                        ) => (
-                          <div key={qualificationId} className="mb-4">
-                            <h3 className="text-gray-700 text-sm font-bold">
-                              {index + 1}. {qualification_name}
-                            </h3>
-
-                            {documents.length > 0 ? (
-                              <>
-                                <div className="text-right text-xs text-gray-600 font-medium">
-                                  Evaluation Remarks
-                                </div>
-                                <ul>
-                                  {documents.map((doc, index) => {
-                                    const filename = extractFilename(
-                                      doc.document_url
-                                    )
-
-                                    return (
-                                      <li
-                                        key={index}
-                                        className="mb-2 flex items-center justify-start space-x-1"
-                                      >
-                                        {/* Display the filename and make it downloadable */}
-                                        <Link
-                                          href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/hrm_public/${doc.document_url}`}
-                                          download={filename}
-                                          target="_blank"
-                                          className="text-blue-600 hover:underline"
-                                        >
-                                          {filename}
-                                        </Link>
-                                        {doc.status === 'For Evaluation' ? (
-                                          <span
-                                            className="flex-1 text-red-500 text-xs cursor-pointer"
-                                            onClick={() => {
-                                              setSelectedId(doc.id)
-                                              setSelectedUrl(doc.document_url)
-                                              setShowDeleteModal(true)
-                                            }}
-                                          >
-                                            (Remove File)
-                                          </span>
-                                        ) : (
-                                          <span className="flex-1">&nbsp;</span>
-                                        )}
-                                        {doc.status === 'Okay' && (
-                                          <span className="app__status_green">
-                                            Okay
-                                          </span>
-                                        )}
-                                        {doc.status === 'Not Okay' && (
-                                          <span className="app__status_red">
-                                            Not Okay
-                                          </span>
-                                        )}
-                                        {doc.status === 'For Evaluation' && (
-                                          <span className="app__status_orange">
-                                            For Evaluation
-                                          </span>
-                                        )}
-                                        {doc.remarks !== '' && (
-                                          <span className="app__status_gray">
-                                            {doc.remarks}
-                                          </span>
-                                        )}
-                                      </li>
-                                    )
-                                  })}
-                                </ul>
-                              </>
-                            ) : (
-                              <p className="text-gray-500">
-                                No documents available.
-                              </p>
-                            )}
-                          </div>
-                        )
-                      )}
-                      {Object.entries(existingQualification).length === 0 && (
-                        <div className="text-gray-600">
-                          No uploaded qualifications yet.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div>
                     <div className="text-gray-600 text-sm mb-2">
                       Upload updated supporting documents for each Qualification
                       Standards below (If applicable):{' '}
@@ -500,6 +375,92 @@ const Page: React.FC = () => {
                               }
                               className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
                             />
+                            <div className="pl-4">
+                              {applicantDetails.applicant_documents.filter(
+                                (applicantDoc) =>
+                                  applicantDoc.qualification_id ===
+                                  qualification.id
+                              ).length > 0 ? (
+                                <>
+                                  <div className="text-right text-xs text-gray-600 font-medium">
+                                    Evaluation Remarks
+                                  </div>
+                                  <ul>
+                                    {applicantDetails.applicant_documents
+                                      .filter(
+                                        (applicantDoc) =>
+                                          applicantDoc.qualification_id ===
+                                          qualification.id
+                                      )
+                                      .map((doc, index) => {
+                                        const filename = extractFilename(
+                                          doc.document_url
+                                        )
+
+                                        return (
+                                          <li
+                                            key={index}
+                                            className="mb-2 flex items-center justify-start space-x-1"
+                                          >
+                                            {/* Display the filename and make it downloadable */}
+                                            <Link
+                                              href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/hrm_public/${doc.document_url}`}
+                                              download={filename}
+                                              target="_blank"
+                                              className="text-blue-600 hover:underline"
+                                            >
+                                              {filename}
+                                            </Link>
+                                            {doc.status === 'For Evaluation' ? (
+                                              <span
+                                                className="flex-1 text-red-500 text-xs cursor-pointer"
+                                                onClick={() => {
+                                                  setSelectedId(doc.id)
+                                                  setSelectedUrl(
+                                                    doc.document_url
+                                                  )
+                                                  setShowDeleteModal(true)
+                                                }}
+                                              >
+                                                (Remove File)
+                                              </span>
+                                            ) : (
+                                              <span className="flex-1">
+                                                &nbsp;
+                                              </span>
+                                            )}
+                                            {doc.status === 'Okay' && (
+                                              <span className="app__status_green">
+                                                Okay
+                                              </span>
+                                            )}
+                                            {doc.status === 'Not Okay' && (
+                                              <span className="app__status_red">
+                                                Not Okay
+                                              </span>
+                                            )}
+                                            {doc.status ===
+                                              'For Evaluation' && (
+                                              <span className="app__status_orange">
+                                                For Evaluation
+                                              </span>
+                                            )}
+                                            {doc.remarks !== '' && (
+                                              <span className="app__status_gray">
+                                                {doc.remarks}
+                                              </span>
+                                            )}
+                                          </li>
+                                        )
+                                      })}
+                                  </ul>
+                                </>
+                              ) : (
+                                <p className="text-gray-500">
+                                  No documents uploaded.
+                                </p>
+                              )}
+                            </div>
                           </div>
                         )
                       )}

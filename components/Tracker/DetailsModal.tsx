@@ -1319,30 +1319,31 @@ export default function DetailsModal({
                   </div>
                 )}
               {/* Forward */}
-              {documentData.receiver_id === session.user.id &&
+              {((documentData.receiver_id === session.user.id &&
                 documentData.current_status !== 'Disapproved' &&
                 documentData.current_status !== 'Cancelled' &&
-                documentData.current_status !== 'Approved' && (
-                  <div className="">
-                    <div className="font-medium text-sm text-gray-700">
-                      Forward this request to:
-                    </div>
-                    <div className="flex w-full space-x-2">
-                      <SearchUserInput
-                        isMultiple={false}
-                        excludedIds={[session.user.id]}
-                        classNames="w-1/2"
-                        handleSelectedUsers={handleSelectedUsers}
-                      />
-                      <CustomButton
-                        containerStyles="app__btn_green"
-                        title={saving ? 'Saving...' : 'Forward'}
-                        btnType="button"
-                        handleClick={() => HandleConfirm('Forward')}
-                      />
-                    </div>
+                documentData.current_status !== 'Approved') ||
+                hasAccess('settings')) && (
+                <div className="">
+                  <div className="font-medium text-sm text-gray-700">
+                    Forward this request to:
                   </div>
-                )}
+                  <div className="flex w-full space-x-2">
+                    <SearchUserInput
+                      isMultiple={false}
+                      excludedIds={[session.user.id]}
+                      classNames="w-1/2"
+                      handleSelectedUsers={handleSelectedUsers}
+                    />
+                    <CustomButton
+                      containerStyles="app__btn_green"
+                      title={saving ? 'Saving...' : 'Forward'}
+                      btnType="button"
+                      handleClick={() => HandleConfirm('Forward')}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="modal-body relative overflow-x-scroll">

@@ -76,6 +76,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       year: formdata.year,
       department: formdata.department,
       description: formdata.description,
+      code_prefix: formdata.code_prefix,
       passing_score: formdata.passing_score,
       days_to_comply: formdata.days_to_comply,
       status: formdata.status,
@@ -175,6 +176,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       year: formdata.year,
       department: formdata.department,
       description: formdata.description,
+      code_prefix: formdata.code_prefix,
       passing_score: formdata.passing_score,
       days_to_comply: formdata.days_to_comply,
       status: formdata.status,
@@ -341,6 +343,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       year: editData ? editData.year : '',
       department: editData ? editData.department : '',
       description: editData ? editData.description : '',
+      code_prefix: editData ? editData.code_prefix : '',
       status: editData ? editData.status : '',
       passing_score: editData ? editData.passing_score : '',
       display_ier: editData ? editData.display_ier : '',
@@ -738,6 +741,27 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                         {errors.description && (
                           <div className="app__error_message">
                             Description is required
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="app__form_field_container">
+                    <div className="w-full">
+                      <div className="app__label_standard">
+                        Ranking Code{' '}
+                        <span className="text-gray-500 italic">
+                          (E.g. TE1-2025)
+                        </span>
+                      </div>
+                      <div>
+                        <input
+                          {...register('code_prefix', { required: true })}
+                          className="app__input_standard"
+                        />
+                        {errors.code_prefix && (
+                          <div className="app__error_message">
+                            Applicant Code Prefix is required
                           </div>
                         )}
                       </div>
