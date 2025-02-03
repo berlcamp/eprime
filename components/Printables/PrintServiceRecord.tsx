@@ -279,32 +279,35 @@ export const PrintServiceRecord = React.forwardRef<
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan={2} className="text-xs"></td>
+                  <td colSpan={2} className="text-xs">
+                    {/* Page Footer */}
+                    <div className="print-footer mt-4">
+                      <div className="border-t-2 border-black flex items-start justify-start space-x-1">
+                        <Image
+                          src="/deped_bayugan.png"
+                          alt=""
+                          width={100}
+                          height={100}
+                        />
+                        <div className="mt-3">
+                          <div>Lanzones Street, Poblacion, Bayugan City</div>
+                          <div className="text-blue-500">
+                            deped.bayugan@gmail.com
+                          </div>
+                          <div>Telephone Number: (085) 303 - 0664</div>
+                          <div className="italic text-gray-500">
+                            (This is a system generated form)
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        {pageIndex} Page {pageIndex + 1} of {total}
+                      </div>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
-            {/* Page Footer */}
-            <div className="print-footer mt-4">
-              <div className="border-t-2 border-black flex items-start justify-start space-x-1">
-                <Image
-                  src="/deped_bayugan.png"
-                  alt=""
-                  width={100}
-                  height={100}
-                />
-                <div className="mt-3">
-                  <div>Lanzones Street, Poblacion, Bayugan City</div>
-                  <div className="text-blue-500">deped.bayugan@gmail.com</div>
-                  <div>Telephone Number: (085) 303 - 0664</div>
-                  <div className="italic text-gray-500">
-                    (This is a system generated form)
-                  </div>
-                </div>
-              </div>
-              <div className="text-center">
-                Page {pageIndex + 1} of {total}
-              </div>
-            </div>
           </div>
         ))}
       </div>
