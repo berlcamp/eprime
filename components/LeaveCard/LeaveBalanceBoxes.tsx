@@ -70,6 +70,7 @@ export default function LeaveBalanceBoxes({ user, refresh }: ModalProps) {
           .from('hrm_cto_users')
           .select()
           .eq('hrm_user_id', user.id)
+          .eq('is_approved', true)
           .gte('expiration', new Date().toISOString())
           .gt('coc', 0)
 

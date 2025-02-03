@@ -558,6 +558,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         .from('hrm_cto_users')
         .select('*')
         .eq('hrm_user_id', documentData.creator?.id)
+        .eq('is_approved', true)
         .gte('expiration', new Date().toISOString())
         .gt('coc', 0)
       const bal: CtosTypes[] = []

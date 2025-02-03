@@ -565,7 +565,9 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                     <option value="">Choose</option>
                     {leaveTypes.map((item, index) => (
                       <option key={index} value={item}>
-                        {item}
+                        {item === 'Vacation Leave'
+                          ? 'Vacation/Personal Leave'
+                          : item}
                       </option>
                     ))}
                   </select>

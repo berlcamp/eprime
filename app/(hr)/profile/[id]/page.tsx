@@ -62,6 +62,7 @@ export default function Page({ params }: { params: { id: string } }) {
       .from('hrm_cto_users')
       .select('id', { count: 'exact' })
       .eq('hrm_user_id', userId)
+      .eq('is_approved', true)
       .is('status', null)
       .lte('expiration', filterDate)
 
