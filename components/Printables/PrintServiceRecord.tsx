@@ -1,4 +1,5 @@
 import { DocumentTypes } from '@/types'
+import { format } from 'date-fns'
 import Image from 'next/image'
 import * as React from 'react'
 
@@ -10,7 +11,7 @@ export const PrintServiceRecord = React.forwardRef<
   HTMLDivElement | null,
   ComponentToPrintProps
 >(({ selectedItem }, ref) => {
-  // Split service records into chunks of 25
+  // Split service records into chunks of 20
   const recordBatches = selectedItem.print_service_records
     ? selectedItem.print_service_records.reduce(
         (
@@ -19,7 +20,7 @@ export const PrintServiceRecord = React.forwardRef<
           index,
           array
         ) => {
-          if (index % 2 === 0) acc.push(array.slice(index, index + 2))
+          if (index % 12 === 0) acc.push(array.slice(index, index + 12))
           return acc
         },
         []
@@ -240,11 +241,69 @@ export const PrintServiceRecord = React.forwardRef<
                     </table>
                   </td>
                 </tr>
+                <tr>
+                  <td colSpan={2} className="text-xs">
+                    <div className="mt-2">
+                      Issued in compliance with Executive Order No. 54 dated
+                      August 10, 1954 and in accordance with Circular No. 54
+                      dated August 10, 1954 of the System.
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan={2} className="text-xs">
+                    <div className="mt-14 pb-4 flex items-start justify-evenly space-x-1">
+                      <div className="text-center">
+                        <div className="font-bold">
+                          {selectedItem.date_approved
+                            ? format(
+                                new Date(selectedItem.date_approved),
+                                'MMMM d, yyyy'
+                              )
+                            : format(
+                                new Date(selectedItem.created_at),
+                                'MMMM d, yyyy'
+                              )}
+                        </div>
+                        <div>Date</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-bold">
+                          {selectedItem.approver?.lastname},{' '}
+                          {selectedItem.approver?.firstname}{' '}
+                          {selectedItem.approver?.middlename}
+                        </div>
+                        <div>{selectedItem.approver?.hrm_positions?.name}</div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan={2} className="text-xs"></td>
+                </tr>
               </tbody>
             </table>
             {/* Page Footer */}
-            <div className="print-footer text-center mt-4">
-              Page {pageIndex + 1} of {total}
+            <div className="print-footer mt-4">
+              <div className="border-t-2 border-black flex items-start justify-start space-x-1">
+                <Image
+                  src="/deped_bayugan.png"
+                  alt=""
+                  width={100}
+                  height={100}
+                />
+                <div className="mt-3">
+                  <div>Lanzones Street, Poblacion, Bayugan City</div>
+                  <div className="text-blue-500">deped.bayugan@gmail.com</div>
+                  <div>Telephone Number: (085) 303 - 0664</div>
+                  <div className="italic text-gray-500">
+                    (This is a system generated form)
+                  </div>
+                </div>
+              </div>
+              <div className="text-center">
+                Page {pageIndex + 1} of {total}
+              </div>
             </div>
           </div>
         ))}
