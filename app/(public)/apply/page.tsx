@@ -425,47 +425,88 @@ const Page: React.FC = () => {
     void fetchData()
   }, [])
 
-  const sendEmails = async () => {
-    // Remove this after running one time
-    const { data: applicantsListData } = await supabase
-      .from('hrm_ranking_applicants')
-      .select('*, ranking:ranking_id(*,position:position_id(*))')
-      .gte('id', 148)
-      .lte('id', 150)
+  // const sendEmails = async () => {
+  //   // Remove this after running one time
+  //   const excludedEmails = [
+  //     'berlcamp2@gmail.com',
+  //     'berlcamp@gmail.com',
+  //     'janicetagaan03@gmail.com',
+  //     'riqueangelbert@gmail.com',
+  //     'gmranario@gmail.com',
+  //     'riqueangelbert@gmail.com',
+  //     'jullienantes05521@gmail.com',
+  //     'beestrong212370@gmail.com',
+  //     'emilouaguillon27@gmail.com',
+  //     'lopezmich0506@gmail.com',
+  //     'emilouaguillon27@gmail.com',
+  //     'beestrong212370@gmail.com',
+  //     'jolinasilagan16@gmail.com',
+  //     'trishaantenero@gmail.com',
+  //     'jolinasilagan16@gmail.com',
+  //     'azzhirtginette@gmail.com',
+  //     'ryanjaycalahat@gmail.com',
+  //     'cassarcino.16@gmail.com',
+  //     'cassarcino.16@gmail.com',
+  //     'cabreros2020@gmail.com',
+  //     'salvaleonpinky@gmail.com',
+  //     'mangitngitlea5@gmail.com',
+  //     'mangitngitlea5@gmail.com',
+  //     'alexandrafuentesmaceda@gmail.com',
+  //     'lhyzakztyn19@gmail.com',
+  //     'anniedelolivar21@gmail.com',
+  //     'tayrerechel@gmail.com',
+  //     'faithlumor4@gmail.com',
+  //     'tayrerechel@gmail.com',
+  //     'renalyn.tagubase@deped.gov.ph',
+  //     'marideluntal36@gmail.com',
+  //     'reymarknavaja600@gmail.com',
+  //     'renalyn.tagubase@deped.gov.ph',
+  //     'renalyn.tagubase@deped.gov.ph',
+  //     'reymarknavaja600@gmail.com',
+  //     'elsajosol79@gmail.com',
+  //     'giepartos1980@gmail.com'
+  //   ]
 
-    const applicantsList: ApplicantTypes[] = applicantsListData
+  //   const { data: applicantsListData } = await supabase
+  //     .from('hrm_ranking_applicants')
+  //     .select('*, ranking:ranking_id(*,position:position_id(*))')
+  //     .not('email', 'in', `(${excludedEmails.map((c) => `'${c}'`).join(',')})`) // Excludes IDs in the array
 
-    // Send emails concurrently using Promise.all
-    await Promise.all(
-      applicantsList.map(async (a) => {
-        try {
-          await axios.post('/api/applicantemail', {
-            position: a.ranking?.position?.name,
-            email: a.email,
-            code: a.code,
-            firstname: a.firstname,
-            middlename: a.middlename,
-            lastname: a.lastname
-          })
-        } catch (error) {
-          await logError(
-            'Sending applicant email',
-            'hrm_ranking_applicants',
-            JSON.stringify({
-              position: a.ranking?.position?.name,
-              email: a.email,
-              code: a.code,
-              firstname: a.firstname,
-              middlename: a.middlename,
-              lastname: a.lastname
-            }),
-            JSON.stringify(error)
-          )
-          console.error('Error sending email to', a.email, error)
-        }
-      })
-    )
-  }
+  //   const applicantsList: ApplicantTypes[] = applicantsListData
+  //   // applicantsList?.forEach((a) => {
+  //   //   console.log(a.email)
+  //   // })
+  //   // Send emails concurrently using Promise.all
+  //   await Promise.all(
+  //     applicantsList.map(async (a) => {
+  //       try {
+  //         await axios.post('/api/applicantemail', {
+  //           position: a.ranking?.position?.name,
+  //           email: a.email,
+  //           code: a.code,
+  //           firstname: a.firstname,
+  //           middlename: a.middlename,
+  //           lastname: a.lastname
+  //         })
+  //       } catch (error) {
+  //         await logError(
+  //           'Sending applicant email',
+  //           'hrm_ranking_applicants',
+  //           JSON.stringify({
+  //             position: a.ranking?.position?.name,
+  //             email: a.email,
+  //             code: a.code,
+  //             firstname: a.firstname,
+  //             middlename: a.middlename,
+  //             lastname: a.lastname
+  //           }),
+  //           JSON.stringify(error)
+  //         )
+  //         console.error('Error sending email to', a.email, error)
+  //       }
+  //     })
+  //   )
+  // }
 
   return (
     <div className="app__home">
@@ -1261,15 +1302,6 @@ const Page: React.FC = () => {
                                   <div className="text-xs text-gray-600 pl-4">
                                     {qualification.description}
                                   </div>
-                                  {/* <input
-                                      type="file"
-                                      multiple
-                                      onChange={(e) =>
-                                        handleFileUpload(index, e.target.files)
-                                      }
-                                      className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
-                                    />
-                                     */}
                                   {/* File input with react-hook-form Controller */}
                                   <Controller
                                     name={`files.${index}`}
@@ -1355,7 +1387,7 @@ const Page: React.FC = () => {
                           title={saving ? 'Saving...' : 'Submit'}
                           containerStyles="app__btn_green"
                         />
-                        {session.user.email === 'berlcamp@gmail.com' && (
+                        {/* {session.user.email === 'berlcamp@gmail.com' && (
                           <CustomButton
                             btnType="button"
                             isDisabled={saving}
@@ -1363,7 +1395,7 @@ const Page: React.FC = () => {
                             handleClick={sendEmails}
                             containerStyles="app__btn_green"
                           />
-                        )}
+                        )} */}
                       </div>
                     </>
                   )}
