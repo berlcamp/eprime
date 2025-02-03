@@ -96,6 +96,12 @@ const Page: React.FC = () => {
                   title="Who can manage RSP"
                 />
                 <ChooseUsers
+                  multiple={true}
+                  type="tracker_manager"
+                  users={users}
+                  title="Request Tracker Manager - Person who can forward request to other."
+                />
+                <ChooseUsers
                   multiple={false}
                   type="hr"
                   users={users}

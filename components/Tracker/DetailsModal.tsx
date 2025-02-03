@@ -1323,7 +1323,8 @@ export default function DetailsModal({
                 documentData.current_status !== 'Disapproved' &&
                 documentData.current_status !== 'Cancelled' &&
                 documentData.current_status !== 'Approved') ||
-                hasAccess('settings')) && (
+                hasAccess('settings') ||
+                hasAccess('tracker_manager')) && (
                 <div className="">
                   <div className="font-medium text-sm text-gray-700">
                     Forward this request to:
