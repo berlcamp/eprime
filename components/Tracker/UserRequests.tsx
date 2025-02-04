@@ -105,7 +105,7 @@ export default function UserRequests({
       query = query.range(from, to)
 
       // Order By
-      query = query.order('created_at', { ascending: false })
+      query = query.order('id', { ascending: true })
 
       const { data, count, error } = await query
 
