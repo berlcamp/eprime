@@ -359,7 +359,14 @@ export default function UserRequests({
                       >
                         <Menu.Items className="app__dropdown_items">
                           <div className="py-1">
-                            {item.type === 'Leave' &&
+                            {[
+                              'Leave',
+                              'Locator Slip',
+                              'Pass Slip',
+                              'Undertime Permit',
+                              'Service Record Print Request',
+                              'Travel Authority'
+                            ].includes(item.type) &&
                               item.current_status === 'Approved' && (
                                 <Menu.Item>
                                   <div
@@ -367,21 +374,10 @@ export default function UserRequests({
                                     className="app__dropdown_item"
                                   >
                                     <PrinterIcon className="w-4 h-4" />
-                                    <span>Print Form 6</span>
+                                    <span>Print Form</span>
                                   </div>
                                 </Menu.Item>
                               )}
-                            {item.type === 'Pass Slip' && (
-                              <Menu.Item>
-                                <div
-                                  onClick={() => handlePrint(item)}
-                                  className="app__dropdown_item"
-                                >
-                                  <PrinterIcon className="w-4 h-4" />
-                                  <span>Print Pass SLip</span>
-                                </div>
-                              </Menu.Item>
-                            )}
                           </div>
                         </Menu.Items>
                       </Transition>
