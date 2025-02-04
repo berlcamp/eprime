@@ -503,7 +503,7 @@ export const PrintLeaveForm = React.forwardRef<
                           new Date(selectedItem.leave_dates[0].date),
                           'MMM d, yyyy'
                         )}
-                      </span>
+                      </span>{' '}
                       to{' '}
                       <span>
                         {format(
