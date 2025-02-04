@@ -495,7 +495,34 @@ export const PrintLeaveForm = React.forwardRef<
                 </div>
                 <div className="pl-10 mt-1">INCLUSIVE DATES</div>
                 <div className="pl-10 font-bold underline uppercase">
-                  OCTOBER 10, 11, 2024
+                  {selectedItem.leave_dates?.length > 1 ? (
+                    <span>
+                      From{' '}
+                      <span>
+                        {format(
+                          new Date(selectedItem.leave_dates[0].date),
+                          'MMM d, yyyy'
+                        )}
+                      </span>
+                      to{' '}
+                      <span>
+                        {format(
+                          new Date(
+                            selectedItem.leave_dates[
+                              selectedItem.leave_dates.length - 1
+                            ].date
+                          ),
+                          'MMM d, yyyy'
+                        )}
+                      </span>
+                    </span>
+                  ) : (
+                    selectedItem.leave_dates?.map((day) => (
+                      <span key={day.id}>
+                        {format(new Date(day.date), 'MMM d, yyyy')}
+                      </span>
+                    ))
+                  )}
                 </div>
               </td>
               <td className="align-top border-2 border-black p-1 text-xs">
