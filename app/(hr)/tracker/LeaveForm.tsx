@@ -507,7 +507,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     const origBal =
       leaveCreditBalances.find((c) => c.type === type)?.credits ?? 0
     const balance = origBal >= Number(watchedDays) ? watchedDays : origBal
-
+    console.log('zz', type, leaveCreditBalances, origBal)
     setBalances({
       type,
       balance: balance.toString(),

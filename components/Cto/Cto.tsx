@@ -111,7 +111,7 @@ export default function Cto({ userId }: { userId: string }) {
       if (result.data) {
         const ctos: CtoUserTypes[] = result.data
         ctos.forEach((cto) => {
-          if (cto.status !== 'Expired') {
+          if (cto.status !== 'Expired' && cto.is_approved) {
             bal += cto.coc
           }
         })

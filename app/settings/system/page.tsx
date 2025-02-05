@@ -105,7 +105,7 @@ const Page: React.FC = () => {
                   multiple={false}
                   type="hr"
                   users={users}
-                  title="HR Head"
+                  title="HR Head / Office-in-charge"
                 />
                 <ChooseUsers
                   multiple={false}
