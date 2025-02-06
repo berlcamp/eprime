@@ -226,6 +226,7 @@ const Page: React.FC = () => {
                   <th className="hidden md:table-cell app__th">
                     Reference Code
                   </th>
+                  <th className="hidden md:table-cell app__th">SO #</th>
                   <th className="hidden md:table-cell app__th">COC</th>
                   <th className="hidden md:table-cell app__th">Employees</th>
                   <th className="hidden md:table-cell app__th">Particulars</th>
@@ -261,7 +262,7 @@ const Page: React.FC = () => {
                                 {item.status !== 'Revoked' && (
                                   <>
                                     <Menu.Item>
-                                      {item.hrm_cto_users?.length === 0 ? (
+                                      {/* {item.hrm_cto_users?.length === 0 ? (
                                         <div
                                           onClick={() => handleEdit(item)}
                                           className="app__dropdown_item"
@@ -274,7 +275,14 @@ const Page: React.FC = () => {
                                           <PencilSquareIcon className="w-4 h-4" />
                                           <span>Edit</span>
                                         </div>
-                                      )}
+                                      )} */}
+                                      <div
+                                        onClick={() => handleEdit(item)}
+                                        className="app__dropdown_item"
+                                      >
+                                        <PencilSquareIcon className="w-4 h-4" />
+                                        <span>Edit</span>
+                                      </div>
                                     </Menu.Item>
                                     <Menu.Item>
                                       <div
@@ -322,6 +330,9 @@ const Page: React.FC = () => {
                         </div>
                         {/* End - Mobile View */}
                       </th>
+                      <td className="hidden md:table-cell app__td">
+                        <div className="font-semibold">{item.so_number}</div>
+                      </td>
                       <td className="hidden md:table-cell app__td">
                         <div className="font-semibold">{item.coc}</div>
                       </td>
