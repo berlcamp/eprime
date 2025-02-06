@@ -403,6 +403,7 @@ export interface CtoTypes {
   days: string
   total_hours: string
   particulars: string
+  so_number: string
   coc: string
   is_holiday: boolean
   hrm_cto_users?: CtoUserTypes[]

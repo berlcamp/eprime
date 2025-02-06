@@ -590,7 +590,10 @@ export const PrintLeaveForm = React.forwardRef<
                 <div className="pl-10 mt-2">
                   As of{' '}
                   <span className="font-bold underline">
-                    September 30, 2024
+                    {format(
+                      new Date(selectedItem.certification_as_of),
+                      'MMMM d, yyyy'
+                    )}
                   </span>
                 </div>
                 <div className="pl-10 mt-1">

@@ -59,6 +59,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       ? Number(formdata.total_hours) * 0.1875
       : Number(formdata.total_hours) * 0.125
 
+    const expireDate = new Date(formdata.date_issued)
+    expireDate.setFullYear(expireDate.getFullYear() + 1)
+
     const newData = {
       reference_code: generateReferenceCode(),
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
@@ -66,7 +69,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       date_issued: new Date(formdata.date_issued),
       total_hours: formdata.total_hours,
       particulars: formdata.particulars,
+      so_number: formdata.so_number,
       is_holiday: isHolidayChecked,
+      expiration: expireDate,
+      status: expireDate <= new Date() ? 'Expired' : null,
       coc,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
@@ -145,7 +151,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       date_issued: new Date(formdata.date_issued),
       total_hours: formdata.total_hours,
       particulars: formdata.particulars,
+      so_number: formdata.so_number,
       is_holiday: isHolidayChecked,
+      expiration: expireDate,
+      status: expireDate <= new Date() ? 'Expired' : null,
       coc
     }
 
@@ -247,6 +256,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     reset({
       from: editData ? editData.from : '',
+      so_number: editData ? editData.so_number : '',
       to: editData ? editData.to : '',
       date_issued: editData ? editData.date_issued : '',
       expiration: editData ? editData.expiration : '',
@@ -277,6 +287,22 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
             <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
               <div className="app__form_field_container">
                 <div className="w-full">
+                  <div className="app__label_standard">SO Number</div>
+                  <div>
+                    <input
+                      {...register('so_number', { required: true })}
+                      className="app__input_standard"
+                    />
+                    {errors.from && (
+                      <div className="app__error_message">
+                        SO number is required
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
                   <div className="app__label_standard">Date Issued</div>
                   <div>
                     <input
@@ -286,7 +312,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                     />
                     {errors.from && (
                       <div className="app__error_message">
-                        Start Date is required
+                        Date Issued is required
                       </div>
                     )}
                   </div>
