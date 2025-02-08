@@ -61,7 +61,7 @@ const Page: React.FC = () => {
                         Apply Now
                       </Link>
                     ) : (
-                      <div className="italic">
+                      <div className="italic mb-2">
                         Application for this Ranking is already closed
                       </div>
                     )}
