@@ -32,7 +32,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
   const [positions, setPositions] = useState<PositionTypes[] | []>([])
 
   // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
+  const globallist = useSelector((state: any) => state.slowList.value)
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
