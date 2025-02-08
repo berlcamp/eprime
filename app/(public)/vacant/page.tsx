@@ -51,13 +51,19 @@ const Page: React.FC = () => {
                     )}
                   </div>
                   <div className="pt-2 space-x-2">
-                    {item.status === 'Open' && (
+                    {item.status === 'Open' &&
+                    item.display_on_portal_until &&
+                    new Date(item.display_on_portal_until) > new Date() ? (
                       <Link
                         href={`/apply?ref=${item.id}`}
                         className="app__btn_green"
                       >
                         Apply Now
                       </Link>
+                    ) : (
+                      <div className="italic">
+                        Application for this Ranking is already closed
+                      </div>
                     )}
                     {item.display_ier && (
                       <Link

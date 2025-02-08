@@ -137,6 +137,8 @@ const Page: React.FC = () => {
 
     setRefCode(randomCode)
 
+    if (saving) return
+
     setSaving(true)
 
     const newData = {
