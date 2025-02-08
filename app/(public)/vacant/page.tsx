@@ -61,8 +61,10 @@ const Page: React.FC = () => {
                         Apply Now
                       </Link>
                     ) : (
-                      <div className="italic mb-2">
-                        Application for this Ranking is already closed
+                      <div className="mb-2">
+                        <span className="app__status_container_orange text-xs!">
+                          Application for this Ranking is already closed
+                        </span>
                       </div>
                     )}
                     {item.display_ier && (
