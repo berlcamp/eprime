@@ -231,6 +231,7 @@ const Page: React.FC = () => {
                   <th className="hidden md:table-cell app__th">Employees</th>
                   <th className="hidden md:table-cell app__th">Particulars</th>
                   <th className="hidden md:table-cell app__th">Duration</th>
+                  <th className="hidden md:table-cell app__th">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -262,7 +263,8 @@ const Page: React.FC = () => {
                                 {item.status !== 'Revoked' && (
                                   <>
                                     <Menu.Item>
-                                      {/* {item.hrm_cto_users?.length === 0 ? (
+                                      {item.hrm_cto_users?.length === 0 ||
+                                      hasAccess('settings') ? (
                                         <div
                                           onClick={() => handleEdit(item)}
                                           className="app__dropdown_item"
@@ -275,14 +277,7 @@ const Page: React.FC = () => {
                                           <PencilSquareIcon className="w-4 h-4" />
                                           <span>Edit</span>
                                         </div>
-                                      )} */}
-                                      <div
-                                        onClick={() => handleEdit(item)}
-                                        className="app__dropdown_item"
-                                      >
-                                        <PencilSquareIcon className="w-4 h-4" />
-                                        <span>Edit</span>
-                                      </div>
+                                      )}
                                     </Menu.Item>
                                     <Menu.Item>
                                       <div
@@ -359,6 +354,13 @@ const Page: React.FC = () => {
                           {format(new Date(item.from), 'MMM d, yyyy')} -{' '}
                           {format(new Date(item.to), 'MMM d, yyyy')}
                         </div>
+                      </td>
+                      <td className="hidden md:table-cell app__td">
+                        {item.status !== 'Expired' ? (
+                          <span className="app__status_green">Active</span>
+                        ) : (
+                          <span className="app__status_orange">Expired</span>
+                        )}
                       </td>
                     </tr>
                   ))}
