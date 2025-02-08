@@ -4,6 +4,7 @@ import Footer from '@/components/Footer'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { RankingTypes } from '@/types'
+import { isAfter, isEqual, parseISO, startOfDay } from 'date-fns'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
@@ -25,6 +26,17 @@ const Page: React.FC = () => {
     }
     void fetchRankins()
   }, [])
+
+  const isDateInPast = (dateString: string) => {
+    if (!dateString) {
+      return false // Treat invalid dates as not in the past
+    }
+
+    const inputDate = startOfDay(parseISO(dateString))
+    const today = startOfDay(new Date())
+
+    return isAfter(inputDate, today) || isEqual(inputDate, today)
+  }
 
   return (
     <div className="app__home">
@@ -52,8 +64,7 @@ const Page: React.FC = () => {
                   </div>
                   <div className="pt-2 space-x-2">
                     {item.status === 'Open' &&
-                    item.display_on_portal_until &&
-                    new Date(item.display_on_portal_until) > new Date() ? (
+                    isDateInPast(item.display_on_portal_until) ? (
                       <Link
                         href={`/apply?ref=${item.id}`}
                         className="app__btn_green"

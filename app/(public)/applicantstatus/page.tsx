@@ -470,35 +470,37 @@ const Page: React.FC = () => {
               )}
 
             <hr className="my-6" />
-            {applicantDetails && applicantDetails.ranking.status === 'Open' && (
-              <>
-                <div className="w-full">
-                  <div className="app__label_standard">
-                    <label className="flex items-center space-x-1">
-                      <input
-                        {...register('confirmed', { required: true })}
-                        type="checkbox"
-                        className=""
-                      />
-                      <span className="font-normal text-xs">
-                        By checking this box, you acknowledge that all
-                        information is accurate and up-to-date.
-                      </span>
-                    </label>
-                    {errors.confirmed && (
-                      <div className="app__error_message">
-                        Confirmation is required
-                      </div>
-                    )}
+            {applicantDetails &&
+              applicantDetails.ranking.status === 'Open' &&
+              !isDateInPast(applicantDetails.ranking.days_to_comply) && (
+                <>
+                  <div className="w-full">
+                    <div className="app__label_standard">
+                      <label className="flex items-center space-x-1">
+                        <input
+                          {...register('confirmed', { required: true })}
+                          type="checkbox"
+                          className=""
+                        />
+                        <span className="font-normal text-xs">
+                          By checking this box, you acknowledge that all
+                          information is accurate and up-to-date.
+                        </span>
+                      </label>
+                      {errors.confirmed && (
+                        <div className="app__error_message">
+                          Confirmation is required
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="app__modal_footer">
-                  <button type="submit" className="app__btn_green_sm">
-                    {saving ? 'Saving..' : 'Submit'}
-                  </button>
-                </div>
-              </>
-            )}
+                  <div className="app__modal_footer">
+                    <button type="submit" className="app__btn_green_sm">
+                      {saving ? 'Saving..' : 'Submit'}
+                    </button>
+                  </div>
+                </>
+              )}
           </form>
         </div>
       </div>
