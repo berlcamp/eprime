@@ -212,6 +212,9 @@ const ApplicantDetails = ({
                       <span className="font-light">
                         ({applicantData.email})
                       </span>
+                      <span className="font-light">
+                        ({applicantData.contact_number})
+                      </span>
                     </div>
                     <div className="app__label_value">
                       {applicantData.age} years old, {applicantData.sex} (
