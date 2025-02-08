@@ -255,6 +255,7 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
               <table className="app__table">
                 <thead className="app__thead">
                   <tr>
+                    <th className="app__th">#</th>
                     <th className="app__th">Applicant</th>
                     <th className="app__th"></th>
                     <th className="app__th">Accumulated Points</th>
@@ -265,6 +266,7 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
                   {list.length > 0 &&
                     list.map((item, index) => (
                       <tr key={index} className="app__tr">
+                        <th className="">{index + 1}.</th>
                         <th className="app__th_firstcol">
                           <div className="font-medium">
                             {item.applicant.lastname},{' '}
