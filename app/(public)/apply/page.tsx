@@ -7,6 +7,7 @@ import { ApplicantTypes, Employee, RankingTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import { generateRandomAlphaNumber } from '@/utils/text-helper'
 import axios from 'axios'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -316,9 +317,16 @@ const Page: React.FC = () => {
             {isSuccess && (
               <div className="text-gray-700">
                 Application successfully submitted. Your application Reference
-                Code is <span className="font-bold text-lg">{refCode}</span>. We
-                will send you an email with instructions on how to proceed and
-                upload the required supporting documents for your application.
+                Code is <span className="font-bold text-lg">{refCode}</span>.
+                You can upload supporting documents for your application using
+                this link{' '}
+                <Link
+                  href={`${
+                    process.env.NEXT_PUBLIC_BASE_URL ?? ''
+                  }/applicantstatus?code=${refCode}`}
+                >{`${
+                  process.env.NEXT_PUBLIC_BASE_URL ?? ''
+                }/applicantstatus?code=${refCode}`}</Link>
               </div>
             )}
             {!isSuccess && (

@@ -332,7 +332,8 @@ const ApplicantDetails = ({
                                           )}
                                         </div>
                                       </div>
-                                      <div className="flex-1">
+
+                                      <div>
                                         {doc.status === 'Okay' && (
                                           <span className="app__status_green">
                                             Okay
@@ -349,13 +350,14 @@ const ApplicantDetails = ({
                                           </span>
                                         )}
                                       </div>
+                                      <div className="flex-1">&nbsp;</div>
                                       <div>
                                         {evaluators.some(
                                           (evaluator) =>
                                             evaluator.user_id ===
                                             session.user.id
                                         ) && (
-                                          <div className="space-x-2">
+                                          <div className="flex space-x-2">
                                             <CustomButton
                                               containerStyles="app__btn_green_xs"
                                               title="Okay"
@@ -378,14 +380,14 @@ const ApplicantDetails = ({
                                                 )
                                               }
                                             />
+                                            <div>
+                                              <RemarksInput
+                                                docId={doc.id}
+                                                remarks={doc.remarks}
+                                              />
+                                            </div>
                                           </div>
                                         )}
-                                      </div>
-                                      <div>
-                                        <RemarksInput
-                                          docId={doc.id}
-                                          remarks={doc.remarks}
-                                        />
                                       </div>
                                     </div>
                                   </li>
