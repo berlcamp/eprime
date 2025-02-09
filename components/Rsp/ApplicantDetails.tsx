@@ -209,9 +209,13 @@ const ApplicantDetails = ({
                     <div className="app__label_value">
                       {applicantData.firstname} {applicantData.middlename}{' '}
                       {applicantData.lastname}
+                    </div>
+                    <div className="app__label_value">
                       <span className="font-light">
                         ({applicantData.email})
                       </span>
+                    </div>
+                    <div className="app__label_value">
                       <span className="font-light">
                         ({applicantData.contact_number})
                       </span>

@@ -851,7 +851,6 @@ export interface ApplicantTypes {
   firstname: string
   middlename: string
   email: string
-  files: Array<FileList | undefined>
   address: string
   age: string
   sex: string

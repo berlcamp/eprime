@@ -5,23 +5,11 @@ import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { ApplicantTypes, Employee, RankingTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
-import {
-  generateRandomAlphaNumber,
-  generateReferenceCode
-} from '@/utils/text-helper'
+import { generateRandomAlphaNumber } from '@/utils/text-helper'
 import axios from 'axios'
-import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
-
-interface ExistingQualificationTypes {
-  qualification_name: string
-  documents: Array<{
-    id: string
-    document_url: string
-  }>
-}
+import { useForm } from 'react-hook-form'
 
 // Major categories and subjects
 const elementaryMajors = ['Kindergarten', 'SPED', 'General Education']
@@ -63,11 +51,6 @@ const Page: React.FC = () => {
   const [isCodeOld, setIsCodeOld] = useState(false)
   const [emailFound, setEmailFound] = useState(false)
   const [doneSearch, setDoneSearch] = useState(false)
-  const [documents, setDocuments] = useState<File[][]>([])
-  const [existingQualification, setExistingQualification] = useState<
-    ExistingQualificationTypes[] | []
-  >([])
-
   const [applicantDetails, setApplicantDetails] =
     useState<ApplicantTypes | null>(null)
   const [refCode, setRefCode] = useState('')
@@ -84,7 +67,6 @@ const Page: React.FC = () => {
     watch,
     setValue,
     setError,
-    control,
     handleSubmit
   } = useForm<ApplicantTypes>({
     mode: 'onSubmit',
@@ -171,7 +153,7 @@ const Page: React.FC = () => {
     }
 
     try {
-      const { data: applicantData, error } = await supabase
+      const { error } = await supabase
         .from('hrm_ranking_applicants')
         .insert(newData)
         .select()
@@ -185,57 +167,6 @@ const Page: React.FC = () => {
         )
 
         throw new Error(error.message)
-      }
-
-      // Upload documents
-      if (ranking?.qualifications) {
-        // Create an array of promises
-        const uploadPromises = ranking.qualifications.map(
-          async (qualification, index) => {
-            // Create an array for the current qualification's file uploads
-            if (documents[index]) {
-              const fileUploadPromises = documents[index].map(async (file) => {
-                const randomString = generateReferenceCode()
-
-                // Extract the file extension (e.g., ".pdf", ".jpg")
-                const fileExtension = file.name.split('.').pop()
-                const newFileName = `${randomString}.${fileExtension}`
-
-                const { data: fileData, error: uploadError } =
-                  await supabase.storage
-                    .from('hrm_public')
-                    .upload(
-                      `applicant_documents/${applicantData[0].id}/${newFileName}`,
-                      file
-                    )
-
-                // Check for upload errors
-                if (uploadError) {
-                  console.error('Upload error:', uploadError)
-                  throw new Error(`Error uploading file: ${file.name}`)
-                }
-
-                // Insert the document URL into the database
-                await supabase.from('hrm_ranking_applicant_documents').insert({
-                  applicant_id: applicantData[0].id,
-                  qualification_id: qualification.id,
-                  document_url: fileData?.path
-                })
-              })
-
-              // Return the promise for the current qualification's file uploads
-              return await Promise.all(fileUploadPromises)
-            }
-          }
-        )
-
-        // Await all qualifications upload promises
-        try {
-          await Promise.all(uploadPromises)
-          console.log('All files uploaded successfully!')
-        } catch (error) {
-          console.error('Error during file upload:', error)
-        }
       }
 
       // Email the applicant on the server side
@@ -276,35 +207,6 @@ const Page: React.FC = () => {
     }
   }
 
-  const handleFileUpload = (index: number, files: FileList | null) => {
-    if (!files) return
-
-    const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ] // Images, PDF, DOCX
-
-    const newDocuments = Array.from(files).filter((file) => {
-      if (!allowedTypes.includes(file.type)) {
-        alert(
-          `File type ${file.name} is not allowed. Please upload only images, DOCX, or PDF files.`
-        )
-        return false // Exclude invalid files
-      }
-      return true // Include valid files
-    })
-
-    if (newDocuments.length === 0) return // Stop if no valid files
-
-    const updatedDocuments = [...documents]
-    updatedDocuments[index] = newDocuments
-    setDocuments(updatedDocuments)
-    setValue(`documents.${index}`, updatedDocuments[index])
-  }
-
   // Function to be called when the user types or pastes the 5th character
   const handleFifthCharacter = async (value: string) => {
     setLoading(true)
@@ -330,24 +232,6 @@ const Page: React.FC = () => {
       setValue('email', rkData.email)
       setValue('previous_applicant', 'Yes')
       setValue('previous_applicant_code', value)
-
-      const groupedDocuments = rkData.applicant_documents.reduce(
-        (acc: any, document: any) => {
-          const { qualification_id, qualification } = document
-
-          if (!acc[qualification_id]) {
-            acc[qualification_id] = {
-              qualification_name: qualification.name,
-              documents: []
-            }
-          }
-
-          acc[qualification_id].documents.push(document)
-          return acc
-        },
-        {}
-      )
-      setExistingQualification(groupedDocuments)
     } else if (
       rkData &&
       rkData.ranking.year === new Date().getFullYear().toString()
@@ -372,10 +256,6 @@ const Page: React.FC = () => {
       setApplicantDetails(null)
       setIsCodeFound(true)
     }
-  }
-
-  const extractFilename = (url: string) => {
-    return url.split('/').pop() // Get the last part of the URL which is the filename
   }
 
   const handleSearch = async () => {
@@ -427,89 +307,6 @@ const Page: React.FC = () => {
     void fetchData()
   }, [])
 
-  // const sendEmails = async () => {
-  //   // Remove this after running one time
-  //   const excludedEmails = [
-  //     'berlcamp2@gmail.com',
-  //     'berlcamp@gmail.com',
-  //     'janicetagaan03@gmail.com',
-  //     'riqueangelbert@gmail.com',
-  //     'gmranario@gmail.com',
-  //     'riqueangelbert@gmail.com',
-  //     'jullienantes05521@gmail.com',
-  //     'beestrong212370@gmail.com',
-  //     'emilouaguillon27@gmail.com',
-  //     'lopezmich0506@gmail.com',
-  //     'emilouaguillon27@gmail.com',
-  //     'beestrong212370@gmail.com',
-  //     'jolinasilagan16@gmail.com',
-  //     'trishaantenero@gmail.com',
-  //     'jolinasilagan16@gmail.com',
-  //     'azzhirtginette@gmail.com',
-  //     'ryanjaycalahat@gmail.com',
-  //     'cassarcino.16@gmail.com',
-  //     'cassarcino.16@gmail.com',
-  //     'cabreros2020@gmail.com',
-  //     'salvaleonpinky@gmail.com',
-  //     'mangitngitlea5@gmail.com',
-  //     'mangitngitlea5@gmail.com',
-  //     'alexandrafuentesmaceda@gmail.com',
-  //     'lhyzakztyn19@gmail.com',
-  //     'anniedelolivar21@gmail.com',
-  //     'tayrerechel@gmail.com',
-  //     'faithlumor4@gmail.com',
-  //     'tayrerechel@gmail.com',
-  //     'renalyn.tagubase@deped.gov.ph',
-  //     'marideluntal36@gmail.com',
-  //     'reymarknavaja600@gmail.com',
-  //     'renalyn.tagubase@deped.gov.ph',
-  //     'renalyn.tagubase@deped.gov.ph',
-  //     'reymarknavaja600@gmail.com',
-  //     'elsajosol79@gmail.com',
-  //     'giepartos1980@gmail.com'
-  //   ]
-
-  //   const { data: applicantsListData } = await supabase
-  //     .from('hrm_ranking_applicants')
-  //     .select('*, ranking:ranking_id(*,position:position_id(*))')
-  //     .not('email', 'in', `(${excludedEmails.map((c) => `'${c}'`).join(',')})`) // Excludes IDs in the array
-
-  //   const applicantsList: ApplicantTypes[] = applicantsListData
-  //   // applicantsList?.forEach((a) => {
-  //   //   console.log(a.email)
-  //   // })
-  //   // Send emails concurrently using Promise.all
-  //   await Promise.all(
-  //     applicantsList.map(async (a) => {
-  //       try {
-  //         await axios.post('/api/applicantemail', {
-  //           position: a.ranking?.position?.name,
-  //           email: a.email,
-  //           code: a.code,
-  //           firstname: a.firstname,
-  //           middlename: a.middlename,
-  //           lastname: a.lastname
-  //         })
-  //       } catch (error) {
-  //         await logError(
-  //           'Sending applicant email',
-  //           'hrm_ranking_applicants',
-  //           JSON.stringify({
-  //             position: a.ranking?.position?.name,
-  //             email: a.email,
-  //             code: a.code,
-  //             firstname: a.firstname,
-  //             middlename: a.middlename,
-  //             lastname: a.lastname
-  //           }),
-  //           JSON.stringify(error)
-  //         )
-  //         console.error('Error sending email to', a.email, error)
-  //       }
-  //     })
-  //   )
-  // }
-
   return (
     <div className="app__home">
       <TopBarDark isGuest={session ? false : true} />
@@ -519,7 +316,9 @@ const Page: React.FC = () => {
             {isSuccess && (
               <div className="text-gray-700">
                 Application successfully submitted. Your application Reference
-                Code is <span className="font-bold text-lg">{refCode}</span>
+                Code is <span className="font-bold text-lg">{refCode}</span>. We
+                will send you an email with instructions on how to proceed and
+                upload the required supporting documents for your application.
               </div>
             )}
             {!isSuccess && (
@@ -1091,79 +890,6 @@ const Page: React.FC = () => {
                               )}
                             </div>
                           )}
-
-                          <div>
-                            <div className="text-gray-600 text-sm">
-                              Upload supporting documents for each Qualification
-                              Standards:{' '}
-                            </div>
-                            <div className="p-4 bg-gray-50 border space-y-6">
-                              <div className="text-center text-sm">
-                                QUALIFICATION STANDARDS
-                              </div>
-                              {ranking.qualifications.map(
-                                (qualification, index) => (
-                                  <div key={qualification.id}>
-                                    <h3 className="text-gray-700 text-sm font-bold">
-                                      {index + 1}. {qualification.name}{' '}
-                                      {qualification.required && (
-                                        <span className="text-red-500 font-normal">
-                                          (Required)
-                                        </span>
-                                      )}
-                                    </h3>
-                                    <div className="text-xs text-gray-600 pl-4">
-                                      {qualification.description}
-                                    </div>
-                                    {/* <input
-                                      type="file"
-                                      multiple
-                                      onChange={(e) =>
-                                        handleFileUpload(index, e.target.files)
-                                      }
-                                      className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500"
-                                    />
-                                     */}
-                                    {/* File input with react-hook-form Controller */}
-                                    <Controller
-                                      name={`files.${index}`}
-                                      control={control}
-                                      rules={{
-                                        required: qualification.required
-                                          ? 'This qualification standard is required.'
-                                          : false
-                                      }}
-                                      render={({ field }) => (
-                                        <input
-                                          type="file"
-                                          multiple
-                                          onChange={(e) => {
-                                            field.onChange(e.target.files) // Update field value
-                                            handleFileUpload(
-                                              index,
-                                              e.target.files
-                                            ) // Custom handler
-                                          }}
-                                          ref={field.ref}
-                                          className={`mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500 ${
-                                            errors?.files?.[index]
-                                              ? 'border-red-500'
-                                              : ''
-                                          }`}
-                                        />
-                                      )}
-                                    />
-                                    {/* Error message */}
-                                    {errors?.files?.[index] && (
-                                      <div className="app__error_message">
-                                        {errors.files[index]?.message}
-                                      </div>
-                                    )}
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          </div>
                         </>
                       )}
                     </>
@@ -1230,120 +956,6 @@ const Page: React.FC = () => {
                             {applicantDetails.solo_parent_detail}
                           </div>
                         </div>
-                        <div>
-                          <div className="p-4 bg-gray-50 border space-y-6">
-                            <div className="text-center text-sm">
-                              PREVIOUSLY SUBMITTED QUALIFICATION STANDARDS
-                            </div>
-                            {Object.entries(existingQualification).map(
-                              (
-                                [
-                                  qualificationId,
-                                  { qualification_name, documents }
-                                ],
-                                index
-                              ) => (
-                                <div key={qualificationId} className="mb-4">
-                                  <h3 className="text-gray-700 text-sm font-bold">
-                                    {index + 1}. {qualification_name}
-                                  </h3>
-                                  {documents.length > 0 ? (
-                                    <ul>
-                                      {documents.map((doc, index) => {
-                                        const filename = extractFilename(
-                                          doc.document_url
-                                        )
-
-                                        return (
-                                          <li key={index} className="mb-2">
-                                            {/* Display the filename and make it downloadable */}
-                                            <Link
-                                              href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/hrm_public/${doc.document_url}`}
-                                              download={filename}
-                                              target="_blank"
-                                              className="text-blue-600 hover:underline"
-                                            >
-                                              {filename}
-                                            </Link>
-                                          </li>
-                                        )
-                                      })}
-                                    </ul>
-                                  ) : (
-                                    <p className="text-gray-500">
-                                      No documents available.
-                                    </p>
-                                  )}
-                                </div>
-                              )
-                            )}
-                            {Object.entries(existingQualification).length ===
-                              0 && <div>No records found.</div>}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-gray-600 text-sm">
-                            Upload updated supporting documents for each
-                            Qualification Standards (If applicable):{' '}
-                          </div>
-                          <div className="p-4 bg-gray-50 border space-y-6">
-                            <div className="text-center text-sm">
-                              QUALIFICATION STANDARDS
-                            </div>
-                            {ranking.qualifications.map(
-                              (qualification, index) => (
-                                <div key={qualification.id}>
-                                  <h3 className="text-gray-700 text-sm font-bold">
-                                    {index + 1}. {qualification.name}{' '}
-                                    {qualification.required && (
-                                      <span className="text-red-500 font-normal">
-                                        (Required)
-                                      </span>
-                                    )}
-                                  </h3>
-                                  <div className="text-xs text-gray-600 pl-4">
-                                    {qualification.description}
-                                  </div>
-                                  {/* File input with react-hook-form Controller */}
-                                  <Controller
-                                    name={`files.${index}`}
-                                    control={control}
-                                    rules={{
-                                      required: qualification.required
-                                        ? 'This qualification standard is required.'
-                                        : false
-                                    }}
-                                    render={({ field }) => (
-                                      <input
-                                        type="file"
-                                        multiple
-                                        onChange={(e) => {
-                                          field.onChange(e.target.files) // Update field value
-                                          handleFileUpload(
-                                            index,
-                                            e.target.files
-                                          ) // Custom handler
-                                        }}
-                                        ref={field.ref}
-                                        className={`mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-500 ${
-                                          errors?.files?.[index]
-                                            ? 'border-red-500'
-                                            : ''
-                                        }`}
-                                      />
-                                    )}
-                                  />
-                                  {/* Error message */}
-                                  {errors?.files?.[index] && (
-                                    <div className="app__error_message">
-                                      {errors.files[index]?.message}
-                                    </div>
-                                  )}
-                                </div>
-                              )
-                            )}
-                          </div>
-                        </div>
                       </div>
                     )}
 
@@ -1389,15 +1001,6 @@ const Page: React.FC = () => {
                           title={saving ? 'Saving...' : 'Submit'}
                           containerStyles="app__btn_green"
                         />
-                        {/* {session.user.email === 'berlcamp@gmail.com' && (
-                          <CustomButton
-                            btnType="button"
-                            isDisabled={saving}
-                            title={saving ? 'Saving...' : 'Send Emails'}
-                            handleClick={sendEmails}
-                            containerStyles="app__btn_green"
-                          />
-                        )} */}
                       </div>
                     </>
                   )}

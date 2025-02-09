@@ -2,6 +2,7 @@ import { CustomButton } from '@/components'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
+  ApplicantIerTypes,
   ApplicantTypes,
   RankingCommitteeCriteriaTypes,
   RankingCriteriaPoints
@@ -33,6 +34,7 @@ const CastPoints = ({
   criterias
 }: ModalProps) => {
   const [saving, setSaving] = useState(false)
+  const [ierData, setIerData] = useState<ApplicantIerTypes[] | []>([])
   const [criteriasField, setCriteriasField] = useState<CriteriaFieldsType[]>([])
 
   const { setToast } = useFilter()
@@ -107,6 +109,17 @@ const CastPoints = ({
     })
   }, [criterias])
 
+  useEffect(() => {
+    void (async () => {
+      const { data } = await supabase
+        .from('hrm_ranking_applicant_ier')
+        .select()
+        .eq('applicant_id', applicantData.id)
+
+      setIerData(data)
+    })()
+  }, [])
+
   return (
     <>
       <div className="app__modal_wrapper">
@@ -166,6 +179,15 @@ const CastPoints = ({
                         )}
                       </div>
                     </div>
+                  </div>
+                ))}
+              </div>
+              {/* IER Data */}
+              <div>
+                {ierData.map((ier) => (
+                  <div key={ier.id}>
+                    <div>{ier.remarks}</div>
+                    <div>{ier.time}</div>
                   </div>
                 ))}
               </div>
