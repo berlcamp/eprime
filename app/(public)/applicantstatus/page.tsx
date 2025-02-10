@@ -163,16 +163,41 @@ const Page: React.FC = () => {
   }
 
   const qualificationStatus = (statuses: ApplicantDocuments[]) => {
-    if (statuses.length === 0) {
+    const qualifications = applicantDetails?.ranking?.qualifications
+
+    if (statuses.length === 0 || !qualifications) {
       return 'No Qualifications'
     }
-    if (statuses.some((item) => item.status === 'Not Okay')) {
+
+    // Filter required qualifications
+    const requiredQualifications = qualifications.filter((q) => q.required)
+
+    // Check if all required qualifications exist in statuses
+    const allRequiredExist = requiredQualifications.every((q) =>
+      statuses.some((s) => s.qualification_id === q.id)
+    )
+
+    if (!allRequiredExist) {
       return 'Not Qualified'
-    } else if (statuses.some((item) => item.status === 'For Evaluation')) {
+    }
+
+    // Extract statuses for required qualifications only
+    const requiredStatuses = statuses.filter((s) =>
+      requiredQualifications.some((q) => q.id === s.qualification_id)
+    )
+
+    if (requiredStatuses.some((s) => s.status === 'Not Okay')) {
+      return 'Not Qualified'
+    }
+
+    if (requiredStatuses.some((s) => s.status === 'For Evaluation')) {
       return 'For Evaluation'
-    } else if (statuses.every((item) => item.status === 'Okay')) {
+    }
+
+    if (requiredStatuses.every((s) => s.status === 'Okay')) {
       return 'Qualified'
     }
+
     return 'Not Known'
   }
 

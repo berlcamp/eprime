@@ -129,7 +129,7 @@ const RankingApplicants = ({
     )
 
     if (requiredStatuses.some((s) => s.status === 'Not Okay')) {
-      return 'Not Okay'
+      return 'Not Qualified'
     }
 
     if (requiredStatuses.some((s) => s.status === 'For Evaluation')) {
