@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react'
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [isCodeFound, setIsCodeFound] = useState(true)
+  const [isUploading, setIsUploading] = useState(false)
 
   const [applicantDetails, setApplicantDetails] =
     useState<ApplicantTypes | null>(null)
@@ -33,6 +34,8 @@ const Page: React.FC = () => {
       setToast('error', 'No file selected')
       return
     }
+
+    setIsUploading(true) // Start loading
 
     try {
       const randomString = generateReferenceCode()
@@ -119,6 +122,8 @@ const Page: React.FC = () => {
       void handleSearch()
     } catch (error) {
       console.error('Unexpected error during file upload:', error)
+    } finally {
+      setIsUploading(false) // Stop loading
     }
   }
 
@@ -222,6 +227,14 @@ const Page: React.FC = () => {
           <div className="px-4 text-lg text-center uppercase font-semibold text-gray-700">
             <span>Application Status</span>
           </div>
+
+          {isUploading && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white p-4 rounded-md shadow-md">
+                <span className="text-lg font-semibold">Uploading...</span>
+              </div>
+            </div>
+          )}
 
           <div className="app__form_field_container">
             <div className="w-full">
@@ -332,9 +345,14 @@ const Page: React.FC = () => {
                         <div key={qualification.id}>
                           <h3 className="text-gray-700 text-sm font-bold">
                             {index + 1}. {qualification.name}{' '}
+                            {qualification.required && (
+                              <span className="font-bold text-red-500">
+                                (Required)
+                              </span>
+                            )}
                           </h3>
                           <div className="text-xs text-gray-600 pl-4">
-                            {qualification.description}
+                            {qualification.description}{' '}
                           </div>
                           {/* File Input Wrapper */}
                           <div className="pl-4 flex">
