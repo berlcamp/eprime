@@ -159,7 +159,7 @@ const Page: React.FC = () => {
     const rankingDateObject = new Date(rankingDate)
 
     const currentDate = new Date()
-    return rankingDateObject < currentDate
+    return rankingDateObject <= currentDate
   }
 
   const qualificationStatus = (statuses: ApplicantDocuments[]) => {
