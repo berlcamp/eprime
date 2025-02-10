@@ -97,6 +97,7 @@ const TravelForm = ({ hideModal }: ModalProps) => {
         travel_to: formdata.to,
         travel_destination: formdata.destination,
         travel_fund_source: formdata.fund_source,
+        travel_with: formdata.with,
         created_by: session.user.id,
         current_approver_id: session.user.id,
         receiver_id: user.id,
@@ -363,6 +364,20 @@ const TravelForm = ({ hideModal }: ModalProps) => {
                       Purpose of Travel is required
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+            <div className="app__form_field_container">
+              <div className="w-full">
+                <div className="app__label_standard">
+                  Accompanied by (optional)
+                </div>
+                <div>
+                  <textarea
+                    {...register('with')}
+                    placeholder="List names"
+                    className="app__input_standard"
+                  />
                 </div>
               </div>
             </div>

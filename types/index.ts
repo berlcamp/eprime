@@ -472,6 +472,7 @@ export interface TravelTypes {
   host: string
   from: string
   to: string
+  with: string
   destination: string
   fund_source: string
   confirmed: string
@@ -673,6 +674,7 @@ export interface DocumentTypes {
   travel_host: string
   travel_from: string
   travel_to: string
+  travel_with: string
   travel_destination: string
   travel_fund_source: string
   undertime_permit_time: string
