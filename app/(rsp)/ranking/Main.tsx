@@ -132,9 +132,10 @@ const Page: React.FC = () => {
     setShowAddModal(true)
     setEditData(item)
   }
-  const handleViewApplicants = (id: string) => {
+  const handleViewApplicants = (item: RankingTypes) => {
     setShowApplicantsModal(true)
-    setSelectedId(id)
+    setEditData(item)
+    setSelectedId(item.id)
   }
 
   const handleViewCriterias = (id: string) => {
@@ -283,9 +284,7 @@ const Page: React.FC = () => {
                                 )}
                                 <Menu.Item>
                                   <div
-                                    onClick={() =>
-                                      handleViewApplicants(item.id)
-                                    }
+                                    onClick={() => handleViewApplicants(item)}
                                     className="app__dropdown_item"
                                   >
                                     <User2Icon className="w-4 h-4" />
@@ -415,9 +414,10 @@ const Page: React.FC = () => {
         />
       )}
       {/* Show Applicants Modal */}
-      {showApplicantsModal && (
+      {showApplicantsModal && editData && (
         <RankingApplicants
           rankingId={selectedId}
+          rankingDetails={editData}
           hideModal={() => setShowApplicantsModal(false)}
         />
       )}

@@ -21,6 +21,7 @@ import CastPoints from './CastPoints'
 interface ModalProps {
   hideModal: () => void
   rankingId: string
+  rankingDetails: RankingTypes
 }
 
 interface ListTypes {
@@ -30,7 +31,11 @@ interface ListTypes {
   ranking: RankingTypes
 }
 
-const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
+const RankingApplicants = ({
+  hideModal,
+  rankingId,
+  rankingDetails
+}: ModalProps) => {
   const [showQualificationsModal, setShowQualificationsModal] = useState(false)
   const [showCastPointsModal, setShowCastPointsModal] = useState(false)
   const [showRemoveModal, setShowRemoveModal] = useState(false)
@@ -100,16 +105,41 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
   }
 
   const qualificationStatus = (statuses: ApplicantDocuments[]) => {
+    const qualifications = rankingDetails.qualifications
+
     if (statuses.length === 0) {
       return 'No Qualifications'
     }
-    if (statuses.some((item) => item.status === 'Not Okay')) {
+
+    // Filter required qualifications
+    const requiredQualifications = qualifications.filter((q) => q.required)
+
+    // Check if all required qualifications exist in statuses
+    const allRequiredExist = requiredQualifications.every((q) =>
+      statuses.some((s) => s.qualification_id === q.id)
+    )
+
+    if (!allRequiredExist) {
       return 'Not Qualified'
-    } else if (statuses.some((item) => item.status === 'For Evaluation')) {
+    }
+
+    // Extract statuses for required qualifications only
+    const requiredStatuses = statuses.filter((s) =>
+      requiredQualifications.some((q) => q.id === s.qualification_id)
+    )
+
+    if (requiredStatuses.some((s) => s.status === 'Not Okay')) {
+      return 'Not Okay'
+    }
+
+    if (requiredStatuses.some((s) => s.status === 'For Evaluation')) {
       return 'For Evaluation'
-    } else if (statuses.every((item) => item.status === 'Okay')) {
+    }
+
+    if (requiredStatuses.every((s) => s.status === 'Okay')) {
       return 'Qualified'
     }
+
     return 'Not Known'
   }
 
@@ -172,7 +202,7 @@ const RankingApplicants = ({ hideModal, rankingId }: ModalProps) => {
       const { data } = await supabase
         .from('hrm_ranking_applicants')
         .select(
-          '*,applicant_documents:hrm_ranking_applicant_documents(status),ranking:ranking_id(status,chairman_id,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          '*,applicant_documents:hrm_ranking_applicant_documents(qualification_id,status),ranking:ranking_id(status,chairman_id,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
           {
             count: 'exact'
           }
