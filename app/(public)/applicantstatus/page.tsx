@@ -306,7 +306,7 @@ const Page: React.FC = () => {
                       (qualification, index) => (
                         <div key={qualification.id}>
                           <h3 className="text-gray-700 text-sm font-bold">
-                            {index + 1}. {qualification.id} {qualification.name}{' '}
+                            {index + 1}. {qualification.name}{' '}
                           </h3>
                           <div className="text-xs text-gray-600 pl-4">
                             {qualification.description}
