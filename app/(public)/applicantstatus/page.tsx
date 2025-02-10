@@ -6,7 +6,7 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { ApplicantDocuments, ApplicantTypes } from '@/types'
 import { generateReferenceCode } from '@/utils/text-helper'
-import { format } from 'date-fns'
+import { format, isEqual, isFuture } from 'date-fns'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -149,17 +149,17 @@ const Page: React.FC = () => {
       void handleSearch()
     }
   }
-
-  const isDateInPast = (rankingDate: string) => {
-    // Check if the parsed date is valid
-    if (!rankingDate) {
+  const isDateInPast = (dateString: string) => {
+    if (!dateString) {
       return false // Treat invalid dates as not in the past
     }
 
-    const rankingDateObject = new Date(rankingDate)
+    // const inputDate = startOfDay(parseISO(dateString))
 
-    const currentDate = new Date()
-    return rankingDateObject <= currentDate
+    return (
+      isFuture(new Date(dateString)) ||
+      isEqual(new Date(dateString), new Date())
+    )
   }
 
   const qualificationStatus = (statuses: ApplicantDocuments[]) => {
