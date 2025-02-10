@@ -76,6 +76,9 @@ export const PrintTravelForm = React.forwardRef<
                   {selectedItem.creator.firstname}{' '}
                   {selectedItem.creator.middlename}
                 </div>
+                <div className="w-full">
+                  Accompanied by: {selectedItem.travel_with}
+                </div>
               </td>
             </tr>
             <tr>
