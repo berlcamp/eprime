@@ -1765,6 +1765,14 @@ export default function DetailsModal({
                               )}
                             </td>
                           </tr>
+                          <tr>
+                            <td className="px-2 py-2 font-light text-right">
+                              Destination:
+                            </td>
+                            <td className="text-sm font-medium">
+                              {documentData.travel_destination}
+                            </td>
+                          </tr>
                           {documentData.travel_type === 'Official Travel' && (
                             <>
                               <tr>
