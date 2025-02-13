@@ -60,7 +60,7 @@ export default function ConfirmChangeStatusModal({
               {status === 'Disqualified' && (
                 <div className="w-full">
                   <div className="app__label_standard">
-                    Reason for Disapproval:
+                    Reason for Disqualification:
                   </div>
                   <textarea
                     value={reason}
