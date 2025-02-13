@@ -109,7 +109,7 @@ const Page: React.FC = () => {
         .insert({
           applicant_id: applicantDetails.id,
           qualification_id: qualificationId,
-          document_url: fileUrl
+          document_url: filePath
         })
 
       if (dbError) {
