@@ -23,7 +23,7 @@ const Page: React.FC = () => {
   const code = searchParams.get('code')
 
   const [inputValue, setInputValue] = useState(code ?? '')
-  const { setToast } = useFilter()
+  const { setToast, hasAccess } = useFilter()
   const { supabase, session } = useSupabase()
 
   const handleFileUpload = async (
@@ -160,7 +160,7 @@ const Page: React.FC = () => {
     }
 
     // berl only
-    if (session.user.email === 'berlcamp@gmail.com') {
+    if (hasAccess('settings')) {
       return true
     }
 
