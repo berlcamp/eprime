@@ -897,6 +897,7 @@ export interface ApplicantTypes {
   ranking_id: string
   code: string
   status: string
+  evaluation_status: string
   confirmed: string
   documents: File[][]
   ranking: RankingTypes

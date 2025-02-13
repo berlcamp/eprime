@@ -73,6 +73,39 @@ const RankingApplicants = ({
     setSelectedItem(item)
   }
 
+  const handleChangeEvaluationStatus = async (
+    applicant: ApplicantTypes,
+    status: string
+  ) => {
+    try {
+      const { error } = await supabase
+        .from('hrm_ranking_applicants')
+        .update({ evaluation_status: status })
+        .eq('id', applicant.id)
+
+      if (error) {
+        void logError(
+          'Update Ranking Evaluation Status',
+          'hrm_ranking_applicants',
+          '',
+          error.message
+        )
+        setToast(
+          'error',
+          'Saving failed, please reload the page and try again.'
+        )
+        throw new Error(error.message)
+      }
+
+      // pop up the success message
+      setToast('success', 'Successfully Deleted!')
+
+      setRefetch(!refetch)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const handleRemoveConfirmed = async () => {
     try {
       const { error } = await supabase
@@ -272,7 +305,7 @@ const RankingApplicants = ({
         <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
-              <h5 className="app__modal_header_text">Ranking Details</h5>
+              <h5 className="app__modal_header_text">Ranking Applicants</h5>
               <CustomButton
                 containerStyles="app__btn_gray"
                 title="Close"
@@ -297,7 +330,7 @@ const RankingApplicants = ({
                     list.map((item, index) => (
                       <tr key={index} className="app__tr">
                         <th className="">{index + 1}.</th>
-                        <th className="app__th_firstcol">
+                        <th className="app__th_firstcol space-y-2">
                           <div className="font-medium">
                             {item.applicant.lastname},{' '}
                             {item.applicant.firstname}{' '}
@@ -316,7 +349,8 @@ const RankingApplicants = ({
                               (Previous Applicant)
                             </div>
                           )}
-                          <div className="mt-1">
+                          <div className="mt-1 whitespace-nowrap">
+                            QS Status:{' '}
                             {qualificationStatus(
                               item.applicant.applicant_documents
                             ) === 'For Evaluation' && (
@@ -327,28 +361,49 @@ const RankingApplicants = ({
                             {qualificationStatus(
                               item.applicant.applicant_documents
                             ) === 'Qualified' && (
-                              <span className="text-green-500 bg-green-100 border border-green-500 py-px px-1">
+                              <span className="whitespace-nowrap text-green-500 bg-green-100 border border-green-500 py-px px-1">
                                 Qualified
                               </span>
                             )}
                             {qualificationStatus(
                               item.applicant.applicant_documents
                             ) === 'Not Qualified' && (
-                              <span className="text-red-500 bg-red-100 border border-red-500 py-px px-1">
+                              <span className="whitespace-nowrap text-red-500 bg-red-100 border border-red-500 py-px px-1">
                                 Not Qualified
                               </span>
                             )}
                             {qualificationStatus(
                               item.applicant.applicant_documents
                             ) === 'No Qualifications' && (
-                              <span className="text-red-500 bg-red-100 border border-red-500 py-px px-1">
+                              <span className="whitespace-nowrap text-red-500 bg-red-100 border border-red-500 py-px px-1">
                                 No Qualifications
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1 whitespace-nowrap">
+                            Applicant Status:{' '}
+                            {item.applicant.evaluation_status ===
+                              'For Evaluation' && (
+                              <span className=" whitespace-nowrap text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
+                                For Evaluation
+                              </span>
+                            )}
+                            {item.applicant.evaluation_status ===
+                              'Qualified' && (
+                              <span className="whitespace-nowrap text-green-500 bg-green-100 border border-green-500 py-px px-1">
+                                Qualified
+                              </span>
+                            )}
+                            {item.applicant.evaluation_status ===
+                              'Disqualified' && (
+                              <span className="whitespace-nowrap text-red-500 bg-red-100 border border-red-500 py-px px-1">
+                                Disqualified
                               </span>
                             )}
                           </div>
                         </th>
                         <td className="app__td">
-                          <div className="space-x-2">
+                          <div className="space-x-2 space-y-2">
                             {item.ranking.chairman_id === session.user.id && (
                               <CustomButton
                                 containerStyles="app__btn_red_xs"
@@ -367,6 +422,48 @@ const RankingApplicants = ({
                                 handleViewQualifications(item.applicant)
                               }
                             />
+                            {item.applicant.evaluation_status !==
+                              'Qualified' && (
+                              <CustomButton
+                                containerStyles="app__btn_green_xs"
+                                title="Mark as Qualified"
+                                btnType="button"
+                                handleClick={() =>
+                                  handleChangeEvaluationStatus(
+                                    item.applicant,
+                                    'Qualified'
+                                  )
+                                }
+                              />
+                            )}
+                            {item.applicant.evaluation_status !==
+                              'Disqualified' && (
+                              <CustomButton
+                                containerStyles="app__btn_red_xs"
+                                title="Mark as Disqualified"
+                                btnType="button"
+                                handleClick={() =>
+                                  handleChangeEvaluationStatus(
+                                    item.applicant,
+                                    'Disqualified'
+                                  )
+                                }
+                              />
+                            )}
+                            {item.applicant.evaluation_status !==
+                              'For Evaluation' && (
+                              <CustomButton
+                                containerStyles="app__btn_orange_xs"
+                                title="Mark as For Evaluation"
+                                btnType="button"
+                                handleClick={() =>
+                                  handleChangeEvaluationStatus(
+                                    item.applicant,
+                                    'For Evaluation'
+                                  )
+                                }
+                              />
+                            )}
                             {qualificationStatus(
                               item.applicant.applicant_documents
                             ) === 'Qualified' && (
