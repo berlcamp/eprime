@@ -160,7 +160,7 @@ const Page: React.FC = () => {
     }
 
     // berl only
-    if (hasAccess('settings')) {
+    if (session && hasAccess('settings')) {
       return true
     }
 
