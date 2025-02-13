@@ -4,9 +4,9 @@ import Footer from '@/components/Footer'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { ApplicantDocuments, ApplicantTypes } from '@/types'
+import { ApplicantTypes } from '@/types'
 import { generateReferenceCode } from '@/utils/text-helper'
-import { format, isEqual, isFuture } from 'date-fns'
+import { format, isFuture } from 'date-fns'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -161,47 +161,9 @@ const Page: React.FC = () => {
 
     return (
       isFuture(new Date(dateString)) ||
-      isEqual(new Date(dateString), new Date())
+      format(new Date(dateString), 'yyyy-MM-dd') ===
+        format(new Date(), 'yyyy-MM-dd')
     )
-  }
-
-  const qualificationStatus = (statuses: ApplicantDocuments[]) => {
-    const qualifications = applicantDetails?.ranking?.qualifications
-
-    if (statuses.length === 0 || !qualifications) {
-      return 'No Qualifications'
-    }
-
-    // Filter required qualifications
-    const requiredQualifications = qualifications.filter((q) => q.required)
-
-    // Check if all required qualifications exist in statuses
-    const allRequiredExist = requiredQualifications.every((q) =>
-      statuses.some((s) => s.qualification_id === q.id)
-    )
-
-    if (!allRequiredExist) {
-      return 'Not Qualified'
-    }
-
-    // Extract statuses for required qualifications only
-    const requiredStatuses = statuses.filter((s) =>
-      requiredQualifications.some((q) => q.id === s.qualification_id)
-    )
-
-    if (requiredStatuses.some((s) => s.status === 'Not Okay')) {
-      return 'Not Qualified'
-    }
-
-    if (requiredStatuses.some((s) => s.status === 'For Evaluation')) {
-      return 'For Evaluation'
-    }
-
-    if (requiredStatuses.every((s) => s.status === 'Okay')) {
-      return 'Qualified'
-    }
-
-    return 'Not Known'
   }
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -276,30 +238,9 @@ const Page: React.FC = () => {
               </div>
               <div className="mt-2">
                 <span className="text-gray-600">Status: </span>
-                {qualificationStatus(applicantDetails.applicant_documents) ===
-                  'For Evaluation' && (
-                  <span className="text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
-                    For Evaluation
-                  </span>
-                )}
-                {qualificationStatus(applicantDetails.applicant_documents) ===
-                  'Qualified' && (
-                  <span className="text-green-500 bg-green-100 border border-green-500 py-px px-1">
-                    Qualified
-                  </span>
-                )}
-                {qualificationStatus(applicantDetails.applicant_documents) ===
-                  'Not Qualified' && (
-                  <span className="text-red-500 bg-red-100 border border-red-500 py-px px-1">
-                    Not Qualified
-                  </span>
-                )}
-                {qualificationStatus(applicantDetails.applicant_documents) ===
-                  'No Qualifications' && (
-                  <span className="text-red-500 bg-red-100 border border-red-500 py-px px-1">
-                    No Qualifications
-                  </span>
-                )}
+                <span className="text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
+                  Evaluation Currently On-going
+                </span>
               </div>
             </div>
           )}
