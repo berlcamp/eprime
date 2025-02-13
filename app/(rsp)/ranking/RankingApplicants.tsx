@@ -8,6 +8,7 @@ import {
   ApplicantTypes,
   RankingCommitteeCriteriaTypes,
   RankingCommitteeTypes,
+  RankingEvaluatorTypes,
   RankingTypes
 } from '@/types'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
@@ -43,6 +44,8 @@ const RankingApplicants = ({
     useState(false)
   const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
   const [refetch, setRefetch] = useState(false)
+
+  const [evaluators, setEvaluators] = useState<RankingEvaluatorTypes[] | []>([])
 
   // use for Cast Points modal
   const [commiteeId, setCommitteeId] = useState('')
@@ -295,6 +298,15 @@ const RankingApplicants = ({
       }
     }
 
+    const fetchEvaluators = async () => {
+      const { data: evaluatorsData } = await supabase
+        .from('hrm_ranking_evaluators')
+        .select()
+        .eq('ranking_id', rankingId)
+      setEvaluators(evaluatorsData)
+    }
+
+    void fetchEvaluators()
     void fetchApplicantsData()
     void fetchCommitteeCriteriasData()
   }, [refetch])
@@ -422,47 +434,54 @@ const RankingApplicants = ({
                                 handleViewQualifications(item.applicant)
                               }
                             />
-                            {item.applicant.evaluation_status !==
-                              'Qualified' && (
-                              <CustomButton
-                                containerStyles="app__btn_green_xs"
-                                title="Mark as Qualified"
-                                btnType="button"
-                                handleClick={() =>
-                                  handleChangeEvaluationStatus(
-                                    item.applicant,
-                                    'Qualified'
-                                  )
-                                }
-                              />
-                            )}
-                            {item.applicant.evaluation_status !==
-                              'Disqualified' && (
-                              <CustomButton
-                                containerStyles="app__btn_red_xs"
-                                title="Mark as Disqualified"
-                                btnType="button"
-                                handleClick={() =>
-                                  handleChangeEvaluationStatus(
-                                    item.applicant,
-                                    'Disqualified'
-                                  )
-                                }
-                              />
-                            )}
-                            {item.applicant.evaluation_status !==
-                              'For Evaluation' && (
-                              <CustomButton
-                                containerStyles="app__btn_orange_xs"
-                                title="Mark as For Evaluation"
-                                btnType="button"
-                                handleClick={() =>
-                                  handleChangeEvaluationStatus(
-                                    item.applicant,
-                                    'For Evaluation'
-                                  )
-                                }
-                              />
+                            {evaluators.some(
+                              (evaluator) =>
+                                evaluator.user_id === session.user.id
+                            ) && (
+                              <>
+                                {item.applicant.evaluation_status !==
+                                  'Qualified' && (
+                                  <CustomButton
+                                    containerStyles="app__btn_green_xs"
+                                    title="Mark as Qualified"
+                                    btnType="button"
+                                    handleClick={() =>
+                                      handleChangeEvaluationStatus(
+                                        item.applicant,
+                                        'Qualified'
+                                      )
+                                    }
+                                  />
+                                )}
+                                {item.applicant.evaluation_status !==
+                                  'Disqualified' && (
+                                  <CustomButton
+                                    containerStyles="app__btn_red_xs"
+                                    title="Mark as Disqualified"
+                                    btnType="button"
+                                    handleClick={() =>
+                                      handleChangeEvaluationStatus(
+                                        item.applicant,
+                                        'Disqualified'
+                                      )
+                                    }
+                                  />
+                                )}
+                                {item.applicant.evaluation_status !==
+                                  'For Evaluation' && (
+                                  <CustomButton
+                                    containerStyles="app__btn_orange_xs"
+                                    title="Mark as For Evaluation"
+                                    btnType="button"
+                                    handleClick={() =>
+                                      handleChangeEvaluationStatus(
+                                        item.applicant,
+                                        'For Evaluation'
+                                      )
+                                    }
+                                  />
+                                )}
+                              </>
                             )}
                             {item.applicant.evaluation_status !==
                               'Qualified' && (
