@@ -362,7 +362,7 @@ const Page: React.FC = () => {
                         {/* End - Mobile View */}
                       </th>
                       <td className="hidden md:table-cell app__td">
-                        {item.type} - {item.year}
+                        {item.type} - {item.year} - #{item.id}
                       </td>
                       <td className="hidden md:table-cell app__td">
                         {item.display_on_portal ? (

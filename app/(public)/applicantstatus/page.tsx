@@ -44,29 +44,29 @@ const Page: React.FC = () => {
       const folderPath = `applicant_documents/${applicantDetails.id}/`
 
       // **Step 1: List existing files in the applicant's folder**
-      const { data: existingFiles, error: listError } = await supabase.storage
-        .from('hrm_public')
-        .list(folderPath)
+      // const { data: existingFiles, error: listError } = await supabase.storage
+      //   .from('hrm_public')
+      //   .list(folderPath)
 
-      if (listError) {
-        setToast('error', 'Error listing files:', listError.message)
-        throw new Error(listError.message)
-      }
+      // if (listError) {
+      //   setToast('error', 'Error listing files:', listError.message)
+      //   throw new Error(listError.message)
+      // }
 
       // **Step 2: Delete existing files (if any)**
-      if (existingFiles && existingFiles.length > 0) {
-        const deletePaths = existingFiles.map(
-          (file: any) => `${folderPath}${file.name}`
-        )
-        const { error: deleteError } = await supabase.storage
-          .from('hrm_public')
-          .remove(deletePaths)
+      // if (existingFiles && existingFiles.length > 0) {
+      //   const deletePaths = existingFiles.map(
+      //     (file: any) => `${folderPath}${file.name}`
+      //   )
+      //   const { error: deleteError } = await supabase.storage
+      //     .from('hrm_public')
+      //     .remove(deletePaths)
 
-        if (deleteError) {
-          setToast('error', 'Error removing files:', deleteError.message)
-          throw new Error(deleteError.message)
-        }
-      }
+      //   if (deleteError) {
+      //     setToast('error', 'Error removing files:', deleteError.message)
+      //     throw new Error(deleteError.message)
+      //   }
+      // }
 
       // **Step 3: Upload the new file**
       const filePath = `${folderPath}${newFileName}`
