@@ -464,9 +464,8 @@ const RankingApplicants = ({
                                 }
                               />
                             )}
-                            {qualificationStatus(
-                              item.applicant.applicant_documents
-                            ) === 'Qualified' && (
+                            {item.applicant.evaluation_status !==
+                              'Qualified' && (
                               <>
                                 <CustomButton
                                   containerStyles="app__btn_blue_xs"
