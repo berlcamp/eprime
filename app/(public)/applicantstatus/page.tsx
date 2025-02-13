@@ -159,8 +159,6 @@ const Page: React.FC = () => {
       return false // Treat invalid dates as not in the past
     }
 
-    // const inputDate = startOfDay(parseISO(dateString))
-
     return (
       isFuture(new Date(dateString)) ||
       isEqual(new Date(dateString), new Date())
@@ -317,7 +315,7 @@ const Page: React.FC = () => {
           {!loading &&
             applicantDetails &&
             applicantDetails.ranking.status === 'Open' &&
-            isDateInPast(applicantDetails.ranking.days_to_comply) && (
+            !isDateInPast(applicantDetails.ranking.days_to_comply) && (
               <div className="text-red-500 text-sm font-medium">
                 The compliance due date has passed. Deadline:{' '}
                 {format(
@@ -329,7 +327,7 @@ const Page: React.FC = () => {
           {!loading &&
             applicantDetails &&
             applicantDetails.ranking.status === 'Open' &&
-            !isDateInPast(applicantDetails.ranking.days_to_comply) && (
+            isDateInPast(applicantDetails.ranking.days_to_comply) && (
               <div className="grid gap-4">
                 <div>
                   <div className="text-gray-600 text-sm mb-2">
