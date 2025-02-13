@@ -15,6 +15,7 @@ import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
 import { logError } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
 import CastPoints from './CastPoints'
+import ConfirmChangeStatusModal from './ConfirmChangeStatusModal'
 
 // import { Resend } from 'resend'
 // const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_KEY)
@@ -43,7 +44,9 @@ const RankingApplicants = ({
   const [showCommitteePointsModal, setShowCommitteePointsModal] =
     useState(false)
   const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
+  const [selectedStatus, setSelectedStatus] = useState('')
   const [refetch, setRefetch] = useState(false)
+  const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
 
   const [evaluators, setEvaluators] = useState<RankingEvaluatorTypes[] | []>([])
 
@@ -76,15 +79,16 @@ const RankingApplicants = ({
     setSelectedItem(item)
   }
 
-  const handleChangeEvaluationStatus = async (
-    applicant: ApplicantTypes,
-    status: string
-  ) => {
+  const handleChangeEvaluationStatus = async (reason: string) => {
+    if (!selectedItem) return
     try {
       const { error } = await supabase
         .from('hrm_ranking_applicants')
-        .update({ evaluation_status: status })
-        .eq('id', applicant.id)
+        .update({
+          evaluation_status: selectedStatus,
+          reason_for_disqualification: reason
+        })
+        .eq('id', selectedItem.id)
 
       if (error) {
         void logError(
@@ -101,12 +105,21 @@ const RankingApplicants = ({
       }
 
       // pop up the success message
-      setToast('success', 'Successfully Deleted!')
-
+      setToast('success', 'Successfully updated!')
+      setShowChangeStatusModal(false)
       setRefetch(!refetch)
     } catch (e) {
       console.error(e)
     }
+  }
+
+  const triggerChangeEvaluationStatus = async (
+    applicant: ApplicantTypes,
+    status: string
+  ) => {
+    setSelectedItem(applicant)
+    setSelectedStatus(status)
+    setShowChangeStatusModal(true)
   }
 
   const handleRemoveConfirmed = async () => {
@@ -446,7 +459,7 @@ const RankingApplicants = ({
                                     title="Mark as Qualified"
                                     btnType="button"
                                     handleClick={() =>
-                                      handleChangeEvaluationStatus(
+                                      triggerChangeEvaluationStatus(
                                         item.applicant,
                                         'Qualified'
                                       )
@@ -460,7 +473,7 @@ const RankingApplicants = ({
                                     title="Mark as Disqualified"
                                     btnType="button"
                                     handleClick={() =>
-                                      handleChangeEvaluationStatus(
+                                      triggerChangeEvaluationStatus(
                                         item.applicant,
                                         'Disqualified'
                                       )
@@ -474,7 +487,7 @@ const RankingApplicants = ({
                                     title="Mark as For Evaluation"
                                     btnType="button"
                                     handleClick={() =>
-                                      handleChangeEvaluationStatus(
+                                      triggerChangeEvaluationStatus(
                                         item.applicant,
                                         'For Evaluation'
                                       )
@@ -583,6 +596,17 @@ const RankingApplicants = ({
           message="This action cannot be undone. Are you sure you want to remove this applicant?"
           onConfirm={handleRemoveConfirmed}
           onCancel={() => setShowRemoveModal(false)}
+        />
+      )}
+      {/* Confirm Change Status Modal */}
+      {showChangeStatusModal && (
+        <ConfirmChangeStatusModal
+          header="Confirm Change"
+          btnText="Confirm"
+          status={selectedStatus}
+          message="Please confirm this action"
+          onConfirm={handleChangeEvaluationStatus}
+          onCancel={() => setShowChangeStatusModal(false)}
         />
       )}
     </>
