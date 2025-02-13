@@ -159,6 +159,11 @@ const Page: React.FC = () => {
       return false // Treat invalid dates as not in the past
     }
 
+    // berl only
+    if (session.user.email === 'berlcamp@gmail.com') {
+      return true
+    }
+
     return (
       isFuture(new Date(dateString)) ||
       format(new Date(dateString), 'yyyy-MM-dd') ===
