@@ -71,6 +71,11 @@ const Page: React.FC = () => {
       { header: 'Disability', key: 'disability', width: 20 },
       { header: 'Ethnicity', key: 'ethnicity', width: 20 },
       { header: 'Email', key: 'email', width: 20 },
+      { header: 'Contact #', key: 'contact_number', width: 20 },
+      { header: 'Education', key: 'education', width: 20 },
+      { header: 'Training', key: 'training', width: 20 },
+      { header: 'Experience', key: 'experience', width: 20 },
+      { header: 'Eligibility', key: 'eligibility', width: 20 },
       { header: 'Remarks', key: 'remarks', width: 20 }
       // Add more columns based on your data structure
     ]
@@ -90,6 +95,11 @@ const Page: React.FC = () => {
         disability: `${item.disability}`,
         ethnicity: `${item.ethnicity_detail ?? ''}`,
         email: `${item.email}`,
+        contact_number: `${item.contact_number}`,
+        education: '',
+        training: '',
+        experience: '',
+        eligibility: '',
         remarks: `${item.evaluation_status} / ${
           item.reason_for_disqualification ?? ''
         }`
