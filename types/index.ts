@@ -898,6 +898,7 @@ export interface ApplicantTypes {
   code: string
   status: string
   evaluation_status: string
+  reason_for_disqualification: string
   confirmed: string
   documents: File[][]
   ranking: RankingTypes
