@@ -4,7 +4,7 @@ import { TableRowLoading, TopBarDark, TwoColTableLoading } from '@/components'
 import React, { useEffect, useState } from 'react'
 
 // Types
-import type { ApplicantDocuments, ApplicantTypes, RankingTypes } from '@/types'
+import type { ApplicantTypes, RankingTypes } from '@/types'
 
 import Footer from '@/components/Footer'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -89,20 +89,6 @@ const Page: React.FC = () => {
     }
   }
 
-  const qualificationStatus = (statuses: ApplicantDocuments[]) => {
-    if (statuses.length === 0) {
-      return 'No Qualifications'
-    }
-    if (statuses.some((item) => item.status === 'Not Okay')) {
-      return 'Not Qualified'
-    } else if (statuses.some((item) => item.status === 'For Evaluation')) {
-      return 'For Evaluation'
-    } else if (statuses.every((item) => item.status === 'Okay')) {
-      return 'Qualified'
-    }
-    return 'Not Qualified.'
-  }
-
   // Fetch data
   useEffect(() => {
     setList([])
@@ -130,6 +116,7 @@ const Page: React.FC = () => {
               <table className="app__table">
                 <thead className="app__thead">
                   <tr>
+                    <th className="app__th">#</th>
                     <th className="app__th">Application Code</th>
                     <th className="app__th">Status</th>
                   </tr>
@@ -138,6 +125,7 @@ const Page: React.FC = () => {
                   {!isDataEmpty &&
                     list.map((item, index) => (
                       <tr key={index} className="app__tr">
+                        <td className="app__td">{index + 1}.</td>
                         <th className="app__th_firstcol">
                           <div className="font-medium">
                             {item.applicant.code}
@@ -145,32 +133,22 @@ const Page: React.FC = () => {
                         </th>
                         <td className="app__td">
                           <div>
-                            {qualificationStatus(
-                              item.applicant.applicant_documents
-                            ) === 'For Evaluation' && (
+                            {item.applicant.evaluation_status ===
+                              'For Evaluation' && (
                               <span className="text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
                                 For Evaluation
                               </span>
                             )}
-                            {qualificationStatus(
-                              item.applicant.applicant_documents
-                            ) === 'Qualified' && (
+                            {item.applicant.evaluation_status ===
+                              'Qualified' && (
                               <span className="text-green-500 bg-green-100 border border-green-500 py-px px-1">
                                 Qualified
                               </span>
                             )}
-                            {qualificationStatus(
-                              item.applicant.applicant_documents
-                            ) === 'Not Qualified' && (
+                            {item.applicant.evaluation_status ===
+                              'Disqualified' && (
                               <span className="text-red-500 bg-red-100 border border-red-500 py-px px-1">
-                                Not Qualified
-                              </span>
-                            )}
-                            {qualificationStatus(
-                              item.applicant.applicant_documents
-                            ) === 'No Qualifications' && (
-                              <span className="text-red-500 bg-red-100 border border-red-500 py-px px-1">
-                                No Qualifications
+                                Disqualified
                               </span>
                             )}
                           </div>
