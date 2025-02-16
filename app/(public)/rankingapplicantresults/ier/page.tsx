@@ -109,10 +109,14 @@ const Page: React.FC = () => {
               {rankingDetails?.position?.name} - {rankingDetails?.year}
             </div>
           </div>
+          <div className="text-xs italic text-center text-gray-600">
+            (The official initial evaluation results will be sent via email once
+            the evaluation period is complete. )
+          </div>
           {loading && <TwoColTableLoading />}
           {/* Main Content */}
           {rankList.length > 0 && (
-            <div>
+            <div className="mt-4">
               <table className="app__table">
                 <thead className="app__thead">
                   <tr>

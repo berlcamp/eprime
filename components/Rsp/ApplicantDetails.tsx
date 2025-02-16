@@ -188,15 +188,17 @@ const ApplicantDetails = ({
         <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
-              <h5 className="app__modal_header_text">
-                Qualifications Standard
-              </h5>
-              <CustomButton
-                containerStyles="app__btn_gray"
-                title="Close"
-                btnType="button"
-                handleClick={handleClose}
-              />
+              <div>
+                <h5 className="app__modal_header_text">
+                  Qualifications Standard
+                </h5>
+                <CustomButton
+                  containerStyles="app__btn_gray"
+                  title="Close"
+                  btnType="button"
+                  handleClick={handleClose}
+                />
+              </div>
             </div>
 
             <div className="app__modal_body">

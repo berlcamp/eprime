@@ -869,7 +869,8 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                                 }
                               )}
                             />
-                            {fields.length > 1 && (
+                            {((editData && editData.applicants.length === 0) ||
+                              (!editData && fields.length > 1)) && (
                               <button
                                 type="button"
                                 className="app__btn_red_xs"
