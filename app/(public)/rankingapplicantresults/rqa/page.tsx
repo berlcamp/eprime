@@ -4,7 +4,7 @@ import { TableRowLoading, TopBarDark, TwoColTableLoading } from '@/components'
 import React, { useEffect, useState } from 'react'
 
 // Types
-import type { ApplicantDocuments, ApplicantTypes, RankingTypes } from '@/types'
+import type { ApplicantTypes, RankingTypes } from '@/types'
 
 import Footer from '@/components/Footer'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -87,27 +87,13 @@ const Page: React.FC = () => {
     }
   }
 
-  const qualificationStatus = (statuses: ApplicantDocuments[]) => {
-    if (statuses.length === 0) {
-      return 'No Qualifications'
-    }
-    if (statuses.some((item) => item.status === 'Not Okay')) {
-      return 'Not Qualified'
-    } else if (statuses.some((item) => item.status === 'For Evaluation')) {
-      return 'For Evaluation'
-    } else if (statuses.every((item) => item.status === 'Okay')) {
-      return 'Qualified'
-    }
-    return 'Not Qualified.'
-  }
-
   // Filter data by Display
   useEffect(() => {
     setLoading(true)
     const passingScore = rankingDetails?.passing_score ?? 50
 
     const filteredList = rankList.filter((item) => {
-      const status = qualificationStatus(item.applicant.applicant_documents)
+      const status = item.applicant.evaluation_status
       return (
         Number(item.overall_score) >= Number(passingScore) &&
         status === 'Qualified'
