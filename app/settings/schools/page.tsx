@@ -13,11 +13,7 @@ import {
 } from '@/components'
 import { fetchSchools } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
-import {
-  ChevronDownIcon,
-  PencilSquareIcon,
-  TrashIcon
-} from '@heroicons/react/20/solid'
+import { ChevronDownIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
 import React, { Fragment, useEffect, useState } from 'react'
 import uuid from 'react-uuid'
 import AddEditModal from './AddEditModal'
@@ -218,7 +214,7 @@ const Page: React.FC = () => {
                                     <span>Edit</span>
                                   </div>
                                 </Menu.Item>
-                                <Menu.Item>
+                                {/* <Menu.Item>
                                   <div
                                     onClick={() => handleDelete(item.id)}
                                     className="app__dropdown_item"
@@ -226,7 +222,7 @@ const Page: React.FC = () => {
                                     <TrashIcon className="w-4 h-4" />
                                     <span>Delete</span>
                                   </div>
-                                </Menu.Item>
+                                </Menu.Item> */}
                               </div>
                             </Menu.Items>
                           </Transition>
