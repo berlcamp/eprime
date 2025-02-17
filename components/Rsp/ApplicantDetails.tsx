@@ -3,7 +3,6 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
   ApplicantDocuments,
-  ApplicantIerTypes,
   ApplicantTypes,
   RankingEvaluatorTypes,
   RankingQualifications
@@ -11,6 +10,7 @@ import {
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
 
 interface ModalProps {
   hideModal: () => void
@@ -44,6 +44,16 @@ interface QualificationTypes {
   }>
 }
 
+interface IerForm {
+  education: string
+  eligibility: string
+  eligibility_rating: string
+  experience: string
+  experience_time: string
+  training: string
+  training_time: string
+}
+
 const ApplicantDetails = ({
   hideModal,
   applicantData,
@@ -55,22 +65,24 @@ const ApplicantDetails = ({
   const [rankingQualifications, setRankingQualifications] = useState<
     RankingQualifications[] | []
   >([])
-  const [iers, setIers] = useState<ApplicantIerTypes[] | []>([])
+
   const [previousQualification, setPreviousQualification] = useState<
     QualificationTypes[] | []
   >([])
   const [refresh, setRefresh] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [evaluators, setEvaluators] = useState<RankingEvaluatorTypes[] | []>([])
   const { supabase, session } = useSupabase()
   const { setToast } = useFilter()
 
-  const [visibleItems, setVisibleItems] = useState<Record<number, boolean>>({})
+  const { register, handleSubmit } = useForm<IerForm>({
+    mode: 'onSubmit'
+  })
 
-  const toggleVisibility = (index: number) => {
-    setVisibleItems((prevState) => ({
-      ...prevState,
-      [index]: !prevState[index]
-    }))
+  const onSubmit = async (formdata: IerForm) => {
+    setSaving(true)
+    console.log('formdata', formdata)
+    setSaving(false)
   }
 
   const extractFilename = (url: string) => {
@@ -113,17 +125,6 @@ const ApplicantDetails = ({
         .eq('ranking_id', applicantData.ranking_id)
 
       setRankingQualifications(data)
-    }
-
-    const fetchIerData = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_applicant_ier')
-        .select()
-        .eq('applicant_id', applicantData.id)
-
-      if (data) {
-        setIers(data)
-      }
     }
 
     const fetchPreviousQualificationsData = async () => {
@@ -174,7 +175,6 @@ const ApplicantDetails = ({
     void fetchQualificationsData()
     void fetchRankingQualificationsData()
 
-    void fetchIerData()
     void fetchEvaluators()
 
     if (applicantData.previous_applicant === 'Yes') {
@@ -188,19 +188,16 @@ const ApplicantDetails = ({
         <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
-              <div>
-                <h5 className="app__modal_header_text">
-                  Qualifications Standard
-                </h5>
-                <CustomButton
-                  containerStyles="app__btn_gray"
-                  title="Close"
-                  btnType="button"
-                  handleClick={handleClose}
-                />
-              </div>
+              <h5 className="app__modal_header_text">
+                Qualifications Standard
+              </h5>
+              <CustomButton
+                containerStyles="app__btn_gray"
+                title="Close"
+                btnType="button"
+                handleClick={handleClose}
+              />
             </div>
-
             <div className="app__modal_body">
               <div className="p-4 text-sm text-gray-700 bg-gray-50 border space-y-2">
                 <div className="grid gap-4">
@@ -281,7 +278,7 @@ const ApplicantDetails = ({
                   </div>
                 </div>
               </div>
-              <div className="p-4 bg-gray-50 border space-y-6">
+              <div className="mt-4 p-4 bg-gray-50 space-y-6">
                 <div className="text-center text-sm">
                   RECENT QUALIFICATION STANDARDS
                 </div>
@@ -401,50 +398,6 @@ const ApplicantDetails = ({
                             No documents uploaded.
                           </p>
                         )}
-                        {/* Ier Data */}
-                        <div>
-                          {iers?.filter(
-                            (ier) =>
-                              ier.qualification_id.toString() ===
-                              qualification.id.toString()
-                          ).length > 0 && (
-                            <div className="text-xs text-gray-600 font-medium">
-                              IER Data:
-                            </div>
-                          )}
-                          {iers
-                            ?.filter(
-                              (ier) =>
-                                ier.qualification_id.toString() ===
-                                qualification.id.toString()
-                            )
-                            .map((ier, i) => (
-                              <div key={i} className="text-xs text-gray-600">
-                                {i + 1}. {ier.remarks} ({ier.time})
-                              </div>
-                            ))}
-                        </div>
-                        {!visibleItems[i] &&
-                          applicantQualifications?.filter(
-                            (aq) =>
-                              aq.qualification_id.toString() ===
-                              qualification.id.toString()
-                          ).length > 0 && (
-                            <button
-                              className="bg-gray-400 hover:bg-gray-600 border active:bg-gray-400 border-gray-500 font-bold px-1 py-px text-[10px] text-white rounded-sm"
-                              onClick={() => toggleVisibility(i)}
-                            >
-                              Add IER Data
-                            </button>
-                          )}
-                        {visibleItems[i] && (
-                          <IerInput
-                            refresh={() => setRefresh(!refresh)}
-                            applicantId={applicantData.id}
-                            qualificationId={qualification.id}
-                            hide={() => toggleVisibility(i)}
-                          />
-                        )}
                       </div>
                     ))}
                   </div>
@@ -511,6 +464,75 @@ const ApplicantDetails = ({
                     </div>
                   </div>
                 )}
+              <div className="mt-8 text-center">IER Data</div>
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="m-4 p-4 text-sm border grid grid-cols-2 gap-2 bg-gray-100"
+              >
+                <div>
+                  <div className="app__label_standard">Education</div>
+                  <div>
+                    <textarea
+                      placeholder="Remarks"
+                      {...register('education')}
+                      className="app__input_standard"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="app__label_standard">Eligibility</div>
+                  <div>
+                    <textarea
+                      placeholder="Remarks"
+                      {...register('eligibility')}
+                      className="app__input_standard"
+                    />
+                    <input
+                      placeholder="Rating"
+                      {...register('eligibility_rating')}
+                      className="app__input_standard"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="app__label_standard">Training</div>
+                  <div>
+                    <textarea
+                      placeholder="Remarks"
+                      {...register('training')}
+                      className="app__input_standard"
+                    />
+                    <input
+                      placeholder="Date/Time"
+                      {...register('training_time')}
+                      className="app__input_standard"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="app__label_standard">Experience</div>
+                  <div>
+                    <textarea
+                      placeholder="Remarks"
+                      {...register('experience')}
+                      className="app__input_standard"
+                    />
+                    <input
+                      placeholder="Date/TIme"
+                      {...register('experience_time')}
+                      className="app__input_standard"
+                    />
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <CustomButton
+                    btnType="submit"
+                    isDisabled={saving}
+                    title={saving ? 'Saving...' : 'Save'}
+                    containerStyles="app__btn_green"
+                  />
+                </div>
+              </form>
             </div>
           </div>
         </div>

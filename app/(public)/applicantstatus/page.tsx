@@ -133,7 +133,7 @@ const Page: React.FC = () => {
     const { data } = await supabase
       .from('hrm_ranking_applicants')
       .select(
-        '*, ranking:ranking_id(status,days_to_comply,type,year,position:position_id(name),qualifications:hrm_ranking_qualifications(*)),applicant_documents:hrm_ranking_applicant_documents(*, qualification:qualification_id(*))'
+        '*, ranking:ranking_id(status,days_to_comply,display_ier,type,year,position:position_id(name),qualifications:hrm_ranking_qualifications(*)),applicant_documents:hrm_ranking_applicant_documents(*, qualification:qualification_id(*))'
       )
       .eq('code', inputValue)
       .maybeSingle()
@@ -242,10 +242,33 @@ const Page: React.FC = () => {
                 </span>
               </div>
               <div className="mt-2">
-                <span className="text-gray-600">Status: </span>
-                <span className="text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
-                  Evaluation Currently On-going
+                <span className="text-gray-600">
+                  Status: {applicantDetails.ranking?.display_ier}
                 </span>
+                {applicantDetails.ranking?.display_ier ? (
+                  <>
+                    {applicantDetails.evaluation_status ===
+                      'For Evaluation' && (
+                      <span className="text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
+                        For Evaluation
+                      </span>
+                    )}
+                    {applicantDetails.evaluation_status === 'Qualified' && (
+                      <span className="text-green-500 bg-green-100 border border-green-500 py-px px-1">
+                        Qualified
+                      </span>
+                    )}
+                    {applicantDetails.evaluation_status === 'Disqualified' && (
+                      <span className="text-red-500 bg-red-100 border border-red-500 py-px px-1">
+                        Disqualified
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
+                    Evaluation Currently On-going
+                  </span>
+                )}
               </div>
             </div>
           )}
