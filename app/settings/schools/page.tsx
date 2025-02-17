@@ -2,7 +2,6 @@
 
 import {
   CustomButton,
-  DeleteModal,
   PerPage,
   SettingsSideBar,
   ShowMore,
@@ -30,8 +29,8 @@ import { useDispatch, useSelector } from 'react-redux'
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [selectedId, setSelectedId] = useState<string>('')
+  // const [showDeleteModal, setShowDeleteModal] = useState(false)
+  // const [selectedId, setSelectedId] = useState<string>('')
   const [list, setList] = useState<SchoolTypes[]>([])
   const [editData, setEditData] = useState<SchoolTypes | null>(null)
   const [perPageCount, setPerPageCount] = useState<number>(10)
@@ -111,10 +110,10 @@ const Page: React.FC = () => {
     setEditData(item)
   }
 
-  const handleDelete = (id: string) => {
-    setSelectedId(id)
-    setShowDeleteModal(true)
-  }
+  // const handleDelete = (id: string) => {
+  //   setSelectedId(id)
+  //   setShowDeleteModal(true)
+  // }
 
   // Update list whenever list in redux updates
   useEffect(() => {
@@ -297,13 +296,13 @@ const Page: React.FC = () => {
           )}
 
           {/* Delete Modal */}
-          {showDeleteModal && (
+          {/* {showDeleteModal && (
             <DeleteModal
               id={selectedId}
               table="hrm_schools"
               hideModal={() => setShowDeleteModal(false)}
             />
-          )}
+          )} */}
         </div>
       </div>
     </>
