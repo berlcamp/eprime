@@ -10,7 +10,7 @@ import {
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import IerData from './IerData'
 
 interface ModalProps {
   hideModal: () => void
@@ -44,16 +44,6 @@ interface QualificationTypes {
   }>
 }
 
-interface IerForm {
-  education: string
-  eligibility: string
-  eligibility_rating: string
-  experience: string
-  experience_time: string
-  training: string
-  training_time: string
-}
-
 const ApplicantDetails = ({
   hideModal,
   applicantData,
@@ -70,20 +60,10 @@ const ApplicantDetails = ({
     QualificationTypes[] | []
   >([])
   const [refresh, setRefresh] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [refreshIer, setRefreshIer] = useState(false)
   const [evaluators, setEvaluators] = useState<RankingEvaluatorTypes[] | []>([])
   const { supabase, session } = useSupabase()
   const { setToast } = useFilter()
-
-  const { register, handleSubmit } = useForm<IerForm>({
-    mode: 'onSubmit'
-  })
-
-  const onSubmit = async (formdata: IerForm) => {
-    setSaving(true)
-    console.log('formdata', formdata)
-    setSaving(false)
-  }
 
   const extractFilename = (url: string) => {
     return url.split('/').pop() // Get the last part of the URL which is the filename
@@ -465,79 +445,120 @@ const ApplicantDetails = ({
                   </div>
                 )}
               <div className="mt-8 text-center">IER Data</div>
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="m-4 p-4 text-sm border grid grid-cols-2 gap-2 bg-gray-100"
-              >
-                <div>
-                  <div className="app__label_standard">Education</div>
-                  <div>
-                    <textarea
-                      placeholder="Remarks"
-                      {...register('education')}
-                      className="app__input_standard"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="app__label_standard">Eligibility</div>
-                  <div>
-                    <textarea
-                      placeholder="Remarks"
-                      {...register('eligibility')}
-                      className="app__input_standard"
-                    />
-                    <input
-                      placeholder="Rating"
-                      {...register('eligibility_rating')}
-                      className="app__input_standard"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="app__label_standard">Training</div>
-                  <div>
-                    <textarea
-                      placeholder="Remarks"
-                      {...register('training')}
-                      className="app__input_standard"
-                    />
-                    <input
-                      placeholder="Date/Time"
-                      {...register('training_time')}
-                      className="app__input_standard"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="app__label_standard">Experience</div>
-                  <div>
-                    <textarea
-                      placeholder="Remarks"
-                      {...register('experience')}
-                      className="app__input_standard"
-                    />
-                    <input
-                      placeholder="Date/TIme"
-                      {...register('experience_time')}
-                      className="app__input_standard"
-                    />
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <CustomButton
-                    btnType="submit"
-                    isDisabled={saving}
-                    title={saving ? 'Saving...' : 'Save'}
-                    containerStyles="app__btn_green"
+              {evaluators.some(
+                (evaluator) => evaluator.user_id === session.user.id
+              ) && (
+                <div className="m-4 p-4 text-sm border grid md:grid-cols-2 gap-2 bg-gray-100">
+                  <IerInput
+                    applicantId={applicantData.id}
+                    onSuccess={() => setRefreshIer((prev) => !prev)}
                   />
                 </div>
-              </form>
+              )}
+              <div className="m-4">
+                <IerData
+                  canDelete={evaluators.some(
+                    (evaluator) => evaluator.user_id === session.user.id
+                  )}
+                  refreshIer={refreshIer}
+                  applicantId={applicantData.id}
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </>
+  )
+}
+
+const IerInput = ({
+  applicantId,
+  onSuccess
+}: {
+  applicantId: string
+  onSuccess: () => void
+}) => {
+  const { setToast } = useFilter()
+  const { supabase } = useSupabase()
+
+  const [remarks, setRemarks] = useState('')
+  const [time, setTime] = useState('')
+  const [type, setType] = useState('')
+
+  const handleAddIER = async () => {
+    if (remarks.trim() === '') return
+
+    const { error } = await supabase.from('hrm_ranking_applicant_ier').insert({
+      applicant_id: applicantId,
+      type,
+      remarks,
+      time
+    })
+    if (error) {
+      setToast('error', 'Something went wrong, please reload the page')
+    } else {
+      onSuccess()
+      setToast('success', 'Successfully saved')
+    }
+  }
+
+  return (
+    <div className="mt-4 bg-yellow-50 p-4 border text-gray-600">
+      <div className="app__form_field_container">Add IER Data</div>
+      <div className="app__form_field_container">
+        <div className="w-full">
+          <div>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              placeholder="IER Type"
+              className="app__select_standard"
+              required
+            >
+              <option value="">Select Type</option>
+              <option value="Education">Education</option>
+              <option value="Training">Training</option>
+              <option value="Eligibility">Eligibility</option>
+              <option value="Experience">Experience</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div className="app__form_field_container">
+        <div className="w-full">
+          <div>
+            <textarea
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              placeholder={`${type} Description`}
+              required
+              className="app__input_standard"
+            />
+          </div>
+        </div>
+      </div>
+      <div className="app__form_field_container">
+        <div className="w-full">
+          <div>
+            <textarea
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              placeholder={`Remarks`}
+              className="app__input_standard"
+            />
+          </div>
+        </div>
+      </div>
+      <div className="space-x-2">
+        <CustomButton
+          containerStyles="app__btn_green"
+          title="Submit"
+          btnType="button"
+          handleClick={handleAddIER}
+        />
+      </div>
+    </div>
   )
 }
 

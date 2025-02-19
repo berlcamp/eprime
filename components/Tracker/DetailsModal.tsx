@@ -232,6 +232,8 @@ export default function DetailsModal({
 
   // display confirm modal
   const HandleConfirm = (action: string) => {
+    if (saving) return
+
     if (action === 'Recommend Approval') {
       setConfirmMessage('Are you sure you want to recommend this for approval?')
     }

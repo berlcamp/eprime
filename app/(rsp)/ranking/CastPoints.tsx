@@ -1,15 +1,14 @@
 import { CustomButton } from '@/components'
+import IerData from '@/components/Rsp/IerData'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
-  ApplicantIerTypes,
   ApplicantTypes,
   RankingCommitteeCriteriaTypes,
   RankingCriteriaPoints
 } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
-import { ChevronRightIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -29,20 +28,6 @@ interface CriteriaFieldsType {
   max_points: number
 }
 
-interface EirData {
-  id: number
-  applicant_id: number
-  qualification_id: number
-  created_at: string
-  remarks: string
-  time: string
-}
-
-interface QualificationEntry {
-  qualification: string
-  eir_data: EirData[]
-}
-
 const CastPoints = ({
   hideModal,
   refetch,
@@ -50,7 +35,6 @@ const CastPoints = ({
   criterias
 }: ModalProps) => {
   const [saving, setSaving] = useState(false)
-  const [ierData, setIerData] = useState<QualificationEntry[] | []>([])
   const [criteriasField, setCriteriasField] = useState<CriteriaFieldsType[]>([])
 
   const { setToast } = useFilter()
@@ -125,38 +109,10 @@ const CastPoints = ({
     })
   }, [criterias])
 
-  useEffect(() => {
-    void (async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_applicant_ier')
-        .select('*, qualification:qualification_id(name)')
-        .eq('applicant_id', applicantData.id)
-
-      const groupedData: QualificationEntry[] = Object.values(
-        data.reduce((acc: any, item: ApplicantIerTypes) => {
-          const qualificationName = item.qualification.name
-
-          if (!acc[qualificationName]) {
-            acc[qualificationName] = {
-              qualification: qualificationName,
-              eir_data: []
-            }
-          }
-
-          const { qualification, ...eirItem } = item // Remove 'qualification' key
-          acc[qualificationName].eir_data.push(eirItem)
-
-          return acc
-        }, {})
-      )
-      setIerData(groupedData)
-    })()
-  }, [])
-
   return (
     <>
       <div className="app__modal_wrapper">
-        <div className="app__modal_wrapper2">
+        <div className="app__modal_wrapper2_large">
           <div className="app__modal_wrapper3">
             <div className="app__modal_header">
               <h5 className="app__modal_header_text">Cast Points</h5>
@@ -216,7 +172,7 @@ const CastPoints = ({
                 ))}
               </div>
 
-              <div className="app__modal_footer">
+              <div className="app__modal_footer_left">
                 <CustomButton
                   btnType="submit"
                   isDisabled={saving}
@@ -225,32 +181,14 @@ const CastPoints = ({
                 />
               </div>
               {/* IER Data */}
-              {ierData.length > 0 && (
-                <div className="mt-8">
-                  <div className="p-2 bg-gray-100 text-sm text-gray-600 space-y-4">
-                    <div className="text-center text-sm text-gray-600">
-                      IER Data
-                    </div>
-                    {ierData.map((ier, idx) => (
-                      <div key={idx}>
-                        <div className="text-xs">
-                          {idx + 1}. {ier.qualification}
-                        </div>
-                        {ier.eir_data?.map((ierData, idx2) => (
-                          <div className="pl-10 text-xs" key={idx2}>
-                            <div className="flex items-center">
-                              <ChevronRightIcon className="h-4 w-4" />
-                              <div>
-                                {ierData.remarks} ({ierData.time})
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div className="mt-8 text-center">IER Data</div>
+              <div className="mt-4">
+                <IerData
+                  canDelete={false}
+                  refreshIer={false}
+                  applicantId={applicantData.id}
+                />
+              </div>
             </form>
           </div>
         </div>

@@ -13,7 +13,12 @@ import {
 } from '@/types'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
 import { logError } from '@/utils/fetchApi'
-import { useEffect, useState } from 'react'
+import { Menu, Transition } from '@headlessui/react'
+import { AcademicCapIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
+import { Fragment, useEffect, useState } from 'react'
+
+import { ListIcon, TrashIcon, UserIcon } from 'lucide-react'
+import { MdChecklist } from 'react-icons/md'
 import CastPoints from './CastPoints'
 import ConfirmChangeStatusModal from './ConfirmChangeStatusModal'
 
@@ -340,12 +345,13 @@ const RankingApplicants = ({
             </div>
 
             <div className="app__modal_body">
-              <table className="app__table">
+              <table className="app__table mb-60">
                 <thead className="app__thead">
                   <tr>
-                    <th className="app__th">#</th>
-                    <th className="app__th">Applicant</th>
                     <th className="app__th"></th>
+                    <th className="app__th">Applicant</th>
+                    <th className="app__th">QS Status</th>
+                    <th className="app__th">Applicant Status</th>
                     <th className="app__th">Accumulated Points</th>
                     <th className="app__th">Overall Score</th>
                   </tr>
@@ -354,10 +360,162 @@ const RankingApplicants = ({
                   {list.length > 0 &&
                     list.map((item, index) => (
                       <tr key={index} className="app__tr">
-                        <th className="">{index + 1}.</th>
+                        <td className="w-6 pl-4 app__td">
+                          <Menu as="div" className="app__menu_container">
+                            <div>
+                              <Menu.Button className="app__dropdown_btn">
+                                <ChevronDownIcon
+                                  className="h-5 w-5"
+                                  aria-hidden="true"
+                                />
+                              </Menu.Button>
+                            </div>
+
+                            <Transition
+                              as={Fragment}
+                              enter="transition ease-out duration-100"
+                              enterFrom="transform opacity-0 scale-95"
+                              enterTo="transform opacity-100 scale-100"
+                              leave="transition ease-in duration-75"
+                              leaveFrom="transform opacity-100 scale-100"
+                              leaveTo="transform opacity-0 scale-95"
+                            >
+                              <Menu.Items className="app__dropdown_items">
+                                <div className="py-1">
+                                  {item.ranking.chairman_id ===
+                                    session.user.id && (
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() =>
+                                          handleRemoveApplicant(item.applicant)
+                                        }
+                                        className="app__dropdown_item"
+                                      >
+                                        <TrashIcon className="w-4 h-4" />
+                                        <span>Remove this Applicant</span>
+                                      </div>
+                                    </Menu.Item>
+                                  )}
+                                  <Menu.Item>
+                                    <div
+                                      onClick={() =>
+                                        handleViewQualifications(item.applicant)
+                                      }
+                                      className="app__dropdown_item"
+                                    >
+                                      <AcademicCapIcon className="w-4 h-4" />
+                                      <span>
+                                        View Qualifications / IER Data
+                                      </span>
+                                    </div>
+                                  </Menu.Item>
+                                  {evaluators.some(
+                                    (evaluator) =>
+                                      evaluator.user_id === session.user.id
+                                  ) && (
+                                    <>
+                                      {item.applicant.evaluation_status !==
+                                        'Qualified' && (
+                                        <Menu.Item>
+                                          <div
+                                            onClick={() =>
+                                              triggerChangeEvaluationStatus(
+                                                item.applicant,
+                                                'Qualified'
+                                              )
+                                            }
+                                            className="app__dropdown_item"
+                                          >
+                                            <UserIcon className="w-4 h-4" />
+                                            <span>
+                                              Change Applicant Status to
+                                              "Qualified"
+                                            </span>
+                                          </div>
+                                        </Menu.Item>
+                                      )}
+                                      {item.applicant.evaluation_status !==
+                                        'Disqualified' && (
+                                        <Menu.Item>
+                                          <div
+                                            onClick={() =>
+                                              triggerChangeEvaluationStatus(
+                                                item.applicant,
+                                                'Disqualified'
+                                              )
+                                            }
+                                            className="app__dropdown_item"
+                                          >
+                                            <UserIcon className="w-4 h-4" />
+                                            <span>
+                                              Change Applicant Status to
+                                              "Disqualified"
+                                            </span>
+                                          </div>
+                                        </Menu.Item>
+                                      )}
+                                      {item.applicant.evaluation_status !==
+                                        'For Evaluation' && (
+                                        <Menu.Item>
+                                          <div
+                                            onClick={() =>
+                                              triggerChangeEvaluationStatus(
+                                                item.applicant,
+                                                'For Evaluation'
+                                              )
+                                            }
+                                            className="app__dropdown_item"
+                                          >
+                                            <UserIcon className="w-4 h-4" />
+                                            <span>
+                                              Change Applicant Status to "For
+                                              Evaluation"
+                                            </span>
+                                          </div>
+                                        </Menu.Item>
+                                      )}
+                                    </>
+                                  )}
+                                  {item.applicant.evaluation_status ===
+                                    'Qualified' && (
+                                    <>
+                                      <Menu.Item>
+                                        <div
+                                          onClick={() =>
+                                            handleViewCommitteePoints(
+                                              item.applicant
+                                            )
+                                          }
+                                          className="app__dropdown_item"
+                                        >
+                                          <MdChecklist className="w-4 h-4" />
+                                          <span>View Casted Points</span>
+                                        </div>
+                                      </Menu.Item>
+                                      {canCastPoints &&
+                                        item.ranking.status === 'Open' && (
+                                          <Menu.Item>
+                                            <div
+                                              onClick={() =>
+                                                handleCastPoints(item.applicant)
+                                              }
+                                              className="app__dropdown_item"
+                                            >
+                                              <ListIcon className="w-4 h-4" />
+                                              <span>Cast Points</span>
+                                            </div>
+                                          </Menu.Item>
+                                        )}
+                                    </>
+                                  )}
+                                </div>
+                              </Menu.Items>
+                            </Transition>
+                          </Menu>
+                        </td>
                         <th className="app__th_firstcol space-y-2">
                           <div className="font-medium">
-                            {item.applicant.lastname},{' '}
+                            {index + 1}. {item.applicant.lastname},{' '}
                             {item.applicant.firstname}{' '}
                             {item.applicant.middlename}
                           </div>
@@ -374,8 +532,9 @@ const RankingApplicants = ({
                               (Previous Applicant)
                             </div>
                           )}
+                        </th>
+                        <td className="app__td">
                           <div className="mt-1 whitespace-nowrap">
-                            QS Status:{' '}
                             {qualificationStatus(
                               item.applicant.applicant_documents
                             ) === 'For Evaluation' && (
@@ -405,8 +564,9 @@ const RankingApplicants = ({
                               </span>
                             )}
                           </div>
+                        </td>
+                        <td className="app__td">
                           <div className="mt-1 whitespace-nowrap">
-                            Applicant Status:{' '}
                             {item.applicant.evaluation_status ===
                               'For Evaluation' && (
                               <span className=" whitespace-nowrap text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
@@ -425,115 +585,6 @@ const RankingApplicants = ({
                                 Disqualified
                               </span>
                             )}
-                          </div>
-                        </th>
-                        <td className="app__td">
-                          <div className="space-x-2 space-y-2">
-                            {item.ranking.chairman_id === session.user.id && (
-                              <CustomButton
-                                containerStyles="app__btn_red_xs"
-                                title="Remove this Applicant"
-                                btnType="button"
-                                handleClick={() =>
-                                  handleRemoveApplicant(item.applicant)
-                                }
-                              />
-                            )}
-                            <CustomButton
-                              containerStyles="app__btn_blue_xs"
-                              title="View Qualifications"
-                              btnType="button"
-                              handleClick={() =>
-                                handleViewQualifications(item.applicant)
-                              }
-                            />
-                            {evaluators.some(
-                              (evaluator) =>
-                                evaluator.user_id === session.user.id
-                            ) && (
-                              <>
-                                {item.applicant.evaluation_status !==
-                                  'Qualified' && (
-                                  <CustomButton
-                                    containerStyles="app__btn_green_xs"
-                                    title="Mark as Qualified"
-                                    btnType="button"
-                                    handleClick={() =>
-                                      triggerChangeEvaluationStatus(
-                                        item.applicant,
-                                        'Qualified'
-                                      )
-                                    }
-                                  />
-                                )}
-                                {item.applicant.evaluation_status !==
-                                  'Disqualified' && (
-                                  <CustomButton
-                                    containerStyles="app__btn_red_xs"
-                                    title="Mark as Disqualified"
-                                    btnType="button"
-                                    handleClick={() =>
-                                      triggerChangeEvaluationStatus(
-                                        item.applicant,
-                                        'Disqualified'
-                                      )
-                                    }
-                                  />
-                                )}
-                                {item.applicant.evaluation_status !==
-                                  'For Evaluation' && (
-                                  <CustomButton
-                                    containerStyles="app__btn_orange_xs"
-                                    title="Mark as For Evaluation"
-                                    btnType="button"
-                                    handleClick={() =>
-                                      triggerChangeEvaluationStatus(
-                                        item.applicant,
-                                        'For Evaluation'
-                                      )
-                                    }
-                                  />
-                                )}
-                              </>
-                            )}
-                            {item.applicant.evaluation_status ===
-                              'Qualified' && (
-                              <>
-                                <CustomButton
-                                  containerStyles="app__btn_blue_xs"
-                                  title="View Casted Points"
-                                  btnType="button"
-                                  handleClick={() =>
-                                    handleViewCommitteePoints(item.applicant)
-                                  }
-                                />
-                                {canCastPoints &&
-                                  item.ranking.status === 'Open' && (
-                                    <CustomButton
-                                      containerStyles="app__btn_blue_xs"
-                                      title="Cast Points"
-                                      btnType="button"
-                                      handleClick={() =>
-                                        handleCastPoints(item.applicant)
-                                      }
-                                    />
-                                  )}
-                              </>
-                            )}
-                            {/* {qualificationStatus(
-                              item.applicant.applicant_documents
-                            ) === 'Not Qualified' && (
-                              <CustomButton
-                                containerStyles="app__btn_red_xs"
-                                title="Send Disqualification Email"
-                                btnType="button"
-                                handleClick={() =>
-                                  handleSendDisqualificationEMail(
-                                    item.applicant.email
-                                  )
-                                }
-                              />
-                            )} */}
                           </div>
                         </td>
                         <td className="app__td">

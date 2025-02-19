@@ -920,10 +920,10 @@ export interface ApplicantDocuments {
 export interface ApplicantIerTypes {
   id: string
   ranking_id: string
-  qualification_id: string
-  qualification: RankingQualifications
+  applicant_id: string
   remarks: string
   time: string
+  type: string
 }
 
 export interface AnnouncementTypes {
