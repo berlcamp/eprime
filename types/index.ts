@@ -926,6 +926,7 @@ export interface ApplicantIerTypes {
   remarks: string
   time: string
   type: string
+  status: string
 }
 
 export interface AnnouncementTypes {

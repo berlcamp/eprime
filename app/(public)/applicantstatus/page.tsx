@@ -23,7 +23,7 @@ const Page: React.FC = () => {
   const code = searchParams.get('code')
 
   const [inputValue, setInputValue] = useState(code ?? '')
-  const { setToast, hasAccess } = useFilter()
+  const { setToast } = useFilter()
   const { supabase, session } = useSupabase()
 
   const handleFileUpload = async (
@@ -159,11 +159,6 @@ const Page: React.FC = () => {
       return false // Treat invalid dates as not in the past
     }
 
-    // berl only
-    if (session && hasAccess('settings')) {
-      return true
-    }
-
     return (
       isFuture(new Date(dateString)) ||
       format(new Date(dateString), 'yyyy-MM-dd') ===
@@ -237,7 +232,7 @@ const Page: React.FC = () => {
               <div>
                 <span className="text-gray-600">Applicant: </span>
                 <span className="font-medium">
-                  {isDateInPast(applicantDetails.ranking.days_to_comply) ? (
+                  {!isDateInPast(applicantDetails.ranking.days_to_comply) ? (
                     <>
                       {maskName(applicantDetails.firstname)}{' '}
                       {maskName(applicantDetails.middlename)}{' '}
@@ -302,7 +297,7 @@ const Page: React.FC = () => {
           {!loading &&
             applicantDetails &&
             applicantDetails.ranking.status === 'Open' &&
-            isDateInPast(applicantDetails.ranking.days_to_comply) && (
+            !isDateInPast(applicantDetails.ranking.days_to_comply) && (
               <div className="text-red-500 text-sm font-medium">
                 The compliance due date has passed. Deadline:{' '}
                 {format(
@@ -314,7 +309,7 @@ const Page: React.FC = () => {
           {!loading &&
             applicantDetails &&
             applicantDetails.ranking.status === 'Open' &&
-            !isDateInPast(applicantDetails.ranking.days_to_comply) && (
+            isDateInPast(applicantDetails.ranking.days_to_comply) && (
               <div className="grid gap-4">
                 <div>
                   <div className="text-gray-600 text-sm mb-2">

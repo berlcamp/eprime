@@ -14,7 +14,11 @@ import {
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
 import { logError } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
-import { AcademicCapIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
+import {
+  AcademicCapIcon,
+  ChevronDownIcon,
+  EnvelopeIcon
+} from '@heroicons/react/20/solid'
 import { Fragment, useEffect, useState } from 'react'
 
 import { ListIcon, TrashIcon, UserIcon } from 'lucide-react'
@@ -83,6 +87,11 @@ const RankingApplicants = ({
   const handleViewCommitteePoints = (item: ApplicantTypes) => {
     setShowCommitteePointsModal(true)
     setSelectedItem(item)
+  }
+
+  const handleSendEmail = async (item: ApplicantTypes) => {
+    console.log(item)
+    // return <div>Hello {item.firstname}</div>
   }
 
   const handleChangeEvaluationStatus = async (reason: string) => {
@@ -210,27 +219,14 @@ const RankingApplicants = ({
     }
 
     // Search user
-    // const searchWords = e.target.value.split(' ')
-    // const results = list.length > 0 && list.filter((user) => {
-    //   // exclude already selected users
-    //   if (selectedItems.some((obj) => obj.id.toString() === user.id.toString()))
-    //     return false
+    const searchWords = e.target.value.split(' ')
+    const results = list.filter((user) => {
+      const fullName =
+        `${user.applicant.firstname} ${user.applicant.middlename} ${user.applicant.lastname}`.toLowerCase()
+      return searchWords.every((word) => fullName.includes(word.toLowerCase()))
+    })
 
-    //   // exclude excluded Ids from props
-    //   if (excludedIds?.some((id) => id === user.id.toString())) return false
-
-    //   // filter only Non Teaching
-    //   if (nonTeachingOnly && user.position_type === 'Teaching') return false
-
-    //   // filter only Teaching
-    //   if (teachingOnly && user.position_type !== 'Teaching') return false
-
-    //   const fullName =
-    //     `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
-    //   return searchWords.every((word) => fullName.includes(word.toLowerCase()))
-    // })
-
-    // setSearchResults(results)
+    setList(results)
   }
 
   // const handleSendDisqualificationEMail = async (email: string) => {
@@ -383,15 +379,15 @@ const RankingApplicants = ({
 
             <div className="app__modal_body">
               <div>
-                xx
                 <input
+                  placeholder="Search applicant"
                   type="text"
                   value={searchKeyword}
                   onChange={handleSearchApplicant}
                   className="app__input_standard"
                 />
               </div>
-              <table className="app__table mb-60">
+              <table className="app__table mt-4 mb-60">
                 <thead className="app__thead">
                   <tr>
                     <th className="app__th"></th>
@@ -553,6 +549,19 @@ const RankingApplicants = ({
                                           </Menu.Item>
                                         )}
                                     </>
+                                  )}
+                                  {!item.applicant.eir_email_sent && (
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() =>
+                                          handleSendEmail(item.applicant)
+                                        }
+                                        className="app__dropdown_item"
+                                      >
+                                        <EnvelopeIcon className="w-4 h-4" />
+                                        <span>SenD EIR to email</span>
+                                      </div>
+                                    </Menu.Item>
                                   )}
                                 </div>
                               </Menu.Items>

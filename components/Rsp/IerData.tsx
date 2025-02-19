@@ -74,7 +74,7 @@ export default function IerData({
                         />
                       )}
                       <div>
-                        {i + 1}. {l.remarks} ({l.time})
+                        {i + 1}. {l.remarks} ({l.time}) ({l.status})
                       </div>
                     </div>
                   </div>
@@ -93,7 +93,7 @@ export default function IerData({
                         />
                       )}
                       <div>
-                        {i + 1}. {l.remarks} ({l.time})
+                        {i + 1}. {l.remarks} ({l.time}) ({l.status})
                       </div>
                     </div>
                   </div>
@@ -112,7 +112,7 @@ export default function IerData({
                         />
                       )}
                       <div>
-                        {i + 1}. {l.remarks} ({l.time})
+                        {i + 1}. {l.remarks} ({l.time}) ({l.status})
                       </div>
                     </div>
                   </div>
@@ -131,7 +131,7 @@ export default function IerData({
                         />
                       )}
                       <div>
-                        {i + 1}. {l.remarks} ({l.time})
+                        {i + 1}. {l.remarks} ({l.time}) ({l.status})
                       </div>
                     </div>
                   </div>

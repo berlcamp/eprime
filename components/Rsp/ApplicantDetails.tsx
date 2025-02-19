@@ -485,7 +485,8 @@ const IerInput = ({
   const [remarks, setRemarks] = useState('')
   const [time, setTime] = useState('')
   const [type, setType] = useState('')
-  const [remarksLabel, setRemarksLabel] = useState('Remarks')
+  const [status, setStatus] = useState('')
+  const [remarksLabel, setRemarksLabel] = useState('')
 
   const handleAddIER = async () => {
     if (remarks.trim() === '') return
@@ -494,6 +495,7 @@ const IerInput = ({
       applicant_id: applicantId,
       type,
       remarks,
+      status,
       time
     })
     if (error) {
@@ -560,6 +562,23 @@ const IerInput = ({
               placeholder={remarksLabel}
               className="app__input_standard"
             />
+          </div>
+        </div>
+      </div>
+      <div className="app__form_field_container">
+        <div className="w-full">
+          <div>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              placeholder="Status"
+              className="app__select_standard"
+              required
+            >
+              <option value="">Select Status</option>
+              <option value="Qualified">Qualified</option>
+              <option value="Disqualified">Disqualified</option>
+            </select>
           </div>
         </div>
       </div>
