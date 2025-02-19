@@ -485,7 +485,7 @@ const IerInput = ({
   const [remarks, setRemarks] = useState('')
   const [time, setTime] = useState('')
   const [type, setType] = useState('')
-  const [remarksLabel, setRemarksLabel] = useState('')
+  const [remarksLabel, setRemarksLabel] = useState('Remarks')
 
   const handleAddIER = async () => {
     if (remarks.trim() === '') return

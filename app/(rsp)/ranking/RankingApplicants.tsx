@@ -54,7 +54,7 @@ const RankingApplicants = ({
   const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
 
   const [evaluators, setEvaluators] = useState<RankingEvaluatorTypes[] | []>([])
-
+  const [searchKeyword, setSearchKeyword] = useState('')
   // use for Cast Points modal
   const [commiteeId, setCommitteeId] = useState('')
   const [criterias, setCriterias] = useState<
@@ -64,6 +64,7 @@ const RankingApplicants = ({
   const [canCastPoints, setCanCastPoints] = useState(false)
 
   const [list, setList] = useState<ListTypes[] | []>([])
+  const [originalList, setOriginalList] = useState<ListTypes[] | []>([])
   const { supabase, session } = useSupabase()
   const { setToast } = useFilter()
 
@@ -197,6 +198,41 @@ const RankingApplicants = ({
     return 'Not Known'
   }
 
+  const handleSearchApplicant = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const searchTerm = e.target.value
+    setSearchKeyword(searchTerm)
+
+    if (searchTerm.trim().length < 3) {
+      setList(originalList)
+      return
+    }
+
+    // Search user
+    // const searchWords = e.target.value.split(' ')
+    // const results = list.length > 0 && list.filter((user) => {
+    //   // exclude already selected users
+    //   if (selectedItems.some((obj) => obj.id.toString() === user.id.toString()))
+    //     return false
+
+    //   // exclude excluded Ids from props
+    //   if (excludedIds?.some((id) => id === user.id.toString())) return false
+
+    //   // filter only Non Teaching
+    //   if (nonTeachingOnly && user.position_type === 'Teaching') return false
+
+    //   // filter only Teaching
+    //   if (teachingOnly && user.position_type !== 'Teaching') return false
+
+    //   const fullName =
+    //     `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
+    //   return searchWords.every((word) => fullName.includes(word.toLowerCase()))
+    // })
+
+    // setSearchResults(results)
+  }
+
   // const handleSendDisqualificationEMail = async (email: string) => {
   //   // Usage
   //   const header = (
@@ -290,6 +326,7 @@ const RankingApplicants = ({
         })
 
         setList(structguredData)
+        setOriginalList(structguredData)
       }
     }
 
@@ -345,6 +382,15 @@ const RankingApplicants = ({
             </div>
 
             <div className="app__modal_body">
+              <div>
+                xx
+                <input
+                  type="text"
+                  value={searchKeyword}
+                  onChange={handleSearchApplicant}
+                  className="app__input_standard"
+                />
+              </div>
               <table className="app__table mb-60">
                 <thead className="app__thead">
                   <tr>

@@ -180,6 +180,14 @@ const Page: React.FC = () => {
     return url.split('/').pop() // Get the last part of the URL which is the filename
   }
 
+  const maskName = (name: string) => {
+    if (!name) return ''
+    return name
+      .split('')
+      .map((char, index) => (index > 2 ? '*' : char))
+      .join('')
+  }
+
   useEffect(() => {
     void handleSearch()
   }, [code])
@@ -229,8 +237,18 @@ const Page: React.FC = () => {
               <div>
                 <span className="text-gray-600">Applicant: </span>
                 <span className="font-medium">
-                  {applicantDetails.firstname} {applicantDetails.middlename}{' '}
-                  {applicantDetails.lastname}
+                  {isDateInPast(applicantDetails.ranking.days_to_comply) ? (
+                    <>
+                      {maskName(applicantDetails.firstname)}{' '}
+                      {maskName(applicantDetails.middlename)}{' '}
+                      {maskName(applicantDetails.lastname)}
+                    </>
+                  ) : (
+                    <>
+                      {applicantDetails.firstname} {applicantDetails.middlename}{' '}
+                      {applicantDetails.lastname}
+                    </>
+                  )}
                 </span>
               </div>
               <div className="mt-2">
@@ -284,7 +302,7 @@ const Page: React.FC = () => {
           {!loading &&
             applicantDetails &&
             applicantDetails.ranking.status === 'Open' &&
-            !isDateInPast(applicantDetails.ranking.days_to_comply) && (
+            isDateInPast(applicantDetails.ranking.days_to_comply) && (
               <div className="text-red-500 text-sm font-medium">
                 The compliance due date has passed. Deadline:{' '}
                 {format(
@@ -296,7 +314,7 @@ const Page: React.FC = () => {
           {!loading &&
             applicantDetails &&
             applicantDetails.ranking.status === 'Open' &&
-            isDateInPast(applicantDetails.ranking.days_to_comply) && (
+            !isDateInPast(applicantDetails.ranking.days_to_comply) && (
               <div className="grid gap-4">
                 <div>
                   <div className="text-gray-600 text-sm mb-2">

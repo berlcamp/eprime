@@ -10,8 +10,7 @@ interface RequestParamTypes {
 
 export const QualifiedApplicantTemplate: React.FC<
   Readonly<RequestParamTypes>
-> = ({ firstname, middlename, lastname, position, code }) => {
-  const header = `Dear ${firstname} ${middlename} ${lastname},`
+> = ({ position, code }) => {
   const body1a = `We confirm receipt of your application for ${position} with Application Number [${code}]. To complete your application, please uploaded supporting document using the link below:`
   const body1b = `${
     process.env.NEXT_PUBLIC_BASE_URL ?? ''
@@ -23,7 +22,12 @@ export const QualifiedApplicantTemplate: React.FC<
   const body5 = 'Deped Bayugan City Division'
   return (
     <div>
-      <div>{header}</div>
+      <div>
+        <div>Republic of the Philippines</div>
+        <div>Department of Education</div>
+        <div>Caraga Region</div>
+        <div>SCHOOLS DIVISION OFFICE OF BAYUGAN CITY</div>
+      </div>
       <br />
       <div>{body1a}</div>
       <br />
