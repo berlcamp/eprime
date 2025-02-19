@@ -485,6 +485,7 @@ const IerInput = ({
   const [remarks, setRemarks] = useState('')
   const [time, setTime] = useState('')
   const [type, setType] = useState('')
+  const [remarksLabel, setRemarksLabel] = useState('')
 
   const handleAddIER = async () => {
     if (remarks.trim() === '') return
@@ -502,6 +503,18 @@ const IerInput = ({
       setToast('success', 'Successfully saved')
     }
   }
+
+  useEffect(() => {
+    if (type === 'Education') {
+      setRemarksLabel('Major')
+    }
+    if (type === 'Training' || type === 'Experience') {
+      setRemarksLabel('Date/Duration')
+    }
+    if (type === 'Eligibility') {
+      setRemarksLabel('Rating (optional)')
+    }
+  }, [type])
 
   return (
     <div className="mt-4 bg-yellow-50 p-4 border text-gray-600">
@@ -544,7 +557,7 @@ const IerInput = ({
             <textarea
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              placeholder={`Remarks`}
+              placeholder={remarksLabel}
               className="app__input_standard"
             />
           </div>

@@ -892,6 +892,8 @@ export interface ApplicantTypes {
   seminars_file_path: string
   seminars_units: string
 
+  eir_email_sent: boolean
+
   deped_email: string
   retype_email: string
   ranking_id: string
