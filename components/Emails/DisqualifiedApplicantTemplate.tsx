@@ -2,10 +2,9 @@ import { ApplicantIerTypes, ApplicantTypes } from '@/types'
 import { format } from 'date-fns'
 import * as React from 'react'
 
-export const QualifiedApplicantTemplate: React.FC<Readonly<ApplicantTypes>> = (
-  applicant,
-  ier
-) => {
+export const DisqualifiedApplicantTemplate: React.FC<
+  Readonly<ApplicantTypes>
+> = (applicant, ier) => {
   //
   const ierData: ApplicantIerTypes[] | null = ier
 
@@ -50,15 +49,12 @@ export const QualifiedApplicantTemplate: React.FC<Readonly<ApplicantTypes>> = (
         ,
       </div>
       <br />
-      <div>Congratulations!</div>
-      <br />
       <div>
-        We are pleased to inform you that based on the initial evaluation, we
-        have found your qualifications to be substantial vis-à-vis the Civil
-        Service Commission (CSC) approved Qualification Standards (QS) of{' '}
+        Please be informed of the results of the initial evaluation of your
+        qualifications vis-à-vis the Civil Service Commission (CSC)
+        approved-Qualification Standards (QS) of{' '}
         {applicant.ranking?.position?.name} position under DEPED Bayugan City
-        Division. Below are the results of the initial evaluation conducted by
-        the undersigned.
+        Division, as follows:
       </div>
       <br />
       <div>
@@ -110,17 +106,38 @@ export const QualifiedApplicantTemplate: React.FC<Readonly<ApplicantTypes>> = (
       </div>
       <br />
       <div>
-        Please be advised of your assigned application code ${applicant.code}
-        which shall be used as you proceed with the next stage of the selection
-        process. You may refer to the official issuances of the DepEd Bayugan
-        City Division for the additional announcements in this regard.
+        While your qualifications made a favorable impression, we regret to
+        inform you that you did not meet the minimum QS set for Attorney
+        IIIposition. You may, however, continue to submit job applications in
+        response to other vacancy announcements that we publish at
+        www.csc.gov.ph/careers, DepEd bulletin boards, and official website.
       </div>
       <br />
       <div>
-        For inquiries, you may communicate with depedbayugancity.hr@gmail.com.
+        The results of the initial evaluation shall be released and posted for
+        transparency purposes. You may refer to your assigned application code
+        [RKXDV] in the official posting of the results.
       </div>
       <br />
-      <div>Thank you.</div>
+      <div>
+        Thank you and we wish you the best of luck in your future success.
+      </div>
+      <br />
+      <div>
+        Postscript: If you wish to submit additional qualifications to address
+        your disqualification, you have until to provide, resubmit, or comply
+        with the necessary minimum qualification standard requirements.
+      </div>
+      <br />
+      <div>
+        You may check your evaluation status and details through the "Check Your
+        Application" feature in the system or by visiting the link below:
+      </div>
+      <div>
+        {`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/applicantstatus?code=${
+          applicant.code
+        }`}
+      </div>
       <br />
       <br />
       <div>Very truly yours,</div>

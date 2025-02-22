@@ -21,6 +21,7 @@ import {
 } from '@heroicons/react/20/solid'
 import { Fragment, useEffect, useState } from 'react'
 
+import axios from 'axios'
 import { ListIcon, TrashIcon, UserIcon } from 'lucide-react'
 import { MdChecklist } from 'react-icons/md'
 import CastPoints from './CastPoints'
@@ -87,11 +88,6 @@ const RankingApplicants = ({
   const handleViewCommitteePoints = (item: ApplicantTypes) => {
     setShowCommitteePointsModal(true)
     setSelectedItem(item)
-  }
-
-  const handleSendEmail = async (item: ApplicantTypes) => {
-    console.log(item)
-    // return <div>Hello {item.firstname}</div>
   }
 
   const handleChangeEvaluationStatus = async (reason: string) => {
@@ -229,66 +225,39 @@ const RankingApplicants = ({
     setList(results)
   }
 
-  // const handleSendDisqualificationEMail = async (email: string) => {
-  //   // Usage
-  //   const header = (
-  //     <p>
-  //       Dear <strong>John Doe</strong>,
-  //     </p>
-  //   )
-  //   const body = (
-  //     <>
-  //       <p>
-  //         Congratulations! Your registration to the{' '}
-  //         <strong>PRIME-HRM system of DepEd Bayugan</strong> has been
-  //         successfully approved.
-  //       </p>
-  //       <p>
-  //         Click this{' '}
-  //         <a
-  //           href="https://eprime.sortbrite.com"
-  //           target="_blank"
-  //           rel="noopener noreferrer"
-  //         >
-  //           link
-  //         </a>{' '}
-  //         to login and access your account.
-  //       </p>
-  //     </>
-  //   )
-
-  //   try {
-  //     const { error } = await resend.emails.send({
-  //       from: 'DepEd Bayugan (No-reply) <noreply@sortbrite.com>',
-  //       to: [email],
-  //       subject: 'PRIME-HRM - Application Disqualification',
-  //       react: DisqualificationTemplate({
-  //         header,
-  //         body
-  //       }) as React.ReactElement
-  //     })
-
-  //     if (error) {
-  //       setToast(
-  //         'error',
-  //         'Saving failed, please reload the page and try again.'
-  //       )
-  //       throw new Error(error.message)
-  //     }
-
-  //     // pop up the success message
-  //     setToast('success', 'Successfully saved.')
-  //   } catch (e) {
-  //     console.error(e)
-  //   }
-  // }
+  const handleSendEirEMail = async (applicant: ApplicantTypes) => {
+    // Email the applicant on the server side
+    axios
+      .post('/api/ieremail', {
+        email: applicant.email,
+        applicant
+      })
+      .then(async function () {
+        await supabase
+          .from('hrm_ranking_applicants')
+          .update({
+            eir_email_sent: true
+          })
+          .eq('id', applicant.id)
+        setToast('success', 'Email sent')
+      })
+      .catch(function (error) {
+        void logError(
+          'EIR Email failed',
+          'EIR Email',
+          '',
+          JSON.stringify(error)
+        )
+        console.error(error)
+      })
+  }
 
   useEffect(() => {
     const fetchApplicantsData = async () => {
       const { data } = await supabase
         .from('hrm_ranking_applicants')
         .select(
-          '*,applicant_documents:hrm_ranking_applicant_documents(qualification_id,status),ranking:ranking_id(status,chairman_id,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          '*,applicant_documents:hrm_ranking_applicant_documents(qualification_id,status),ranking:ranking_id(type,year,status,position:position_id(name),chairman_id,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
           {
             count: 'exact'
           }
@@ -550,19 +519,21 @@ const RankingApplicants = ({
                                         )}
                                     </>
                                   )}
-                                  {!item.applicant.eir_email_sent && (
-                                    <Menu.Item>
-                                      <div
-                                        onClick={() =>
-                                          handleSendEmail(item.applicant)
-                                        }
-                                        className="app__dropdown_item"
-                                      >
-                                        <EnvelopeIcon className="w-4 h-4" />
-                                        <span>SenD EIR to email</span>
-                                      </div>
-                                    </Menu.Item>
-                                  )}
+                                  {!item.applicant.eir_email_sent &&
+                                    item.ranking.chairman_id ===
+                                      session.user.id && (
+                                      <Menu.Item>
+                                        <div
+                                          onClick={() =>
+                                            handleSendEirEMail(item.applicant)
+                                          }
+                                          className="app__dropdown_item"
+                                        >
+                                          <EnvelopeIcon className="w-4 h-4" />
+                                          <span>Send EIR to email</span>
+                                        </div>
+                                      </Menu.Item>
+                                    )}
                                 </div>
                               </Menu.Items>
                             </Transition>
@@ -585,6 +556,12 @@ const RankingApplicants = ({
                           {item.applicant.previous_applicant === 'Yes' && (
                             <div className="font-bold">
                               (Previous Applicant)
+                            </div>
+                          )}
+
+                          {item.applicant.eir_email_sent && (
+                            <div className="font-light">
+                              IER Email: <span className="font-bold">Sent</span>
                             </div>
                           )}
                         </th>

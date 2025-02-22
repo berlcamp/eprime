@@ -32,17 +32,22 @@ const Page: React.FC = () => {
   const { hasAccess } = useFilter()
 
   const fetchData = async () => {
+    if (filterRanking === '') return
+
     setLoading(true)
 
     try {
       const { data } = await supabase
         .from('hrm_ranking_applicants')
-        .select('*,ranking:ranking_id(code_prefix)', {
-          count: 'exact'
-        })
+        .select(
+          '*,ier:hrm_ranking_applicant_ier(*),ranking:ranking_id(code_prefix)',
+          {
+            count: 'exact'
+          }
+        )
         .eq('ranking_id', filterRanking)
         .order('lastname', { assending: true })
-
+      console.log(data)
       setList(data)
     } catch (e) {
       console.error(e)
@@ -83,6 +88,26 @@ const Page: React.FC = () => {
     // Data for the Excel file
     const data: any[] = []
     list.forEach((item, index) => {
+      // For IER Column
+      let experience = ''
+      let eligibility = ''
+      let education = ''
+      let training = ''
+      item.ier?.forEach((ier) => {
+        if (ier.type === 'Experience') {
+          experience += `\n ${ier.remarks} (${ier.time})`
+        }
+        if (ier.type === 'Eligibility') {
+          eligibility += `\n ${ier.remarks} (${ier.time})`
+        }
+        if (ier.type === 'Education') {
+          education += `\n ${ier.remarks} (${ier.time})`
+        }
+        if (ier.type === 'Training') {
+          training += `\n ${ier.remarks} (${ier.time})`
+        }
+      })
+
       data.push({
         no: index + 1,
         code: `${item.ranking?.code_prefix}-${item.code}`,
@@ -96,10 +121,10 @@ const Page: React.FC = () => {
         ethnicity: `${item.ethnicity_detail ?? ''}`,
         email: `${item.email}`,
         contact_number: `${item.contact_number}`,
-        education: '',
-        training: '',
-        experience: '',
-        eligibility: '',
+        education,
+        training,
+        experience,
+        eligibility,
         remarks: `${item.evaluation_status} / ${
           item.reason_for_disqualification ?? ''
         }`

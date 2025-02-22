@@ -488,8 +488,14 @@ const IerInput = ({
   const [status, setStatus] = useState('')
   const [remarksLabel, setRemarksLabel] = useState('')
 
+  const [errorMessage, setErrorMessage] = useState('')
+
   const handleAddIER = async () => {
-    if (remarks.trim() === '') return
+    setErrorMessage('')
+    if (remarks.trim() === '' || type.trim() === '' || status.trim() === '') {
+      setErrorMessage('Type, Description and Status are required')
+      return
+    }
 
     const { error } = await supabase.from('hrm_ranking_applicant_ier').insert({
       applicant_id: applicantId,
@@ -501,6 +507,10 @@ const IerInput = ({
     if (error) {
       setToast('error', 'Something went wrong, please reload the page')
     } else {
+      setRemarks('')
+      setTime('')
+      setType('')
+      setStatus('')
       onSuccess()
       setToast('success', 'Successfully saved')
     }
@@ -521,6 +531,9 @@ const IerInput = ({
   return (
     <div className="mt-4 bg-yellow-50 p-4 border text-gray-600">
       <div className="app__form_field_container">Add IER Data</div>
+      <div className="app__form_field_container text-red-500">
+        {errorMessage}
+      </div>
       <div className="app__form_field_container">
         <div className="w-full">
           <div>

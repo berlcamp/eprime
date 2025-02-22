@@ -893,6 +893,7 @@ export interface ApplicantTypes {
   seminars_units: string
 
   eir_email_sent: boolean
+  ier: ApplicantIerTypes[]
 
   deped_email: string
   retype_email: string
