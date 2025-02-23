@@ -1,7 +1,15 @@
 'use client'
 
-import { Sidebar, TableRowLoading, Title, TopBar } from '@/components'
+import {
+  CustomButton,
+  Sidebar,
+  TableRowLoading,
+  Title,
+  TopBar
+} from '@/components'
 import { useSupabase } from '@/context/SupabaseProvider'
+import Excel from 'exceljs'
+import { saveAs } from 'file-saver'
 import React, { useEffect, useState } from 'react'
 import Filters from './Filters'
 
@@ -23,8 +31,56 @@ const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [list, setList] = useState<ListTypes[] | []>([])
   const [filterRanking, setFilterRanking] = useState<string>('')
-
+  const [downloading, setDownloading] = useState(false)
   const { supabase } = useSupabase()
+
+  const handleDownloadExcel = async () => {
+    setDownloading(true)
+
+    // Create a new workbook and add a worksheet
+    const workbook = new Excel.Workbook()
+    const worksheet = workbook.addWorksheet('Sheet 1')
+
+    // Extract unique keys from accumulated_points dynamically
+    const allKeys = Array.from(
+      new Set(
+        list.flatMap((item) => Object.keys(item.accumulated_points ?? {}))
+      )
+    )
+
+    // Define worksheet columns dynamically
+    worksheet.columns = [
+      { header: 'No.', key: 'no', width: 10 },
+      { header: 'Names of Applicant', key: 'name', width: 25 },
+      ...allKeys.map((key) => ({ header: key, key, width: 15 })), // Dynamic columns
+      { header: 'Overall Score', key: 'overall_score', width: 15 },
+      { header: 'Ranking', key: 'ranking', width: 15 }
+    ]
+
+    // Data for the Excel file
+    const data: any[] = list.map((item, index) => ({
+      no: index + 1,
+      name: `${item.applicant.lastname}, ${item.applicant.firstname} ${item.applicant.middlename}`,
+      ...allKeys.reduce<Record<string, any>>((acc, key) => {
+        acc[key] = item.accumulated_points?.[key] ?? '-' // Use "-" if value is missing
+        return acc
+      }, {}),
+      overall_score: item.overall_score,
+      ranking: item.ranking?.position?.name
+    }))
+
+    // Add data to the worksheet
+    data.forEach((item) => worksheet.addRow(item))
+
+    // Generate the Excel file
+    await workbook.xlsx.writeBuffer().then((buffer) => {
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+      saveAs(blob, 'Open Ranking.xlsx')
+    })
+    setDownloading(false)
+  }
 
   const fetchApplicantsData = async () => {
     if (filterRanking === '') return
@@ -32,7 +88,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     const { data } = await supabase
-    .from('hrm_ranking_applicants')
+      .from('hrm_ranking_applicants')
       .select(
         '*,applicant_documents:hrm_ranking_applicant_documents(qualification_id,status),ranking:ranking_id(type,year,status,position:position_id(name),chairman_id,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
         {
@@ -102,6 +158,17 @@ const Page: React.FC = () => {
             <Filters setFilterRanking={setFilterRanking} />
           </div>
 
+          {/* Export Button */}
+          <div className="mx-4 mb-4 flex justify-end items-end space-x-2">
+            <CustomButton
+              containerStyles="app__btn_blue"
+              isDisabled={downloading}
+              title={downloading ? 'Downloading...' : 'Export Data To Excel'}
+              btnType="button"
+              handleClick={handleDownloadExcel}
+            />
+          </div>
+
           {/* Main Content */}
           <div>
             <table className="app__table">
@@ -110,9 +177,11 @@ const Page: React.FC = () => {
                   <th className="app__th pl-4">No.</th>
                   <th className="app__th">Fullname</th>
                   {allKeys.map((key) => (
-            <th className="app__th" key={key}>{key}</th>
-          ))}
-          <th className="app__th">Overall Score</th>
+                    <th className="app__th" key={key}>
+                      {key}
+                    </th>
+                  ))}
+                  <th className="app__th">Overall Score</th>
                 </tr>
               </thead>
               <tbody>
@@ -122,13 +191,16 @@ const Page: React.FC = () => {
                       <td className="w-6 pl-4 app__td">{index + 1}.</td>
                       <th className="app__th_firstcol">
                         <div>
-                          {item.applicant.lastname}, {item.applicant.firstname} {item.applicant.middlename}
+                          {item.applicant.lastname}, {item.applicant.firstname}{' '}
+                          {item.applicant.middlename}
                         </div>
                       </th>
-                        {allKeys.map((key) => (
-                          <td key={key} className="app__td">{item.accumulated_points?.[key] ?? '-'}</td>
-                        ))}
-                        <td className="app__td">{item.overall_score}</td>
+                      {allKeys.map((key) => (
+                        <td key={key} className="app__td">
+                          {item.accumulated_points?.[key] ?? '-'}
+                        </td>
+                      ))}
+                      <td className="app__td">{item.overall_score}</td>
                     </tr>
                   ))}
                 {loading && <TableRowLoading cols={3} rows={2} />}
