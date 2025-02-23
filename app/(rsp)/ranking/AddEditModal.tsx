@@ -80,6 +80,10 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       passing_score: formdata.passing_score,
       days_to_comply: formdata.days_to_comply,
       status: formdata.status,
+      ier_education_description: formdata.ier_education_description,
+      ier_experience_description: formdata.ier_experience_description,
+      ier_training_description: formdata.ier_training_description,
+      ier_eligibility_description: formdata.ier_eligibility_description,
       display_ier: formdata.display_ier ? true : false,
       display_rqa: formdata.display_rqa ? true : false,
       display_ranklist: formdata.display_ranklist ? true : false,
@@ -185,6 +189,12 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       display_ranklist: formdata.display_ranklist ? true : false,
       display_nai: formdata.display_nai ? true : false,
       display_on_portal: formdata.display_on_portal ? true : false,
+
+      ier_education_description: formdata.ier_education_description,
+      ier_experience_description: formdata.ier_experience_description,
+      ier_training_description: formdata.ier_training_description,
+      ier_eligibility_description: formdata.ier_eligibility_description,
+
       display_on_portal_from: formdata.display_on_portal_from
         ? formdata.display_on_portal_from
         : null,
@@ -351,6 +361,18 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       display_ranklist: editData ? editData.display_ranklist : '',
       display_nai: editData ? editData.display_nai : '',
       display_on_portal: editData ? editData.display_on_portal : '',
+      ier_education_description: editData
+        ? editData.ier_education_description
+        : '',
+      ier_experience_description: editData
+        ? editData.ier_experience_description
+        : '',
+      ier_training_description: editData
+        ? editData.ier_training_description
+        : '',
+      ier_eligibility_description: editData
+        ? editData.ier_eligibility_description
+        : '',
       display_on_portal_from: editData ? editData.display_on_portal_from : '',
       display_on_portal_until: editData ? editData.display_on_portal_until : '',
       days_to_comply: editData ? editData.days_to_comply : '',
@@ -671,7 +693,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                   <div className="app__form_field_container">
                     <div className="w-full">
                       <div className="app__label_standard">
-                        Duration of Posting (To)
+                        Duration of Posting (To) / Deadline of Submission
                       </div>
                       <div>
                         <input
@@ -840,6 +862,56 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       </div>
                     </div>
                   </div>
+                  <div className="app__form_field_container">
+                    <hr />
+                    <div className="text-sm text-gray-600 font-bold">
+                      Minimum Qualification Requirements
+                    </div>
+                    <div className="w-full">
+                      <div className="app__label_standard">Education</div>
+                      <div>
+                        <textarea
+                          {...register('ier_education_description', {
+                            required: true
+                          })}
+                          className="app__input_standard"
+                        />
+                      </div>
+                    </div>
+                    <div className="w-full">
+                      <div className="app__label_standard">Experience</div>
+                      <div>
+                        <textarea
+                          {...register('ier_experience_description', {
+                            required: true
+                          })}
+                          className="app__input_standard"
+                        />
+                      </div>
+                    </div>
+                    <div className="w-full">
+                      <div className="app__label_standard">Training</div>
+                      <div>
+                        <textarea
+                          {...register('ier_training_description', {
+                            required: true
+                          })}
+                          className="app__input_standard"
+                        />
+                      </div>
+                    </div>
+                    <div className="w-full">
+                      <div className="app__label_standard">Eligibility</div>
+                      <div>
+                        <textarea
+                          {...register('ier_eligibility_description', {
+                            required: true
+                          })}
+                          className="app__input_standard"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 {/* End First Column */}
                 {/* Begin Second Column */}
@@ -869,7 +941,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                                 }
                               )}
                             />
-                            {((editData && editData.applicants.length === 0) ||
+                            {((editData?.applicants.length ?? 0) === 0 ||
                               (!editData && fields.length > 1)) && (
                               <button
                                 type="button"

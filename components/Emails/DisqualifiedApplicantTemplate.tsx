@@ -81,20 +81,14 @@ export const DisqualifiedApplicantTemplate: React.FC<
                   )}
                   <td>{type}:</td>
                   <td>
-                    {ierData &&
-                      ierData
-                        .filter((l) => l.type === type)
-                        .map((l, i) => (
+                    {ierData?.filter((l) => l.type === type).map((l, i) => (
                           <div key={i}>{`${i + 1}. ${l.remarks} - ${
                             l.time
                           }`}</div>
                         ))}
                   </td>
                   <td>
-                    {ierData &&
-                      ierData
-                        .filter((l) => l.type === type)
-                        .map((l, i) => (
+                    {ierData?.filter((l) => l.type === type).map((l, i) => (
                           <div key={i}>{`${i + 1}. ${l.status}`}</div>
                         ))}
                   </td>

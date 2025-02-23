@@ -107,6 +107,16 @@ const RspSidebar = () => {
               </li>
               <li>
                 <Link
+                  href="/openranking"
+                  className={`app__menu_link ${
+                    currentRoute === '/openranking' ? 'app_menu_link_active' : ''
+                  }`}
+                >
+                  <span className="flex-1 ml-3 whitespace-nowrap">Open Ranking</span>
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/rankingier"
                   className={`app__menu_link ${
                     currentRoute === '/rankingier' ? 'app_menu_link_active' : ''

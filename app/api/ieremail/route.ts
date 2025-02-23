@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       const { error } = await resend.emails.send({
         from: 'DepEd Bayugan (No-reply) <noreply@sortbrite.com>',
         to: [params.email],
-        subject: `Initial Evaluation Result`,
+        subject: 'Initial Evaluation Result',
         react: QualifiedApplicantTemplate(
           params.applicant,
           ierData
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       const { error } = await resend.emails.send({
         from: 'DepEd Bayugan (No-reply) <noreply@sortbrite.com>',
         to: [params.email],
-        subject: `Initial Evaluation Result`,
+        subject: 'Initial Evaluation Result',
         react: DisqualifiedApplicantTemplate(
           params.applicant,
           ierData

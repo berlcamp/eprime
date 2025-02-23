@@ -824,11 +824,17 @@ export interface RankingTypes {
   status: string
   code_prefix: string
   passing_score: string
+  display_on_open_ranking: boolean
   display_on_portal: string
   display_on_portal_from: string
   display_on_portal_until: string
   committees: RankingCommitteeTypes[]
   applicants: ApplicantTypes[]
+
+  ier_education_description: string
+  ier_eligibility_description: string
+  ier_training_description: string
+  ier_experience_description: string
   confirmed: string
 }
 
