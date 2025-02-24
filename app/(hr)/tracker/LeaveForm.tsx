@@ -578,6 +578,27 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </div>
             </div>
+            {(watchedType === 'Solo Parent Leave' ||
+              watchedType === 'Special Privilege Leave') && (
+              <>
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">Reason</div>
+                    <div>
+                      <input
+                        {...register('reason', { required: true })}
+                        className="app__select_standard"
+                      />
+                      {errors.reason && (
+                        <div className="app__error_message">
+                          Reason is required
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
             {(watchedType === 'Vacation Leave' ||
               watchedType === 'Special Privilege Leave') && (
               <>
@@ -624,27 +645,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </>
             )}
-            {(watchedType === 'Solo Parent Leave' ||
-              watchedType === 'Special Privilege Leave') && (
-              <>
-                <div className="app__form_field_container">
-                  <div className="w-full">
-                    <div className="app__label_standard">Reason</div>
-                    <div>
-                      <input
-                        {...register('reason', { required: true })}
-                        className="app__select_standard"
-                      />
-                      {errors.reason && (
-                        <div className="app__error_message">
-                          Reason is required
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
+
             {watchedType === 'Sick Leave' && (
               <>
                 <div className="app__form_field_container">
