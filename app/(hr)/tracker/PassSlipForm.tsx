@@ -68,6 +68,7 @@ const PassSlipForm = ({ hideModal }: ModalProps) => {
         pass_slip_type: formdata.type,
         pass_slip_intended_time_departure: formdata.intended_time_departure,
         pass_slip_intended_time_arrival: formdata.intended_time_arrival,
+        pass_slip_date: formdata.date,
         pass_slip_fixed_time_from: formdata.fixed_time_from,
         pass_slip_fixed_time_to: formdata.fixed_time_to,
         pass_slip_purpose: formdata.purpose,
@@ -229,6 +230,21 @@ const PassSlipForm = ({ hideModal }: ModalProps) => {
                   </select>
                   {errors.type && (
                     <div className="app__error_message">Type is required</div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="app__form_field_container">
+              <div className="w-full">
+                <div className="app__label_standard">Date</div>
+                <div>
+                  <input
+                    {...register('date', { required: true })}
+                    type="date"
+                    className="app__input_standard"
+                  />
+                  {errors.date && (
+                    <div className="app__error_message">Date is required</div>
                   )}
                 </div>
               </div>

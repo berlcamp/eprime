@@ -1494,6 +1494,17 @@ export default function DetailsModal({
                                 </td>
                               </tr>
                             )}
+                          {documentData.leave_reason &&
+                            documentData.leave_reason.trim() !== '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Reason:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {documentData.leave_reason}
+                                </td>
+                              </tr>
+                            )}
                           {documentData.leave_hospitalization &&
                             documentData.leave_hospitalization.trim() !==
                               '' && (
@@ -1576,21 +1587,31 @@ export default function DetailsModal({
                           </tr>
                           <tr>
                             <td className="px-2 py-2 font-light text-right">
-                              Date:
+                              Travel Date/Time:
                             </td>
                             <td className="text-sm font-medium">
                               {format(
                                 new Date(documentData.locator_slip_date),
                                 'MMMM dd, yyyy'
                               )}
+                              {' - '}
+                              {documentData.locator_slip_time}
                             </td>
                           </tr>
                           <tr>
                             <td className="px-2 py-2 font-light text-right">
-                              Time:
+                              Return Date/Time:
                             </td>
                             <td className="text-sm font-medium">
-                              {documentData.locator_slip_time}
+                              {documentData.locator_slip_return_date &&
+                                format(
+                                  new Date(
+                                    documentData.locator_slip_return_date
+                                  ),
+                                  'MMMM dd, yyyy'
+                                )}
+                              {' - '}
+                              {documentData.locator_slip_return_time}
                             </td>
                           </tr>
                           <tr>
@@ -1656,6 +1677,20 @@ export default function DetailsModal({
                               {documentData.pass_slip_type}
                             </td>
                           </tr>
+                          {documentData.pass_slip_date &&
+                            documentData.pass_slip_date.trim() !== '' && (
+                              <tr>
+                                <td className="px-2 py-2 font-light text-right">
+                                  Date:
+                                </td>
+                                <td className="text-sm font-medium">
+                                  {format(
+                                    new Date(documentData.pass_slip_date),
+                                    'MMMM dd, yyyy'
+                                  )}
+                                </td>
+                              </tr>
+                            )}
                           {documentData.pass_slip_intended_time_departure &&
                             documentData.pass_slip_intended_time_departure.trim() !==
                               '' && (

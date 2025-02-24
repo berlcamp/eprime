@@ -185,6 +185,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         leave_women_illness: formdata.women_illness,
         leave_study_purpose: formdata.study_purpose,
         leave_other_purpose: formdata.other_purpose,
+        leave_reason: formdata.reason,
         leave_days: formdata.days,
         leave_from: formdata.leave_from,
         leave_to: formdata.leave_to,
@@ -616,6 +617,27 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                       {errors.specify_location && (
                         <div className="app__error_message">
                           Location is required
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            {(watchedType === 'Solo Parent Leave' ||
+              watchedType === 'Special Privilege Leave') && (
+              <>
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">Reason</div>
+                    <div>
+                      <input
+                        {...register('reason', { required: true })}
+                        className="app__select_standard"
+                      />
+                      {errors.reason && (
+                        <div className="app__error_message">
+                          Reason is required
                         </div>
                       )}
                     </div>

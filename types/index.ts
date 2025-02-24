@@ -449,6 +449,7 @@ export interface LeaveTypes {
   hospitalization: string
   illness: string
   women_illness: string
+  reason: string
   study_purpose: string
   other_purpose: string
   days: string
@@ -482,6 +483,7 @@ export interface PassSlipTypes {
   type: string
   intended_time_departure: string
   intended_time_arrival: string
+  date: string
   fixed_time_from: string
   fixed_time_to: string
   purpose: string
@@ -508,6 +510,8 @@ export interface LocatorSlipTypes {
   type: string
   date: string
   time: string
+  return_date: string
+  return_time: string
   destination: string
   confirmed: string
 }
@@ -624,6 +628,7 @@ export interface DocumentTypes {
   leave_illness: string
   leave_women_illness: string
   leave_study_purpose: string
+  leave_reason: string
   leave_other_purpose: string
   leave_days: string
   leave_from: string
@@ -660,11 +665,14 @@ export interface DocumentTypes {
   locator_slip_type: string
   locator_slip_date: string
   locator_slip_time: string
+  locator_slip_return_date: string
+  locator_slip_return_time: string
   locator_slip_destination: string
   service_record_print_request_purpose: string
   pass_slip_type: string
   pass_slip_intended_time_departure: string
   pass_slip_intended_time_arrival: string
+  pass_slip_date: string
   pass_slip_fixed_time_from: string
   pass_slip_fixed_time_to: string
   pass_slip_purpose: string

@@ -94,6 +94,7 @@ const LocatorSlipForm = ({ hideModal }: ModalProps) => {
         locator_slip_type: formdata.type,
         locator_slip_date: formdata.date,
         locator_slip_time: formdata.time,
+        locator_slip_return_time: formdata.return_time,
         locator_slip_destination: formdata.destination,
         created_by: session.user.id,
         current_approver_id: session.user.id,
@@ -314,7 +315,7 @@ const LocatorSlipForm = ({ hideModal }: ModalProps) => {
             </div>
             <div className="app__form_field_container">
               <div className="w-full">
-                <div className="app__label_standard">Date</div>
+                <div className="app__label_standard">Travel Date</div>
                 <div>
                   <input
                     {...register('date', { required: true })}
@@ -322,14 +323,16 @@ const LocatorSlipForm = ({ hideModal }: ModalProps) => {
                     className="app__select_standard"
                   />
                   {errors.date && (
-                    <div className="app__error_message">Date is required</div>
+                    <div className="app__error_message">
+                      Travel Date is required
+                    </div>
                   )}
                 </div>
               </div>
             </div>
             <div className="app__form_field_container">
               <div className="w-full">
-                <div className="app__label_standard">Time</div>
+                <div className="app__label_standard">Travel Time</div>
                 <div>
                   <input
                     {...register('time', { required: true })}
@@ -337,7 +340,26 @@ const LocatorSlipForm = ({ hideModal }: ModalProps) => {
                     className="app__select_standard"
                   />
                   {errors.time && (
-                    <div className="app__error_message">Time is required</div>
+                    <div className="app__error_message">
+                      Travel Time is required
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="app__form_field_container">
+              <div className="w-full">
+                <div className="app__label_standard">Return Time</div>
+                <div>
+                  <input
+                    {...register('return_time', { required: true })}
+                    type="time"
+                    className="app__select_standard"
+                  />
+                  {errors.return_time && (
+                    <div className="app__error_message">
+                      Return Time is required
+                    </div>
                   )}
                 </div>
               </div>
