@@ -90,19 +90,19 @@ const Page: React.FC = () => {
   // Filter data by Display
   useEffect(() => {
     setLoading(true)
-    const passingScore = rankingDetails?.passing_score ?? 50
+    // const passingScore = rankingDetails?.passing_score ?? 50
 
     const filteredList = rankList.filter((item) => {
       const status = item.applicant.evaluation_status
       return (
-        Number(item.overall_score) < Number(passingScore) &&
+        // Number(item.overall_score) < Number(passingScore) &&
         status === 'Qualified'
       )
     })
     setList(filteredList)
 
     setLoading(false)
-  }, [rankingDetails])
+  }, [rankList])
 
   // Fetch data
   useEffect(() => {
