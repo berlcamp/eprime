@@ -4,7 +4,7 @@ import Footer from '@/components/Footer'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { RankingTypes } from '@/types'
-import { isAfter, isEqual, parseISO, startOfDay } from 'date-fns'
+import { format, isAfter, isEqual, parseISO, startOfDay } from 'date-fns'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
@@ -55,14 +55,32 @@ const Page: React.FC = () => {
                 <div className="flex flex-col space-y-1">
                   <div className="font-bold">{item.position?.name}</div>
                   <div>{item.description}</div>
-                  <div>
-                    {item.status === 'Closed' && (
-                      <span className="text-gray-600 italic">
-                        The application for this ranking is already Closed
-                      </span>
+                  <div className="pt-2">
+                    Deadline:{' '}
+                    {format(
+                      new Date(item.display_on_portal_until),
+                      'MMMM d, yyyy'
                     )}
                   </div>
+                  <div className="pt-2">Minimum CSC Requirements:</div>
+                  <div className="font-semibold">1. Education</div>
+                  <div className="pl-6">{item.ier_education_description}</div>
+                  <div className="font-semibold">2. Experience</div>
+                  <div className="pl-6">{item.ier_experience_description}</div>
+                  <div className="font-semibold">3. Training</div>
+                  <div className="pl-6">{item.ier_training_description}</div>
+                  <div className="font-semibold">4. Eligibility</div>
+                  <div className="pl-6">{item.ier_eligibility_description}</div>
+
                   <div className="pt-2 space-x-2">
+                    {item.display_ier && (
+                      <Link
+                        href={`/rankingapplicantresults/ier?ref=${item.id}`}
+                        className="app__btn_blue"
+                      >
+                        Initial Evaluation Result
+                      </Link>
+                    )}
                     {item.status === 'Open' &&
                     isDateInPast(item.display_on_portal_until) ? (
                       <Link
@@ -72,19 +90,18 @@ const Page: React.FC = () => {
                         Apply Now
                       </Link>
                     ) : (
-                      <div className="mb-2">
+                      <div className="mt-4">
                         <span className="app__status_container_orange text-xs!">
                           Application for this Ranking is already closed
                         </span>
                       </div>
                     )}
-                    {item.display_ier && (
-                      <Link
-                        href={`/rankingapplicantresults/ier?ref=${item.id}`}
-                        className="app__btn_blue"
-                      >
-                        Initial Evaluation Result
-                      </Link>
+                  </div>
+                  <div>
+                    {item.status === 'Closed' && (
+                      <span className="text-gray-600 italic">
+                        The application for this ranking is already Closed
+                      </span>
                     )}
                   </div>
                 </div>
