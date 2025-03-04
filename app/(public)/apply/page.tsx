@@ -2,6 +2,7 @@
 import { CustomButton, OneColLayoutLoading, TopBarDark } from '@/components'
 import Footer from '@/components/Footer'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
+import { elementaryMajors, jhsMajors, shsMajors } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { ApplicantTypes, Employee, RankingTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
@@ -11,37 +12,6 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-
-// Major categories and subjects
-const elementaryMajors = ['Kindergarten', 'SPED', 'General Education']
-const jhsMajors = [
-  'English',
-  'Filipino',
-  'Mathematics',
-  'Science - Major in Biology',
-  'Science - Major in Chemistry',
-  'Science - Major in General Science',
-  'Science - Major in Physics',
-  'Aralin Panlipunan',
-  'MAPEH',
-  'Social Science/Values Education',
-  'T.L.E - Home Economics',
-  'T.L.E - Agri-Fishery',
-  'T.L.E - ICT',
-  'T.L.E - Industrial Arts'
-]
-const shsMajors = [
-  'Academic Track - Accountancy, Business and Management (ABM)',
-  'Academic Track - Science, Technology, Engineering and Mathematics (STEM)',
-  'Academic Track - Humanities & Social Science (HUMSS)',
-  'Academic Track - General & Academic (GAS)',
-  'Arts and Design',
-  'Sports',
-  'TVL - Agriculture-Fishery Arts (AFA)',
-  'TVL - Home Economics (HE)',
-  'TVL - Industrial Arts (IA)',
-  'TVL - Information and Communication Technology (ICT)'
-]
 
 const Page: React.FC = () => {
   const [saving, setSaving] = useState(false)

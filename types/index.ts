@@ -151,6 +151,10 @@ export interface Employee {
   confirmed: string
   date_of_next_increment: string
   signature_path: string
+  grade_levels: PersonnelGradeLevels[]
+  subjects: PersonnelSubjectTypes[]
+  majors: PersonnelMajorTypes[]
+  coordinatorships: PersonnelCoordinatorshipTypes[]
 }
 
 export interface LeaveCardTypes {
@@ -948,6 +952,43 @@ export interface AnnouncementTypes {
   id: string
   title: string
   description: string
+}
+
+export interface SubjectTypes {
+  id: string
+  title: string
+  category_level: string
+}
+
+export interface CoordinatorshipTypes {
+  id: string
+  title: string
+}
+export interface MajorTypes {
+  id: string
+  title: string
+  type: string
+}
+
+export interface PersonnelSubjectTypes {
+  id: string
+  user_id: string
+  subject_id: string
+}
+export interface PersonnelGradeLevels {
+  id: string
+  user_id: string
+  grade_level: string
+}
+export interface PersonnelMajorTypes {
+  id: string
+  user_id: string
+  major_id: string
+}
+export interface PersonnelCoordinatorshipTypes {
+  id: string
+  user_id: string
+  coordinatorship_id: string
 }
 
 export interface RankingCriteriaTypes {

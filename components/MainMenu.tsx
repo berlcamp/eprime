@@ -103,7 +103,7 @@ const MainMenu = () => {
               </div>
             </Link>
             {(schools.length > 0 || offices.length > 0) && (
-              <Link href="/personnels">
+              <Link href="/schoolpersonnels">
                 <div className="app__menu_item">
                   <div className="pt-1">
                     <UserIcon className="w-8 h-8" />
@@ -199,7 +199,7 @@ const MainMenu = () => {
                 </div>
               </div>
             </Link>
-            <Link href="#">
+            <Link href="/schoolpersonnels">
               <div className="app__menu_item">
                 <div className="pt-1">
                   <BookOpenIcon className="w-8 h-8" />

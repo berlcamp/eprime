@@ -140,6 +140,37 @@ export const majors = {
   ]
 }
 
+// Major categories and subjects
+export const elementaryMajors = ['Kindergarten', 'SPED', 'General Education']
+export const jhsMajors = [
+  'English',
+  'Filipino',
+  'Mathematics',
+  'Science - Major in Biology',
+  'Science - Major in Chemistry',
+  'Science - Major in General Science',
+  'Science - Major in Physics',
+  'Aralin Panlipunan',
+  'MAPEH',
+  'Social Science/Values Education',
+  'T.L.E - Home Economics',
+  'T.L.E - Agri-Fishery',
+  'T.L.E - ICT',
+  'T.L.E - Industrial Arts'
+]
+export const shsMajors = [
+  'Academic Track - Accountancy, Business and Management (ABM)',
+  'Academic Track - Science, Technology, Engineering and Mathematics (STEM)',
+  'Academic Track - Humanities & Social Science (HUMSS)',
+  'Academic Track - General & Academic (GAS)',
+  'Arts and Design',
+  'Sports',
+  'TVL - Agriculture-Fishery Arts (AFA)',
+  'TVL - Home Economics (HE)',
+  'TVL - Industrial Arts (IA)',
+  'TVL - Information and Communication Technology (ICT)'
+]
+
 export const leaveTypes = [
   'Vacation Leave',
   'Sick Leave',

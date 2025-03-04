@@ -347,7 +347,7 @@ export async function fetchPersonnel(
     let query = supabase
       .from('hrm_users')
       .select(
-        '*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))',
+        '*, grade_levels:hrm_personnel_grade_levels(*), coordinatorships:hrm_personnel_coordinatorships(*),majors:hrm_personnel_majors(*), subjects:hrm_personnel_subjects(*), hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))',
         { count: 'exact' }
       )
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
@@ -591,6 +591,63 @@ export async function fetchAnnoucements(
     return { data, count }
   } catch (error) {
     console.error('fetch announcements error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchSubjects(perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase.from('hrm_subjects').select('*', { count: 'exact' })
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+    return { data, count }
+  } catch (error) {
+    console.error('fetch subjects error', error)
+    return { data: [], count: 0 }
+  }
+}
+
+export async function fetchCoordinatorships(
+  perPageCount: number,
+  rangeFrom: number
+) {
+  try {
+    let query = supabase
+      .from('hrm_coordinatorships')
+      .select('*', { count: 'exact' })
+
+    // Per Page from context
+    const from = rangeFrom
+    const to = from + (perPageCount - 1)
+
+    // Per Page from context
+    query = query.range(from, to)
+
+    // Order By
+    query = query.order('id', { ascending: false })
+
+    const { data, error, count } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+    return { data, count }
+  } catch (error) {
+    console.error('fetch coordinatorships error', error)
     return { data: [], count: 0 }
   }
 }
