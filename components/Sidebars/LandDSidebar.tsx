@@ -4,7 +4,7 @@
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { Office, SchoolTypes } from '@/types'
-import { CogIcon, TableCellsIcon } from '@heroicons/react/20/solid'
+import { TableCellsIcon } from '@heroicons/react/20/solid'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -59,45 +59,6 @@ const LandDSidebar = () => {
           </li>
         </ul>
       )}
-      {
-        // Check access from permission settings
-        hasAccess('settings') && (
-          <ul className="pt-8 mt-4 space-y-2 border-gray-700">
-            <li>
-              <div className="flex items-center text-gray-500 items-centers space-x-1 px-2">
-                <CogIcon className="w-4 h-4" />
-                <span>Settings</span>
-              </div>
-            </li>
-            <li>
-              <Link
-                href="/subjectssettings"
-                className={`app__menu_link ${
-                  currentRoute === '/subjectssettings'
-                    ? 'app_menu_link_active'
-                    : ''
-                }`}
-              >
-                <span className="flex-1 ml-3 whitespace-nowrap">Subjects</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/coordinatorshipsettings"
-                className={`app__menu_link ${
-                  currentRoute === '/coordinatorshipsettings'
-                    ? 'app_menu_link_active'
-                    : ''
-                }`}
-              >
-                <span className="flex-1 ml-3 whitespace-nowrap">
-                  Coordinatorships
-                </span>
-              </Link>
-            </li>
-          </ul>
-        )
-      }
     </>
   )
 }

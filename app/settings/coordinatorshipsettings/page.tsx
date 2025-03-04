@@ -3,21 +3,21 @@ import {
   CustomButton,
   DeleteModal,
   PerPage,
+  SettingsSideBar,
   ShowMore,
   Sidebar,
   TableRowLoading,
   Title,
   Unauthorized
 } from '@/components/index'
-import LandDSidebar from '@/components/Sidebars/LandDSidebar'
 import TopBar from '@/components/TopBar'
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { SubjectTypes } from '@/types'
-import { fetchSubjects } from '@/utils/fetchApi'
+import { CoordinatorshipTypes } from '@/types'
+import { fetchCoordinatorships } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
 import { TrashIcon } from '@heroicons/react/24/solid'
@@ -35,10 +35,10 @@ const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
 
-  const [list, setList] = useState<SubjectTypes[]>([])
+  const [list, setList] = useState<CoordinatorshipTypes[]>([])
 
   const [perPageCount, setPerPageCount] = useState<number>(10)
-  const [editData, setEditData] = useState<SubjectTypes | null>(null)
+  const [editData, setEditData] = useState<CoordinatorshipTypes | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -49,7 +49,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchSubjects(perPageCount, 0)
+      const result = await fetchCoordinatorships(perPageCount, 0)
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -72,7 +72,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchSubjects(perPageCount, list.length)
+      const result = await fetchCoordinatorships(perPageCount, list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -102,7 +102,7 @@ const Page: React.FC = () => {
     setEditData(null)
   }
 
-  const handleEdit = (item: SubjectTypes) => {
+  const handleEdit = (item: CoordinatorshipTypes) => {
     setShowAddModal(true)
     setEditData(item)
   }
@@ -128,16 +128,16 @@ const Page: React.FC = () => {
   return (
     <>
       <Sidebar>
-        <LandDSidebar />
+        <SettingsSideBar />
       </Sidebar>
       <TopBar />
       <div className="app__main">
         <div>
           <div className="app__title">
-            <Title title="Subjects" />
+            <Title title="Coordinatorships" />
             <CustomButton
               containerStyles="app__btn_green"
-              title="Add Subject"
+              title="Add Coordinatorship"
               btnType="button"
               handleClick={handleAdd}
             />
@@ -157,8 +157,7 @@ const Page: React.FC = () => {
               <thead className="app__thead">
                 <tr>
                   <th className="app__th pl-4"></th>
-                  <th className="app__th">Title</th>
-                  <th className="app__th">Category Level</th>
+                  <th className="app__th">Coordinatorships</th>
                 </tr>
               </thead>
               <tbody>
@@ -211,7 +210,6 @@ const Page: React.FC = () => {
                         </Menu>
                       </td>
                       <th className="app__th_firstcol">{item.title}</th>
-                      <td className="app__td">{item.category_level}</td>
                     </tr>
                   ))}
                 {loading && <TableRowLoading cols={3} rows={2} />}
@@ -231,7 +229,7 @@ const Page: React.FC = () => {
           {showDeleteModal && (
             <DeleteModal
               id={selectedId}
-              table="hrm_subjects"
+              table="hrm_coordinatorships"
               hideModal={() => setShowDeleteModal(false)}
             />
           )}

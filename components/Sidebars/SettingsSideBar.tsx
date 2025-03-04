@@ -101,6 +101,32 @@ const SettingsSideBar = () => {
             <span className="flex-1 ml-3 whitespace-nowrap">Announcements</span>
           </Link>
         </li>
+        <li>
+          <Link
+            href="/settings/subjectssettings"
+            className={`app__menu_link ${
+              currentRoute === '/settings/subjectssettings'
+                ? 'app_menu_link_active'
+                : ''
+            }`}
+          >
+            <span className="flex-1 ml-3 whitespace-nowrap">Subjects</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/settings/coordinatorshipsettings"
+            className={`app__menu_link ${
+              currentRoute === '/settings/coordinatorshipsettings'
+                ? 'app_menu_link_active'
+                : ''
+            }`}
+          >
+            <span className="flex-1 ml-3 whitespace-nowrap">
+              Coordinatorships
+            </span>
+          </Link>
+        </li>
       </ul>
       <ul className="pt-8 mt-4 space-y-2 border-t border-gray-700">
         <li>
