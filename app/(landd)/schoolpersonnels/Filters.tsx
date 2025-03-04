@@ -88,7 +88,7 @@ const Filters = ({ setFilterKeyword }: FilterTypes) => {
                 className="app__filter_input"
               />
             </div>
-            <div className="app__filter_container hidden">
+            <div className="app__filter_container !hidden">
               <TagIcon className="w-4 h-4 mr-1" />
               <select
                 value={selectedGradeLevel}
@@ -96,7 +96,6 @@ const Filters = ({ setFilterKeyword }: FilterTypes) => {
                 className="app__filter_select"
               >
                 <option value="">Choose Grade Level</option>
-                <option value="">Choose</option>
                 <option value="1">Grade 1</option>
                 <option value="2">Grade 2</option>
                 <option value="3">Grade 3</option>
@@ -111,7 +110,7 @@ const Filters = ({ setFilterKeyword }: FilterTypes) => {
                 <option value="12">Grade 12</option>
               </select>
             </div>
-            <div className="app__filter_container hidden">
+            <div className="app__filter_container !hidden">
               <TagIcon className="w-4 h-4 mr-1" />
               <select
                 value={selectedSubject}
@@ -126,7 +125,7 @@ const Filters = ({ setFilterKeyword }: FilterTypes) => {
                 ))}
               </select>
             </div>
-            <div className="app__filter_container hidden">
+            <div className="app__filter_container !hidden">
               <TagIcon className="w-4 h-4 mr-1" />
               <select
                 value={selectedMajor}
@@ -141,7 +140,7 @@ const Filters = ({ setFilterKeyword }: FilterTypes) => {
                 ))}
               </select>
             </div>
-            <div className="app__filter_container hidden">
+            <div className="app__filter_container !hidden">
               <TagIcon className="w-4 h-4 mr-1" />
               <select
                 value={selectedCoordinatorship}
