@@ -336,7 +336,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       clearErrors('chairman_id')
     } else {
       setUser(null)
-      setValue('chairman_id', '')
+      // setValue('chairman_id', '')
     }
   }
 

@@ -24,7 +24,7 @@ const ReportsSidebar = () => {
               currentRoute === '/reports' ? 'app_menu_link_active' : ''
             }`}
           >
-            <span className="flex-1 ml-3 whitespace-nowrap">Dashboard</span>
+            <span className="flex-1 ml-3 whitespace-nowrap">Personnels</span>
           </Link>
         </li>
         <li>

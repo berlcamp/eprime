@@ -974,6 +974,7 @@ export interface PersonnelSubjectTypes {
   id: string
   user_id: string
   subject_id: string
+  subject: SubjectTypes
 }
 export interface PersonnelGradeLevels {
   id: string
@@ -984,11 +985,13 @@ export interface PersonnelMajorTypes {
   id: string
   user_id: string
   major_id: string
+  major: MajorTypes
 }
 export interface PersonnelCoordinatorshipTypes {
   id: string
   user_id: string
   coordinatorship_id: string
+  coordinatorship: CoordinatorshipTypes
 }
 
 export interface RankingCriteriaTypes {
