@@ -14,6 +14,7 @@ interface FilterTypes {
   subjects: SubjectTypes[]
   majors: MajorTypes[]
   setFilterSchool: (type: string) => void
+  setFilterLevel: (type: string) => void
   setFilterMajor: (type: string) => void
   setFilterSubject: (type: string) => void
   setFilterCoodinatorship: (type: string) => void
@@ -23,11 +24,13 @@ const Filters = ({
   subjects,
   majors,
   setFilterSchool,
+  setFilterLevel,
   setFilterMajor,
   setFilterSubject,
   setFilterCoodinatorship
 }: FilterTypes) => {
   const [selectedSchool, setSelectedSchool] = useState('')
+  const [selectedLevel, setSelectedLevel] = useState('')
   const [selectedMajor, setSelectedMajor] = useState('')
   const [selectedSubject, setSelectedSubject] = useState('')
   const [selectedCoordinatorship, setSelectedCoordinatorship] = useState('')
@@ -40,6 +43,7 @@ const Filters = ({
   const handleApply = () => {
     if (
       selectedSchool === '' &&
+      selectedLevel === '' &&
       selectedMajor === '' &&
       selectedSubject === '' &&
       selectedCoordinatorship === ''
@@ -48,6 +52,7 @@ const Filters = ({
 
     // pass filter values to parent
     setFilterSchool(selectedSchool)
+    setFilterLevel(selectedLevel)
     setFilterMajor(selectedMajor)
     setFilterSubject(selectedSubject)
     setFilterCoodinatorship(selectedCoordinatorship)
@@ -58,6 +63,7 @@ const Filters = ({
 
     if (
       selectedSchool === '' &&
+      selectedLevel === '' &&
       selectedMajor === '' &&
       selectedSubject === '' &&
       selectedCoordinatorship === ''
@@ -66,6 +72,7 @@ const Filters = ({
 
     // pass filter values to parent
     setFilterSchool(selectedSchool)
+    setFilterLevel(selectedLevel)
     setFilterMajor(selectedMajor)
     setFilterSubject(selectedSubject)
     setFilterCoodinatorship(selectedCoordinatorship)
@@ -74,12 +81,14 @@ const Filters = ({
   // clear all filters
   const handleClear = () => {
     setFilterSchool('')
+    setFilterLevel('')
     setFilterMajor('')
     setFilterSubject('')
     setFilterCoodinatorship('')
 
     // local state
     setSelectedSchool('')
+    setSelectedLevel('')
     setSelectedMajor('')
     setSelectedSubject('')
     setSelectedCoordinatorship('')
@@ -122,6 +131,19 @@ const Filters = ({
                     {item.name}
                   </option>
                 ))}
+              </select>
+            </div>
+            <div className="app__filter_container">
+              <TagIcon className="w-4 h-4 mr-1" />
+              <select
+                value={selectedLevel}
+                onChange={(e) => setSelectedLevel(e.target.value)}
+                className="app__filter_select"
+              >
+                <option value="">Choose Level</option>
+                <option value="Elementary">Elementary</option>
+                <option value="Junior Highschool">Junior Highschool</option>
+                <option value="Senior Highschool">Senior Highschool</option>
               </select>
             </div>
             <div className="app__filter_container">

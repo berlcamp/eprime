@@ -29,6 +29,7 @@ import Filters from './Filters'
 export default function Page() {
   //
   const [filterSchool, setFilterSchool] = useState('')
+  const [filterLevel, setFilterLevel] = useState('')
   const [filterMajor, setFilterMajor] = useState('')
   const [filterSubject, setFilterSubject] = useState('')
   const [filterCoodinatorship, setFilterCoodinatorship] = useState('')
@@ -48,6 +49,53 @@ export default function Page() {
     try {
       const userIds = []
 
+      // If filter by major is selected
+      if (filterMajor !== '') {
+        const { data } = await supabase
+          .from('hrm_personnel_majors')
+          .select()
+          .eq('major_id', filterMajor)
+        if (data && data.length > 0) {
+          data.forEach((d: PersonnelMajorTypes) => {
+            userIds.push(d.user_id)
+          })
+        } else {
+          userIds.push('999999e9-9999-999f-8709-c94fd3dbb72f') // fake uuid
+        }
+      }
+
+      // If filter by level is selected
+      if (filterLevel !== '') {
+        let lvls: string[] = []
+        if (filterLevel === 'Elementary') {
+          lvls = [
+            'Grade 1',
+            'Grade 2',
+            'Grade 3',
+            'Grade 4',
+            'Grade 5',
+            'Grade 6'
+          ]
+        }
+        if (filterLevel === 'Junior Highschool') {
+          lvls = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10']
+        }
+        if (filterLevel === 'Senior Highschool') {
+          lvls = ['Grade 11', 'Grade 12']
+        }
+        const { data } = await supabase
+          .from('hrm_personnel_grade_levels')
+          .select()
+          .in('grade_level', lvls)
+
+        if (data && data.length > 0) {
+          data.forEach((d: PersonnelMajorTypes) => {
+            userIds.push(d.user_id)
+          })
+        } else {
+          userIds.push('999999e9-9999-999f-8709-c94fd3dbb72f') // fake uuid
+        }
+      }
       // If filter by major is selected
       if (filterMajor !== '') {
         const { data } = await supabase
@@ -206,7 +254,13 @@ export default function Page() {
 
   useEffect(() => {
     void fetchData()
-  }, [filterSchool, filterMajor, filterSubject, filterCoodinatorship])
+  }, [
+    filterSchool,
+    filterLevel,
+    filterMajor,
+    filterSubject,
+    filterCoodinatorship
+  ])
 
   // Check access from permission settings or Super Admins
   if (
@@ -229,7 +283,7 @@ export default function Page() {
       <div className="app__main">
         <div>
           <div className="app__title">
-            <Title title="Personnels" />
+            <Title title="Personnel" />
           </div>
           {/* Filters */}
           <div className="app__filters">
@@ -237,6 +291,7 @@ export default function Page() {
               subjects={subjects}
               majors={majors}
               setFilterSchool={setFilterSchool}
+              setFilterLevel={setFilterLevel}
               setFilterMajor={setFilterMajor}
               setFilterSubject={setFilterSubject}
               setFilterCoodinatorship={setFilterCoodinatorship}
@@ -260,7 +315,7 @@ export default function Page() {
                   <div className="bg-white p-4 mb-4 rounded-md shadow-md text-gray-600">
                     <div className="text-sm font-semibold px-2 mb-2 text-gray-600">
                       <div className="flex space-x-2 items-center">
-                        <span>Sex</span>
+                        <span>Sex / Levels</span>
                       </div>
                     </div>
                     <div className="items-center">
@@ -276,6 +331,60 @@ export default function Page() {
                           {
                             list.filter((item) => item.gender === 'Female')
                               .length
+                          }
+                        </div>
+                      </div>
+                      <div className="inline-flex flex-col text-center border-r px-2">
+                        <div className="text-xs text-gray-500">Elementary</div>
+                        <div className="text-xs text-gray-700 font-bold">
+                          {
+                            list.filter((personnel) =>
+                              personnel.grade_levels.some((lvl) =>
+                                [
+                                  'Grade 1',
+                                  'Grade 2',
+                                  'Grade 3',
+                                  'Grade 4',
+                                  'Grade 5',
+                                  'Grade 6'
+                                ].includes(lvl.grade_level)
+                              )
+                            ).length
+                          }
+                        </div>
+                      </div>
+                      <div className="inline-flex flex-col text-center border-r px-2">
+                        <div className="text-xs text-gray-500">
+                          Junior Highschool
+                        </div>
+                        <div className="text-xs text-gray-700 font-bold">
+                          {
+                            list.filter((personnel) =>
+                              personnel.grade_levels.some((lvl) =>
+                                [
+                                  'Grade 7',
+                                  'Grade 8',
+                                  'Grade 9',
+                                  'Grade 10'
+                                ].includes(lvl.grade_level)
+                              )
+                            ).length
+                          }
+                        </div>
+                      </div>
+                      <div className="inline-flex flex-col text-center border-r px-2">
+                        <div className="text-xs text-gray-500">
+                          Senior Highschool
+                        </div>
+                        <div className="text-xs text-gray-700 font-bold">
+                          {
+                            list.filter((personnel) =>
+                              personnel.grade_levels.some((lvl) =>
+                                ['Grade 11', 'Grade 12'].includes(
+                                  lvl.grade_level
+                                )
+                              )
+                            ).length
                           }
                         </div>
                       </div>
@@ -342,7 +451,7 @@ export default function Page() {
                         <thead className="app__thead">
                           <tr>
                             <th className="app__th">Subject</th>
-                            <th className="app__th">Total Personnels</th>
+                            <th className="app__th">Total Personnel</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -376,7 +485,7 @@ export default function Page() {
                         <thead className="app__thead">
                           <tr>
                             <th className="app__th">Major</th>
-                            <th className="app__th">Total Personnels</th>
+                            <th className="app__th">Total Personnel</th>
                           </tr>
                         </thead>
                         <tbody>

@@ -40,7 +40,7 @@ const LandDSidebar = () => {
           <li>
             <div className="flex items-center text-gray-500 items-centers space-x-1 px-2">
               <TableCellsIcon className="w-4 h-4" />
-              <span>Personnels</span>
+              <span>Personnel</span>
             </div>
           </li>
           <li>
@@ -53,7 +53,7 @@ const LandDSidebar = () => {
               }`}
             >
               <span className="flex-1 ml-3 whitespace-nowrap">
-                School Personnels
+                School Personnel
               </span>
             </Link>
           </li>

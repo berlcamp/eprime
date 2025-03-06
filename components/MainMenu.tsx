@@ -111,7 +111,7 @@ const MainMenu = () => {
                   <div>
                     <div className="app__menu_item_label">Personnel</div>
                     <div className="app__menu_item_label_description">
-                      School/Office Personnels under your supervision
+                      School/Office Personnel under your supervision
                     </div>
                   </div>
                 </div>

@@ -24,10 +24,10 @@ const ReportsSidebar = () => {
               currentRoute === '/reports' ? 'app_menu_link_active' : ''
             }`}
           >
-            <span className="flex-1 ml-3 whitespace-nowrap">Personnels</span>
+            <span className="flex-1 ml-3 whitespace-nowrap">Personnel</span>
           </Link>
         </li>
-        <li>
+        {/* <li>
           <Link
             href="/reports-leave"
             className={`app__menu_link ${
@@ -36,7 +36,7 @@ const ReportsSidebar = () => {
           >
             <span className="flex-1 ml-3 whitespace-nowrap">Leave</span>
           </Link>
-        </li>
+        </li> */}
       </ul>
     </>
   )
