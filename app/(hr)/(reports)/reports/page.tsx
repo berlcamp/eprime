@@ -25,6 +25,7 @@ import Excel from 'exceljs'
 import { saveAs } from 'file-saver'
 import { useEffect, useState } from 'react'
 import Filters from './Filters'
+import NamesModal from './NamesModal'
 
 export default function Page() {
   //
@@ -34,7 +35,10 @@ export default function Page() {
   const [filterSubject, setFilterSubject] = useState('')
   const [filterCoodinatorship, setFilterCoodinatorship] = useState('')
 
+  const [showNamesModal, setShowNamesModal] = useState(false)
+
   const [list, setList] = useState<Employee[]>([])
+  const [modalList, setModalList] = useState<Employee[]>([])
 
   const [downloading, setDownloading] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -236,6 +240,15 @@ export default function Page() {
     setDownloading(false)
   }
 
+  const handleViewNames = (list: Employee[] | []) => {
+    if (list.length === 0) {
+      return
+    }
+
+    setShowNamesModal(true)
+    setModalList(list)
+  }
+
   useEffect(() => {
     const fetchSubjectsData = async () => {
       const result = await fetchSubjects(999, 0)
@@ -322,35 +335,76 @@ export default function Page() {
                       <div className="inline-flex flex-col text-center border-r px-2">
                         <div className="text-xs text-gray-500">Male</div>
                         <div className="text-xs text-gray-700 font-bold">
-                          {list.filter((item) => item.gender === 'Male').length}
+                          <span
+                            className="cursor-pointer font-bold text-sm"
+                            onClick={() =>
+                              handleViewNames(
+                                list.filter((item) => item.gender === 'Male')
+                              )
+                            }
+                          >
+                            {
+                              list.filter((item) => item.gender === 'Male')
+                                .length
+                            }
+                          </span>
                         </div>
                       </div>
                       <div className="inline-flex flex-col text-center border-r px-2">
                         <div className="text-xs text-gray-500">Female</div>
                         <div className="text-xs text-gray-700 font-bold">
-                          {
-                            list.filter((item) => item.gender === 'Female')
-                              .length
-                          }
+                          <span
+                            className="cursor-pointer font-bold text-sm"
+                            onClick={() =>
+                              handleViewNames(
+                                list.filter((item) => item.gender === 'Female')
+                              )
+                            }
+                          >
+                            {
+                              list.filter((item) => item.gender === 'Female')
+                                .length
+                            }
+                          </span>
                         </div>
                       </div>
                       <div className="inline-flex flex-col text-center border-r px-2">
                         <div className="text-xs text-gray-500">Elementary</div>
                         <div className="text-xs text-gray-700 font-bold">
-                          {
-                            list.filter((personnel) =>
-                              personnel.grade_levels.some((lvl) =>
-                                [
-                                  'Grade 1',
-                                  'Grade 2',
-                                  'Grade 3',
-                                  'Grade 4',
-                                  'Grade 5',
-                                  'Grade 6'
-                                ].includes(lvl.grade_level)
+                          <span
+                            className="cursor-pointer font-bold text-sm"
+                            onClick={() =>
+                              handleViewNames(
+                                list.filter((personnel) =>
+                                  personnel.grade_levels.some((lvl) =>
+                                    [
+                                      'Grade 1',
+                                      'Grade 2',
+                                      'Grade 3',
+                                      'Grade 4',
+                                      'Grade 5',
+                                      'Grade 6'
+                                    ].includes(lvl.grade_level)
+                                  )
+                                )
                               )
-                            ).length
-                          }
+                            }
+                          >
+                            {
+                              list.filter((personnel) =>
+                                personnel.grade_levels.some((lvl) =>
+                                  [
+                                    'Grade 1',
+                                    'Grade 2',
+                                    'Grade 3',
+                                    'Grade 4',
+                                    'Grade 5',
+                                    'Grade 6'
+                                  ].includes(lvl.grade_level)
+                                )
+                              ).length
+                            }
+                          </span>
                         </div>
                       </div>
                       <div className="inline-flex flex-col text-center border-r px-2">
@@ -358,18 +412,36 @@ export default function Page() {
                           Junior Highschool
                         </div>
                         <div className="text-xs text-gray-700 font-bold">
-                          {
-                            list.filter((personnel) =>
-                              personnel.grade_levels.some((lvl) =>
-                                [
-                                  'Grade 7',
-                                  'Grade 8',
-                                  'Grade 9',
-                                  'Grade 10'
-                                ].includes(lvl.grade_level)
+                          <span
+                            className="cursor-pointer font-bold text-sm"
+                            onClick={() =>
+                              handleViewNames(
+                                list.filter((personnel) =>
+                                  personnel.grade_levels.some((lvl) =>
+                                    [
+                                      'Grade 7',
+                                      'Grade 8',
+                                      'Grade 9',
+                                      'Grade 10'
+                                    ].includes(lvl.grade_level)
+                                  )
+                                )
                               )
-                            ).length
-                          }
+                            }
+                          >
+                            {
+                              list.filter((personnel) =>
+                                personnel.grade_levels.some((lvl) =>
+                                  [
+                                    'Grade 7',
+                                    'Grade 8',
+                                    'Grade 9',
+                                    'Grade 10'
+                                  ].includes(lvl.grade_level)
+                                )
+                              ).length
+                            }
+                          </span>
                         </div>
                       </div>
                       <div className="inline-flex flex-col text-center border-r px-2">
@@ -377,15 +449,30 @@ export default function Page() {
                           Senior Highschool
                         </div>
                         <div className="text-xs text-gray-700 font-bold">
-                          {
-                            list.filter((personnel) =>
-                              personnel.grade_levels.some((lvl) =>
-                                ['Grade 11', 'Grade 12'].includes(
-                                  lvl.grade_level
+                          <span
+                            className="cursor-pointer font-bold text-sm"
+                            onClick={() =>
+                              handleViewNames(
+                                list.filter((personnel) =>
+                                  personnel.grade_levels.some((lvl) =>
+                                    ['Grade 11', 'Grade 12'].includes(
+                                      lvl.grade_level
+                                    )
+                                  )
                                 )
                               )
-                            ).length
-                          }
+                            }
+                          >
+                            {
+                              list.filter((personnel) =>
+                                personnel.grade_levels.some((lvl) =>
+                                  ['Grade 11', 'Grade 12'].includes(
+                                    lvl.grade_level
+                                  )
+                                )
+                              ).length
+                            }
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -406,11 +493,22 @@ export default function Page() {
                       <div className="inline-flex flex-col text-center border-r px-2">
                         <div className="text-xs text-gray-500">Teaching</div>
                         <div className="text-xs text-gray-700 font-bold">
-                          {
-                            list.filter(
-                              (item) => item.position_type === 'Teaching'
-                            ).length
-                          }
+                          <span
+                            className="cursor-pointer font-bold text-sm"
+                            onClick={() =>
+                              handleViewNames(
+                                list.filter(
+                                  (item) => item.position_type === 'Teaching'
+                                )
+                              )
+                            }
+                          >
+                            {
+                              list.filter(
+                                (item) => item.position_type === 'Teaching'
+                              ).length
+                            }
+                          </span>
                         </div>
                       </div>
                       <div className="inline-flex flex-col text-center border-r px-2">
@@ -418,12 +516,24 @@ export default function Page() {
                           Teaching-Related
                         </div>
                         <div className="text-xs text-gray-700 font-bold">
-                          {
-                            list.filter(
-                              (item) =>
-                                item.position_type === 'Teaching-Related'
-                            ).length
-                          }
+                          <span
+                            className="cursor-pointer font-bold text-sm"
+                            onClick={() =>
+                              handleViewNames(
+                                list.filter(
+                                  (item) =>
+                                    item.position_type === 'Teaching-Related'
+                                )
+                              )
+                            }
+                          >
+                            {
+                              list.filter(
+                                (item) =>
+                                  item.position_type === 'Teaching-Related'
+                              ).length
+                            }
+                          </span>
                         </div>
                       </div>
                       <div className="inline-flex flex-col text-center border-r px-2">
@@ -431,11 +541,23 @@ export default function Page() {
                           Non-teaching
                         </div>
                         <div className="text-xs text-gray-700 font-bold">
-                          {
-                            list.filter(
-                              (item) => item.position_type === 'Non-teaching'
-                            ).length
-                          }
+                          <span
+                            className="cursor-pointer"
+                            onClick={() =>
+                              handleViewNames(
+                                list.filter(
+                                  (item) =>
+                                    item.position_type === 'Non-teaching'
+                                )
+                              )
+                            }
+                          >
+                            {
+                              list.filter(
+                                (item) => item.position_type === 'Non-teaching'
+                              ).length
+                            }
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -459,14 +581,28 @@ export default function Page() {
                             <tr key={item.id} className="app__tr">
                               <td className="app__td">{item.title}</td>
                               <td className="app__td">
-                                {
-                                  list.filter((personnel) =>
-                                    personnel.subjects.some(
-                                      (subject) =>
-                                        subject.subject_id === item.id
+                                <span
+                                  className="cursor-pointer font-bold text-sm"
+                                  onClick={() =>
+                                    handleViewNames(
+                                      list.filter((personnel) =>
+                                        personnel.subjects.some(
+                                          (subject) =>
+                                            subject.subject_id === item.id
+                                        )
+                                      )
                                     )
-                                  ).length
-                                }
+                                  }
+                                >
+                                  {
+                                    list.filter((personnel) =>
+                                      personnel.subjects.some(
+                                        (subject) =>
+                                          subject.subject_id === item.id
+                                      )
+                                    ).length
+                                  }
+                                </span>
                               </td>
                             </tr>
                           ))}
@@ -493,13 +629,26 @@ export default function Page() {
                             <tr key={item.id} className="app__tr">
                               <td className="app__td">{item.title}</td>
                               <td className="app__td">
-                                {
-                                  list.filter((personnel) =>
-                                    personnel.majors.some(
-                                      (major) => major.major_id === item.id
+                                <span
+                                  className="cursor-pointer font-bold text-sm"
+                                  onClick={() =>
+                                    handleViewNames(
+                                      list.filter((personnel) =>
+                                        personnel.majors.some(
+                                          (major) => major.major_id === item.id
+                                        )
+                                      )
                                     )
-                                  ).length
-                                }
+                                  }
+                                >
+                                  {
+                                    list.filter((personnel) =>
+                                      personnel.majors.some(
+                                        (major) => major.major_id === item.id
+                                      )
+                                    ).length
+                                  }
+                                </span>
                               </td>
                             </tr>
                           ))}
@@ -513,6 +662,13 @@ export default function Page() {
           </div>
         </div>
       </div>
+      {/* Print Modal */}
+      {showNamesModal && modalList && (
+        <NamesModal
+          list={modalList}
+          hideModal={() => setShowNamesModal(false)}
+        />
+      )}
     </>
   )
 }
