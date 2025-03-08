@@ -311,7 +311,13 @@ export const PrintLeaveForm = React.forwardRef<
                   </div>
                   <div className="mt-1 italic">Others: </div>
                   <div className="mt-1">
-                    <span>______________________________________</span>
+                    {selectedItem.leave_type === 'Others' ? (
+                      <span className="underline">
+                        {selectedItem.leave_others_specify}
+                      </span>
+                    ) : (
+                      <span>______________________________________</span>
+                    )}
                   </div>
                 </div>
               </td>
