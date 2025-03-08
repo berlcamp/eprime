@@ -333,7 +333,7 @@ const Page: React.FC = () => {
                           )}
                         </th>
                         <td className="app__td">
-                          {hasAccess('sds') &&
+                          {(hasAccess('sds') || hasAccess('settings')) &&
                             item.applicant.status !== 'Appointed' && (
                               <CustomButton
                                 containerStyles="app__btn_blue"
