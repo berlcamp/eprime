@@ -1,0 +1,273 @@
+'use client'
+
+import {
+  Sidebar,
+  TableRowLoading,
+  Title,
+  TopBar,
+  Unauthorized
+} from '@/components'
+import { useFilter } from '@/context/FilterContext'
+import { Menu, Transition } from '@headlessui/react'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import React, { Fragment, useEffect, useState } from 'react'
+import Filters from './Filters'
+
+// Types
+import type { ApplicantTypes } from '@/types'
+
+import RspSidebar from '@/components/Sidebars/RspSidebar'
+import { useSupabase } from '@/context/SupabaseProvider'
+import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
+import { PrinterIcon } from 'lucide-react'
+
+interface ListTypes {
+  applicant: ApplicantTypes
+  accumulated_points: Record<string, number> | null
+  overall_score: string
+}
+
+const Page: React.FC = () => {
+  const [loading, setLoading] = useState(false)
+  // const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
+
+  const [list, setList] = useState<ListTypes[]>([])
+  const [rankList, setRankList] = useState<ListTypes[]>([])
+  const [filterKeyword, setFilterKeyword] = useState<string>('')
+  const [filterRanking, setFilterRanking] = useState<string>('')
+
+  const { hasAccess } = useFilter()
+  const { supabase } = useSupabase()
+
+  const fetchData = async () => {
+    setLoading(true)
+
+    try {
+      let query = supabase
+        .from('hrm_ranking_applicants')
+        .select(
+          '*, ranking:ranking_id(type,passing_score,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          {
+            count: 'exact'
+          }
+        )
+        .eq('status', 'Appointed')
+
+      // filter ranking
+      if (filterRanking !== '') {
+        query = query.eq('ranking_id', filterRanking)
+      }
+
+      // filter keyword
+      if (filterKeyword !== '') {
+        query = query.or(
+          `lastname.ilike.%${filterKeyword}%,firstname.ilike.%${filterKeyword}%,middlename.ilike.%${filterKeyword}%`
+        )
+      }
+      const { data, error } = await query
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      if (filterRanking !== '') {
+        if (data.length > 0) {
+          const structguredData: ListTypes[] = []
+          data.forEach((d: ApplicantTypes) => {
+            const accumulatedPoints: Record<string, number> | null =
+              CommitteeAccumulatedPoints(d.id, d.ranking.committees)
+
+            structguredData.push({
+              applicant: d,
+              accumulated_points: accumulatedPoints,
+              overall_score: accumulatedPoints
+                ? Object.values(accumulatedPoints)
+                    .reduce((sum: number, points) => sum + points, 0)
+                    .toFixed(2)
+                : ''
+            })
+          })
+
+          // Sort structguredData by overall_score in descending order
+          structguredData.sort((a, b) => {
+            const scoreA = parseFloat(a.overall_score || '0')
+            const scoreB = parseFloat(b.overall_score || '0')
+            return scoreB - scoreA // Sort in descending order
+          })
+
+          setList(structguredData)
+          setRankList(structguredData)
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fetch data
+  useEffect(() => {
+    setList([])
+    setRankList([])
+    void fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterRanking, filterKeyword])
+
+  const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
+
+  // Check access from permission settings or Super Admins
+  if (!hasAccess('rsp_manager')) return <Unauthorized />
+
+  return (
+    <>
+      <Sidebar>
+        <RspSidebar />
+      </Sidebar>
+      <TopBar />
+      <div className="app__main">
+        <div>
+          <div className="app__title">
+            <Title title="Appointees" />
+          </div>
+
+          {/* Filters */}
+          <div className="app__filters">
+            <Filters
+              setFilterRanking={setFilterRanking}
+              setFilterKeyword={setFilterKeyword}
+            />
+          </div>
+
+          {rankList.length > 0 && (
+            <div className="flex items-center space-x-2 py-2 px-4 bg-gray-50 border-t border-gray-200 text-gray-500">
+              <div className="flex-1 text-xs">{`Total results: ${list.length}`}</div>
+            </div>
+          )}
+
+          {filterRanking === '' && (
+            <div className="mt-10 text-center text-xl font-light text-gray-600">
+              Choose ranking from filters above.
+            </div>
+          )}
+
+          {/* Main Content */}
+          {rankList.length > 0 && (
+            <div>
+              <table className="app__table">
+                <thead className="app__thead">
+                  <tr>
+                    <th className="app__th pl-4"></th>
+                    <th className="app__th w-[300px]">Applicant</th>
+                    <th className="app__th w-40"></th>
+                    <th className="app__th">Accumulated Points</th>
+                    <th className="app__th">Overall Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {!isDataEmpty &&
+                    list.map((item, index) => (
+                      <tr key={index} className="app__tr">
+                        <td className="w-6 pl-4 app__td">
+                          <Menu as="div" className="app__menu_container">
+                            <div>
+                              <Menu.Button className="app__dropdown_btn">
+                                <ChevronDownIcon
+                                  className="h-5 w-5"
+                                  aria-hidden="true"
+                                />
+                              </Menu.Button>
+                            </div>
+
+                            <Transition
+                              as={Fragment}
+                              enter="transition ease-out duration-100"
+                              enterFrom="transform opacity-0 scale-95"
+                              enterTo="transform opacity-100 scale-100"
+                              leave="transition ease-in duration-75"
+                              leaveFrom="transform opacity-100 scale-100"
+                              leaveTo="transform opacity-0 scale-95"
+                            >
+                              <Menu.Items className="app__dropdown_items">
+                                <div className="py-1">
+                                  <Menu.Item>
+                                    <div className="app__dropdown_item">
+                                      <PrinterIcon className="w-4 h-4" />
+                                      <span>Print Advice Order</span>
+                                    </div>
+                                  </Menu.Item>
+                                  <Menu.Item>
+                                    <div className="app__dropdown_item">
+                                      <PrinterIcon className="w-4 h-4" />
+                                      <span>Print CSC Appointment Form</span>
+                                    </div>
+                                  </Menu.Item>
+                                  <Menu.Item>
+                                    <div className="app__dropdown_item">
+                                      <PrinterIcon className="w-4 h-4" />
+                                      <span>Print Oath of Office</span>
+                                    </div>
+                                  </Menu.Item>
+                                </div>
+                              </Menu.Items>
+                            </Transition>
+                          </Menu>
+                        </td>
+                        <th className="app__th_firstcol">
+                          <div className="font-medium">
+                            {item.applicant.lastname},{' '}
+                            {item.applicant.firstname}{' '}
+                            {item.applicant.middlename}
+                          </div>
+                          <div className="font-light">
+                            {item.applicant.email}
+                          </div>
+                          {item.applicant.current_employee === 'Yes' && (
+                            <div className="font-bold">
+                              (Current DepEd Employee)
+                            </div>
+                          )}
+                          {item.applicant.previous_applicant === 'Yes' && (
+                            <div className="font-bold">
+                              (Previous Applicant)
+                            </div>
+                          )}
+                        </th>
+                        <td className="app__td">
+                          <span className="font-bold text-lg">Appointed</span>
+                        </td>
+                        <td className="app__td">
+                          {item.accumulated_points && (
+                            <div>
+                              {Object.entries(item.accumulated_points).map(
+                                ([criteriaName, avgPoints]) => (
+                                  <div key={criteriaName}>
+                                    <span>{criteriaName}:</span>
+                                    <span className="font-bold">
+                                      {' '}
+                                      {avgPoints.toFixed(2)}{' '}
+                                    </span>
+                                    {/* Display with 2 decimal places */}
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td className="app__td">{item.overall_score}</td>
+                      </tr>
+                    ))}
+                  {loading && <TableRowLoading cols={4} rows={2} />}
+                </tbody>
+              </table>
+              {!loading && isDataEmpty && (
+                <div className="app__norecordsfound">No results.</div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
+export default Page

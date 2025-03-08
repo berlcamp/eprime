@@ -144,6 +144,7 @@ const Filters = ({
                 <option value="Elementary">Elementary</option>
                 <option value="Junior Highschool">Junior Highschool</option>
                 <option value="Senior Highschool">Senior Highschool</option>
+                <option value="Secondary">Secondary</option>
               </select>
             </div>
             <div className="app__filter_container">

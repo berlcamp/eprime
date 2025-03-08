@@ -87,6 +87,16 @@ export default function Page() {
         if (filterLevel === 'Senior Highschool') {
           lvls = ['Grade 11', 'Grade 12']
         }
+        if (filterLevel === 'Secondary') {
+          lvls = [
+            'Grade 7',
+            'Grade 8',
+            'Grade 9',
+            'Grade 10',
+            'Grade 11',
+            'Grade 12'
+          ]
+        }
         const { data } = await supabase
           .from('hrm_personnel_grade_levels')
           .select()
@@ -128,14 +138,15 @@ export default function Page() {
         } else {
           userIds.push('999999e9-9999-999f-8709-c94fd3dbb72f') // fake uuid
         }
+        console.log('userIds', userIds)
       }
 
       // If filter by coordinatorhip is selected
-      if (filterSubject !== '') {
+      if (filterCoodinatorship !== '') {
         const { data } = await supabase
           .from('hrm_personnel_coordinatorships')
           .select()
-          .eq('coordinatorship_id', filterSubject)
+          .eq('coordinatorship_id', filterCoodinatorship)
         if (data && data.length > 0) {
           data.forEach((d: PersonnelCoordinatorshipTypes) => {
             userIds.push(d.user_id)
