@@ -1423,7 +1423,10 @@ export default function DetailsModal({
                               Leave Type:
                             </td>
                             <td className="text-sm font-medium">
-                              {documentData.leave_type}
+                              {documentData.leave_type}{' '}
+                              {documentData.leave_others_specify
+                                ? `(${documentData.leave_others_specify})`
+                                : ''}
                             </td>
                           </tr>
                           {documentData.leave_days &&

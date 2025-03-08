@@ -174,7 +174,8 @@ export const shsMajors = [
 export const leaveTypes = [
   'Vacation Leave',
   'Sick Leave',
-  // 'Mandatory/Forced Leave',
+  'Compensatory Time Off',
+  'Mandatory/Forced Leave',
   'Maternity Leave',
   'Paternity Leave',
   'Special Privilege Leave',
@@ -185,6 +186,7 @@ export const leaveTypes = [
   'Special Leave Benefits for Women',
   'Special Emergency (Calamity) Leave',
   'Adoption Leave',
+  'Terminal/Monetization Leave',
   'Others'
 ]
 

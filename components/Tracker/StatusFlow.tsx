@@ -115,6 +115,11 @@ function StatusFlow({
                             {log.message}
                           </span>
                         )}
+                        {log.message === 'Leave Credits Certified' && (
+                          <span className="text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium">
+                            {log.message}
+                          </span>
+                        )}
                         <span className="font-normal">
                           {' '}
                           by {log.hrm_user?.firstname}{' '}

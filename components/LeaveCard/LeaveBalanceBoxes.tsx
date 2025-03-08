@@ -91,29 +91,38 @@ export default function LeaveBalanceBoxes({ user, refresh }: ModalProps) {
         const currentMonth = now.getMonth() + 1 // Months are zero-based, so December is 11 + 1 = 12
 
         // Only perform the query if the current month is December
-        if (currentMonth === 12 && user.position_type !== 'Teaching') {
+        if (currentMonth <= 3 && user.position_type !== 'Teaching') {
           // Fetch the data
           const { data: leaveRequests } = await supabase
             .from('hrm_request_trackers')
-            .select('leave_credit_use_vl, leave_from')
+            .select('id')
             .eq('created_by', user.id)
             .eq('type', 'Leave')
+            .in('leave_type', ['Mandatory/Forced Leave', 'Vacation Leave'])
             .eq('current_status', 'Approved')
-            .gte('leave_from', `${currentYear}-01-01`) // Start of the year
-            .lte('leave_from', `${currentYear}-12-31`) // End of the year
 
-          if (leaveRequests) {
-            // Calculate the sum
-            const totalVlUsed = leaveRequests.reduce(
-              (sum: number, record: DocumentTypes) =>
-                sum + (Number(record.leave_credit_use_vl) || 0),
-              0
-            )
+          const reqIds: string[] = []
 
-            if (totalVlUsed <= 5) {
+          if (leaveRequests && leaveRequests.length > 0) {
+            leaveRequests.forEach((lr: DocumentTypes) => {
+              reqIds.push(lr.id)
+            })
+          }
+
+          // Get all dates form leave_dates
+          const { data: leaveDates } = await supabase
+            .from('hrm_leave_dates')
+            .select()
+            .in('tracker_id', reqIds)
+            .eq('is_paid', true)
+            .gte('date', `${currentYear}-01-01`) // Start of the year
+            .lte('date', `${currentYear}-12-31`) // End of the year
+
+          if (leaveDates) {
+            if (leaveDates.length <= 5) {
               balances.push({
                 type: 'Force Leave',
-                balance: (5 - Number(totalVlUsed)).toString()
+                balance: (5 - Number(leaveDates.length)).toString()
               })
             }
           } else {

@@ -185,6 +185,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         leave_women_illness: formdata.women_illness,
         leave_study_purpose: formdata.study_purpose,
         leave_other_purpose: formdata.other_purpose,
+        leave_others_specify: formdata.others_specify,
         leave_reason: formdata.reason,
         leave_days: formdata.days,
         leave_from: formdata.leave_from,
@@ -495,20 +496,22 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     let type = watchedType
     if (
       currentUser.position_type === 'Teaching' &&
-      [
-        'Vacation Leave',
-        'Sick Leave',
-        'Others',
-        'Mandatory/Forced Leave'
-      ].includes(watchedType)
+      ['Sick Leave'].includes(watchedType)
     ) {
       type = 'Service Credit'
+    }
+
+    if (
+      watchedType === 'Mandatory/Forced Leave' &&
+      currentUser.position_type !== 'Teaching'
+    ) {
+      type = 'Vacation Leave'
     }
 
     const origBal =
       leaveCreditBalances.find((c) => c.type === type)?.credits ?? 0
     const balance = origBal >= Number(watchedDays) ? watchedDays : origBal
-    console.log('zz', type, leaveCreditBalances, origBal)
+
     setBalances({
       type,
       balance: balance.toString(),
@@ -741,7 +744,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </div>
             )}
-            {watchedType === 'Others' && (
+            {watchedType === 'Terminal/Monetization Leave' && (
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
@@ -762,30 +765,54 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                     </div>
                   </div>
                 </div>
-                {watchedType === 'Others' && watchedOtherPurpose !== '' && (
-                  <div className="app__form_field_container">
-                    <LeaveBalanceBoxes user={currentUser} />
-                  </div>
-                )}
+                {watchedType === 'Terminal/Monetization Leave' &&
+                  watchedOtherPurpose !== '' && (
+                    <div className="app__form_field_container">
+                      <LeaveBalanceBoxes user={currentUser} />
+                    </div>
+                  )}
               </>
             )}
 
-            {watchedType === 'Others' && watchedOtherPurpose !== '' && (
-              <div className="">
-                <div className="app__label_standard mb-0!">
-                  Money Value:{' '}
-                  <span className="font-bold text-green-700">
-                    P {monetizationAmount}
-                  </span>
+            {watchedType === 'Others' && (
+              <>
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">Please Specify</div>
+                    <div>
+                      <input
+                        {...register('others_specify', {
+                          required: true
+                        })}
+                        type="text"
+                        className="app__select_standard"
+                      />
+                      {errors.others_specify && (
+                        <div className="app__error_message">Please specify</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="italic text-xs">
-                    (Actual amount may vary, please refer to HR for actual
-                    Amount)
-                  </span>
-                </div>
-              </div>
+              </>
             )}
+
+            {watchedType === 'Terminal/Monetization Leave' &&
+              watchedOtherPurpose !== '' && (
+                <div className="">
+                  <div className="app__label_standard mb-0!">
+                    Money Value:{' '}
+                    <span className="font-bold text-green-700">
+                      P {monetizationAmount}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="italic text-xs">
+                      (Actual amount may vary, please refer to HR for actual
+                      Amount)
+                    </span>
+                  </div>
+                </div>
+              )}
           </div>
           {/* End First Column */}
           {/* Begin Second Column */}

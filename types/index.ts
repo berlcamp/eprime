@@ -456,6 +456,7 @@ export interface LeaveTypes {
   reason: string
   study_purpose: string
   other_purpose: string
+  others_specify: string
   days: string
   // leave_dates: string
   leave_from: string
@@ -634,6 +635,7 @@ export interface DocumentTypes {
   leave_study_purpose: string
   leave_reason: string
   leave_other_purpose: string
+  leave_others_specify: string
   leave_days: string
   leave_from: string
   leave_to: string
