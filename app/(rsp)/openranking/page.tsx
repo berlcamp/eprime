@@ -95,6 +95,7 @@ const Page: React.FC = () => {
           count: 'exact'
         }
       )
+      .eq('evaluation_status', 'Qualified')
       .eq('ranking_id', filterRanking)
       .order('lastname', { assending: true })
 
