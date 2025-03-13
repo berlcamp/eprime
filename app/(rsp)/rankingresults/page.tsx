@@ -380,6 +380,9 @@ const Page: React.FC = () => {
                             {item.applicant.middlename}
                           </div>
                           <div className="font-light">
+                            Address: {item.applicant.address}
+                          </div>
+                          <div className="font-light">
                             Application Code: {item.applicant.code}
                           </div>
                           <div className="font-light">
