@@ -628,7 +628,7 @@ const RankingApplicants = ({
                                     <span>{criteriaName}:</span>
                                     <span className="font-bold">
                                       {' '}
-                                      {avgPoints.toFixed(2)}{' '}
+                                      {avgPoints.toFixed(3)}{' '}
                                     </span>
                                     {/* Display with 2 decimal places */}
                                   </div>
@@ -637,7 +637,9 @@ const RankingApplicants = ({
                             </div>
                           )}
                         </td>
-                        <td className="app__td">{item.overall_score}</td>
+                        <td className="app__td">
+                          {Number(item.overall_score).toFixed(3)}
+                        </td>
                       </tr>
                     ))}
                 </tbody>

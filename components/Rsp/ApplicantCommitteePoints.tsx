@@ -69,7 +69,7 @@ const ApplicantCommitteePoints = ({ applicantData }: PropTypes) => {
 
                       {c.criteria_points && c.criteria_points.length > 0 && (
                         <span className="font-bold">
-                          {c.criteria_points[0].points}
+                          {Number(c.criteria_points[0].points).toFixed(3)}
                         </span>
                       )}
                     </div>
