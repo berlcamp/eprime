@@ -871,9 +871,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       <div className="app__label_standard">Education</div>
                       <div>
                         <textarea
-                          {...register('ier_education_description', {
-                            required: true
-                          })}
+                          {...register('ier_education_description')}
                           className="app__input_standard"
                         />
                       </div>
@@ -882,9 +880,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       <div className="app__label_standard">Experience</div>
                       <div>
                         <textarea
-                          {...register('ier_experience_description', {
-                            required: true
-                          })}
+                          {...register('ier_experience_description')}
                           className="app__input_standard"
                         />
                       </div>
@@ -893,9 +889,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       <div className="app__label_standard">Training</div>
                       <div>
                         <textarea
-                          {...register('ier_training_description', {
-                            required: true
-                          })}
+                          {...register('ier_training_description')}
                           className="app__input_standard"
                         />
                       </div>
@@ -904,9 +898,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       <div className="app__label_standard">Eligibility</div>
                       <div>
                         <textarea
-                          {...register('ier_eligibility_description', {
-                            required: true
-                          })}
+                          {...register('ier_eligibility_description')}
                           className="app__input_standard"
                         />
                       </div>
@@ -999,6 +991,20 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
               </div>
 
               <hr className="my-6" />
+              {/* {Object.keys(errors).length > 0 && (
+                <div className="bg-red-100 border-gray-500 border-l-red-500 border-l-4 p-2">
+                  <div className="text-red-500 font-bold">
+                    Error: Some forms fields are required
+                  </div>
+                  <ul className="text-red-500 text-sm">
+                    {Object.entries(errors).map(([key, error]) => (
+                      <li key={key}>
+                        {key} {error.message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )} */}
               <div className="w-full">
                 <div className="app__label_standard">
                   <label className="flex items-center space-x-1">
