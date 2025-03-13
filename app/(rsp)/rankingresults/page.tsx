@@ -232,9 +232,7 @@ const Page: React.FC = () => {
                 />
                 <CustomButton
                   containerStyles="app__btn_blue"
-                  title={`Display ${
-                    rankingDetails?.type.includes('RQA') ? 'RQA' : 'CAR'
-                  }`}
+                  title={`Display ${rankingDetails?.type}`}
                   btnType="button"
                   handleClick={() => setFilterDisplay('RQA')}
                 />
@@ -357,7 +355,7 @@ const Page: React.FC = () => {
                                     <span>{criteriaName}:</span>
                                     <span className="font-bold">
                                       {' '}
-                                      {avgPoints.toFixed(2)}{' '}
+                                      {avgPoints.toFixed(3)}{' '}
                                     </span>
                                     {/* Display with 2 decimal places */}
                                   </div>
@@ -366,7 +364,9 @@ const Page: React.FC = () => {
                             </div>
                           )}
                         </td>
-                        <td className="app__td">{item.overall_score}</td>
+                        <td className="app__td">
+                          {Number(item.overall_score).toFixed(3)}
+                        </td>
                       </tr>
                     ))}
                   {loading && <TableRowLoading cols={4} rows={2} />}
