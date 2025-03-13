@@ -43,7 +43,6 @@ const Page: React.FC = () => {
   const [list, setList] = useState<ListTypes[]>([])
   const [rankList, setRankList] = useState<ListTypes[]>([])
   const [originalList, setOriginalList] = useState<ListTypes[] | []>([])
-  const [filterKeyword, setFilterKeyword] = useState<string>('')
   const [filterRanking, setFilterRanking] = useState<string>('')
   const [filterDisplay, setFilterDisplay] = useState<string>('')
 
@@ -76,12 +75,6 @@ const Page: React.FC = () => {
         query = query.eq('ranking_id', filterRanking)
       }
 
-      // filter keyword
-      if (filterKeyword !== '') {
-        query = query.or(
-          `lastname.ilike.%${filterKeyword}%,firstname.ilike.%${filterKeyword}%,middlename.ilike.%${filterKeyword}%`
-        )
-      }
       const { data, error } = await query
 
       if (error) {
@@ -244,7 +237,7 @@ const Page: React.FC = () => {
     setRankList([])
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterRanking, filterKeyword, refetch])
+  }, [filterRanking, refetch])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -265,10 +258,7 @@ const Page: React.FC = () => {
 
           {/* Filters */}
           <div className="app__filters">
-            <Filters
-              setFilterRanking={setFilterRanking}
-              setFilterKeyword={setFilterKeyword}
-            />
+            <Filters setFilterRanking={setFilterRanking} />
           </div>
 
           {rankList.length > 0 && (
