@@ -235,6 +235,8 @@ const RankingApplicants = ({
         (item) => item.applicant.specific_major === searchTerm
       )
       setList(filteredArr)
+    } else {
+      setList(originalList)
     }
   }
 
@@ -307,6 +309,7 @@ const RankingApplicants = ({
         const uniqueMajors = Array.from(
           new Set(structguredData.map((item) => item.applicant.specific_major))
         )
+
         setMajors(uniqueMajors)
 
         setList(structguredData)
@@ -578,7 +581,7 @@ const RankingApplicants = ({
                             Application Code: {item.applicant.code}
                           </div>
                           <div className="font-light">
-                            Major Code: {item.applicant.specific_major}
+                            Major: {item.applicant.specific_major}
                           </div>
                           {item.applicant.current_employee === 'Yes' && (
                             <div className="font-bold">

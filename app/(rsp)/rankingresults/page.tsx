@@ -42,6 +42,7 @@ const Page: React.FC = () => {
 
   const [list, setList] = useState<ListTypes[]>([])
   const [rankList, setRankList] = useState<ListTypes[]>([])
+  const [originalList, setOriginalList] = useState<ListTypes[] | []>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
   const [filterRanking, setFilterRanking] = useState<string>('')
   const [filterDisplay, setFilterDisplay] = useState<string>('')
@@ -49,6 +50,10 @@ const Page: React.FC = () => {
   const [rankingDetails, setRankingDetails] = useState<RankingTypes | null>(
     null
   )
+
+  const [searchKeyword, setSearchKeyword] = useState('')
+  const [searchMajor, setSearchMajor] = useState('')
+  const [majors, setMajors] = useState<string[] | []>([])
 
   const { hasAccess, setToast } = useFilter()
   const { supabase } = useSupabase()
@@ -108,7 +113,18 @@ const Page: React.FC = () => {
             return scoreB - scoreA // Sort in descending order
           })
 
+          // Extract unique majors using Array.from() to avoid spread operator issues
+          const uniqueMajors = Array.from(
+            new Set(
+              structguredData.map((item) => item.applicant.specific_major)
+            )
+          )
+
+          setMajors(uniqueMajors)
+
           setList(structguredData)
+          setOriginalList(structguredData)
+
           setRankList(structguredData)
 
           // get the ranking details so we can use the passing score
@@ -119,6 +135,41 @@ const Page: React.FC = () => {
       console.error(e)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSearchApplicant = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const searchTerm = e.target.value
+    setSearchKeyword(searchTerm)
+
+    if (searchTerm.trim().length < 3) {
+      setList(originalList)
+      return
+    }
+
+    // Search user
+    const searchWords = e.target.value.split(' ')
+    const results = list.filter((user) => {
+      const fullName =
+        `${user.applicant.firstname} ${user.applicant.middlename} ${user.applicant.lastname}`.toLowerCase()
+      return searchWords.every((word) => fullName.includes(word.toLowerCase()))
+    })
+
+    setList(results)
+  }
+  const handleSearchMajor = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const searchTerm = e.target.value
+    setSearchMajor(searchTerm)
+
+    if (searchTerm.trim() !== '') {
+      const filteredArr = originalList.filter(
+        (item) => item.applicant.specific_major === searchTerm
+      )
+      setList(filteredArr)
+    } else {
+      setList(originalList)
     }
   }
 
@@ -221,6 +272,28 @@ const Page: React.FC = () => {
           </div>
 
           {rankList.length > 0 && (
+            <div className="flex space-x-2 px-4 py-4 w-full md:w-1/2">
+              <input
+                placeholder="Search applicant"
+                type="text"
+                value={searchKeyword}
+                onChange={handleSearchApplicant}
+                className="app__input_standard"
+              />
+              <select
+                value={searchMajor}
+                onChange={handleSearchMajor}
+                className="app__input_standard"
+              >
+                <option value="">All Major</option>
+                {majors.map((m) => (
+                  <option key={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {rankList.length > 0 && (
             <div className="flex items-center space-x-2 py-2 px-4 bg-gray-50 border-t border-gray-200 text-gray-500">
               <div className="flex-1 text-xs">{`Total results: ${list.length}`}</div>
               <div className="space-x-2">
@@ -317,7 +390,10 @@ const Page: React.FC = () => {
                             {item.applicant.middlename}
                           </div>
                           <div className="font-light">
-                            {item.applicant.email}
+                            Application Code: {item.applicant.code}
+                          </div>
+                          <div className="font-light">
+                            Major: {item.applicant.specific_major}
                           </div>
                           {item.applicant.current_employee === 'Yes' && (
                             <div className="font-bold">
