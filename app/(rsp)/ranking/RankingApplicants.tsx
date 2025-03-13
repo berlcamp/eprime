@@ -60,6 +60,7 @@ const RankingApplicants = ({
 
   const [evaluators, setEvaluators] = useState<RankingEvaluatorTypes[] | []>([])
   const [searchKeyword, setSearchKeyword] = useState('')
+  const [searchMajor, setSearchMajor] = useState('')
   // use for Cast Points modal
   const [commiteeId, setCommitteeId] = useState('')
   const [criterias, setCriterias] = useState<
@@ -69,6 +70,7 @@ const RankingApplicants = ({
   const [canCastPoints, setCanCastPoints] = useState(false)
 
   const [list, setList] = useState<ListTypes[] | []>([])
+  const [majors, setMajors] = useState<string[] | []>([])
   const [originalList, setOriginalList] = useState<ListTypes[] | []>([])
   const { supabase, session } = useSupabase()
   const { setToast } = useFilter()
@@ -224,6 +226,17 @@ const RankingApplicants = ({
 
     setList(results)
   }
+  const handleSearchMajor = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const searchTerm = e.target.value
+    setSearchMajor(searchTerm)
+
+    if (searchTerm.trim() !== '') {
+      const filteredArr = originalList.filter(
+        (item) => item.applicant.specific_major === searchTerm
+      )
+      setList(filteredArr)
+    }
+  }
 
   const handleSendEirEMail = async (applicant: ApplicantTypes) => {
     // Email the applicant on the server side
@@ -290,6 +303,12 @@ const RankingApplicants = ({
           return scoreB - scoreA // Sort in descending order
         })
 
+        // Extract unique majors using Array.from() to avoid spread operator issues
+        const uniqueMajors = Array.from(
+          new Set(structguredData.map((item) => item.applicant.specific_major))
+        )
+        setMajors(uniqueMajors)
+
         setList(structguredData)
         setOriginalList(structguredData)
       }
@@ -347,7 +366,7 @@ const RankingApplicants = ({
             </div>
 
             <div className="app__modal_body">
-              <div>
+              <div className="flex space-x-2">
                 <input
                   placeholder="Search applicant"
                   type="text"
@@ -355,6 +374,16 @@ const RankingApplicants = ({
                   onChange={handleSearchApplicant}
                   className="app__input_standard"
                 />
+                <select
+                  value={searchMajor}
+                  onChange={handleSearchMajor}
+                  className="app__input_standard"
+                >
+                  <option value="">Filter by Major</option>
+                  {majors.map((m) => (
+                    <option key={m}>{m}</option>
+                  ))}
+                </select>
               </div>
               <table className="app__table mt-4 mb-60">
                 <thead className="app__thead">
@@ -547,6 +576,9 @@ const RankingApplicants = ({
                           </div>
                           <div className="font-light">
                             Application Code: {item.applicant.code}
+                          </div>
+                          <div className="font-light">
+                            Major Code: {item.applicant.specific_major}
                           </div>
                           {item.applicant.current_employee === 'Yes' && (
                             <div className="font-bold">
