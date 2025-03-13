@@ -112,7 +112,7 @@ const Page: React.FC = () => {
           overall_score: accumulatedPoints
             ? Object.values(accumulatedPoints)
                 .reduce((sum: number, points) => sum + points, 0)
-                .toFixed(2)
+                .toFixed(3)
             : ''
         })
       })
@@ -198,7 +198,8 @@ const Page: React.FC = () => {
                       </th>
                       {allKeys.map((key) => (
                         <td key={key} className="app__td">
-                          {item.accumulated_points?.[key] ?? '-'}
+                          {Number(item.accumulated_points?.[key]).toFixed(3) ??
+                            '-'}
                         </td>
                       ))}
                       <td className="app__td">{item.overall_score}</td>
