@@ -293,7 +293,7 @@ const RankingApplicants = ({
             overall_score: accumulatedPoints
               ? Object.values(accumulatedPoints)
                   .reduce((sum: number, points) => sum + points, 0)
-                  .toFixed(2)
+                  .toFixed(3)
               : ''
           })
         })
