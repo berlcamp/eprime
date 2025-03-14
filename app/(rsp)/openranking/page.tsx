@@ -202,7 +202,9 @@ const Page: React.FC = () => {
                             '-'}
                         </td>
                       ))}
-                      <td className="app__td">{item.overall_score}</td>
+                      <td className="app__td">
+                        {Number(item.overall_score).toFixed(3)}
+                      </td>
                     </tr>
                   ))}
                 {loading && <TableRowLoading cols={3} rows={2} />}
