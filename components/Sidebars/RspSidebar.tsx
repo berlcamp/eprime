@@ -74,7 +74,7 @@ const RspSidebar = () => {
       </ul>
       {
         // Check access from permission settings
-        (hasAccess('rsp_manager') || hasAccess('hr')) && (
+        (hasAccess('sds') || hasAccess('rsp_manager') || hasAccess('hr')) && (
           <>
             <ul className="pt-8 mt-4 space-y-2 border-t border-gray-700">
               <li>
