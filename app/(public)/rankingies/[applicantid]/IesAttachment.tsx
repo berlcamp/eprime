@@ -188,6 +188,7 @@ export async function IesAttachment(item: ListTypes) {
 
     return [criteria.name, criteria.points, '', '', actualScore]
   })
+  tableBody.push(['', '100', '', '', item.overall_score])
 
   // Table Content
   autoTable(doc, {
