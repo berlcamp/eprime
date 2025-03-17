@@ -620,7 +620,7 @@ const RankingApplicants = ({
                                           className="app__dropdown_item"
                                         >
                                           <EnvelopeIcon className="w-4 h-4" />
-                                          <span>Send EIR to email</span>
+                                          <span>Send IER to email</span>
                                         </div>
                                       </Menu.Item>
                                     )}
