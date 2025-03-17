@@ -221,13 +221,7 @@ const Page: React.FC = () => {
             </div>
           </div>
 
-          {applicantDetails && applicantDetails.ranking.status === 'Closed' && (
-            <div className="mb-8 app__error_message">
-              Ranking already closed for this application code
-            </div>
-          )}
-
-          {applicantDetails && applicantDetails.ranking.status === 'Open' && (
+          {applicantDetails && (
             <div className="mb-8 text-sm">
               <div>
                 <span className="text-gray-600">Applicant: </span>
@@ -256,8 +250,11 @@ const Page: React.FC = () => {
               </div>
               <div className="mt-2">
                 <span className="text-gray-600">
-                  Status: {applicantDetails.ranking?.display_ier}
+                  Ranking Status: {applicantDetails.ranking.status}
                 </span>
+              </div>
+              <div className="mt-2">
+                <span className="text-gray-600">Qualification Status: </span>
                 {applicantDetails.ranking?.display_ier ? (
                   <>
                     {applicantDetails.evaluation_status ===
@@ -283,6 +280,39 @@ const Page: React.FC = () => {
                   </span>
                 )}
               </div>
+              {applicantDetails.ranking.status === 'Closed' && (
+                <div className="mt-4">
+                  <div className="text-gray-600">
+                    We would like to inform you that the ranking process for
+                    Attorney III-CAR-RQA-2027, for which you had applied, has
+                    concluded, and the results have been finalized. Please visit
+                    the link provided for your Individual Evaluation Sheet
+                    (IES). Kindly review it and follow these steps:{' '}
+                  </div>
+                  <div className="text-gray-600 mt-2 pl-10">
+                    <div>
+                      1. Download and print your{' '}
+                      <Link
+                        target="_blank"
+                        className="text-blue-600 font-bold"
+                        href={`${
+                          process.env.NEXT_PUBLIC_BASE_URL ?? ''
+                        }/rankingies/${applicantDetails.id}`}
+                      >
+                        Individual Evaluation Sheet (IES).
+                      </Link>
+                    </div>
+                    <div>2. Sign the document as confirmation. </div>
+                    <div>
+                      3. Resend the signed IES to depedbayugancity.hr@gmail.com
+                      with the subject:
+                    </div>
+                    <div className="font-bold pl-4 mt-2">
+                      "IES Confirmation - [Your Full Name]"
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
