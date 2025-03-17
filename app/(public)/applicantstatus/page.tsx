@@ -304,7 +304,10 @@ const Page: React.FC = () => {
                     </div>
                     <div>2. Sign the document as confirmation. </div>
                     <div>
-                      3. Resend the signed IES to depedbayugancity.hr@gmail.com
+                      3. Resend the signed IES to{' '}
+                      <span className="font-bold">
+                        depedbayugancity.hr@gmail.com
+                      </span>
                       with the subject:
                     </div>
                     <div className="font-bold pl-4 mt-2">
