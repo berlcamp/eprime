@@ -222,13 +222,13 @@ export async function IesAttachment(item: ListTypes) {
   // Signature Section
   doc.setFont('times', 'bold')
   doc.text(
-    (
+    capitalizeWords(
       item.applicant?.firstname +
-      ' ' +
-      item.applicant?.middlename +
-      ' ' +
-      item.applicant?.lastname
-    ).toUpperCase(),
+        ' ' +
+        item.applicant?.middlename +
+        ' ' +
+        item.applicant?.lastname
+    ),
     120,
     y
   )
@@ -246,17 +246,7 @@ export async function IesAttachment(item: ListTypes) {
 
   // Signature Section
   doc.setFont('times', 'bold')
-  doc.text(
-    (
-      item.applicant?.firstname +
-      ' ' +
-      item.applicant?.middlename +
-      ' ' +
-      item.applicant?.lastname
-    ).toUpperCase(),
-    15,
-    y
-  )
+  doc.text('Corazon P. Roa', 15, y)
   y += 2
   doc.line(15, y, 75, y)
   y += 5
