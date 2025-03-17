@@ -23,6 +23,7 @@ import { Fragment, useEffect, useState } from 'react'
 
 import axios from 'axios'
 import { ListIcon, TrashIcon, UserIcon } from 'lucide-react'
+import Link from 'next/link'
 import { MdChecklist } from 'react-icons/md'
 import CastPoints from './CastPoints'
 import ConfirmChangeStatusModal from './ConfirmChangeStatusModal'
@@ -255,11 +256,58 @@ const RankingApplicants = ({
           })
           .eq('id', applicant.id)
         setToast('success', 'Email sent')
+        setList((prevList) =>
+          prevList.map((item) =>
+            item.applicant.id === applicant.id
+              ? {
+                  ...item,
+                  applicant: { ...item.applicant, eir_email_sent: true }
+                }
+              : item
+          )
+        )
       })
       .catch(function (error) {
         void logError(
           'EIR Email failed',
           'EIR Email',
+          '',
+          JSON.stringify(error)
+        )
+        console.error(error)
+      })
+  }
+
+  const handleSendIesEmail = async (applicant: ApplicantTypes) => {
+    // Email the applicant on the server side
+    axios
+      .post('/api/iesemail', {
+        email: applicant.email,
+        applicant
+      })
+      .then(async function () {
+        await supabase
+          .from('hrm_ranking_applicants')
+          .update({
+            ies_email_sent: true
+          })
+          .eq('id', applicant.id)
+        setToast('success', 'Email sent')
+        setList((prevList) =>
+          prevList.map((item) =>
+            item.applicant.id === applicant.id
+              ? {
+                  ...item,
+                  applicant: { ...item.applicant, ies_email_sent: true }
+                }
+              : item
+          )
+        )
+      })
+      .catch(function (error) {
+        void logError(
+          'IES Email failed',
+          'IES Email',
           '',
           JSON.stringify(error)
         )
@@ -452,6 +500,16 @@ const RankingApplicants = ({
                                       </span>
                                     </div>
                                   </Menu.Item>
+                                  <Menu.Item>
+                                    <div className="app__dropdown_item">
+                                      <AcademicCapIcon className="w-4 h-4" />
+                                      <Link
+                                        href={`/rankingies/${item.applicant.id}`}
+                                      >
+                                        View IES Data
+                                      </Link>
+                                    </div>
+                                  </Menu.Item>
                                   {evaluators.some(
                                     (evaluator) =>
                                       evaluator.user_id === session.user.id
@@ -566,6 +624,21 @@ const RankingApplicants = ({
                                         </div>
                                       </Menu.Item>
                                     )}
+                                  {!item.applicant.ies_email_sent &&
+                                    item.ranking.chairman_id ===
+                                      session.user.id && (
+                                      <Menu.Item>
+                                        <div
+                                          onClick={() =>
+                                            handleSendIesEmail(item.applicant)
+                                          }
+                                          className="app__dropdown_item"
+                                        >
+                                          <EnvelopeIcon className="w-4 h-4" />
+                                          <span>Send IES to email</span>
+                                        </div>
+                                      </Menu.Item>
+                                    )}
                                 </div>
                               </Menu.Items>
                             </Transition>
@@ -594,11 +667,22 @@ const RankingApplicants = ({
                             </div>
                           )}
 
-                          {item.applicant.eir_email_sent && (
-                            <div className="font-light">
-                              IER Email: <span className="font-bold">Sent</span>
-                            </div>
-                          )}
+                          <div className="font-light">
+                            IER Email:{' '}
+                            <span className="font-bold">
+                              {item.applicant.eir_email_sent
+                                ? 'Sent'
+                                : 'Not yet sent'}
+                            </span>
+                          </div>
+                          <div className="font-light">
+                            IES Email:{' '}
+                            <span className="font-bold">
+                              {item.applicant.ies_email_sent
+                                ? 'Sent'
+                                : 'Not yet sent'}
+                            </span>
+                          </div>
                         </th>
                         <td className="app__td">
                           <div className="mt-1 whitespace-nowrap">

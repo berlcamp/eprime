@@ -843,6 +843,7 @@ export interface RankingTypes {
   display_on_portal_from: string
   display_on_portal_until: string
   committees: RankingCommitteeTypes[]
+  criterias: RankingCriteriaTypes[]
   applicants: ApplicantTypes[]
 
   ier_education_description: string
@@ -913,6 +914,7 @@ export interface ApplicantTypes {
   seminars_units: string
 
   eir_email_sent: boolean
+  ies_email_sent: boolean
   ier: ApplicantIerTypes[]
 
   deped_email: string

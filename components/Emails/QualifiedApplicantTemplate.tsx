@@ -85,16 +85,20 @@ export const QualifiedApplicantTemplate: React.FC<Readonly<ApplicantTypes>> = (
                   )}
                   <td>{type}:</td>
                   <td>
-                    {ierData?.filter((l) => l.type === type).map((l, i) => (
-                          <div key={i}>{`${i + 1}. ${l.remarks} - ${
-                            l.time
-                          }`}</div>
-                        ))}
+                    {ierData
+                      ?.filter((l) => l.type === type)
+                      .map((l, i) => (
+                        <div key={i}>{`${i + 1}. ${l.remarks} - ${
+                          l.time
+                        }`}</div>
+                      ))}
                   </td>
                   <td>
-                    {ierData?.filter((l) => l.type === type).map((l, i) => (
-                          <div key={i}>{`${i + 1}. ${l.status}`}</div>
-                        ))}
+                    {ierData
+                      ?.filter((l) => l.type === type)
+                      .map((l, i) => (
+                        <div key={i}>{`${i + 1}. ${l.status}`}</div>
+                      ))}
                   </td>
                 </tr>
               )
@@ -104,7 +108,7 @@ export const QualifiedApplicantTemplate: React.FC<Readonly<ApplicantTypes>> = (
       </div>
       <br />
       <div>
-        Please be advised of your assigned application code ${applicant.code}
+        Please be advised of your assigned application code {applicant.code}{' '}
         which shall be used as you proceed with the next stage of the selection
         process. You may refer to the official issuances of the DepEd Bayugan
         City Division for the additional announcements in this regard.
