@@ -43,10 +43,22 @@ const Filters = ({ setFilterRanking }: FilterTypes) => {
     const fetchRankings = async () => {
       const { data } = await supabase
         .from('hrm_rankings')
-        .select('*,position:position_id(name)')
+        .select(
+          '*,position:position_id(name),committees:hrm_ranking_committees(*)'
+        )
         .eq('status', 'Closed')
       if (data) {
-        setRankings(data)
+        // Filter rankings where majority of committee members have "Confirmed" status
+        const filteredRankings = data.filter((ranking: RankingTypes) => {
+          const totalMembers = ranking.committees.length
+          const confirmedCount = ranking.committees.filter(
+            (c) => c.status === 'Confirmed'
+          ).length
+
+          return confirmedCount > totalMembers / 2 // Majority check
+        })
+
+        setRankings(filteredRankings)
       }
     }
 

@@ -296,6 +296,22 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
         }
       }
 
+      // Notifiy original commmittee members if status is changed to close
+      const insertArr: any = []
+      editData.committees.forEach((c) => {
+        if (c.type === 'Original Member') {
+          insertArr.push({
+            message: `Ranking for ${editData.position.name}-${editData.type}-${editData.year} is closing, as committee member you are required to confirm.`,
+            url: '/ranking',
+            type: 'ranking',
+            user_id: c.user_id,
+            ranking_committee_id: c.id,
+            reference_table: 'hrm_ranking_committees'
+          })
+        }
+      })
+      await supabase.from('hrm_notifications').insert(insertArr)
+
       // Update data in redux
       const hrmPosition = positions.find(
         (p) => p.id.toString() === formdata.position_id?.toString()

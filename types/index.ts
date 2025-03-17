@@ -1033,6 +1033,7 @@ export interface RankingCommitteeTypes {
   hrm_user: Employee
   ranking_id: string
   type: string
+  status?: string
   criteria_ids?: string[]
   committee_criterias?: RankingCommitteeCriteriaTypes[]
 }

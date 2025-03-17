@@ -698,7 +698,7 @@ export async function fetchRankings(
     let query = supabase
       .from('hrm_rankings')
       .select(
-        '*, chairman:chairman_id(id,firstname,middlename,lastname,avatar_url),position:position_id(name), applicants:hrm_ranking_applicants(*), qualifications:hrm_ranking_qualifications(*)',
+        '*, chairman:chairman_id(id,firstname,middlename,lastname,avatar_url),position:position_id(name), applicants:hrm_ranking_applicants(*), qualifications:hrm_ranking_qualifications(*),committees:hrm_ranking_committees(*)',
         { count: 'exact' }
       )
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)

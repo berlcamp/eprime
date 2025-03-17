@@ -278,43 +278,6 @@ const RankingApplicants = ({
       })
   }
 
-  const handleSendIesEmail = async (applicant: ApplicantTypes) => {
-    // Email the applicant on the server side
-    axios
-      .post('/api/iesemail', {
-        email: applicant.email,
-        applicant
-      })
-      .then(async function () {
-        await supabase
-          .from('hrm_ranking_applicants')
-          .update({
-            ies_email_sent: true
-          })
-          .eq('id', applicant.id)
-        setToast('success', 'Email sent')
-        setList((prevList) =>
-          prevList.map((item) =>
-            item.applicant.id === applicant.id
-              ? {
-                  ...item,
-                  applicant: { ...item.applicant, ies_email_sent: true }
-                }
-              : item
-          )
-        )
-      })
-      .catch(function (error) {
-        void logError(
-          'IES Email failed',
-          'IES Email',
-          '',
-          JSON.stringify(error)
-        )
-        console.error(error)
-      })
-  }
-
   useEffect(() => {
     const fetchApplicantsData = async () => {
       const { data } = await supabase
@@ -624,21 +587,6 @@ const RankingApplicants = ({
                                         </div>
                                       </Menu.Item>
                                     )}
-                                  {!item.applicant.ies_email_sent &&
-                                    item.ranking.chairman_id ===
-                                      session.user.id && (
-                                      <Menu.Item>
-                                        <div
-                                          onClick={() =>
-                                            handleSendIesEmail(item.applicant)
-                                          }
-                                          className="app__dropdown_item"
-                                        >
-                                          <EnvelopeIcon className="w-4 h-4" />
-                                          <span>Send IES to email</span>
-                                        </div>
-                                      </Menu.Item>
-                                    )}
                                 </div>
                               </Menu.Items>
                             </Transition>
@@ -671,14 +619,6 @@ const RankingApplicants = ({
                             IER Email:{' '}
                             <span className="font-bold">
                               {item.applicant.eir_email_sent
-                                ? 'Sent'
-                                : 'Not yet sent'}
-                            </span>
-                          </div>
-                          <div className="font-light">
-                            IES Email:{' '}
-                            <span className="font-bold">
-                              {item.applicant.ies_email_sent
                                 ? 'Sent'
                                 : 'Not yet sent'}
                             </span>

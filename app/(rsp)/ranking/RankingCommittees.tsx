@@ -315,7 +315,22 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
                       list.map((item, index) => (
                         <tr key={index} className="app__tr">
                           <th className="app__th_firstcol">
-                            <UserBlock user={item.hrm_user} />
+                            <div className="flex items-center space-x-2">
+                              <UserBlock user={item.hrm_user} />
+                              {item.type === 'Original Member' && (
+                                <>
+                                  {item.status === 'Pending Confirmation' ? (
+                                    <span className="text-orange-600">
+                                      ({item.status})
+                                    </span>
+                                  ) : (
+                                    <span className="text-green-600">
+                                      ({item.status})
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </div>
                           </th>
                           <td className="app__td">{item.type}</td>
                           <td className="app__td">

@@ -307,7 +307,7 @@ const Page: React.FC = () => {
                       3. Resend the signed IES to{' '}
                       <span className="font-bold">
                         depedbayugancity.hr@gmail.com
-                      </span>
+                      </span>{' '}
                       with the subject:
                     </div>
                     <div className="font-bold pl-4 mt-2">

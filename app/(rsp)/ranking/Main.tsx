@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  ConfirmModal,
   CustomButton,
   PerPage,
   ShowMore,
@@ -38,6 +39,7 @@ const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showApplicantsModal, setShowApplicantsModal] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [showCriteriasModal, setShowCriteriasModal] = useState(false)
   const [showCommitteesModal, setShowCommitteesModal] = useState(false)
   const [showEvaluatorsModal, setShowEvaluatorsModal] = useState(false)
@@ -56,8 +58,8 @@ const Page: React.FC = () => {
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { hasAccess } = useFilter()
-  const { session } = useSupabase()
+  const { setToast, hasAccess } = useFilter()
+  const { session, supabase } = useSupabase()
 
   const fetchData = async () => {
     setLoading(true)
@@ -120,6 +122,41 @@ const Page: React.FC = () => {
       console.error(e)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCommitteeConfirm = async (rankingId: string) => {
+    setSelectedId(rankingId)
+    setShowConfirmModal(true)
+  }
+  const handleCommitteeConfirmed = async () => {
+    setShowConfirmModal(false)
+    const { error } = await supabase
+      .from('hrm_ranking_committees')
+      .update({
+        status: 'Confirmed'
+      })
+      .eq('ranking_id', selectedId)
+      .eq('user_id', session.user.id)
+    if (!error) {
+      setList((prevItems) =>
+        prevItems.map((item) =>
+          item.id === selectedId
+            ? {
+                ...item,
+                committees: item.committees.map((c) =>
+                  c.type === 'Original Member' &&
+                  c.status === 'Pending Confirmation' &&
+                  c.user_id === session.user.id
+                    ? { ...c, status: 'Confirmed' }
+                    : c
+                )
+              }
+            : item
+        )
+      )
+
+      setToast('success', 'Successfully confirmed')
     }
   }
 
@@ -216,6 +253,9 @@ const Page: React.FC = () => {
                   </th>
                   <th className="hidden md:table-cell app__th">Chairman</th>
                   <th className="hidden md:table-cell app__th">Status</th>
+                  <th className="hidden md:table-cell app__th">
+                    Committee Member Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -389,11 +429,64 @@ const Page: React.FC = () => {
                         <UserBlock user={item.chairman} />
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        {item.status}
+                        {item.status === 'Open' && <span>Open</span>}
+                        {item.status === 'Closed' && (
+                          <>
+                            {(() => {
+                              const totalMembers = item.committees.length
+                              const confirmedCount = item.committees.filter(
+                                (c) => c.status === 'Confirmed'
+                              ).length
+
+                              // Check if the majority have confirmed
+                              const majorityConfirmed =
+                                confirmedCount > totalMembers / 2
+
+                              return majorityConfirmed ? 'Closed' : 'Closing'
+                            })()}
+                          </>
+                        )}
+                      </td>
+                      <td className="hidden md:table-cell app__td">
+                        {item.committees.find(
+                          (c) =>
+                            c.type === 'Original Member' &&
+                            c.status === 'Pending Confirmation' &&
+                            c.user_id === session.user.id
+                        ) &&
+                          item.status === 'Closed' && (
+                            <div>
+                              <div className="font-bold mb-1">
+                                Ranking is Closing, please confirm
+                              </div>
+                              <div>
+                                <CustomButton
+                                  containerStyles="app__btn_green"
+                                  title="Confirm"
+                                  btnType="button"
+                                  handleClick={() =>
+                                    handleCommitteeConfirm(item.id)
+                                  }
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                        {item.committees.find(
+                          (c) =>
+                            c.type === 'Original Member' &&
+                            c.status === 'Confirmed' &&
+                            c.user_id === session.user.id
+                        ) &&
+                          item.status === 'Closed' && (
+                            <div className="font-bold text-green-600">
+                              Confirmed
+                            </div>
+                          )}
                       </td>
                     </tr>
                   ))}
-                {loading && <TableRowLoading cols={6} rows={2} />}
+                {loading && <TableRowLoading cols={7} rows={2} />}
               </tbody>
             </table>
             {!loading && isDataEmpty && (
@@ -407,6 +500,17 @@ const Page: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Confirm Approve Modal */}
+      {showConfirmModal && (
+        <ConfirmModal
+          header="Confirmation"
+          btnText="Confirm"
+          message="This action cannot be undone. Are you sure you want confirm this ranking?"
+          onConfirm={handleCommitteeConfirmed}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+      )}
 
       {/* Add/Edit Modal */}
       {showAddModal && (

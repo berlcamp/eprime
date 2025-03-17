@@ -117,7 +117,8 @@ const Page: React.FC = () => {
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
   // Check access from permission settings or Super Admins
-  if (!hasAccess('rsp_manager')) return <Unauthorized />
+  if (!hasAccess('rsp_manager') && !hasAccess('hr') && !hasAccess('sds'))
+    return <Unauthorized />
 
   return (
     <>
