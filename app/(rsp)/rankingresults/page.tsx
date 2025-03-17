@@ -1,5 +1,4 @@
 'use client'
-
 import {
   ConfirmModal,
   CustomButton,
@@ -12,6 +11,8 @@ import {
 import { useFilter } from '@/context/FilterContext'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import Excel from 'exceljs'
+import { saveAs } from 'file-saver'
 import React, { Fragment, useEffect, useState } from 'react'
 import Filters from './Filters'
 
@@ -35,6 +36,7 @@ const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [refetch, setRefetch] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [showCommitteePointsModal, setShowCommitteePointsModal] =
     useState(false)
   const [showConfirmAppointModal, setShowConfirmAppointModal] = useState(false)
@@ -214,6 +216,84 @@ const Page: React.FC = () => {
     }
   }
 
+  const handleDownloadExcel = async (type: string) => {
+    setDownloading(true)
+
+    const passingScore = rankingDetails?.passing_score ?? 50
+
+    let list = rankList
+    if (type === 'RQA') {
+      const filteredList = rankList.filter(
+        (item) => Number(item.overall_score) > Number(passingScore)
+      )
+      list = filteredList
+    }
+
+    // Create a new workbook and add a worksheet
+    const workbook = new Excel.Workbook()
+    const worksheet = workbook.addWorksheet('Sheet 1')
+
+    // Extract unique keys from accumulated_points dynamically
+    const allKeys = Array.from(
+      new Set(
+        list.flatMap((item) => Object.keys(item.accumulated_points ?? {}))
+      )
+    )
+
+    // Define worksheet columns dynamically
+    worksheet.columns = [
+      { header: 'No.', key: 'number', width: 10 },
+      { header: 'Names of Applicant', key: 'name', width: 25 },
+      { header: 'Applicant Code', key: 'code', width: 25 },
+      ...allKeys.map((key) => ({ header: key, key, width: 15 })), // Dynamic columns
+      { header: 'Total', key: 'overall_score', width: 15 },
+      { header: 'remarks', key: 'remarks', width: 15 },
+      { header: 'For Background Investigation (Yes)', key: 'yes', width: 15 },
+      { header: 'For Background Investigation (No)', key: 'no', width: 15 },
+      {
+        header:
+          'For Appointment (To be filled out by the appointing Officer/Authority, Please sign opposite the name of the applicant)',
+        key: 'status1',
+        width: 15
+      },
+      {
+        header:
+          'Status of Appointment (Based on availability of PBET/LET/LEPT)',
+        key: 'status2',
+        width: 15
+      }
+    ]
+
+    // Data for the Excel file
+    const data: any[] = list.map((item, index) => ({
+      number: index + 1,
+      name: `${item.applicant.lastname}, ${item.applicant.firstname} ${item.applicant.middlename}`,
+      code: `${item.applicant.code}`,
+      ...allKeys.reduce<Record<string, any>>((acc, key) => {
+        acc[key] = item.accumulated_points?.[key] ?? '-' // Use "-" if value is missing
+        return acc
+      }, {}),
+      overall_score: item.overall_score,
+      remarks: '',
+      yes: '',
+      no: '',
+      status1: '',
+      status2: ''
+    }))
+
+    // Add data to the worksheet
+    data.forEach((item) => worksheet.addRow(item))
+
+    // Generate the Excel file
+    await workbook.xlsx.writeBuffer().then((buffer) => {
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+      saveAs(blob, 'Ranking-Results.xlsx')
+    })
+    setDownloading(false)
+  }
+
   // Filter data by Display
   useEffect(() => {
     setLoading(true)
@@ -287,6 +367,18 @@ const Page: React.FC = () => {
             <div className="flex items-center space-x-2 py-2 px-4 bg-gray-50 border-t border-gray-200 text-gray-500">
               <div className="flex-1 text-xs">{`Total results: ${list.length}`}</div>
               <div className="space-x-2">
+                <CustomButton
+                  containerStyles="app__btn_green"
+                  title={downloading ? 'Downloading...' : 'Download Rank List'}
+                  btnType="button"
+                  handleClick={() => handleDownloadExcel('Rank List')}
+                />
+                <CustomButton
+                  containerStyles="app__btn_green"
+                  title={downloading ? 'Downloading...' : 'Download RQA'}
+                  btnType="button"
+                  handleClick={() => handleDownloadExcel('RQA')}
+                />
                 <CustomButton
                   containerStyles="app__btn_blue"
                   title="Display Rank List"
