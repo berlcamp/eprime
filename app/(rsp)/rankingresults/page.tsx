@@ -25,6 +25,7 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
 import { logError } from '@/utils/fetchApi'
 import { CheckIcon, EyeIcon } from 'lucide-react'
+import Image from 'next/image'
 
 interface ListTypes {
   applicant: ApplicantTypes
@@ -66,7 +67,7 @@ const Page: React.FC = () => {
       let query = supabase
         .from('hrm_ranking_applicants')
         .select(
-          '*, ranking:ranking_id(type,passing_score,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, hrm_positions:position_id(name)), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          '*, ranking:ranking_id(type,passing_score,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, signature_path, hrm_positions:position_id(name)), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
           {
             count: 'exact'
           }
@@ -548,6 +549,46 @@ const Page: React.FC = () => {
               </table>
               {!loading && isDataEmpty && (
                 <div className="app__norecordsfound">No results.</div>
+              )}
+              {!isDataEmpty && (
+                <div className="mx-4 mt-4">
+                  <div className="text-sm font-bold text-gray-600">
+                    Ranking Committees:
+                  </div>
+                  <div className="mt-4 space-x-4 space-y-2">
+                    {rankingDetails?.committees.map((committee) => (
+                      <div key={committee.id} className="inline-flex">
+                        <div>
+                          <div>
+                            {committee.hrm_user?.signature_path ? (
+                              <Image
+                                src={committee.hrm_user?.signature_path}
+                                alt=""
+                                width={75}
+                                height={75}
+                              />
+                            ) : (
+                              <Image
+                                src="/sgd.png"
+                                alt=""
+                                width={75}
+                                height={75}
+                              />
+                            )}
+                          </div>
+                          <div className="text-sm underline underline-offset-4">
+                            {committee.hrm_user.firstname}{' '}
+                            {committee.hrm_user.middlename ?? ''}{' '}
+                            {committee.hrm_user.lastname}
+                          </div>
+                          <div className="text-xs">
+                            {committee.hrm_user.hrm_positions?.name}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           )}

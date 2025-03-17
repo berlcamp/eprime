@@ -4,7 +4,7 @@ import Footer from '@/components/Footer'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { ApplicantTypes } from '@/types'
+import { ApplicantTypes, RankingTypes } from '@/types'
 import { generateReferenceCode } from '@/utils/text-helper'
 import { format, isFuture } from 'date-fns'
 import Link from 'next/link'
@@ -23,6 +23,7 @@ const Page: React.FC = () => {
   const code = searchParams.get('code')
 
   const [inputValue, setInputValue] = useState(code ?? '')
+  const [rankingStatus, setRankingStatus] = useState('')
   const { setToast } = useFilter()
   const { supabase, session } = useSupabase()
 
@@ -133,7 +134,7 @@ const Page: React.FC = () => {
     const { data } = await supabase
       .from('hrm_ranking_applicants')
       .select(
-        '*, ranking:ranking_id(status,days_to_comply,display_ier,type,year,position:position_id(name),qualifications:hrm_ranking_qualifications(*)),applicant_documents:hrm_ranking_applicant_documents(*, qualification:qualification_id(*))'
+        '*, ranking:ranking_id(status,days_to_comply,display_ier,type,year,position:position_id(name),committees:hrm_ranking_committees(*),qualifications:hrm_ranking_qualifications(*)),applicant_documents:hrm_ranking_applicant_documents(*, qualification:qualification_id(*))'
       )
       .eq('code', inputValue)
       .maybeSingle()
@@ -141,6 +142,21 @@ const Page: React.FC = () => {
     if (data) {
       setIsCodeFound(true)
       setApplicantDetails(data)
+
+      // Filter rankings where majority of committee members have "Confirmed" status
+      const ranking: RankingTypes = data.ranking
+
+      const totalMembers = ranking.committees.length
+      const confirmedCount = ranking.committees.filter(
+        (c) => c.status === 'Confirmed'
+      ).length
+
+      // Majority check
+      if (ranking.status === 'Closed' && confirmedCount > totalMembers / 2) {
+        setRankingStatus('Closed')
+      } else {
+        setRankingStatus('Open')
+      }
     } else {
       setIsCodeFound(false)
       setApplicantDetails(null)
@@ -154,6 +170,7 @@ const Page: React.FC = () => {
       void handleSearch()
     }
   }
+
   const isDateInPast = (dateString: string) => {
     if (!dateString) {
       return false // Treat invalid dates as not in the past
@@ -250,35 +267,30 @@ const Page: React.FC = () => {
               </div>
               <div className="mt-2">
                 <span className="text-gray-600">
-                  Ranking Status: {applicantDetails.ranking.status}
+                  Ranking Status:{' '}
+                  <span className="font-bold">{rankingStatus}</span>
                 </span>
               </div>
               <div className="mt-2">
                 <span className="text-gray-600">Qualification Status: </span>
-                {applicantDetails.ranking?.display_ier ? (
-                  <>
-                    {applicantDetails.evaluation_status ===
-                      'For Evaluation' && (
-                      <span className="text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
-                        For Evaluation
-                      </span>
-                    )}
-                    {applicantDetails.evaluation_status === 'Qualified' && (
-                      <span className="text-green-500 bg-green-100 border border-green-500 py-px px-1">
-                        Qualified
-                      </span>
-                    )}
-                    {applicantDetails.evaluation_status === 'Disqualified' && (
-                      <span className="text-red-500 bg-red-100 border border-red-500 py-px px-1">
-                        Disqualified
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  <span className="text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
-                    Evaluation Currently On-going
-                  </span>
-                )}
+
+                <>
+                  {applicantDetails.evaluation_status === 'For Evaluation' && (
+                    <span className="text-orange-500 bg-orange-100 border border-orange-500 py-px px-1">
+                      For Evaluation
+                    </span>
+                  )}
+                  {applicantDetails.evaluation_status === 'Qualified' && (
+                    <span className="text-green-500 bg-green-100 border border-green-500 py-px px-1">
+                      Qualified
+                    </span>
+                  )}
+                  {applicantDetails.evaluation_status === 'Disqualified' && (
+                    <span className="text-red-500 bg-red-100 border border-red-500 py-px px-1">
+                      Disqualified
+                    </span>
+                  )}
+                </>
               </div>
               {applicantDetails.ranking.status === 'Closed' && (
                 <div className="mt-4">

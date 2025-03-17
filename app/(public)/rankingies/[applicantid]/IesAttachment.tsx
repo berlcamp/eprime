@@ -43,7 +43,7 @@ export async function IesAttachment(item: ListTypes) {
   // Document Title
   doc.setFontSize(12)
   doc.text('INDIVIDUAL EVALUATION SHEET (IES)', 105, y, { align: 'center' })
-  y += 10
+  y += 7
   doc.setFontSize(10)
   doc.setFont('times', 'normal')
   doc.text('Name of Applicant: ', 15, y)
@@ -60,27 +60,27 @@ export async function IesAttachment(item: ListTypes) {
     y
   )
 
-  y += 6
+  y += 5
   doc.setFont('times', 'normal')
   doc.text('Application Code: ', 15, y)
   doc.setFont('times', 'bold')
   doc.text((item.applicant?.code).toUpperCase(), 70, y)
-  y += 6
+  y += 5
   doc.setFont('times', 'normal')
   doc.text('Position Applied for: ', 15, y)
   doc.setFont('times', 'bold')
   doc.text(item.ranking.position.name, 70, y)
-  y += 6
+  y += 5
   doc.setFont('times', 'normal')
   doc.text('Schools Division Office: ', 15, y)
   doc.setFont('times', 'bold')
   doc.text('DepEd Bayugan City', 70, y)
-  y += 6
+  y += 5
   doc.setFont('times', 'normal')
   doc.text('Contact Number: ', 15, y)
   doc.setFont('times', 'bold')
   doc.text('(085) 303-0664', 70, y)
-  y += 6
+  y += 5
   doc.setFont('times', 'normal')
   doc.text('Job Group/ SG-Level: ', 15, y)
   doc.setFont('times', 'bold')
@@ -188,7 +188,7 @@ export async function IesAttachment(item: ListTypes) {
 
     return [criteria.name, criteria.points, '', '', actualScore]
   })
-  tableBody.push(['Total', '100', '', '', item.overall_score])
+  tableBody.push(['TOTAL', '100', '', '', item.overall_score])
 
   // Table Content
   autoTable(doc, {
@@ -196,8 +196,19 @@ export async function IesAttachment(item: ListTypes) {
     head: tableHeaders,
     body: tableBody,
     theme: 'grid', // Ensures grid-like borders
-    styles: { fontSize: 10, lineWidth: 0.3, lineColor: [0, 0, 0] }, // Black border for all cells
-    headStyles: { fillColor: [102, 204, 0], textColor: [0, 0, 0] }
+    styles: {
+      fontSize: 10,
+      lineWidth: 0.3,
+      lineColor: [0, 0, 0]
+    }, // Black border for all cells
+    headStyles: { fillColor: [102, 204, 0], textColor: [0, 0, 0] },
+    didParseCell: function (data) {
+      const rowData = data.row.raw as string[] // Explicitly assert as an array
+      if (rowData && rowData[0] === 'TOTAL') {
+        data.cell.styles.fontStyle = 'bold'
+        data.cell.styles.textColor = [0, 0, 0]
+      }
+    }
   })
 
   // Correctly retrieve the last table Y position
@@ -238,12 +249,12 @@ export async function IesAttachment(item: ListTypes) {
   y += 5
   doc.setFont('times', 'normal')
   doc.text('Name & Signature of Applicant', 125, y)
-  y += 6
+  y += 5
   doc.text('Date:', 125, y)
 
   y += 6
   doc.text('Attested by:', 15, y)
-  y += 10
+  y += 8
 
   // Signature Section
   doc.setFont('times', 'bold')
