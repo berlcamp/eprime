@@ -376,7 +376,7 @@ const Page: React.FC = () => {
                 />
                 <CustomButton
                   containerStyles="app__btn_green"
-                  title={downloading ? 'Downloading...' : 'Download RQA'}
+                  title={`Download ${rankingDetails?.type}`}
                   btnType="button"
                   handleClick={() => handleDownloadExcel('RQA')}
                 />
