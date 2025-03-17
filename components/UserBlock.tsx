@@ -24,7 +24,7 @@ const UserBlock = ({ user }: PropTypes) => {
       )}
       <div className="font-medium">
         {capitalizeWords(
-          `${user.firstname} ${user.middlename} ${user.lastname}`
+          `${user.firstname} ${user.middlename ?? ''} ${user.lastname}`
         )}
       </div>
     </div>

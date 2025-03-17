@@ -304,7 +304,7 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
                 <table className="app__table mt-10">
                   <thead className="app__thead">
                     <tr>
-                      <th className="app__th">Member</th>
+                      <th className="app__th w-96">Member</th>
                       <th className="app__th">Type</th>
                       <th className="app__th">Can cast points on Criteria</th>
                       <th className="app__th"></th>
@@ -334,11 +334,11 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
                           </th>
                           <td className="app__td">{item.type}</td>
                           <td className="app__td">
-                            <div className="space-x-1">
+                            <div className="space-x-1 space-y-1">
                               {item.committee_criterias?.map((c) => (
                                 <span
                                   key={c.id}
-                                  className="p-1 bg-green-100 border border-green-500"
+                                  className="inline-flex p-1 bg-green-100 border border-green-500"
                                 >
                                   {c.criteria.name}
                                 </span>

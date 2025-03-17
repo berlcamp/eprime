@@ -66,7 +66,7 @@ const Page: React.FC = () => {
       let query = supabase
         .from('hrm_ranking_applicants')
         .select(
-          '*, ranking:ranking_id(type,passing_score,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          '*, ranking:ranking_id(type,passing_score,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, hrm_positions:position_id(name)), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
           {
             count: 'exact'
           }
@@ -280,6 +280,18 @@ const Page: React.FC = () => {
       status1: '',
       status2: ''
     }))
+
+    data.push({ name: '' })
+    data.push({ name: 'Confirmed Committee Members:' })
+    rankingDetails?.committees.forEach((c) => {
+      if (c.type === 'Original Member' && c.status === 'Confirmed') {
+        data.push({
+          name: `${c.hrm_user.firstname} ${c.hrm_user.middlename ?? ''} ${
+            c.hrm_user.lastname
+          } / ${c.hrm_user.hrm_positions?.name}`
+        })
+      }
+    })
 
     // Add data to the worksheet
     data.forEach((item) => worksheet.addRow(item))
