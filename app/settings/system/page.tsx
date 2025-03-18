@@ -97,6 +97,12 @@ const Page: React.FC = () => {
                 />
                 <ChooseUsers
                   multiple={true}
+                  type="rsp_reports"
+                  users={users}
+                  title="Who can view RSP reports"
+                />
+                <ChooseUsers
+                  multiple={true}
                   type="tracker_manager"
                   users={users}
                   title="Request Tracker Manager - Person who can forward request to other."
