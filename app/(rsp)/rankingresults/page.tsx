@@ -559,23 +559,27 @@ const Page: React.FC = () => {
                     {rankingDetails?.committees.map((committee) => (
                       <div key={committee.id} className="inline-flex">
                         <div>
-                          <div>
-                            {committee.hrm_user?.signature_path ? (
-                              <Image
-                                src={committee.hrm_user?.signature_path}
-                                alt=""
-                                width={75}
-                                height={75}
-                              />
-                            ) : (
-                              <Image
-                                src="/sgd.png"
-                                alt=""
-                                width={75}
-                                height={75}
-                              />
-                            )}
-                          </div>
+                          {committee.status === 'Confirmed' ? (
+                            <div>
+                              {committee.hrm_user?.signature_path ? (
+                                <Image
+                                  src={committee.hrm_user?.signature_path}
+                                  alt=""
+                                  width={75}
+                                  height={75}
+                                />
+                              ) : (
+                                <Image
+                                  src="/sgd.png"
+                                  alt=""
+                                  width={75}
+                                  height={75}
+                                />
+                              )}
+                            </div>
+                          ) : (
+                            <div className="h-[75px]">&nbsp;</div>
+                          )}
                           <div className="text-sm underline underline-offset-4">
                             {committee.hrm_user.firstname}{' '}
                             {committee.hrm_user.middlename ?? ''}{' '}
