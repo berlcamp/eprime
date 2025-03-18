@@ -67,7 +67,6 @@ const TravelForm = ({ hideModal }: ModalProps) => {
     register,
     formState: { errors },
     reset,
-    watch,
     handleSubmit
   } = useForm<TravelTypes>({
     mode: 'onSubmit'
