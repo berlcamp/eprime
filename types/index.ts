@@ -474,6 +474,7 @@ export interface LeaveTypes {
 
 export interface TravelTypes {
   type: string
+  official_type: string
   purpose: string
   host: string
   from: string
@@ -684,6 +685,7 @@ export interface DocumentTypes {
   pass_slip_purpose: string
   pass_slip_reason: string
   travel_type: string
+  travel_official_type: string
   travel_purpose: string
   travel_host: string
   travel_from: string

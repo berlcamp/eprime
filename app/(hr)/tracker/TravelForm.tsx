@@ -67,6 +67,7 @@ const TravelForm = ({ hideModal }: ModalProps) => {
     register,
     formState: { errors },
     reset,
+    watch,
     handleSubmit
   } = useForm<TravelTypes>({
     mode: 'onSubmit'
@@ -91,6 +92,7 @@ const TravelForm = ({ hideModal }: ModalProps) => {
         type: 'Travel Authority',
         reference_code: refCode,
         travel_type: formdata.type,
+        travel_official_type: formdata.official_type,
         travel_purpose: formdata.purpose,
         travel_host: formdata.host,
         travel_from: formdata.from,
@@ -297,6 +299,27 @@ const TravelForm = ({ hideModal }: ModalProps) => {
                 </div>
               </div>
             </div>
+            {travelType === 'Official Travel' && (
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div>
+                    <select
+                      {...register('official_type', { required: true })}
+                      className="app__select_standard"
+                    >
+                      <option value="">Choose Type</option>
+                      <option value="Official Business">
+                        Official Business
+                      </option>
+                      <option value="Official Time">Official Time</option>
+                    </select>
+                    {errors.official_type && (
+                      <div className="app__error_message">This is required</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="app__form_field_container">
               <div className="w-full">
                 <div className="app__label_standard">Inclusive Date (From)</div>

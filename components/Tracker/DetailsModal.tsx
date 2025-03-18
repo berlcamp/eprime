@@ -1772,7 +1772,8 @@ export default function DetailsModal({
                               Travel Type:
                             </td>
                             <td className="text-sm font-medium">
-                              {documentData.travel_type}
+                              {documentData.travel_type} /{' '}
+                              {documentData.travel_official_type}
                             </td>
                           </tr>
                           <tr>
