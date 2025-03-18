@@ -30,9 +30,14 @@ interface ListTypes {
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [list, setList] = useState<ListTypes[] | []>([])
+  const [originalList, setOriginalList] = useState<ListTypes[] | []>([])
   const [filterRanking, setFilterRanking] = useState<string>('')
   const [downloading, setDownloading] = useState(false)
   const { supabase } = useSupabase()
+
+  const [searchKeyword, setSearchKeyword] = useState('')
+  const [searchMajor, setSearchMajor] = useState('')
+  const [majors, setMajors] = useState<string[] | []>([])
 
   const handleDownloadExcel = async () => {
     setDownloading(true)
@@ -77,9 +82,44 @@ const Page: React.FC = () => {
       const blob = new Blob([buffer], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       })
-      saveAs(blob, 'Open Ranking.xlsx')
+      saveAs(blob, `Open Ranking - ${searchMajor}.xlsx`)
     })
     setDownloading(false)
+  }
+
+  const handleSearchApplicant = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const searchTerm = e.target.value
+    setSearchKeyword(searchTerm)
+
+    if (searchTerm.trim().length < 3) {
+      setList(originalList)
+      return
+    }
+
+    // Search user
+    const searchWords = e.target.value.split(' ')
+    const results = list.filter((user) => {
+      const fullName =
+        `${user.applicant.firstname} ${user.applicant.middlename} ${user.applicant.lastname}`.toLowerCase()
+      return searchWords.every((word) => fullName.includes(word.toLowerCase()))
+    })
+
+    setList(results)
+  }
+  const handleSearchMajor = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const searchTerm = e.target.value
+    setSearchMajor(searchTerm)
+
+    if (searchTerm.trim() !== '') {
+      const filteredArr = originalList.filter(
+        (item) => item.applicant.specific_major === searchTerm
+      )
+      setList(filteredArr)
+    } else {
+      setList(originalList)
+    }
   }
 
   const fetchApplicantsData = async () => {
@@ -124,7 +164,15 @@ const Page: React.FC = () => {
         return scoreB - scoreA // Sort in descending order
       })
 
+      // Extract unique majors using Array.from() to avoid spread operator issues
+      const uniqueMajors = Array.from(
+        new Set(structguredData.map((item) => item.applicant.specific_major))
+      )
+
+      setMajors(uniqueMajors)
+
       setList(structguredData)
+      setOriginalList(structguredData)
     }
 
     setLoading(false)
@@ -158,6 +206,28 @@ const Page: React.FC = () => {
           <div className="app__filters">
             <Filters setFilterRanking={setFilterRanking} />
           </div>
+
+          {!isDataEmpty && (
+            <div className="flex space-x-2 px-4 py-4 w-full md:w-1/2">
+              <input
+                placeholder="Search applicant"
+                type="text"
+                value={searchKeyword}
+                onChange={handleSearchApplicant}
+                className="app__input_standard"
+              />
+              <select
+                value={searchMajor}
+                onChange={handleSearchMajor}
+                className="app__input_standard"
+              >
+                <option value="">All Major</option>
+                {majors.map((m) => (
+                  <option key={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Export Button */}
           <div className="mx-4 mb-4 flex justify-end items-end space-x-2">
