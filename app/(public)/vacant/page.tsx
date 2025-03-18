@@ -83,22 +83,28 @@ const Page: React.FC = () => {
                       </Link>
                     )}
                     {item.status === 'Open' &&
-                      isDateInPast(item.display_on_portal_until) && (
-                        <Link
-                          href={`/apply?ref=${item.id}`}
-                          className="app__btn_green"
-                        >
-                          Apply Now
-                        </Link>
-                      )}
+                    isDateInPast(item.display_on_portal_until) ? (
+                      <Link
+                        href={`/apply?ref=${item.id}`}
+                        className="app__btn_green"
+                      >
+                        Apply Now
+                      </Link>
+                    ) : (
+                      <div className="mt-4">
+                        <span className="app__status_container_orange text-xs!">
+                          Application for this Ranking is already closed
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div>
+                  {/* <div>
                     {item.status === 'Closed' && (
                       <span className="text-gray-600 italic">
                         The application for this ranking is already Closed
                       </span>
                     )}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             ))}
