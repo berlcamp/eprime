@@ -437,6 +437,9 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
                       <th className="hidden md:table-cell app__th">
                         Employees
                       </th>
+                      <th className="hidden md:table-cell app__th">
+                        Service Credit
+                      </th>
                       <th className="hidden md:table-cell app__th">Status</th>
                       <th className="hidden md:table-cell app__th">
                         Attachments
@@ -519,6 +522,9 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
                             </div>
                             {/* End - Mobile View */}
                           </th>
+                          <td className="hidden md:table-cell app__td">
+                            {item.service_credits}
+                          </td>
                           <td className="hidden md:table-cell app__td">
                             {item.is_approved ? (
                               <span className="app__status_container_green">
