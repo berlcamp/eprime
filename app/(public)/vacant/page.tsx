@@ -19,6 +19,7 @@ const Page: React.FC = () => {
       const { data } = await supabase
         .from('hrm_rankings')
         .select('*, position:position_id(name)')
+        .eq('status', 'Open')
         .eq('display_on_portal', true)
 
       setRankings(data)
@@ -82,20 +83,14 @@ const Page: React.FC = () => {
                       </Link>
                     )}
                     {item.status === 'Open' &&
-                    isDateInPast(item.display_on_portal_until) ? (
-                      <Link
-                        href={`/apply?ref=${item.id}`}
-                        className="app__btn_green"
-                      >
-                        Apply Now
-                      </Link>
-                    ) : (
-                      <div className="mt-4">
-                        <span className="app__status_container_orange text-xs!">
-                          Application for this Ranking is already closed
-                        </span>
-                      </div>
-                    )}
+                      isDateInPast(item.display_on_portal_until) && (
+                        <Link
+                          href={`/apply?ref=${item.id}`}
+                          className="app__btn_green"
+                        >
+                          Apply Now
+                        </Link>
+                      )}
                   </div>
                   <div>
                     {item.status === 'Closed' && (
