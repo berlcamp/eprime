@@ -72,6 +72,7 @@ const Page: React.FC = () => {
             count: 'exact'
           }
         )
+        .eq('evaluation_status', 'Qualified')
 
       // filter ranking
       if (filterRanking !== '') {
