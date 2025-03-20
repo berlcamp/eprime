@@ -65,7 +65,7 @@ const Page: React.FC = () => {
                           'Registry of Quallified Applicants'}
                         {(item.type === 'CAR (Teaching)' ||
                           item.type === 'CAR (Non-Teaching)') &&
-                          'Comparative Assestment Result'}
+                          'Comparative Assessment Result'}
                       </Link>
                     )}
                     {item.display_nai && (
