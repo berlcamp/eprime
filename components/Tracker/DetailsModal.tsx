@@ -1713,7 +1713,7 @@ export default function DetailsModal({
                               '' && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
-                                  Intended Time of Departure:
+                                  Intended Time of Arrival:
                                 </td>
                                 <td className="text-sm font-medium">
                                   {documentData.pass_slip_intended_time_arrival}
