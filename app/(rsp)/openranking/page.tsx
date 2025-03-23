@@ -19,6 +19,7 @@ import type { ApplicantTypes, RankingTypes } from '@/types'
 // Redux imports
 import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
+import { capitalizeWords } from '@/utils/text-helper'
 
 interface ListTypes {
   applicant: ApplicantTypes
@@ -57,6 +58,7 @@ const Page: React.FC = () => {
     worksheet.columns = [
       { header: 'No.', key: 'no', width: 10 },
       { header: 'Names of Applicant', key: 'name', width: 25 },
+      { header: 'Applicant Code', key: 'code', width: 25 },
       ...allKeys.map((key) => ({ header: key, key, width: 15 })), // Dynamic columns
       { header: 'Overall Score', key: 'overall_score', width: 15 },
       { header: 'Ranking', key: 'ranking', width: 15 }
@@ -65,7 +67,10 @@ const Page: React.FC = () => {
     // Data for the Excel file
     const data: any[] = list.map((item, index) => ({
       no: index + 1,
-      name: `${item.applicant.lastname}, ${item.applicant.firstname} ${item.applicant.middlename}`,
+      name: capitalizeWords(
+        `${item.applicant.lastname}, ${item.applicant.firstname} ${item.applicant.middlename}`
+      ),
+      code: item.applicant.code,
       ...allKeys.reduce<Record<string, any>>((acc, key) => {
         acc[key] = item.accumulated_points?.[key] ?? '-' // Use "-" if value is missing
         return acc
@@ -247,6 +252,7 @@ const Page: React.FC = () => {
                 <tr>
                   <th className="app__th pl-4">No.</th>
                   <th className="app__th">Fullname</th>
+                  <th className="app__th">Applicant Code</th>
                   {allKeys.map((key) => (
                     <th className="app__th" key={key}>
                       {key}
@@ -262,10 +268,13 @@ const Page: React.FC = () => {
                       <td className="w-6 pl-4 app__td">{index + 1}.</td>
                       <th className="app__th_firstcol">
                         <div>
-                          {item.applicant.lastname}, {item.applicant.firstname}{' '}
-                          {item.applicant.middlename}
+                          {capitalizeWords(`
+                          ${item.applicant.lastname},
+                          ${item.applicant.firstname}
+                          ${item.applicant.middlename}`)}
                         </div>
                       </th>
+                      <td className="app__td">{item.applicant.code}</td>
                       {allKeys.map((key) => (
                         <td key={key} className="app__td">
                           {Number(item.accumulated_points?.[key]).toFixed(3) ??
