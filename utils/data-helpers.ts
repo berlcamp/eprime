@@ -1,4 +1,5 @@
 import { RankingCommitteeTypes } from '@/types'
+import { createBrowserClient } from './supabase-browser'
 
 export function CommitteeAccumulatedPoints(
   applicantId: string,
@@ -52,4 +53,17 @@ export function CommitteeAccumulatedPoints(
   } else {
     return null
   }
+}
+
+export async function CheckIfSchoolHead(id: string) {
+  const supabase = createBrowserClient()
+
+  const { data } = await supabase
+    .from('hrm_schools')
+    .select('id')
+    .eq('head_user_id', id)
+    .limit(1)
+    .maybeSingle()
+
+  return data
 }

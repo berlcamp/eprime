@@ -103,6 +103,18 @@ const Page: React.FC = () => {
                 />
                 <ChooseUsers
                   multiple={true}
+                  type="pms_manager"
+                  users={users}
+                  title="Who can manage PMS"
+                />
+                <ChooseUsers
+                  multiple={true}
+                  type="land_hrd"
+                  users={users}
+                  title="L & D HRD"
+                />
+                <ChooseUsers
+                  multiple={true}
                   type="tracker_manager"
                   users={users}
                   title="Request Tracker Manager - Person who can forward request to other."

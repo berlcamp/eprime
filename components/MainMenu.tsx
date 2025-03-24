@@ -184,7 +184,7 @@ const MainMenu = () => {
                 </div>
               </div>
             </Link>
-            <Link href="#">
+            <Link href="/pms">
               <div className="app__menu_item">
                 <div className="pt-1">
                   <ChartBarSquareIcon className="w-8 h-8" />
@@ -199,7 +199,7 @@ const MainMenu = () => {
                 </div>
               </div>
             </Link>
-            <Link href="/schoolpersonnels">
+            <Link href="/landd">
               <div className="app__menu_item">
                 <div className="pt-1">
                   <BookOpenIcon className="w-8 h-8" />

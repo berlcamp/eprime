@@ -2,6 +2,7 @@
 import { OfflinePage } from '@/components'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { UserAccessTypes } from '@/types'
+import { CheckIfSchoolHead } from '@/utils/data-helpers'
 import React, { useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 
@@ -42,6 +43,11 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Check if school head
+  const isSchoolHead = async () => {
+    return await CheckIfSchoolHead(session.user.id)
+  }
+
   useEffect(() => {
     function handleOnlineStatus() {
       setIsOnline(true)
@@ -63,6 +69,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
   const value = {
     filters,
     setFilters,
+    isSchoolHead,
     hasAccess,
     setToast,
     perPage,
