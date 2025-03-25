@@ -1452,7 +1452,11 @@ export default function DetailsModal({
                                     <span className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2">
                                       {format(
                                         new Date(
-                                          documentData.leave_dates[0].date
+                                          documentData.leave_dates.sort(
+                                            (a, b) =>
+                                              new Date(a.date).getTime() -
+                                              new Date(b.date).getTime()
+                                          )[0].date
                                         ),
                                         'MMM d, yyyy'
                                       )}
