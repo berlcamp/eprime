@@ -506,7 +506,15 @@ export const PrintLeaveForm = React.forwardRef<
                       From{' '}
                       <span>
                         {format(
-                          new Date(selectedItem.leave_dates[0].date),
+                          new Date(
+                            selectedItem.leave_dates
+                              .slice() // Create a shallow copy to avoid mutating the original array
+                              .sort(
+                                (a, b) =>
+                                  new Date(a.date).getTime() -
+                                  new Date(b.date).getTime()
+                              )[0].date
+                          ),
                           'MMM d, yyyy'
                         )}
                       </span>{' '}
@@ -514,9 +522,13 @@ export const PrintLeaveForm = React.forwardRef<
                       <span>
                         {format(
                           new Date(
-                            selectedItem.leave_dates[
-                              selectedItem.leave_dates.length - 1
-                            ].date
+                            selectedItem.leave_dates
+                              .slice() // Create a shallow copy to avoid mutating the original array
+                              .sort(
+                                (a, b) =>
+                                  new Date(a.date).getTime() -
+                                  new Date(b.date).getTime()
+                              )[selectedItem.leave_dates.length - 1].date
                           ),
                           'MMM d, yyyy'
                         )}
