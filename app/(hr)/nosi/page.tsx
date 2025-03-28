@@ -37,6 +37,7 @@ import { PrinterIcon } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useReactToPrint } from 'react-to-print'
 import AddEditModal from './AddEditModal'
+import { PrintNosa } from './PrintNosa'
 import { PrintNosi } from './PrintNosi'
 import SignatoriesModal from './SignatoriesModal'
 
@@ -49,6 +50,7 @@ const Page: React.FC = () => {
   const [signatories, setSignatories] = useState<SignatoriesTypes | null>(null)
   const [selectedId, setSelectedId] = useState<string>('')
   const [selectedItem, setSelectedItem] = useState<NosiTypes | null>(null)
+  const [printType, setPrintType] = useState('nosi')
 
   const [list, setList] = useState<NosiTypes[]>([])
   const [filterUser, setFilterUser] = useState<string>('')
@@ -65,9 +67,14 @@ const Page: React.FC = () => {
   const { hasAccess } = useFilter()
 
   const componentRef = React.useRef(null)
+  const componentRef2 = React.useRef(null)
   const printFn = useReactToPrint({
     contentRef: componentRef,
     documentTitle: 'NOSI'
+  })
+  const printFn2 = useReactToPrint({
+    contentRef: componentRef2,
+    documentTitle: 'NOSA'
   })
 
   const fetchData = async () => {
@@ -132,8 +139,9 @@ const Page: React.FC = () => {
     setShowDeleteModal(true)
   }
 
-  const handleInitiatePrint = (item: NosiTypes) => {
+  const handleInitiatePrint = (item: NosiTypes, printType: string) => {
     setSelectedItem(item)
+    setPrintType(printType)
     setShowSignatoriesModal(true)
   }
 
@@ -144,7 +152,11 @@ const Page: React.FC = () => {
       setSelectedItem(item) // Set the new item after a short delay
       setSignatories(signatories) // Set the new item after a short delay
       setTimeout(() => {
-        printFn() // Trigger the print function after re-rendering the new content
+        if (printType === 'nosi') {
+          printFn() // Trigger the print function after re-rendering the new content
+        } else {
+          printFn2() // Trigger the print function after re-rendering the new content
+        }
       }, 100) // Adjust this delay if needed
     }, 100) // This delay ensures the unmounting and re-rendering are separated
   }
@@ -237,11 +249,24 @@ const Page: React.FC = () => {
                               <div className="py-1">
                                 <Menu.Item>
                                   <div
-                                    onClick={() => handleInitiatePrint(item)}
+                                    onClick={() =>
+                                      handleInitiatePrint(item, 'nosi')
+                                    }
                                     className="app__dropdown_item"
                                   >
                                     <PrinterIcon className="w-4 h-4" />
                                     <span>Print NOSI</span>
+                                  </div>
+                                </Menu.Item>
+                                <Menu.Item>
+                                  <div
+                                    onClick={() =>
+                                      handleInitiatePrint(item, 'nosa')
+                                    }
+                                    className="app__dropdown_item"
+                                  >
+                                    <PrinterIcon className="w-4 h-4" />
+                                    <span>Print NOSA</span>
                                   </div>
                                 </Menu.Item>
                                 {new Date(item.effective_date) > new Date() ? (
@@ -354,6 +379,14 @@ const Page: React.FC = () => {
           selectedItem={selectedItem}
           signatories={signatories}
           ref={componentRef}
+        />
+      )}
+      {/* Print Container */}
+      {selectedItem && signatories && (
+        <PrintNosa
+          selectedItem={selectedItem}
+          signatories={signatories}
+          ref={componentRef2}
         />
       )}
     </>

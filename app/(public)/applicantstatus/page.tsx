@@ -295,11 +295,16 @@ const Page: React.FC = () => {
               {applicantDetails.ranking.status === 'Closed' && (
                 <div className="mt-4">
                   <div className="text-gray-600">
-                    We would like to inform you that the ranking process for
-                    Attorney III-CAR-RQA-2027, for which you had applied, has
-                    concluded, and the results have been finalized. Please visit
-                    the link provided for your Individual Evaluation Sheet
-                    (IES). Kindly review it and follow these steps:{' '}
+                    We would like to inform you that the ranking process for{' '}
+                    <span className="font-bold">
+                      {applicantDetails.ranking.position.name}-
+                      {applicantDetails.ranking.type}-
+                      {applicantDetails.ranking.year}
+                    </span>
+                    , for which you had applied, has concluded, and the results
+                    have been finalized. Please visit the link provided for your
+                    Individual Evaluation Sheet (IES). Kindly review it and
+                    follow these steps:{' '}
                   </div>
                   <div className="text-gray-600 mt-2 pl-10">
                     <div>

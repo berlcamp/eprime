@@ -1,7 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 import { NosaTypes, SignatoriesTypes } from '@/types'
 import { formatToPesos } from '@/utils/text-helper'
 import { format } from 'date-fns'
-import Image from 'next/image'
 import * as React from 'react'
 
 interface ComponentToPrintProps {
@@ -24,7 +24,7 @@ export const PrintNosa = React.forwardRef<
               <td colSpan={2} className="relative text-center">
                 <div className="flex items-center justify-center">
                   <div className="">
-                    <Image
+                    <img
                       src="/deped_header.png"
                       alt=""
                       width={200}
@@ -88,7 +88,7 @@ export const PrintNosa = React.forwardRef<
                 <table className="w-full mt-10 mx-8">
                   <tbody>
                     <tr>
-                      <td className="px-1">
+                      <td className="px-1 py-1">
                         <div>
                           1. Adjusted monthly basic salary effective{' '}
                           <span className="font-bold">
@@ -112,7 +112,7 @@ export const PrintNosa = React.forwardRef<
                       </td>
                     </tr>
                     <tr>
-                      <td className="px-1">
+                      <td className="px-1 py-1">
                         <div>
                           2. Actual monthly basic salary as of
                           <span className="font-bold">
@@ -139,7 +139,7 @@ export const PrintNosa = React.forwardRef<
                       </td>
                     </tr>
                     <tr>
-                      <td className="px-1">
+                      <td className="px-1 py-1">
                         <div>
                           3. Monthly salary adjustment effective
                           <span className="font-bold">
@@ -238,7 +238,7 @@ export const PrintNosa = React.forwardRef<
         </table>
         <div className="absolute bottom-0 w-full text-xs">
           <div className="border-t-2 border-black flex items-start justify-start space-x-1">
-            <Image src="/deped_bayugan.png" alt="" width={100} height={100} />
+            <img src="/deped_bayugan.png" alt="" width={100} height={100} />
             <div className="mt-3">
               <div>Lanzones Street, Poblacion, Bayugan City</div>
               <div className="text-blue-500">deped.bayugan@gmail.com</div>

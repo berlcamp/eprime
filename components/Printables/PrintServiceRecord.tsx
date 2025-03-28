@@ -1,6 +1,5 @@
 import { DocumentTypes } from '@/types'
 import { format } from 'date-fns'
-import Image from 'next/image'
 import * as React from 'react'
 
 interface ComponentToPrintProps {
@@ -48,7 +47,7 @@ export const PrintServiceRecord = React.forwardRef<
                   <td colSpan={2} className="relative text-center">
                     <div className="flex items-center justify-center">
                       <div>
-                        <Image
+                        <img
                           src="/deped_header.png"
                           alt="DepEd Header"
                           width={200}
@@ -283,7 +282,7 @@ export const PrintServiceRecord = React.forwardRef<
                     {/* Page Footer */}
                     <div className="print-footer mt-4">
                       <div className="border-t-2 border-black flex items-start justify-start space-x-1">
-                        <Image
+                        <img
                           src="/deped_bayugan.png"
                           alt=""
                           width={100}

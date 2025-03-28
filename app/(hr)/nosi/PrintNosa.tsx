@@ -1,15 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
-import { NosiTypes, SignatoriesTypes } from '@/types'
+import { NosaTypes, SignatoriesTypes } from '@/types'
 import { formatToPesos } from '@/utils/text-helper'
 import { format } from 'date-fns'
 import * as React from 'react'
 
 interface ComponentToPrintProps {
-  selectedItem: NosiTypes
+  selectedItem: NosaTypes
   signatories: SignatoriesTypes
 }
 
-export const PrintNosi = React.forwardRef<
+export const PrintNosa = React.forwardRef<
   HTMLDivElement | null,
   ComponentToPrintProps
 >((props, ref) => {
@@ -41,7 +41,7 @@ export const PrintNosi = React.forwardRef<
             <tr>
               <td colSpan={2} className="text-center">
                 <div className="mt-4 text-2xl mb-4 font-bold">
-                  Notice of Step Increment Due to Length of Service
+                  Notice of Salary Adjustment
                 </div>
               </td>
             </tr>
@@ -68,13 +68,11 @@ export const PrintNosi = React.forwardRef<
                 <div className="mt-10">Sir/Ma'am:</div>
 
                 <div className="indent-10 mt-10">
-                  Pursuant to Civil Service Commision and Department of Budget
-                  and Management and Management Joint Circular No. 1, s.2012,
-                  dated September 3, 2012 implementing item (4) (d) of the
-                  Senate of the House of Representatives Joint Resolution No. 4,
-                  s. 2009, approved on June 17, 2009, your salary as{' '}
-                  {selectedItem.hrm_user?.hrm_positions?.name} is hereby
-                  adjusted effective{' '}
+                  Pursuant to National Budget Circular No.{' '}
+                  <span className="underline">594</span> dated{' '}
+                  <span className="underline">12 August 2024</span>,
+                  implementing Executive Order No. 64, s. 2024 dated August 2,
+                  2024, your salary is hereby adjusted effective,{' '}
                   <span className="font-bold underline">
                     {format(
                       new Date(selectedItem.effective_date),
@@ -90,26 +88,50 @@ export const PrintNosi = React.forwardRef<
                 <table className="w-full mt-10 mx-8">
                   <tbody>
                     <tr>
-                      <td className="px-1">
+                      <td className="px-1 py-1">
                         <div>
-                          1. Actual Basic Salary as of{' '}
+                          1. Adjusted monthly basic salary effective{' '}
+                          <span className="font-bold">
+                            {format(
+                              new Date(selectedItem.effective_date),
+                              'MMMM dd, yyyy'
+                            )}
+                          </span>
+                          ,
+                        </div>
+                        <div className="ml-5">
+                          under the new Salary Schedule; (SG{' '}
+                          <span className="font-bold underline">
+                            {selectedItem.new_grade}
+                          </span>
+                          , step <span className="font-bold underline">1</span>)
+                        </div>
+                      </td>
+                      <td className="px-1 py-1">
+                        {formatToPesos(Number(selectedItem.new_amount))}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-1 py-1">
+                        <div>
+                          2. Actual monthly basic salary as of
                           <span className="font-bold">
                             {format(
                               new Date(selectedItem.as_of_date),
                               'MMMM dd, yyyy'
                             )}
                           </span>
+                          ;
                         </div>
-                        <div>
-                          (SG{' '}
+                        <div className="ml-5">
+                          SG{' '}
                           <span className="font-bold underline">
                             {selectedItem.previous_grade}
                           </span>
-                          , step{' '}
+                          Step{' '}
                           <span className="font-bold underline">
                             {selectedItem.previous_step}
                           </span>
-                          )
                         </div>
                       </td>
                       <td className="px-1">
@@ -117,26 +139,9 @@ export const PrintNosi = React.forwardRef<
                       </td>
                     </tr>
                     <tr>
-                      <td className="px-1">
-                        <div className="mt-4">
-                          2. Add:{' '}
-                          {Number(selectedItem.new_step) -
-                            Number(selectedItem.previous_step)}{' '}
-                          Step Increment
-                        </div>
-                        <div>Due to length of Service</div>
-                      </td>
-                      <td className="px-1">
-                        {formatToPesos(
-                          Number(selectedItem.new_amount) -
-                            Number(selectedItem.previous_amount)
-                        )}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-1">
-                        <div className="mt-4">
-                          3. Adjusted month basic salary Effective{' '}
+                      <td className="px-1 py-1">
+                        <div>
+                          3. Monthly salary adjustment effective{' '}
                           <span className="font-bold">
                             {format(
                               new Date(selectedItem.effective_date),
@@ -146,8 +151,11 @@ export const PrintNosi = React.forwardRef<
                         </div>
                       </td>
                       <td className="px-1">
-                        <div className="mt-4 underline underline-offset-2">
-                          {formatToPesos(Number(selectedItem.new_amount))}
+                        <div className="underline underline-offset-2">
+                          {formatToPesos(
+                            Number(selectedItem.new_amount) -
+                              Number(selectedItem.previous_amount)
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -158,8 +166,9 @@ export const PrintNosi = React.forwardRef<
             <tr>
               <td colSpan={2} className="text-xs">
                 <div className="indent-10 mt-10">
-                  The salary adjustment is subject to review and post-audit, and
-                  to appropriate re-adjustment and refund if found not in order.
+                  It is understood that this salary adjustment is subject to
+                  review and post-audit, and to appropriate re-adjustment and
+                  refund if found not in order.
                 </div>
               </td>
             </tr>
@@ -212,6 +221,10 @@ export const PrintNosi = React.forwardRef<
             <tr>
               <td colSpan={2} className="text-xs">
                 <div className="mt-4">
+                  Position Title: {selectedItem.hrm_user?.hrm_positions?.name}
+                </div>
+                <div>Salary Grade: {selectedItem.new_grade}</div>
+                <div>
                   Item No./Unique No., FY 2023 personal Services Itemization
                 </div>
                 <div>

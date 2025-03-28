@@ -1,6 +1,5 @@
 import { DocumentTypes } from '@/types'
 import { SquareCheckIcon, SquareIcon } from 'lucide-react'
-import Image from 'next/image'
 import * as React from 'react'
 
 interface ComponentToPrintProps {
@@ -123,7 +122,7 @@ export const PrintLocatorSlipForm = React.forwardRef<
                   <div className="text-center">
                     <div className="flex items-center justify-center">
                       {selectedItem.creator?.signature_path ? (
-                        <Image
+                        <img
                           src={selectedItem.creator?.signature_path}
                           alt=""
                           width={75}
@@ -143,7 +142,7 @@ export const PrintLocatorSlipForm = React.forwardRef<
                   <div className="text-center">
                     <div className="flex items-center justify-center">
                       {selectedItem.approver?.signature_path ? (
-                        <Image
+                        <img
                           src={selectedItem.approver?.signature_path}
                           alt=""
                           width={75}
@@ -294,7 +293,7 @@ export const PrintLocatorSlipForm = React.forwardRef<
                   <div className="text-center">
                     <div className="flex items-center justify-center">
                       {selectedItem.creator?.signature_path ? (
-                        <Image
+                        <img
                           src={selectedItem.creator?.signature_path}
                           alt=""
                           width={75}
@@ -314,7 +313,7 @@ export const PrintLocatorSlipForm = React.forwardRef<
                   <div className="text-center">
                     <div className="flex items-center justify-center">
                       {selectedItem.approver?.signature_path ? (
-                        <Image
+                        <img
                           src={selectedItem.approver?.signature_path}
                           alt=""
                           width={75}

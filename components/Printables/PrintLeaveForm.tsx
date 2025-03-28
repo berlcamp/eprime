@@ -1,7 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 import { DocumentTypes } from '@/types'
 import { format } from 'date-fns'
 import { SquareCheckIcon, SquareIcon } from 'lucide-react'
-import Image from 'next/image'
 import * as React from 'react'
 
 interface ComponentToPrintProps {
@@ -31,7 +31,7 @@ export const PrintLeaveForm = React.forwardRef<
                 </div>
                 <div className="flex items-center justify-center">
                   <div>
-                    <Image
+                    <img
                       src="/images/bayugan_logo.png"
                       alt=""
                       width={100}
@@ -50,7 +50,7 @@ export const PrintLeaveForm = React.forwardRef<
                     </div>
                   </div>
                   <div>
-                    <Image
+                    <img
                       src="/images/deped_logo.png"
                       alt=""
                       width={100}
@@ -576,7 +576,7 @@ export const PrintLeaveForm = React.forwardRef<
                 <div className="w-full flex flex-col items-center justify-center">
                   <div className="flex items-center justify-center">
                     {selectedItem.creator?.signature_path ? (
-                      <Image
+                      <img
                         src={selectedItem.creator?.signature_path}
                         alt=""
                         width={75}
@@ -677,7 +677,7 @@ export const PrintLeaveForm = React.forwardRef<
                 <div className="w-full mt-2 flex flex-col items-center justify-center">
                   <div className="font-bold">
                     {selectedItem.certifier?.signature_path ? (
-                      <Image
+                      <img
                         src={selectedItem.certifier?.signature_path}
                         alt=""
                         width={75}
@@ -712,7 +712,7 @@ export const PrintLeaveForm = React.forwardRef<
                 <div className="w-full mt-2 flex flex-col items-center justify-center">
                   <div className="font-bold">
                     {selectedItem.recommender?.signature_path ? (
-                      <Image
+                      <img
                         src={selectedItem.recommender?.signature_path}
                         alt=""
                         width={75}
@@ -763,7 +763,7 @@ export const PrintLeaveForm = React.forwardRef<
                 <div className="w-full flex flex-col items-center justify-center">
                   <div className="font-bold">
                     {selectedItem.finalapprover?.signature_path ? (
-                      <Image
+                      <img
                         src={selectedItem.finalapprover?.signature_path}
                         alt=""
                         width={75}

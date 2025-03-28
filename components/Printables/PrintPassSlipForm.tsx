@@ -1,7 +1,6 @@
 import { DocumentTypes } from '@/types'
 import { format } from 'date-fns'
 import { SquareCheckIcon, SquareIcon } from 'lucide-react'
-import Image from 'next/image'
 import * as React from 'react'
 
 interface ComponentToPrintProps {
@@ -180,7 +179,7 @@ export const PrintPassSlipForm = React.forwardRef<
                   <div className="text-center w-1/2">
                     <div className="flex items-center justify-center">
                       {selectedItem.recommender?.signature_path ? (
-                        <Image
+                        <img
                           src={selectedItem.recommender?.signature_path}
                           alt=""
                           width={75}
@@ -201,7 +200,7 @@ export const PrintPassSlipForm = React.forwardRef<
                   <div className="text-center">
                     <div className="flex items-center justify-center">
                       {selectedItem.approver?.signature_path ? (
-                        <Image
+                        <img
                           src={selectedItem.approver?.signature_path}
                           alt=""
                           width={75}
