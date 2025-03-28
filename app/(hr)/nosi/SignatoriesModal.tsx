@@ -22,6 +22,7 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
 
   const onSubmit = async (formdata: SignatoriesTypes) => {
     const signatories = {
+      first_paragraph: formdata.first_paragraph,
       truly_yours: formdata.truly_yours,
       truly_yours_position: formdata.truly_yours_position,
       recommending_1: formdata.recommending_1,
@@ -49,6 +50,21 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
               />
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">First paragramph:</div>
+                  <div className="flex space-x-1">
+                    <textarea
+                      {...register('first_paragraph', { required: true })}
+                      placeholder="First paragraph"
+                      className="app__input_standard"
+                    />
+                  </div>
+                  {errors.first_paragraph && (
+                    <div className="app__error_message">This is required</div>
+                  )}
+                </div>
+              </div>
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Very truly yours:</div>

@@ -89,6 +89,7 @@ export interface ImplementingUnitTypes {
 }
 
 export interface SignatoriesTypes {
+  first_paragraph?: string
   prepared_by?: string
   prepared_by_position?: string
   truly_yours?: string

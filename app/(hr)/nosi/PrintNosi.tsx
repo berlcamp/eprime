@@ -68,11 +68,7 @@ export const PrintNosi = React.forwardRef<
                 <div className="mt-10">Sir/Ma'am:</div>
 
                 <div className="indent-10 mt-10">
-                  Pursuant to Civil Service Commision and Department of Budget
-                  and Management and Management Joint Circular No. 1, s.2012,
-                  dated September 3, 2012 implementing item (4) (d) of the
-                  Senate of the House of Representatives Joint Resolution No. 4,
-                  s. 2009, approved on June 17, 2009, your salary as{' '}
+                  {signatories.first_paragraph} your salary as{' '}
                   {selectedItem.hrm_user?.hrm_positions?.name} is hereby
                   adjusted effective{' '}
                   <span className="font-bold underline">

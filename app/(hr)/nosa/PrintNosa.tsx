@@ -68,11 +68,7 @@ export const PrintNosa = React.forwardRef<
                 <div className="mt-10">Sir/Ma'am:</div>
 
                 <div className="indent-10 mt-10">
-                  Pursuant to National Budget Circular No.{' '}
-                  <span className="underline">594</span> dated{' '}
-                  <span className="underline">12 August 2024</span>,
-                  implementing Executive Order No. 64, s. 2024 dated August 2,
-                  2024, your salary is hereby adjusted effective,{' '}
+                  {signatories.first_paragraph}{' '}
                   <span className="font-bold underline">
                     {format(
                       new Date(selectedItem.effective_date),
