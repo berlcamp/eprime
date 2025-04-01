@@ -1073,7 +1073,7 @@ export default function AddEdit({
                       <td className="px-2 py-2">
                         {!viewMode && (
                           <TrashIcon
-                            onClick={(e) =>
+                            onClick={() =>
                               handleRemoveSelectedCompetency(item.id)
                             }
                             className="w-4 h-4 cursor-pointer"
@@ -1106,7 +1106,7 @@ export default function AddEdit({
                 <div className="flex items-center justify-center space-x-2 bg-gray-50 text-xs">
                   <button
                     type="button"
-                    onClick={(e) => setAddCompetency(true)}
+                    onClick={() => setAddCompetency(true)}
                     className="bg-emerald-500 hover:bg-emerald-600 border border-emerald-600 font-medium px-2 py-1 text-xs text-white rounded-sm"
                   >
                     Add Competency

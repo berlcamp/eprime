@@ -617,11 +617,11 @@ export default function DevelopmentPlanModal({
                           {!viewMode && (
                             <div className="flex space-x-2">
                               <TrashIcon
-                                onClick={(e) => handleRemoveCore(index)}
+                                onClick={() => handleRemoveCore(index)}
                                 className="w-4 h-4 cursor-pointer"
                               />
                               <PencilSquareIcon
-                                onClick={(e) => handleEditCore(item, index)}
+                                onClick={() => handleEditCore(item, index)}
                                 className="w-4 h-4 cursor-pointer"
                               />
                             </div>

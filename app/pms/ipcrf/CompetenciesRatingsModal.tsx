@@ -13,7 +13,6 @@ import CompentencyRatingRow from './CompentencyRatingRow'
 
 interface ModalProps {
   ipcrfId: string
-  competencyType: string
   editData: IpcrfTypes
   view: string
   hideRatingModal: () => void
@@ -22,7 +21,6 @@ interface ModalProps {
 export default function CompetenciesRatingsModal({
   ipcrfId,
   editData,
-  competencyType,
   view,
   hideRatingModal
 }: ModalProps) {
