@@ -136,17 +136,7 @@ const PmsSideBar = () => {
                 className="flex items-center p-2 text-sm font-light rounded-lg text-gray-300  hover:bg-gray-700"
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
-                  IPCRF Templates
-                </span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/pms/opcrftemplates"
-                className="flex items-center p-2 text-sm font-light rounded-lg text-gray-300  hover:bg-gray-700"
-              >
-                <span className="flex-1 ml-3 whitespace-nowrap">
-                  OPCRF Templates
+                  IPCRF/Opcrf Templates
                 </span>
               </Link>
             </li>

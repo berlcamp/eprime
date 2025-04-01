@@ -218,45 +218,47 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
       }
 
       // Generate an array of all dates in the range
-      let dateRange = []
-      if (formdata.leave_from !== '' && formdata.leave_to !== '') {
-        // dateRange = eachDayOfInterval({
-        //   start: new Date(formdata.leave_from),
-        //   end: new Date(formdata.leave_to)
-        // })
-        dateRange = eachDayOfInterval({
-          start: new Date(formdata.leave_from),
-          end: new Date(formdata.leave_to)
-        }).filter(
-          (date) =>
-            watchedWeeked || (date.getDay() !== 0 && date.getDay() !== 6)
-        ) // Exclude weekends if watchedWeeked is false
-      } else {
-        dateRange = formdata.leave_dates
-          .filter((item) => item.date) // Ensure the date is valid (not blank)
-          .map((item) => new Date(item.date))
-          .sort((a, b) => a.getTime() - b.getTime())
-      }
+      if (watchedType !== 'Terminal/Monetization Leave') {
+        let dateRange = []
+        if (formdata.leave_from !== '' && formdata.leave_to !== '') {
+          // dateRange = eachDayOfInterval({
+          //   start: new Date(formdata.leave_from),
+          //   end: new Date(formdata.leave_to)
+          // })
+          dateRange = eachDayOfInterval({
+            start: new Date(formdata.leave_from),
+            end: new Date(formdata.leave_to)
+          }).filter(
+            (date) =>
+              watchedWeeked || (date.getDay() !== 0 && date.getDay() !== 6)
+          ) // Exclude weekends if watchedWeeked is false
+        } else {
+          dateRange = formdata.leave_dates
+            .filter((item) => item.date) // Ensure the date is valid (not blank)
+            .map((item) => new Date(item.date))
+            .sort((a, b) => a.getTime() - b.getTime())
+        }
 
-      // Map the dates to the required format
-      const insertArray = dateRange.map((date, index) => ({
-        tracker_id: data[0].id,
-        date: format(date, 'yyyy-MM-dd'),
-        is_paid: index < withPay // Mark as paid if within the withPay limit
-      }))
+        // Map the dates to the required format
+        const insertArray = dateRange.map((date, index) => ({
+          tracker_id: data[0].id,
+          date: format(date, 'yyyy-MM-dd'),
+          is_paid: index < withPay // Mark as paid if within the withPay limit
+        }))
 
-      // Store each leave dates
-      const { error: datesError } = await supabase
-        .from('hrm_leave_dates')
-        .insert(insertArray)
+        // Store each leave dates
+        const { error: datesError } = await supabase
+          .from('hrm_leave_dates')
+          .insert(insertArray)
 
-      if (datesError) {
-        void logError('Leave Days', 'hrm_leave_dates', '', datesError.message)
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(datesError.message)
+        if (datesError) {
+          void logError('Leave Days', 'hrm_leave_dates', '', datesError.message)
+          setToast(
+            'error',
+            'Saving failed, please reload the page and try again.'
+          )
+          throw new Error(datesError.message)
+        }
       }
 
       const { error: error2 } = await supabase.from('hrm_tracker_flow').insert([
@@ -817,115 +819,120 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
           {/* End First Column */}
           {/* Begin Second Column */}
           <div className="w-full px-4">
-            <div className="app__form_field_container">
-              <div className="w-full">
-                <div className="app__label_standard">Inclusive Date/s</div>
+            {watchedType !== 'Terminal/Monetization Leave' && (
+              <div className="app__form_field_container">
                 <div className="w-full">
-                  <div className="mt-3 flex items-start justify-start space-x-2 text-sm">
-                    <label className="space-x-2">
-                      <input
-                        type="radio"
-                        value="Custom Dates"
-                        disabled={isDisabled}
-                        {...register('date_type')}
-                      />
-                      <span>Custom Dates</span>
-                    </label>
+                  <div className="app__label_standard">Inclusive Date/s</div>
+                  <div className="w-full">
+                    <div className="mt-3 flex items-start justify-start space-x-2 text-sm">
+                      <label className="space-x-2">
+                        <input
+                          type="radio"
+                          value="Custom Dates"
+                          disabled={isDisabled}
+                          {...register('date_type')}
+                        />
+                        <span>Custom Dates</span>
+                      </label>
 
-                    <label className="space-x-2">
-                      <input
-                        type="radio"
-                        value="Date Range"
-                        disabled={isDisabled}
-                        {...register('date_type')}
-                      />
-                      <span>Date Range</span>
-                    </label>
+                      <label className="space-x-2">
+                        <input
+                          type="radio"
+                          value="Date Range"
+                          disabled={isDisabled}
+                          {...register('date_type')}
+                        />
+                        <span>Date Range</span>
+                      </label>
+                    </div>
                   </div>
-                </div>
-                <div className="mt-2">
-                  {watchedDateType === 'Custom Dates' && (
-                    <>
-                      {fields.map((_q, index) => (
-                        <div key={index} className="app__form_field_container">
-                          <div>
-                            <div className="flex items-center justify-start space-x-2">
-                              <input
-                                type="date"
-                                className="app__input_standard"
-                                {...register(`leave_dates.${index}.date`, {
-                                  required: true
-                                })}
-                              />
-                              {fields.length > 1 && (
-                                <button
-                                  type="button"
-                                  className="app__btn_red_xs"
-                                  onClick={() => remove(index)}
-                                >
-                                  Remove
-                                </button>
+                  <div className="mt-2">
+                    {watchedDateType === 'Custom Dates' && (
+                      <>
+                        {fields.map((_q, index) => (
+                          <div
+                            key={index}
+                            className="app__form_field_container"
+                          >
+                            <div>
+                              <div className="flex items-center justify-start space-x-2">
+                                <input
+                                  type="date"
+                                  className="app__input_standard"
+                                  {...register(`leave_dates.${index}.date`, {
+                                    required: true
+                                  })}
+                                />
+                                {fields.length > 1 && (
+                                  <button
+                                    type="button"
+                                    className="app__btn_red_xs"
+                                    onClick={() => remove(index)}
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+                              {errors.leave_dates?.[index]?.date && (
+                                <div className="app__error_message">
+                                  Date is required
+                                </div>
                               )}
                             </div>
-                            {errors.leave_dates?.[index]?.date && (
-                              <div className="app__error_message">
-                                Date is required
-                              </div>
-                            )}
                           </div>
-                        </div>
-                      ))}
+                        ))}
 
-                      <button
-                        type="button"
-                        className="app__btn_blue_xs"
-                        onClick={handleAddDate}
-                      >
-                        Add Date
-                      </button>
-                    </>
-                  )}
-                  {watchedDateType === 'Date Range' && (
-                    <div className="w-full">
-                      <div className="flex space-x-2">
-                        <input
-                          {...register('leave_from', { required: true })}
-                          type="date"
-                          className="app__input_standard"
-                        />
-                        <input
-                          {...register('leave_to', { required: true })}
-                          type="date"
-                          className="app__input_standard"
-                        />
-                      </div>
-                      <div className="app__label_standard">
-                        <label className="flex items-center space-x-1">
+                        <button
+                          type="button"
+                          className="app__btn_blue_xs"
+                          onClick={handleAddDate}
+                        >
+                          Add Date
+                        </button>
+                      </>
+                    )}
+                    {watchedDateType === 'Date Range' && (
+                      <div className="w-full">
+                        <div className="flex space-x-2">
                           <input
-                            {...register('weekend')}
-                            disabled={isDisabled}
-                            type="checkbox"
-                            className=""
+                            {...register('leave_from', { required: true })}
+                            type="date"
+                            className="app__input_standard"
                           />
-                          <span>Include weekend</span>
-                        </label>
+                          <input
+                            {...register('leave_to', { required: true })}
+                            type="date"
+                            className="app__input_standard"
+                          />
+                        </div>
+                        <div className="app__label_standard">
+                          <label className="flex items-center space-x-1">
+                            <input
+                              {...register('weekend')}
+                              disabled={isDisabled}
+                              type="checkbox"
+                              className=""
+                            />
+                            <span>Include weekend</span>
+                          </label>
 
-                        {errors.leave_from && (
-                          <div className="app__error_message">
-                            Date (From) is required
-                          </div>
-                        )}
-                        {errors.leave_to && (
-                          <div className="app__error_message">
-                            Date (To) is required
-                          </div>
-                        )}
+                          {errors.leave_from && (
+                            <div className="app__error_message">
+                              Date (From) is required
+                            </div>
+                          )}
+                          {errors.leave_to && (
+                            <div className="app__error_message">
+                              Date (To) is required
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
             <div className="app__form_field_container">
               <div className="w-full">
                 <div className="app__label_standard">
@@ -935,11 +942,19 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                   </span>
                 </div>
                 <div>
-                  <input
-                    {...register('days', { required: true })}
-                    type="hidden"
-                    className="app__select_standard"
-                  />
+                  {watchedType !== 'Terminal/Monetization Leave' ? (
+                    <input
+                      {...register('days', { required: true })}
+                      type="hidden"
+                      className="app__select_standard"
+                    />
+                  ) : (
+                    <input
+                      {...register('days', { required: true })}
+                      type="text"
+                      className="app__select_standard"
+                    />
+                  )}
                   {errors.days && (
                     <div className="app__error_message">
                       Please choose dates to get Total Days
