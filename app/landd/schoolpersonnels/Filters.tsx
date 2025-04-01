@@ -23,7 +23,6 @@ const Filters = ({ setFilterKeyword }: FilterTypes) => {
   const [majors, setMajors] = useState<MajorTypes[] | []>([])
 
   const { supabase } = useSupabase()
-
   const handleApply = () => {
     if (keyword.trim() === '') return
 

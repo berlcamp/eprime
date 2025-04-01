@@ -30,7 +30,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".eslintrc.js"
+    ".eslintrc.js",
+    "types/pmsTypes.sx",
+    "app/pms/(admin)/competencies/page.js"
   ],
   "exclude": ["node_modules"]
 }

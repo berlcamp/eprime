@@ -350,7 +350,6 @@ export async function fetchPersonnel(
         '*, grade_levels:hrm_personnel_grade_levels(*), coordinatorships:hrm_personnel_coordinatorships(*),majors:hrm_personnel_majors(*), subjects:hrm_personnel_subjects(*), hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))',
         { count: 'exact' }
       )
-      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // if (schoolIds.length > 0) {
     //   query = query.in('school_id', schoolIds)
