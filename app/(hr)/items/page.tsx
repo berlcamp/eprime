@@ -35,6 +35,7 @@ const Page: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false)
 
   const [list, setList] = useState<ItemTypes[]>([])
+  const [filterNumber, setFilterNumber] = useState<string>('')
   const [filterPosition, setFilterPosition] = useState<string>('')
   const [filterSchool, setFilterSchool] = useState<string>('')
   const [filterUser, setFilterUser] = useState<string>('')
@@ -55,7 +56,7 @@ const Page: React.FC = () => {
 
     try {
       const result = await fetchItems(
-        { filterSchool, filterPosition, filterUser },
+        { filterSchool, filterNumber, filterPosition, filterUser },
         perPageCount,
         0
       )
@@ -82,7 +83,7 @@ const Page: React.FC = () => {
 
     try {
       const result = await fetchItems(
-        { filterSchool, filterPosition, filterUser },
+        { filterSchool, filterNumber, filterPosition, filterUser },
         perPageCount,
         list.length
       )
@@ -125,7 +126,7 @@ const Page: React.FC = () => {
     setList([])
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPageCount, filterUser, filterPosition, filterSchool])
+  }, [perPageCount, filterUser, filterNumber, filterPosition, filterSchool])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -154,6 +155,7 @@ const Page: React.FC = () => {
           {/* Filters */}
           <div className="app__filters">
             <Filters
+              setFilterNumber={setFilterNumber}
               setFilterSchool={setFilterSchool}
               setFilterPosition={setFilterPosition}
               setFilterUser={setFilterUser}

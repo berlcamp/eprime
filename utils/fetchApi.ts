@@ -490,6 +490,7 @@ export async function fetchAssignments(
 export async function fetchItems(
   filters: {
     filterKeyword?: string
+    filterNumber?: string
     filterSchool?: string
     filterPosition?: string
     filterStatus?: string
@@ -508,8 +509,8 @@ export async function fetchItems(
       .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Item Number
-    if (filters.filterKeyword && filters.filterKeyword !== '') {
-      query = query.eq('item_number', filters.filterKeyword)
+    if (filters.filterNumber && filters.filterNumber !== '') {
+      query = query.eq('item_number', filters.filterNumber)
     }
 
     // filter position

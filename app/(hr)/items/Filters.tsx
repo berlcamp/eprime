@@ -1,6 +1,11 @@
 import { CustomButton, UserBlock } from '@/components'
 import { fetchImplementingUnits, fetchPositions } from '@/utils/fetchApi'
-import { TagIcon, UserIcon, XMarkIcon } from '@heroicons/react/20/solid'
+import {
+  MagnifyingGlassIcon,
+  TagIcon,
+  UserIcon,
+  XMarkIcon
+} from '@heroicons/react/20/solid'
 import React, { useEffect, useState } from 'react'
 
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -12,16 +17,19 @@ import type {
 } from '@/types'
 
 interface FilterTypes {
+  setFilterNumber: (type: string) => void
   setFilterSchool: (type: string) => void
   setFilterPosition: (type: string) => void
   setFilterUser: (employee: string) => void
 }
 
 const Filters = ({
+  setFilterNumber,
   setFilterSchool,
   setFilterUser,
   setFilterPosition
 }: FilterTypes) => {
+  const [itemNumber, setItemNumber] = useState('')
   const [selectedSchool, setSelectedSchool] = useState('')
   const [selectedPosition, setSelectedPosition] = useState('')
 
@@ -40,6 +48,7 @@ const Filters = ({
 
   const handleApply = () => {
     if (
+      itemNumber !== '' &&
       selectedSchool !== '' &&
       selectedPosition !== '' &&
       selectedUserId === ''
@@ -47,6 +56,7 @@ const Filters = ({
       return
 
     // pass filter values to parent
+    setFilterNumber(itemNumber)
     setFilterSchool(selectedSchool)
     setFilterUser(selectedUserId)
     setFilterPosition(selectedPosition)
@@ -56,6 +66,7 @@ const Filters = ({
     e.preventDefault()
 
     if (
+      itemNumber !== '' &&
       selectedSchool !== '' &&
       selectedPosition !== '' &&
       selectedUserId === ''
@@ -63,6 +74,7 @@ const Filters = ({
       return
 
     // pass filter values to parent
+    setFilterNumber(itemNumber)
     setFilterSchool(selectedSchool)
     setFilterUser(selectedUserId)
     setFilterPosition(selectedPosition)
@@ -70,6 +82,8 @@ const Filters = ({
 
   // clear all filters
   const handleClear = () => {
+    setFilterNumber('')
+    setItemNumber('')
     setFilterSchool('')
     setSelectedSchool('')
     setFilterPosition('')
@@ -139,6 +153,15 @@ const Filters = ({
           className="items-center inline-flex app__filter_field_container"
         >
           <div className="items-center space-y-1">
+            <div className="app__filter_container">
+              <MagnifyingGlassIcon className="w-4 h-4 mr-1" />
+              <input
+                placeholder="Item Number"
+                value={itemNumber}
+                onChange={(e) => setItemNumber(e.target.value)}
+                className="app__filter_input"
+              />
+            </div>
             <div className="app__filter_container">
               <UserIcon className="w-4 h-4 mr-1" />
               {selectedItems.length > 0 &&
