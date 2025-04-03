@@ -61,25 +61,26 @@ const Page: React.FC = () => {
   const { supabase } = useSupabase()
 
   const fetchData = async () => {
+    if (filterRanking === '') {
+      return
+    }
     setLoading(true)
 
     try {
-      let query = supabase
+      const query = supabase
         .from('hrm_ranking_applicants')
         .select(
-          '*, ranking:ranking_id(type,passing_score,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, signature_path, hrm_positions:position_id(name)), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          '*, hrm_item:item_id(implementing_unit:implementing_unit_id(*),hrm_position:position_id(*)),ranking:ranking_id(type,passing_score,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, signature_path, hrm_positions:position_id(name)), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
           {
             count: 'exact'
           }
         )
         .eq('evaluation_status', 'Qualified')
-
-      // filter ranking
-      if (filterRanking !== '') {
-        query = query.eq('ranking_id', filterRanking)
-      }
+        .eq('ranking_id', filterRanking)
 
       const { data, error } = await query
+
+      console.log('data', data)
 
       if (error) {
         throw new Error(error.message)
@@ -246,6 +247,8 @@ const Page: React.FC = () => {
     worksheet.columns = [
       { header: 'No.', key: 'number', width: 10 },
       { header: 'Names of Applicant', key: 'name', width: 25 },
+      { header: 'Position', key: 'position', width: 25 },
+      { header: 'Implementing Unit', key: 'ius', width: 25 },
       { header: 'Applicant Code', key: 'code', width: 25 },
       ...allKeys.map((key) => ({ header: key, key, width: 15 })), // Dynamic columns
       { header: 'Total', key: 'overall_score', width: 15 },
@@ -270,6 +273,8 @@ const Page: React.FC = () => {
     const data: any[] = list.map((item, index) => ({
       number: index + 1,
       name: `${item.applicant.lastname}, ${item.applicant.firstname} ${item.applicant.middlename}`,
+      position: `${item.applicant.hrm_item?.hrm_position?.name ?? 'N/A'}`,
+      ius: `${item.applicant.hrm_item?.implementing_unit?.name ?? 'N/A'}`,
       code: `${item.applicant.code}`,
       ...allKeys.reduce<Record<string, any>>((acc, key) => {
         acc[key] = item.accumulated_points?.[key] ?? '-' // Use "-" if value is missing
@@ -496,9 +501,22 @@ const Page: React.FC = () => {
                             Major: {item.applicant.specific_major}
                           </div>
                           {item.applicant.current_employee === 'Yes' && (
-                            <div className="font-bold">
-                              (Current DepEd Employee)
-                            </div>
+                            <>
+                              <div className="font-bold mt-2">
+                                (Current DepEd Employee)
+                              </div>
+                              <div className="">
+                                Position:{' '}
+                                {item.applicant.hrm_item?.hrm_position?.name}
+                              </div>
+                              <div className="">
+                                Implementing Unit:{' '}
+                                {
+                                  item.applicant.hrm_item?.implementing_unit
+                                    ?.name
+                                }
+                              </div>
+                            </>
                           )}
                           {item.applicant.previous_applicant === 'Yes' && (
                             <div className="font-bold">

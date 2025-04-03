@@ -506,7 +506,6 @@ export async function fetchItems(
         '*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_school:school_id(name),implementing_unit:implementing_unit_id(name),hrm_position:position_id(name)',
         { count: 'exact' }
       )
-      .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
 
     // Item Number
     if (filters.filterNumber && filters.filterNumber !== '') {

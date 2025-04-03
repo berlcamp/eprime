@@ -932,6 +932,9 @@ export interface ApplicantTypes {
   ranking: RankingTypes
   applicant_documents: ApplicantDocuments[]
   qualifications: Array<{ id?: string; name: string; files: [] }>
+
+  item_id: string
+  hrm_item: ItemTypes
 }
 
 export interface ApplicantDocuments {
