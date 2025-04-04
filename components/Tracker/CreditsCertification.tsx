@@ -1127,21 +1127,34 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                 </div>
               ))}
             </div>
-            <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-              Absence with Pay:{' '}
-              {Number.isInteger(withPay) ? withPay : withPay.toFixed(2)}
-              {withPay > Number(documentData.leave_days) && (
-                <span className="text-red-500">
-                  (Exceeds to actual number of leave days)
-                </span>
-              )}
-            </div>
-            <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-              Absence without Pay:{' '}
-              {Number.isInteger(withoutPay)
-                ? withoutPay
-                : withoutPay.toFixed(2)}
-            </div>
+            {documentData.leave_type === 'Terminal/Monetization Leave' ? (
+              <>
+                <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
+                  Absence with Pay: {documentData.leave_days}
+                </div>
+                <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
+                  Absence without Pay: 0
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
+                  Absence with Pay:{' '}
+                  {Number.isInteger(withPay) ? withPay : withPay.toFixed(2)}
+                  {withPay > Number(documentData.leave_days) && (
+                    <span className="text-red-500">
+                      (Exceeds to actual number of leave days)
+                    </span>
+                  )}
+                </div>
+                <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
+                  Absence without Pay:{' '}
+                  {Number.isInteger(withoutPay)
+                    ? withoutPay
+                    : withoutPay.toFixed(2)}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
