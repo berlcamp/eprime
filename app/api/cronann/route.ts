@@ -29,7 +29,7 @@ export async function GET() {
     // CTO expiration cron
     const { error: ctoError } = await supabase.rpc('automate_cto_expiration')
     if (ctoError) {
-      throw new Error(ctoError.message)
+      throw new Error(`automate_cto_expiration cron: ${ctoError.message}`)
     }
 
     // Reset annual leave credits
@@ -37,13 +37,15 @@ export async function GET() {
       'reset_annual_leave_credits'
     )
     if (resetYearlyCreditsError) {
-      throw new Error(resetYearlyCreditsError.message)
+      throw new Error(
+        `reset_annual_leave_credits cron: ${resetYearlyCreditsError.message}`
+      )
     }
 
     // NOSI cron
     const { error: nosiCronError } = await supabase.rpc('process_nosi')
     if (nosiCronError) {
-      throw new Error(nosiCronError.message)
+      throw new Error(`process_nosi cron: ${nosiCronError.message}`)
     }
 
     return NextResponse.json('Cron completed', { status: 200 })
