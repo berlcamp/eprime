@@ -264,21 +264,13 @@ const Page: React.FC = () => {
                                 {item.status !== 'Revoked' && (
                                   <>
                                     <Menu.Item>
-                                      {item.hrm_service_credit_users.length ===
-                                      0 ? (
-                                        <div
-                                          onClick={() => handleEdit(item)}
-                                          className="app__dropdown_item"
-                                        >
-                                          <PencilSquareIcon className="w-4 h-4" />
-                                          <span>Edit</span>
-                                        </div>
-                                      ) : (
-                                        <div className="app__dropdown_item_disabled">
-                                          <PencilSquareIcon className="w-4 h-4" />
-                                          <span>Edit</span>
-                                        </div>
-                                      )}
+                                      <div
+                                        onClick={() => handleEdit(item)}
+                                        className="app__dropdown_item"
+                                      >
+                                        <PencilSquareIcon className="w-4 h-4" />
+                                        <span>Edit</span>
+                                      </div>
                                     </Menu.Item>
                                     <Menu.Item>
                                       <div
