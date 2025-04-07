@@ -111,15 +111,17 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       dispatch(updateList(items))
 
       // insert to notifications
-      const { error2 } = await supabase.from('hrm_notifications').insert({
-        message:
-          'You are added to a <b>CTO</b>, please upload supporting documents.',
-        url: `/profile/${user.id}?page=ctos&id=${data[0].id}`,
-        type: 'cto',
-        user_id: user.id,
-        cto_user_id: data[0].id,
-        reference_table: 'hrm_cto_users'
-      })
+      const { error: error2 } = await supabase
+        .from('hrm_notifications')
+        .insert({
+          message:
+            'You are added to a <b>CTO</b>, please upload supporting documents.',
+          url: `/profile/${user.id}?page=ctos&id=${data[0].id}`,
+          type: 'cto',
+          user_id: user.id,
+          cto_user_id: data[0].id,
+          reference_table: 'hrm_cto_users'
+        })
 
       if (error2) {
         throw new Error(error2.message)

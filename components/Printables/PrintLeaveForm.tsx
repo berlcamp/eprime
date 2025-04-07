@@ -315,6 +315,8 @@ export const PrintLeaveForm = React.forwardRef<
                       <span className="underline">
                         {selectedItem.leave_others_specify}
                       </span>
+                    ) : selectedItem.leave_type === 'Compensatory Time Off' ? (
+                      <span className="underline">Compensatory Time Off</span>
                     ) : (
                       <span>______________________________________</span>
                     )}

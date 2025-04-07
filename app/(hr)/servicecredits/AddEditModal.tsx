@@ -59,6 +59,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
     const newData = {
       reference_code: generateReferenceCode(),
+      so_number: formdata.so_number,
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
       to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       date_issued: new Date(formdata.date_issued),
@@ -121,7 +122,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     const serviceCredits = Number(totalHours) * perHour
 
     const newData = {
-      reference_code: generateReferenceCode(),
+      so_number: formdata.so_number,
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
       to: new Date(formdata.to), // use the string data before storing the redux to avoid error
       date_issued: new Date(formdata.date_issued),
@@ -228,6 +229,22 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">SO Number</div>
+                  <div>
+                    <input
+                      {...register('so_number', { required: true })}
+                      className="app__input_standard"
+                    />
+                    {errors.from && (
+                      <div className="app__error_message">
+                        SO number is required
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Date Issued</div>

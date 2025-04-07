@@ -433,6 +433,7 @@ export interface ServiceCreditUserTypes {
 export interface ServiceCreditTypes {
   reference_code: string
   id: string
+  so_number: string
   from: string
   to: string
   status: string

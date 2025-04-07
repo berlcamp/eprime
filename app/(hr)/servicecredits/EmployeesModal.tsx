@@ -31,6 +31,7 @@ import type {
   ServiceCreditUserTypes
 } from '@/types'
 import { logError } from '@/utils/fetchApi'
+import ConfirmApproveModal from './ConfirmApproveModal'
 
 interface ModalProps {
   hideModal: () => void
@@ -150,7 +151,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
     setShowAttachmentsModal(true)
   }
 
-  const handleApproveConfirmed = async () => {
+  const handleApproveConfirmed = async (newBalance: string) => {
     if (!scData) return
 
     if (!selectedRow) return
@@ -160,7 +161,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
 
       const { error } = await supabase
         .from('hrm_service_credit_users')
-        .update({ is_approved: true })
+        .update({ is_approved: true, service_credits: newBalance })
         .eq('id', selectedRow?.id)
 
       if (error) throw new Error(error.message)
@@ -202,8 +203,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
       const scBalance =
         balances.find((item) => item.type === 'Service Credit')?.balance ?? 0
 
-      // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
-      const sc = Number(scBalance) + Number(selectedRow.service_credits)
+      const sc = Number(scBalance) + Number(newBalance)
 
       // Update Service Credit
       const { error: error4 } = await supabase
@@ -228,7 +228,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
         type: 'Service Credit',
         balance: sc,
         remarks: '',
-        credits_earned: selectedRow.service_credits,
+        credits_earned: newBalance,
         user_id: selectedRow.hrm_user_id,
         particulars: 'Earned Service Credit'
       }
@@ -255,7 +255,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
       // Update list
       const updatedData = list.map((item) => {
         if (item.id === selectedRow?.id) {
-          return { ...item, is_approved: true }
+          return { ...item, service_credit: newBalance, is_approved: true }
         }
         return item
       })
@@ -584,7 +584,8 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
       )}
       {/* Confirm Approve Modal */}
       {showApproveModal && (
-        <ConfirmModal
+        <ConfirmApproveModal
+          credit={scData.service_credits}
           header="Confirm Approve"
           btnText="Confirm"
           message="This action cannot be undone. Are you sure you want to approve this employee?"
