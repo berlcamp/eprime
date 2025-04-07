@@ -22,7 +22,9 @@ export async function GET() {
       throw new Error(incrementError.message)
     }
 
-    if (data[0].status === 'Error') {
+    console.log('data', data)
+
+    if (data[0].status && data[0].status === 'Error') {
       throw new Error(`Increment failed: ${data[0].status}`)
     }
 

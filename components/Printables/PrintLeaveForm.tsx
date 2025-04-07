@@ -581,8 +581,8 @@ export const PrintLeaveForm = React.forwardRef<
                       <img
                         src={selectedItem.creator?.signature_path}
                         alt=""
-                        width={75}
-                        height={75}
+                        width={40}
+                        height={40}
                       />
                     ) : (
                       <span>SGD</span>
@@ -682,8 +682,8 @@ export const PrintLeaveForm = React.forwardRef<
                       <img
                         src={selectedItem.certifier?.signature_path}
                         alt=""
-                        width={75}
-                        height={75}
+                        width={40}
+                        height={40}
                       />
                     ) : (
                       <span>SGD</span>
@@ -717,8 +717,8 @@ export const PrintLeaveForm = React.forwardRef<
                       <img
                         src={selectedItem.recommender?.signature_path}
                         alt=""
-                        width={75}
-                        height={75}
+                        width={40}
+                        height={40}
                       />
                     ) : (
                       <span>SGD</span>
@@ -768,8 +768,8 @@ export const PrintLeaveForm = React.forwardRef<
                       <img
                         src={selectedItem.finalapprover?.signature_path}
                         alt=""
-                        width={75}
-                        height={75}
+                        width={40}
+                        height={40}
                       />
                     ) : (
                       <span>SGD</span>
