@@ -233,12 +233,19 @@ export const PrintNosa = React.forwardRef<
           </tbody>
         </table>
         <div className="absolute bottom-0 w-full text-xs">
-          <div className="border-t-2 border-black flex items-start justify-start space-x-1">
-            <img src="/deped_bayugan.png" alt="" width={100} height={100} />
-            <div className="mt-3">
-              <div>Lanzones Street, Poblacion, Bayugan City</div>
+          <div className="border-t-2 border-black flex items-start justify-start space-x-4">
+            <img
+              src="/logo3.png"
+              alt=""
+              width={150}
+              height={150}
+              className="mt-2"
+            />
+            <div className="mt-2">
+              <div>DepEd Bldg., Palusapis Street, Poblacion, Bayugan City</div>
               <div className="text-blue-500">deped.bayugan@gmail.com</div>
-              <div>Telephone Number: (085) 303 - 0664</div>
+              <div>Telephone Numbers: (085) 231-1496, (085) 231-1924</div>
+              <div>Mobile No: 0962-867-6334 </div>
             </div>
           </div>
         </div>
