@@ -1,4 +1,5 @@
 import { Announcements, TopBarDark } from '@/components'
+import Cover from '@/components/Cover'
 import Footer from '@/components/Footer'
 import TrackerApplicationBox from '@/components/TrackerApplicationBox'
 import TrackerBox from '@/components/TrackerBox'
@@ -13,17 +14,23 @@ export default async function Page() {
     <>
       <div className="app__home">
         <TopBarDark isGuest={session ? false : true} />
-        <div className="bg-gray-700 pb-10 pt-32 px-6 md:flex items-start md:space-x-4 justify-center">
-          <div className="md:w-[620px] md:max-w-[620px] space-y-4">
-            <div className="bg-gray-100 p-4 rounded-lg border ">
-              <TrackerBox />
+        <Cover />
+        <div className="bg-gray-700 pb-10 -mt-32 px-6 md:flex items-start md:space-x-4 justify-center">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="z-20">
+              <div className="bg-gray-100 p-4 rounded-lg border">
+                <TrackerBox />
+              </div>
             </div>
-            <div className="bg-gray-100 p-4 rounded-lg border">
-              <TrackerApplicationBox />
+
+            <div className="z-20">
+              <div className="bg-gray-100 p-4 rounded-lg border pb-32">
+                <TrackerApplicationBox />
+              </div>
             </div>
-          </div>
-          <div className="bg-gray-100 p-4 rounded-lg border mt-10 md:mt-0 md:w-[620px] md:max-w-[620px]">
-            <Announcements />
+            <div className="bg-gray-100 p-4 rounded-lg border z-20">
+              <Announcements />
+            </div>
           </div>
         </div>
         {/* <div className=''>

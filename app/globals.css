@@ -283,6 +283,9 @@
 .app__single_page_wrapper2_large {
   @apply bg-gray-100 p-4 mb-20 rounded-lg border w-full md:mx-20;
 }
+.app__coverphoto_container {
+  @apply relative mt-14 w-full mx-auto h-80 lg:h-[550px] bg-gray-300 dark:bg-gray-700;
+}
 
 @media print {
   /* Ensure content fits well on multiple pages */
