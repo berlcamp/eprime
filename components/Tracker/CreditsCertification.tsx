@@ -59,6 +59,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
   >([])
 
   const [withPay, setWithPay] = useState(0)
+  const [certifiedWithPay, setCertifiedWithPay] = useState(0)
   const [withoutPay, setWithoutPay] = useState(Number(documentData.leave_days))
 
   const {
@@ -542,6 +543,16 @@ export default function CreditsCertification({ requestData }: PropTypes) {
           throw new Error(error.message)
         }
 
+        const d: DocumentTypes = data
+        let daysWithPay = 0
+        if (d.certified_by) {
+          d.leave_dates.forEach((d) => {
+            if (d.is_paid) {
+              daysWithPay++
+            }
+          })
+        }
+        setCertifiedWithPay(daysWithPay)
         setDocumentData(data)
       } catch (error) {
         console.error('fetch error xx', error)
@@ -1141,21 +1152,35 @@ export default function CreditsCertification({ requestData }: PropTypes) {
               </>
             ) : (
               <>
-                <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-                  Absence with Pay:{' '}
-                  {Number.isInteger(withPay) ? withPay : withPay.toFixed(2)}
-                  {withPay > Number(documentData.leave_days) && (
-                    <span className="text-red-500">
-                      (Exceeds to actual number of leave days)
-                    </span>
-                  )}
-                </div>
-                <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-                  Absence without Pay:{' '}
-                  {Number.isInteger(withoutPay)
-                    ? withoutPay
-                    : withoutPay.toFixed(2)}
-                </div>
+                {documentData.certified_by ? (
+                  <>
+                    <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
+                      Absence with Pay: {certifiedWithPay}
+                    </div>
+                    <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
+                      Absence without Pay:{' '}
+                      {Number(documentData.leave_days) - certifiedWithPay}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
+                      Absence with Pay:{' '}
+                      {Number.isInteger(withPay) ? withPay : withPay.toFixed(2)}
+                      {withPay > Number(documentData.leave_days) && (
+                        <span className="text-red-500">
+                          (Exceeds to actual number of leave days)
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
+                      Absence without Pay:{' '}
+                      {Number.isInteger(withoutPay)
+                        ? withoutPay
+                        : withoutPay.toFixed(2)}
+                    </div>
+                  </>
+                )}
               </>
             )}
           </div>
