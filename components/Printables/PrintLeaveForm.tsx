@@ -14,6 +14,15 @@ export const PrintLeaveForm = React.forwardRef<
 >((props, ref) => {
   const { selectedItem } = props
 
+  const d: DocumentTypes = selectedItem
+  let daysWithPay = 0
+  if (d.certified_by) {
+    d.leave_dates.forEach((d) => {
+      if (d.is_paid) {
+        daysWithPay++
+      }
+    })
+  }
   return (
     <div className="invisible">
       <div ref={ref} className="w-[816px] bg-white py-2 px-4">
@@ -760,13 +769,13 @@ export const PrintLeaveForm = React.forwardRef<
                   <div className="pl-10 mt-2">
                     <div>
                       <span className="underline underline-offset-1 font-bold">
-                        {selectedItem.leave_days_with_pay}
+                        {daysWithPay}
                       </span>{' '}
                       days with pay
                     </div>
                     <div>
                       <span className="underline underline-offset-1 font-bold">
-                        {selectedItem.leave_days_without_pay}
+                        {Number(selectedItem.leave_days) - daysWithPay}
                       </span>{' '}
                       days without pay
                     </div>
