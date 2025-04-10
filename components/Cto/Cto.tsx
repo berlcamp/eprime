@@ -167,6 +167,7 @@ export default function Cto({ userId }: { userId: string }) {
                 <th className="hidden md:table-cell app__th">
                   Expiration Status
                 </th>
+                <th className="hidden md:table-cell app__th">Remarks</th>
               </tr>
             </thead>
             <tbody>
@@ -301,6 +302,9 @@ export default function Cto({ userId }: { userId: string }) {
                           Active
                         </span>
                       )}
+                    </td>
+                    <td className="hidden md:table-cell app__td">
+                      {item.remarks}
                     </td>
                   </tr>
                 ))}

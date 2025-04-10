@@ -394,6 +394,7 @@ export interface CtoUserTypes {
   coc: number
   used_coc?: number
   status: string
+  remarks?: string
 }
 
 export interface CtoTypes {
@@ -428,6 +429,7 @@ export interface ServiceCreditUserTypes {
   is_approved: boolean
   service_credits: number
   used_service_credits?: number
+  remarks?: string
 }
 
 export interface ServiceCreditTypes {

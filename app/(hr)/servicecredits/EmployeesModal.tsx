@@ -32,6 +32,7 @@ import type {
 } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import ConfirmApproveModal from './ConfirmApproveModal'
+import Remarks from './Remarks'
 
 interface ModalProps {
   hideModal: () => void
@@ -445,6 +446,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
                         Attachments
                       </th>
                       <th className="hidden md:table-cell app__th"></th>
+                      <th className="hidden md:table-cell app__th"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -558,6 +560,11 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
                                   containerStyles="app__btn_green"
                                 />
                               )}
+                          </td>
+                          <td className="hidden md:table-cell app__td">
+                            {hasAccess('cto_sc_approver') && (
+                              <Remarks sc={item} />
+                            )}
                           </td>
                         </tr>
                       ))}
