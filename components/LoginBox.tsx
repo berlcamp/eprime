@@ -65,7 +65,7 @@ export default function LoginBox() {
 
   return (
     !session && (
-      <div className="">
+      <div className="z-20">
         <div className="flex items-start justify-center">
           <div className="bg-white p-4 w-96 rounded-lg shadow-lg">
             <form onSubmit={handleEmailLogin}>

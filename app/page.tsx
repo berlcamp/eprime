@@ -17,18 +17,18 @@ export default async function Page() {
         <Cover />
         <div className="bg-gray-700 pb-10 -mt-32 px-6 md:flex items-start md:space-x-4 justify-center">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="z-20">
+            <div className="z-10">
               <div className="bg-gray-100 p-4 rounded-lg border">
                 <TrackerBox />
               </div>
             </div>
 
-            <div className="z-20">
+            <div className="z-10">
               <div className="bg-gray-100 p-4 rounded-lg border pb-32">
                 <TrackerApplicationBox />
               </div>
             </div>
-            <div className="bg-gray-100 p-4 rounded-lg border z-20">
+            <div className="bg-gray-100 p-4 rounded-lg border z-10">
               <Announcements />
             </div>
           </div>
