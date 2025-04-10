@@ -735,21 +735,44 @@ export const PrintLeaveForm = React.forwardRef<
             <tr className="border-t-2 border-l-2 border-r-2 border-black">
               <td className="align-top p-1 text-xs">
                 <div>7.C APPROVED FOR:</div>
-                <div className="pl-10 mt-2">
-                  <div>
-                    <span className="underline underline-offset-1 font-bold">
-                      {selectedItem.leave_days_with_pay}
-                    </span>{' '}
-                    days with pay
+                {selectedItem.leave_type === 'Terminal/Monetization Leave' ? (
+                  <div className="pl-10 mt-2">
+                    <div>
+                      <span className="underline underline-offset-1 font-bold">
+                        0
+                      </span>{' '}
+                      days with pay
+                    </div>
+                    <div>
+                      <span className="underline underline-offset-1 font-bold">
+                        0
+                      </span>{' '}
+                      days without pay
+                    </div>
+                    <div>
+                      <span className="underline underline-offset-1 font-bold">
+                        {selectedItem.leave_days}
+                      </span>{' '}
+                      others (Monetization)
+                    </div>
                   </div>
-                  <div>
-                    <span className="underline underline-offset-1 font-bold">
-                      {selectedItem.leave_days_without_pay}
-                    </span>{' '}
-                    days without pay
+                ) : (
+                  <div className="pl-10 mt-2">
+                    <div>
+                      <span className="underline underline-offset-1 font-bold">
+                        {selectedItem.leave_days_with_pay}
+                      </span>{' '}
+                      days with pay
+                    </div>
+                    <div>
+                      <span className="underline underline-offset-1 font-bold">
+                        {selectedItem.leave_days_without_pay}
+                      </span>{' '}
+                      days without pay
+                    </div>
+                    <div>________ others (Specify)</div>
                   </div>
-                  <div>________ others (Specify)</div>
-                </div>
+                )}
               </td>
               <td className="align-top p-1 text-xs">
                 <div>7.D DISAPPROVED DUE TO:</div>
