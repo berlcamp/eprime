@@ -5,57 +5,63 @@ import TopMenu from '@/components/TopBars/TopMenu'
 import UserDropdown from '@/components/TopBars/UserDropdown'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import MobileMenu from './MobileMenu'
 
 export default function TopBarDark({ isGuest }: { isGuest?: boolean }) {
   const currentRoute = usePathname()
   return (
-    <div className="fixed top-0 z-20 w-full">
-      <div className="p-2 flex items-center bg-gray-800">
-        <div className="flex-1 flex">
-          <Link href="/" className="font-semibold text-lg text-white">
-            PRIME-HRM
-          </Link>
-          <div className="ml-10 space-x-4">
-            <Link
-              href="/"
-              className="text-gray-300 p-1 whitespace-nowrap rounded-sm font-medium text-xs uppercase hover:text-white"
-            >
-              Home
+    <>
+      <div className="fixed top-0 z-20 w-full">
+        <div className="p-2 flex items-center bg-gray-800">
+          <div className="hidden flex-1 lg:flex">
+            <Link href="/" className="font-semibold text-lg text-white">
+              PRIME-HRM
             </Link>
-            <Link
-              href="/vacant"
-              className={`${
-                currentRoute === '/vacant'
-                  ? 'text-white underline underline-offset-4 font-medium'
-                  : 'text-gray-300'
-              } p-1 whitespace-nowrap rounded-sm text-xs uppercase hover:text-white`}
-            >
-              Vacant Items
-            </Link>
-            <Link
-              href="/rankingapplicantresults"
-              className={`${
-                currentRoute === '/rankingapplicantresults'
-                  ? 'text-white underline underline-offset-4 font-medium'
-                  : 'text-gray-300'
-              } p-1 whitespace-nowrap rounded-sm text-xs uppercase hover:text-white`}
-            >
-              Ranking Results
-            </Link>
+            <div className="ml-10 space-x-4">
+              <Link
+                href="/"
+                className="text-gray-300 p-1 whitespace-nowrap rounded-sm font-medium text-xs uppercase hover:text-white"
+              >
+                Home
+              </Link>
+              <Link
+                href="/vacant"
+                className={`${
+                  currentRoute === '/vacant'
+                    ? 'text-white underline underline-offset-4 font-medium'
+                    : 'text-gray-300'
+                } p-1 whitespace-nowrap rounded-sm text-xs uppercase hover:text-white`}
+              >
+                Vacant Items
+              </Link>
+              <Link
+                href="/rankingapplicantresults"
+                className={`${
+                  currentRoute === '/rankingapplicantresults'
+                    ? 'text-white underline underline-offset-4 font-medium'
+                    : 'text-gray-300'
+                } p-1 whitespace-nowrap rounded-sm text-xs uppercase hover:text-white`}
+              >
+                Ranking Results
+              </Link>
+            </div>
+          </div>
+          <div className="flex flex-1 justify-end space-x-2">
+            {!isGuest ? (
+              <>
+                <TopMenu darkMode={true} />
+                <Notifications darkMode={true} />
+                <UserDropdown />
+              </>
+            ) : (
+              <LoginDropDown darkMode={true} />
+            )}
           </div>
         </div>
-        <div className="flex space-x-2">
-          {!isGuest ? (
-            <>
-              <TopMenu darkMode={true} />
-              <Notifications darkMode={true} />
-              <UserDropdown />
-            </>
-          ) : (
-            <LoginDropDown darkMode={true} />
-          )}
+        <div className="lg:hidden">
+          <MobileMenu />
         </div>
       </div>
-    </div>
+    </>
   )
 }
