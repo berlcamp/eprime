@@ -17,7 +17,7 @@ import {
   SearchUserInput,
   StatusFlow,
   UserBlock
-} from '@/components'
+} from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import type {
   AttachmentTypes,

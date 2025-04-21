@@ -1,6 +1,6 @@
-import { Announcements, TopBarDark } from '@/components'
 import Cover from '@/components/Cover'
 import Footer from '@/components/Footer'
+import { Announcements, TopBarDark } from '@/components/index'
 import TrackerApplicationBox from '@/components/TrackerApplicationBox'
 import TrackerBox from '@/components/TrackerBox'
 import { createServerClient } from '@/utils/supabase-server'

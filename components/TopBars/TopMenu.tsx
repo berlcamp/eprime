@@ -1,7 +1,7 @@
 'use client'
-import React, { useEffect, useRef, useState } from 'react'
-import { MainMenu } from '@/components'
+import { MainMenu } from '@/components/index'
 import { Squares2X2Icon } from '@heroicons/react/20/solid'
+import { useEffect, useRef, useState } from 'react'
 
 interface propTypes {
   darkMode?: boolean
@@ -12,7 +12,10 @@ const TopMenu = ({ darkMode }: propTypes) => {
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   const handleClickOutside = (event: MouseEvent) => {
-    if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+    if (
+      wrapperRef.current &&
+      !wrapperRef.current.contains(event.target as Node)
+    ) {
       setShowDropdown(false)
     }
   }
@@ -33,19 +36,27 @@ const TopMenu = ({ darkMode }: propTypes) => {
 
   return (
     <>
-      <div ref={wrapperRef} className='relative inline-block mr-1'>
+      <div ref={wrapperRef} className="relative inline-block mr-1">
         <div
           onClick={() => setShowDropdown(!showDropdown)}
-          className='flex items-center py-1 cursor-pointer text-gray-500 focus:ring-0 focus:outline-none'>
-            <span className={`inline-flex items-center justify-center rounded-full ${darkMode ? 'bg-white' : 'bg-gray-500 bg-opacity-30'} w-8 h-8`}>
-              <Squares2X2Icon className='w-4 h-4 text-gray-800'/>
-            </span>
+          className="flex items-center py-1 cursor-pointer text-gray-500 focus:ring-0 focus:outline-none"
+        >
+          <span
+            className={`inline-flex items-center justify-center rounded-full ${
+              darkMode ? 'bg-white' : 'bg-gray-500 bg-opacity-30'
+            } w-8 h-8`}
+          >
+            <Squares2X2Icon className="w-4 h-4 text-gray-800" />
+          </span>
         </div>
 
-        <div className={`${showDropdown ? '' : 'hidden'} absolute right-0 z-30 mt-2 origin-top-right rounded-md bg-gray-100 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}>
-          <MainMenu/>
+        <div
+          className={`${
+            showDropdown ? '' : 'hidden'
+          } absolute right-0 z-30 mt-2 origin-top-right rounded-md bg-gray-100 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
+        >
+          <MainMenu />
         </div>
-
       </div>
     </>
   )

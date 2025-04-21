@@ -1,4 +1,4 @@
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import IerData from '@/components/Rsp/IerData'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'

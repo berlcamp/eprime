@@ -1,4 +1,4 @@
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 
 // Types
 import type { Employee } from '@/types'

@@ -12,7 +12,7 @@ import {
   TopBar,
   Unauthorized,
   UserBlock
-} from '@/components'
+} from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { fetchEmployees } from '@/utils/fetchApi'
 import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/20/solid'

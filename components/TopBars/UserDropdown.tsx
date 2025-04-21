@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 'use client'
-import { AccountDetails } from '@/components'
+import { AccountDetails } from '@/components/index'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { Menu, Transition } from '@headlessui/react'
 import { UserIcon } from '@heroicons/react/20/solid'

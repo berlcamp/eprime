@@ -1,19 +1,19 @@
 'use client'
-import React, { useState, useRef, useEffect } from 'react'
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import { requestTypes } from '@/constants'
+import { useEffect, useRef, useState } from 'react'
 import LeaveForm from './LeaveForm'
-import TravelForm from './TravelForm'
-import PassSlipForm from './PassSlipForm'
 import LocatorSlipForm from './LocatorSlipForm'
+import PassSlipForm from './PassSlipForm'
 import ServiceRecordPrintRequestForm from './ServiceRecordPrintRequestForm'
+import TravelForm from './TravelForm'
 import UndertimeForm from './UndertimeForm'
 
 interface ModalProps {
   hideModal: () => void
 }
 
-export default function AddDocumentModal ({ hideModal }: ModalProps) {
+export default function AddDocumentModal({ hideModal }: ModalProps) {
   const [requestType, setRequestType] = useState('')
 
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -29,73 +29,68 @@ export default function AddDocumentModal ({ hideModal }: ModalProps) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wrapperRef])
 
   return (
-      <div ref={wrapperRef} className="app__modal_wrapper">
-        <div className="app__modal_wrapper2_large">
-          <div className="app__modal_wrapper3">
-            <div className="app__modal_header">
-              <h5 className="text-md font-bold leading-normal text-gray-800 dark:text-gray-300">
-                Request Details
-              </h5>
-              <CustomButton
-                containerStyles='app__btn_gray'
-                title='Close'
-                btnType='button'
-                handleClick={hideModal}
-              />
-            </div>
-            <div className='app__modal_body'>
-              <div className='w-full lg:w-1/2 px-4'>
-                <div className='grid grid-cols-1 gap-4 mb-4'>
-                  <div className='w-full'>
-                    <div className='text-gray-600 font-medium text-sm mb-1 dark:text-gray-300'>Request Type:</div>
-                    <div>
-                      <select
-                        value={requestType}
-                        onChange={e => setRequestType(e.target.value)}
-                        className='w-full text-sm py-1 px-2 text-gray-600 border border-gray-300 rounded-sm focus:ring-0 focus:outline-none dark:bg-gray-900 dark:text-gray-300'>
-                        <option value=''>Select Request Type</option>
-                        {
-                          requestTypes?.map((item, index) => (
-                            <option key={index} value={item}>{item}</option>
-                          ))
-                        }
-                      </select>
-                    </div>
+    <div ref={wrapperRef} className="app__modal_wrapper">
+      <div className="app__modal_wrapper2_large">
+        <div className="app__modal_wrapper3">
+          <div className="app__modal_header">
+            <h5 className="text-md font-bold leading-normal text-gray-800 dark:text-gray-300">
+              Request Details
+            </h5>
+            <CustomButton
+              containerStyles="app__btn_gray"
+              title="Close"
+              btnType="button"
+              handleClick={hideModal}
+            />
+          </div>
+          <div className="app__modal_body">
+            <div className="w-full lg:w-1/2 px-4">
+              <div className="grid grid-cols-1 gap-4 mb-4">
+                <div className="w-full">
+                  <div className="text-gray-600 font-medium text-sm mb-1 dark:text-gray-300">
+                    Request Type:
+                  </div>
+                  <div>
+                    <select
+                      value={requestType}
+                      onChange={(e) => setRequestType(e.target.value)}
+                      className="w-full text-sm py-1 px-2 text-gray-600 border border-gray-300 rounded-sm focus:ring-0 focus:outline-none dark:bg-gray-900 dark:text-gray-300"
+                    >
+                      <option value="">Select Request Type</option>
+                      {requestTypes?.map((item, index) => (
+                        <option key={index} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
-              <hr className='my-6 mx-4'/>
-              {
-                requestType === 'Leave' &&
-                  <LeaveForm hideModal={hideModal}/>
-              }
-              {
-                requestType === 'Locator Slip' &&
-                  <LocatorSlipForm hideModal={hideModal}/>
-              }
-              {
-                requestType === 'Travel Authority' &&
-                  <TravelForm hideModal={hideModal}/>
-              }
-              {
-                requestType === 'Pass Slip' &&
-                  <PassSlipForm hideModal={hideModal}/>
-              }
-              {
-                requestType === 'Service Record Print Request' &&
-                  <ServiceRecordPrintRequestForm hideModal={hideModal}/>
-              }
-              {
-                requestType === 'Undertime Permit' &&
-                  <UndertimeForm hideModal={hideModal}/>
-              }
             </div>
+            <hr className="my-6 mx-4" />
+            {requestType === 'Leave' && <LeaveForm hideModal={hideModal} />}
+            {requestType === 'Locator Slip' && (
+              <LocatorSlipForm hideModal={hideModal} />
+            )}
+            {requestType === 'Travel Authority' && (
+              <TravelForm hideModal={hideModal} />
+            )}
+            {requestType === 'Pass Slip' && (
+              <PassSlipForm hideModal={hideModal} />
+            )}
+            {requestType === 'Service Record Print Request' && (
+              <ServiceRecordPrintRequestForm hideModal={hideModal} />
+            )}
+            {requestType === 'Undertime Permit' && (
+              <UndertimeForm hideModal={hideModal} />
+            )}
           </div>
         </div>
       </div>
+    </div>
   )
 }

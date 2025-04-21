@@ -1,6 +1,6 @@
 'use client'
-import { ConfirmModal, CustomButton, UserBlock } from '@/components'
 import GlobalRemarks from '@/components/GlobalRemarks/GlobalRemarks'
+import { ConfirmModal, CustomButton, UserBlock } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { updateList } from '@/GlobalRedux/Features/listSlice'

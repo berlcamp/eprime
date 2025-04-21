@@ -11,7 +11,7 @@ import {
   CustomButton,
   SearchUserInput,
   UserBlock
-} from '@/components'
+} from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import type { ApplicantTypes, Employee, namesType } from '@/types'
 import { logError } from '@/utils/fetchApi'

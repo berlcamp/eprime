@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
-import { CustomButton } from '@/components'
 import ConfirmModal from '@/components/ConfirmModal'
+import { CustomButton } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'

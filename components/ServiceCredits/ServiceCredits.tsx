@@ -6,7 +6,7 @@ import {
   ShowMore,
   TableRowLoading,
   Title
-} from '@/components'
+} from '@/components/index'
 import { fetchMyServiceCredits } from '@/utils/fetchApi'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'

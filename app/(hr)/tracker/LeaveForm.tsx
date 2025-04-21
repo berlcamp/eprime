@@ -1,4 +1,8 @@
-import { CustomButton, LeaveBalanceBoxes, SearchUserInput } from '@/components'
+import {
+  CustomButton,
+  LeaveBalanceBoxes,
+  SearchUserInput
+} from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { generateReferenceCode } from '@/utils/text-helper'

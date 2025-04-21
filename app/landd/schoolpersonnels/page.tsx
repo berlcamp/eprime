@@ -8,7 +8,7 @@ import {
   Title,
   TopBar,
   UserBlock
-} from '@/components'
+} from '@/components/index'
 import { fetchPersonnel } from '@/utils/fetchApi'
 import React, { Fragment, useEffect, useState } from 'react'
 import Filters from './Filters'

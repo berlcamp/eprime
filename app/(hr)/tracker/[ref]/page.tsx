@@ -6,7 +6,7 @@ import {
   TopBar,
   TrackerSideBar,
   UserBlock
-} from '@/components'
+} from '@/components/index'
 import DetailsModal from '@/components/Tracker/DetailsModal'
 import { fetchDocuments } from '@/utils/fetchApi'
 import { ArrowLeftIcon } from '@heroicons/react/20/solid'

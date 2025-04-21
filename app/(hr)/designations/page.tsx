@@ -11,7 +11,7 @@ import {
   TopBar,
   Unauthorized,
   UserBlock
-} from '@/components'
+} from '@/components/index'
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'

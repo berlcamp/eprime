@@ -1,4 +1,4 @@
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CoordinatorshipTypes, MajorTypes, SubjectTypes } from '@/types'
 import { MagnifyingGlassIcon, TagIcon } from '@heroicons/react/20/solid'

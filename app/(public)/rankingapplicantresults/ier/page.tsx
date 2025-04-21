@@ -1,6 +1,10 @@
 'use client'
 
-import { TableRowLoading, TopBarDark, TwoColTableLoading } from '@/components'
+import {
+  TableRowLoading,
+  TopBarDark,
+  TwoColTableLoading
+} from '@/components/index'
 import React, { useEffect, useState } from 'react'
 
 // Types

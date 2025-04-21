@@ -13,7 +13,7 @@ import type { DistrictTypes, Employee, SchoolTypes, namesType } from '@/types'
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { SearchUserInput } from '@/components'
+import { SearchUserInput } from '@/components/index'
 import { useDispatch, useSelector } from 'react-redux'
 
 const classList = [

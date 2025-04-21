@@ -1,4 +1,4 @@
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import React, { useState } from 'react'
 

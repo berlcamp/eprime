@@ -1,4 +1,4 @@
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CtoUserTypes } from '@/types'
 import { useState } from 'react'

@@ -10,7 +10,7 @@ import type { Employee, Office, namesType } from '@/types'
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { CustomButton, SearchUserInput } from '@/components'
+import { CustomButton, SearchUserInput } from '@/components/index'
 import { useDispatch, useSelector } from 'react-redux'
 
 interface ModalProps {

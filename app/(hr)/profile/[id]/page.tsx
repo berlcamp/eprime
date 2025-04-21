@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 'use client'
 
-import { Sidebar, Title, TopBar } from '@/components'
 import Cto from '@/components/Cto/Cto'
+import { Sidebar, Title, TopBar } from '@/components/index'
 import LeaveCard from '@/components/LeaveCard/LeaveCard'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import LoginSettings from '@/components/LoginSettings/LoginSettings'

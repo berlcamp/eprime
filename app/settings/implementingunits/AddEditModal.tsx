@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import type { ImplementingUnitTypes } from '@/types'
 
 // Redux imports
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { logError } from '@/utils/fetchApi'

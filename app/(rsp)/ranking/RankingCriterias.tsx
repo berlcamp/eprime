@@ -1,4 +1,4 @@
-import { ConfirmModal, CustomButton } from '@/components'
+import { ConfirmModal, CustomButton } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { RankingCriteriaTypes } from '@/types'

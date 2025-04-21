@@ -1,4 +1,4 @@
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import ApplicantCommitteePoints from '@/components/Rsp/ApplicantCommitteePoints'
 import { ApplicantTypes } from '@/types'
 

@@ -1,5 +1,5 @@
 'use client'
-import { Sidebar, Title } from '@/components'
+import { Sidebar, Title } from '@/components/index'
 import TopBar from '@/components/TopBar'
 import { useSupabase } from '@/context/SupabaseProvider'
 import React, { useEffect, useState } from 'react'

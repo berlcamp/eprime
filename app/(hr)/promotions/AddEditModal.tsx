@@ -1,4 +1,4 @@
-import { CustomButton, SearchUserInput, UserBlock } from '@/components'
+import { CustomButton, SearchUserInput, UserBlock } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { logError } from '@/utils/fetchApi'

@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import { CustomButton } from '@/components/index'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
-import { CustomButton } from '@/components'
+import React, { useState } from 'react'
 
 interface FilterTypes {
   setFilterKeyword: (keyword: string) => void
@@ -32,34 +32,38 @@ const Filters = ({ setFilterKeyword }: FilterTypes) => {
   }
 
   return (
-    <div className=''>
-      <div className='items-center space-y-1'>
-        <form onSubmit={handleSubmit} className='items-center app__filter_field_container'>
-          <div className='items-center space-y-1'>
-            <div className='app__filter_container'>
-              <MagnifyingGlassIcon className="w-4 h-4 mr-1"/>
+    <div className="">
+      <div className="items-center space-y-1">
+        <form
+          onSubmit={handleSubmit}
+          className="items-center app__filter_field_container"
+        >
+          <div className="items-center space-y-1">
+            <div className="app__filter_container">
+              <MagnifyingGlassIcon className="w-4 h-4 mr-1" />
               <input
-                placeholder='Search'
+                placeholder="Search"
                 value={keyword}
-                onChange={e => setKeyword(e.target.value)}
-                className="app__filter_input"/>
+                onChange={(e) => setKeyword(e.target.value)}
+                className="app__filter_input"
+              />
             </div>
           </div>
         </form>
       </div>
-      <div className='flex items-center space-x-2 mt-4'>
+      <div className="flex items-center space-x-2 mt-4">
         <CustomButton
-              containerStyles='app__btn_green'
-              title='Apply Filter'
-              btnType='button'
-              handleClick={handleApply}
-            />
-          <CustomButton
-              containerStyles='app__btn_gray'
-              title='Clear Filter'
-              btnType='button'
-              handleClick={handleClear}
-            />
+          containerStyles="app__btn_green"
+          title="Apply Filter"
+          btnType="button"
+          handleClick={handleApply}
+        />
+        <CustomButton
+          containerStyles="app__btn_gray"
+          title="Clear Filter"
+          btnType="button"
+          handleClick={handleClear}
+        />
       </div>
     </div>
   )

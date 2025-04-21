@@ -6,7 +6,7 @@ import {
   ShowMore,
   TableRowLoading,
   Title
-} from '@/components'
+} from '@/components/index'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { fetchMyCtos } from '@/utils/fetchApi'
 import { format } from 'date-fns'

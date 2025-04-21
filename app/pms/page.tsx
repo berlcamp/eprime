@@ -1,5 +1,5 @@
 'use client'
-import { Sidebar, TopBar } from '@/components'
+import { Sidebar, TopBar } from '@/components/index'
 import PmsSideBar from '@/components/Sidebars/PmsSideBar'
 import { BookmarkIcon } from '@heroicons/react/24/solid'
 

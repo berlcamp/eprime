@@ -17,11 +17,19 @@ const PmsSideBar = () => {
 
   const currentRoute = usePathname()
 
-  const isHead =
-    systemSchools.find((school) => school.head_user_id === session.user.id) ??
-    systemOffices.find((office) => office.head_user_id === session.user.id)
-      ? true
-      : false
+  const isHead = systemSchools.find(
+    (school) => school.head_user_id === session.user.id
+  )
+    ? true
+    : false
+
+  const isOfficeHead = systemOffices.find(
+    (office) => office.head_user_id === session.user.id
+  )
+    ? true
+    : false
+
+  console.log('isOfficeHead', isOfficeHead)
 
   const hasAccessPmsSettings = hasAccess('pms_manager')
 
@@ -37,7 +45,9 @@ const PmsSideBar = () => {
         <li>
           <Link
             href="/pms"
-            className="flex items-center p-2 text-sm font-light rounded-lg text-gray-300  hover:bg-gray-700"
+            className={`app__menu_link ${
+              currentRoute === '/pms' ? 'app_menu_link_active' : ''
+            }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">HOME</span>
           </Link>
@@ -45,7 +55,9 @@ const PmsSideBar = () => {
         <li>
           <Link
             href="/pms/ipcrf"
-            className="flex items-center p-2 text-sm font-light rounded-lg text-gray-300  hover:bg-gray-700"
+            className={`app__menu_link ${
+              currentRoute === '/pms/ipcrf' ? 'app_menu_link_active' : ''
+            }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">IPCRF</span>
           </Link>
@@ -53,11 +65,15 @@ const PmsSideBar = () => {
         {isHead && (
           <Link
             href="/pms/opcrf"
-            className="flex items-center p-2 text-sm font-light rounded-lg text-gray-300  hover:bg-gray-700"
+            className={`app__menu_link ${
+              currentRoute === '/pms/opcrf' ? 'app_menu_link_active' : ''
+            }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">
               OPCRF{' '}
-              <sup className="text-xs font-bold text-red-500">(Heads)</sup>
+              <sup className="text-xs font-bold text-red-500">
+                (School Head)
+              </sup>
             </span>
           </Link>
         )}
@@ -86,20 +102,12 @@ const PmsSideBar = () => {
             </li>
             <li>
               <Link
-                href="#"
-                className="flex items-center p-2 text-sm font-light rounded-lg text-gray-300  hover:bg-gray-700"
-              >
-                <span className="flex-1 ml-3 whitespace-nowrap">Reports</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/pms/kra"
+                href="/pms/kras"
                 className={`app__menu_link ${
-                  currentRoute === '/pms/kra' ? 'app_menu_link_active' : ''
+                  currentRoute === '/pms/kras' ? 'app_menu_link_active' : ''
                 }`}
               >
-                <span className="flex-1 ml-3 whitespace-nowrap">KRA</span>
+                <span className="flex-1 ml-3 whitespace-nowrap">Domains</span>
               </Link>
             </li>
             <li>
@@ -112,7 +120,7 @@ const PmsSideBar = () => {
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
-                  Objectives
+                  KRA/Domain Objectives
                 </span>
               </Link>
             </li>
@@ -133,28 +141,14 @@ const PmsSideBar = () => {
             <li>
               <Link
                 href="/pms/ipcrftemplates"
-                className="flex items-center p-2 text-sm font-light rounded-lg text-gray-300  hover:bg-gray-700"
+                className={`app__menu_link ${
+                  currentRoute === '/pms/ipcrftemplates'
+                    ? 'app_menu_link_active'
+                    : ''
+                }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
-                  IPCRF/Opcrf Templates
-                </span>
-              </Link>
-            </li>
-          </ul>
-          <ul className="pt-8 mt-4 space-y-2 border-t border-gray-700">
-            <li>
-              <div className="flex items-center text-gray-500 items-centers space-x-1 px-2">
-                <Cog6ToothIcon className="w-4 h-4" />
-                <span>HOMEPAGE SETTINGS</span>
-              </div>
-            </li>
-            <li>
-              <Link
-                href="/pms/announcements"
-                className="flex items-center p-2 text-sm font-light rounded-lg text-gray-300  hover:bg-gray-700"
-              >
-                <span className="flex-1 ml-3 whitespace-nowrap">
-                  Annoucements
+                  IPCRF/OPCRF Templates
                 </span>
               </Link>
             </li>

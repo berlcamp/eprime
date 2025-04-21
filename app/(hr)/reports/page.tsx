@@ -7,7 +7,7 @@ import {
   TopBar,
   TwoColTableLoading,
   Unauthorized
-} from '@/components'
+} from '@/components/index'
 import ReportsSidebar from '@/components/Sidebars/ReportsSidebar'
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'

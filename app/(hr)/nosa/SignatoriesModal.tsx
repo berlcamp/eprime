@@ -1,4 +1,4 @@
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import { SignatoriesTypes } from '@/types'
 import { useForm } from 'react-hook-form'
 

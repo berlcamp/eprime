@@ -12,7 +12,7 @@ import {
   Title,
   TopBar,
   Unauthorized
-} from '@/components'
+} from '@/components/index'
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { updateList } from '@/GlobalRedux/Features/listSlice'

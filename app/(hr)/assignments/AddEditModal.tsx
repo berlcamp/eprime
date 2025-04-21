@@ -3,7 +3,7 @@ import {
   OneColLayoutLoading,
   SearchUserInput,
   UserBlock
-} from '@/components'
+} from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {

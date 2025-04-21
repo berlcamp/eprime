@@ -8,7 +8,7 @@ import {
   Title,
   TopBar,
   Unauthorized
-} from '@/components'
+} from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { fetchRankingApplicants } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'

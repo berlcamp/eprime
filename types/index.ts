@@ -1,4 +1,7 @@
+import { RootState as RootStateType } from '@/GlobalRedux/store'
 import type { MouseEventHandler, ReactNode } from 'react'
+
+export type RootState = RootStateType
 
 export interface SelectUserNamesProps {
   settingsData: any[]

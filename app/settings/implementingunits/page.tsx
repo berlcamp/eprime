@@ -10,7 +10,7 @@ import {
   TableRowLoading,
   Title,
   TopBar
-} from '@/components'
+} from '@/components/index'
 import { fetchImplementingUnits } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
 import {

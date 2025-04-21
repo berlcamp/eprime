@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { ConfirmModal, UserBlock } from '@/components'
+import { ConfirmModal, UserBlock } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { Employee, UserAccessTypes } from '@/types'

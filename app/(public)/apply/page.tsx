@@ -1,6 +1,10 @@
 'use client'
-import { CustomButton, OneColLayoutLoading, TopBarDark } from '@/components'
 import Footer from '@/components/Footer'
+import {
+  CustomButton,
+  OneColLayoutLoading,
+  TopBarDark
+} from '@/components/index'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { elementaryMajors, jhsMajors, shsMajors } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'

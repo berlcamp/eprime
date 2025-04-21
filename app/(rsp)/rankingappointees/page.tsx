@@ -6,7 +6,7 @@ import {
   Title,
   TopBar,
   Unauthorized
-} from '@/components'
+} from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'

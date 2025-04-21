@@ -1,5 +1,5 @@
 'use client'
-import { StatusFlow } from '@/components'
+import { StatusFlow } from '@/components/index'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { DocumentTypes } from '@/types'
 // import { createBrowserClient } from '@supabase/ssr'

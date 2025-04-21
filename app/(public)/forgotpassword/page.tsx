@@ -1,6 +1,6 @@
 'use client'
-import { TopBarDark } from '@/components'
 import Footer from '@/components/Footer'
+import { TopBarDark } from '@/components/index'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'

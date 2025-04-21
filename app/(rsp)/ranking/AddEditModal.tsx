@@ -1,4 +1,4 @@
-import { CustomButton, SearchUserInput } from '@/components'
+import { CustomButton, SearchUserInput } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { fetchPositions, logError } from '@/utils/fetchApi'

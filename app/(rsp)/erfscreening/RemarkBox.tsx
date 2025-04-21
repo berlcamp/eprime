@@ -5,7 +5,7 @@ import { EyeIcon } from '@heroicons/react/24/solid'
 import { Fragment, useCallback, useEffect, useState } from 'react'
 // Redux imports
 import { updateRemarksList } from '@/GlobalRedux/Features/remarksSlice'
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { ApplicantTypes, Employee } from '@/types'

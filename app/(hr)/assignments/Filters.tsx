@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
-import { MagnifyingGlassIcon, TagIcon } from '@heroicons/react/20/solid'
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import { fetchOffices, fetchSchools } from '@/utils/fetchApi'
+import { MagnifyingGlassIcon, TagIcon } from '@heroicons/react/20/solid'
+import React, { useEffect, useState } from 'react'
 
 import { type Office, type SchoolTypes } from '@/types'
 
@@ -12,7 +12,12 @@ interface FilterTypes {
   setFilterStatus: (type: string) => void
 }
 
-const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilterStatus }: FilterTypes) => {
+const Filters = ({
+  setFilterKeyword,
+  setFilterSchool,
+  setFilterOffice,
+  setFilterStatus
+}: FilterTypes) => {
   const [selectedSchool, setSelectedSchool] = useState('')
   const [selectedOffice, setSelectedOffice] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('')
@@ -21,7 +26,13 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilter
   const [offices, setOffices] = useState<Office[]>([])
 
   const handleApply = () => {
-    if (keyword.trim() === '' && selectedSchool !== '' && selectedOffice !== '' && selectedStatus === '') return
+    if (
+      keyword.trim() === '' &&
+      selectedSchool !== '' &&
+      selectedOffice !== '' &&
+      selectedStatus === ''
+    )
+      return
 
     // pass filter values to parent
     setFilterKeyword(keyword)
@@ -33,7 +44,13 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilter
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (keyword.trim() === '' && selectedSchool !== '' && selectedOffice !== '' && selectedStatus === '') return
+    if (
+      keyword.trim() === '' &&
+      selectedSchool !== '' &&
+      selectedOffice !== '' &&
+      selectedStatus === ''
+    )
+      return
 
     // pass filter values to parent
     setFilterKeyword(keyword)
@@ -69,73 +86,80 @@ const Filters = ({ setFilterKeyword, setFilterSchool, setFilterOffice, setFilter
   }, [])
 
   return (
-    <div className=''>
-      <div className='items-center space-x-2 space-y-1'>
-        <form onSubmit={handleSubmit} className='items-center inline-flex app__filter_field_container'>
-          <div className='items-center space-y-1'>
-            <div className='app__filter_container'>
-              <MagnifyingGlassIcon className="w-4 h-4 mr-1"/>
+    <div className="">
+      <div className="items-center space-x-2 space-y-1">
+        <form
+          onSubmit={handleSubmit}
+          className="items-center inline-flex app__filter_field_container"
+        >
+          <div className="items-center space-y-1">
+            <div className="app__filter_container">
+              <MagnifyingGlassIcon className="w-4 h-4 mr-1" />
               <input
-                placeholder='Search Ref Code or Employee'
+                placeholder="Search Ref Code or Employee"
                 value={keyword}
-                onChange={e => setKeyword(e.target.value)}
-                className="app__filter_input"/>
+                onChange={(e) => setKeyword(e.target.value)}
+                className="app__filter_input"
+              />
             </div>
-            <div className='app__filter_container'>
-              <TagIcon className="w-4 h-4 mr-1"/>
+            <div className="app__filter_container">
+              <TagIcon className="w-4 h-4 mr-1" />
               <select
                 value={selectedSchool}
-                onChange={e => setSelectedSchool(e.target.value)}
-                className='app__filter_select'>
-                  <option value=''>Choose School</option>
-                  {
-                    schools.map((item, index) => (
-                      <option key={index} value={item.id}>{item.name}</option>
-                    ))
-                  }
+                onChange={(e) => setSelectedSchool(e.target.value)}
+                className="app__filter_select"
+              >
+                <option value="">Choose School</option>
+                {schools.map((item, index) => (
+                  <option key={index} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
               </select>
             </div>
-            <div className='app__filter_container'>
-              <TagIcon className="w-4 h-4 mr-1"/>
+            <div className="app__filter_container">
+              <TagIcon className="w-4 h-4 mr-1" />
               <select
                 value={selectedOffice}
-                onChange={e => setSelectedOffice(e.target.value)}
-                className='app__filter_select'>
-                  <option value=''>Choose Office</option>
-                  {
-                    offices.map((item, index) => (
-                      <option key={index} value={item.id}>{item.name}</option>
-                    ))
-                  }
+                onChange={(e) => setSelectedOffice(e.target.value)}
+                className="app__filter_select"
+              >
+                <option value="">Choose Office</option>
+                {offices.map((item, index) => (
+                  <option key={index} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
               </select>
             </div>
-            <div className='app__filter_container'>
-              <TagIcon className="w-4 h-4 mr-1"/>
+            <div className="app__filter_container">
+              <TagIcon className="w-4 h-4 mr-1" />
               <select
                 value={selectedStatus}
-                onChange={e => setSelectedStatus(e.target.value)}
-                className='app__filter_select'>
-                  <option value=''>Status:</option>
-                  <option value='Active'>Active</option>
-                  <option value='Revoked'>Revoked</option>
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="app__filter_select"
+              >
+                <option value="">Status:</option>
+                <option value="Active">Active</option>
+                <option value="Revoked">Revoked</option>
               </select>
             </div>
           </div>
         </form>
       </div>
-      <div className='flex items-center space-x-2 mt-4'>
+      <div className="flex items-center space-x-2 mt-4">
         <CustomButton
-              containerStyles='app__btn_green'
-              title='Apply Filter'
-              btnType='button'
-              handleClick={handleApply}
-            />
-          <CustomButton
-              containerStyles='app__btn_gray'
-              title='Clear Filter'
-              btnType='button'
-              handleClick={handleClear}
-            />
+          containerStyles="app__btn_green"
+          title="Apply Filter"
+          btnType="button"
+          handleClick={handleApply}
+        />
+        <CustomButton
+          containerStyles="app__btn_gray"
+          title="Clear Filter"
+          btnType="button"
+          handleClick={handleClear}
+        />
       </div>
     </div>
   )

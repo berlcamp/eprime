@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 
-import { CustomButton, RegisterModal } from '@/components'
+import { CustomButton, RegisterModal } from '@/components/index'
 import { useSupabase } from '@/context/SupabaseProvider'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'

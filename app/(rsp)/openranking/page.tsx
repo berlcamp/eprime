@@ -6,7 +6,7 @@ import {
   TableRowLoading,
   Title,
   TopBar
-} from '@/components'
+} from '@/components/index'
 import { useSupabase } from '@/context/SupabaseProvider'
 import Excel from 'exceljs'
 import { saveAs } from 'file-saver'

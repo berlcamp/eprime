@@ -1,6 +1,6 @@
 'use client'
 
-import { PerPage, ShowMore, TableRowLoading, Title } from '@/components'
+import { PerPage, ShowMore, TableRowLoading, Title } from '@/components/index'
 import { fetchNosa } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
 

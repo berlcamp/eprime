@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import uuid from 'react-uuid'
 
-import { CustomButton, OneColLayoutLoading } from '@/components'
+import { CustomButton, OneColLayoutLoading } from '@/components/index'
 import type { DistrictTypes, Office, SchoolTypes } from '@/types'
 
 interface ModalProps {

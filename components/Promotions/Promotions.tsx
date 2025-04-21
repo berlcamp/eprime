@@ -7,7 +7,7 @@ import {
   TableRowLoading,
   Title,
   UserBlock
-} from '@/components'
+} from '@/components/index'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { fetchMyPromotions } from '@/utils/fetchApi'
 import { format } from 'date-fns'

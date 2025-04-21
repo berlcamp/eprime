@@ -1,5 +1,5 @@
 'use client'
-import { OfflinePage } from '@/components'
+import { OfflinePage } from '@/components/index'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { UserAccessTypes } from '@/types'
 import { CheckIfSchoolHead } from '@/utils/data-helpers'

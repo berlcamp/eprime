@@ -37,6 +37,7 @@ export default function SearchUserInput({
 
   const handleSearchUser = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value
+    const searchWord = e.target.value.toLowerCase()
     setSearchHead(searchTerm)
 
     if (searchTerm.trim().length < 3) {
@@ -45,7 +46,7 @@ export default function SearchUserInput({
     }
 
     // Search user
-    const searchWords = e.target.value.split(' ')
+    const searchWords = searchWord.split(' ')
     const results = systemUsers.filter((user) => {
       // exclude already selected users
       if (selectedItems.some((obj) => obj.id.toString() === user.id.toString()))

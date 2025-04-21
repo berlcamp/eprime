@@ -7,7 +7,7 @@ import {
   TableRowLoading,
   Title,
   UserBlock
-} from '@/components'
+} from '@/components/index'
 import DetailsModal from '@/components/Tracker/DetailsModal'
 import { format } from 'date-fns'
 
@@ -22,10 +22,10 @@ import React, { Fragment, useEffect, useState } from 'react'
 import type { DocumentTypes } from '@/types'
 
 // Redux imports
-import { updateList } from '@/GlobalRedux/Features/listSlice'
 import AddDocumentModal from '@/app/(hr)/tracker/AddDocumentModal'
 import { requestTypes } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { useDispatch, useSelector } from 'react-redux'
 import { useReactToPrint } from 'react-to-print'
 import { PrintLeaveForm } from '../Printables/PrintLeaveForm'

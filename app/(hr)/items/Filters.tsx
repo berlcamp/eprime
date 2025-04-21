@@ -1,4 +1,4 @@
-import { CustomButton, UserBlock } from '@/components'
+import { CustomButton, UserBlock } from '@/components/index'
 import { fetchImplementingUnits, fetchPositions } from '@/utils/fetchApi'
 import {
   MagnifyingGlassIcon,

@@ -1,4 +1,4 @@
-import { CustomButton, UserBlock } from '@/components'
+import { CustomButton, UserBlock } from '@/components/index'
 import { UserIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import React, { useState } from 'react'
 

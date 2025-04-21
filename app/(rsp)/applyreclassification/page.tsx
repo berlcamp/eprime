@@ -1,5 +1,5 @@
 'use client'
-import { SearchUserInput, TopBarDark, UserBlock } from '@/components'
+import { SearchUserInput, TopBarDark, UserBlock } from '@/components/index'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'

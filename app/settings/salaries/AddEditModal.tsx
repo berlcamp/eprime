@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import type { SalaryGradeTypes } from '@/types'
 
 // Redux imports
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { logError } from '@/utils/fetchApi'
 import { formatToPesos } from '@/utils/text-helper'

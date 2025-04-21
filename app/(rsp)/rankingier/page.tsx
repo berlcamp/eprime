@@ -7,7 +7,7 @@ import {
   Title,
   TopBar,
   Unauthorized
-} from '@/components'
+} from '@/components/index'
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'

@@ -10,7 +10,7 @@ import {
   TopBar,
   TrackerSideBar,
   UserBlock
-} from '@/components'
+} from '@/components/index'
 import DetailsModal from '@/components/Tracker/DetailsModal'
 import { fetchDocuments } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
@@ -32,7 +32,6 @@ import type {
 } from '@/types'
 
 // Redux imports
-import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { PrintLeaveForm } from '@/components/Printables/PrintLeaveForm'
 import { PrintLocatorSlipForm } from '@/components/Printables/PrintLocatorSlipForm'
 import { PrintPassSlipForm } from '@/components/Printables/PrintPassSlipForm'
@@ -40,6 +39,7 @@ import { PrintServiceRecord } from '@/components/Printables/PrintServiceRecord'
 import { PrintTravelForm } from '@/components/Printables/PrintTravelForm'
 import { PrintUndertimeForm } from '@/components/Printables/PrintUndertimeForm'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { useSearchParams } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
 import { useReactToPrint } from 'react-to-print'

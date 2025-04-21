@@ -1,4 +1,8 @@
-import { CustomButton, OneColLayoutLoading, UserBlock } from '@/components'
+import {
+  CustomButton,
+  OneColLayoutLoading,
+  UserBlock
+} from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {

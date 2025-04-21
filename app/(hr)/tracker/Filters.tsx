@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-import { CustomButton, UserBlock } from '@/components'
+import { CustomButton, UserBlock } from '@/components/index'
 import { requestTypes } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { Employee, namesType } from '@/types'

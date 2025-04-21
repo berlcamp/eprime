@@ -1,10 +1,10 @@
 'use client'
-import React, { useState } from 'react'
-import ProfileCard from './ProfileCard'
+import { CustomButton } from '@/components/index'
 import { orgChart } from '@/constants'
-import { CustomButton } from '@/components'
+import { useState } from 'react'
+import ProfileCard from './ProfileCard'
 
-export default function App () {
+export default function App() {
   const [zoomLevel, setZoomLevel] = useState<number>(0.3)
 
   const handleZoomIn = () => {
@@ -21,15 +21,15 @@ export default function App () {
       <h1 className="text-2xl">Organizational Flow Chart</h1>
       <div className="space-x-2 mt-4">
         <CustomButton
-          containerStyles='app__btn_green'
-          title='Zoom In'
-          btnType='button'
+          containerStyles="app__btn_green"
+          title="Zoom In"
+          btnType="button"
           handleClick={handleZoomIn}
         />
         <CustomButton
-          containerStyles='app__btn_green'
-          title='Zoom Out'
-          btnType='button'
+          containerStyles="app__btn_green"
+          title="Zoom Out"
+          btnType="button"
           handleClick={handleZoomOut}
         />
       </div>
@@ -39,7 +39,8 @@ export default function App () {
         style={{
           transformOrigin: 'top',
           transform: `scale(${zoomLevel})`
-        }}>
+        }}
+      >
         <div className="items-start justify-center flex">
           {orgChart.map((profile, idX) => (
             <ProfileCard key={idX} {...profile} />

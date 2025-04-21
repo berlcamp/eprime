@@ -1,14 +1,14 @@
-import React, { Fragment, useState } from 'react'
+import { CustomButton } from '@/components/index'
 import { Listbox, Transition } from '@headlessui/react'
-import { CheckIcon, ChevronDownIcon, MagnifyingGlassIcon, TagIcon } from '@heroicons/react/20/solid'
-import { CustomButton } from '@/components'
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+  TagIcon
+} from '@heroicons/react/20/solid'
+import React, { Fragment, useState } from 'react'
 
-const schoolTypes = [
-  'Elementary',
-  'Secondary',
-  'Integrated',
-  'SPED Centers'
-]
+const schoolTypes = ['Elementary', 'Secondary', 'Integrated', 'SPED Centers']
 
 interface FilterTypes {
   setFilterKeyword: (keyword: string) => void
@@ -46,31 +46,31 @@ const Filters = ({ setFilterKeyword, setFilterType }: FilterTypes) => {
   }
 
   return (
-    <div className=''>
-      <div className='flex items-center'>
-        <form onSubmit={handleSubmit} className='items-center'>
-          <div className='app__filter_container'>
-            <MagnifyingGlassIcon className="w-4 h-4 mr-1"/>
+    <div className="">
+      <div className="flex items-center">
+        <form onSubmit={handleSubmit} className="items-center">
+          <div className="app__filter_container">
+            <MagnifyingGlassIcon className="w-4 h-4 mr-1" />
             <input
-              placeholder='Search'
+              placeholder="Search"
               value={keyword}
-              onChange={e => setKeyword(e.target.value)}
-              className="app__filter_input"/>
+              onChange={(e) => setKeyword(e.target.value)}
+              className="app__filter_input"
+            />
           </div>
         </form>
         <div className="w-40">
           <Listbox value={selectedType} onChange={setSelectedType}>
             <div className="relative">
               <Listbox.Button className="app__listbox_btn">
-                <span><TagIcon className="w-4 h-4 mr-1"/></span>
+                <span>
+                  <TagIcon className="w-4 h-4 mr-1" />
+                </span>
                 <span className="block truncate text-xs">
                   Type: {selectedType}
                 </span>
                 <span className="app__listbox_icon">
-                  <ChevronDownIcon
-                    className="h-5 w-5"
-                    aria-hidden="true"
-                  />
+                  <ChevronDownIcon className="h-5 w-5" aria-hidden="true" />
                 </span>
               </Listbox.Button>
               <Transition
@@ -85,7 +85,9 @@ const Filters = ({ setFilterKeyword, setFilterType }: FilterTypes) => {
                       key={itemIdx}
                       className={({ active }) =>
                         `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                          active ? 'bg-amber-50 text-amber-900' : 'text-gray-900'
+                          active
+                            ? 'bg-amber-50 text-amber-900'
+                            : 'text-gray-900'
                         }`
                       }
                       value={item}
@@ -99,15 +101,14 @@ const Filters = ({ setFilterKeyword, setFilterType }: FilterTypes) => {
                           >
                             {item}
                           </span>
-                          {
-                            selected
-                              ? (
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
-                                  <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                                </span>
-                                )
-                              : null
-                          }
+                          {selected ? (
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                              <CheckIcon
+                                className="h-5 w-5"
+                                aria-hidden="true"
+                              />
+                            </span>
+                          ) : null}
                         </>
                       )}
                     </Listbox.Option>
@@ -118,19 +119,19 @@ const Filters = ({ setFilterKeyword, setFilterType }: FilterTypes) => {
           </Listbox>
         </div>
       </div>
-      <div className='flex items-center space-x-2 mt-4'>
+      <div className="flex items-center space-x-2 mt-4">
         <CustomButton
-              containerStyles='app__btn_green'
-              title='Apply Filter'
-              btnType='button'
-              handleClick={handleApply}
-            />
-          <CustomButton
-              containerStyles='app__btn_gray'
-              title='Clear Filter'
-              btnType='button'
-              handleClick={handleClear}
-            />
+          containerStyles="app__btn_green"
+          title="Apply Filter"
+          btnType="button"
+          handleClick={handleApply}
+        />
+        <CustomButton
+          containerStyles="app__btn_gray"
+          title="Clear Filter"
+          btnType="button"
+          handleClick={handleClear}
+        />
       </div>
     </div>
   )

@@ -2,7 +2,7 @@ import {
   CustomButton,
   LeaveBalanceBoxes,
   TwoColTableLoading
-} from '@/components'
+} from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { CtoUserTypes, DocumentTypes, LeaveCreditTypes } from '@/types'

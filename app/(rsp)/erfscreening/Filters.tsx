@@ -1,4 +1,4 @@
-import { CustomButton } from '@/components'
+import { CustomButton } from '@/components/index'
 import { fetchOffices, fetchSchools } from '@/utils/fetchApi'
 import { MagnifyingGlassIcon, TagIcon } from '@heroicons/react/20/solid'
 import React, { useEffect, useState } from 'react'

@@ -10,7 +10,7 @@ import {
   Title,
   TopBar,
   UserBlock
-} from '@/components'
+} from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { fetchRankings } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'

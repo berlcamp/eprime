@@ -1,4 +1,4 @@
-import { ConfirmModal, CustomButton } from '@/components'
+import { ConfirmModal, CustomButton } from '@/components/index'
 import ApplicantDetails from '@/components/Rsp/ApplicantDetails'
 import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
 import { useFilter } from '@/context/FilterContext'

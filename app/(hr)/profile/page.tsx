@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 'use client'
-import { Sidebar } from '@/components'
+import { Sidebar } from '@/components/index'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { useRouter } from 'next/navigation'
 
-export default function Page () {
+export default function Page() {
   const router = useRouter()
   const { session } = useSupabase()
 
@@ -13,12 +13,12 @@ export default function Page () {
 
   return (
     <>
-    <Sidebar>
-      <></>
-    </Sidebar>
-    <div>
-      <TwoColTableLoading/>
-    </div>
+      <Sidebar>
+        <></>
+      </Sidebar>
+      <div>
+        <TwoColTableLoading />
+      </div>
     </>
   )
 }

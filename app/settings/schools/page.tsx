@@ -9,7 +9,7 @@ import {
   TableRowLoading,
   Title,
   TopBar
-} from '@/components'
+} from '@/components/index'
 import { fetchSchools } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon, PencilSquareIcon } from '@heroicons/react/20/solid'

@@ -1,5 +1,10 @@
 'use client'
-import { CustomButton, SettingsSideBar, Sidebar, Title } from '@/components'
+import {
+  CustomButton,
+  SettingsSideBar,
+  Sidebar,
+  Title
+} from '@/components/index'
 import TopBar from '@/components/TopBar'
 import React, { useState } from 'react'
 

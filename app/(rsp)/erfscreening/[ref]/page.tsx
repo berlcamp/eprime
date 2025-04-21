@@ -1,6 +1,6 @@
 'use client'
 
-import { Sidebar, TableRowLoading, TopBar, UserBlock } from '@/components'
+import { Sidebar, TableRowLoading, TopBar, UserBlock } from '@/components/index'
 import { fetchRankingApplicants } from '@/utils/fetchApi'
 import { ArrowLeftIcon } from '@heroicons/react/20/solid'
 import { format } from 'date-fns'
