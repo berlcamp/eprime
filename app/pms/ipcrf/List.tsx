@@ -21,10 +21,11 @@ const table = 'pms_ipcrf'
 
 export const List = () => {
   // Redux staff
+
   const dispatch = useDispatch()
   const list = useSelector((state: RootState) => state.list.value)
 
-  const { supabase } = useSupabase()
+  const { supabase, session } = useSupabase()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalAddOpen, setModalAddOpen] = useState(false)
@@ -89,16 +90,19 @@ export const List = () => {
                   >
                     <Menu.Items className="app__dropdown_items">
                       <div className="py-1">
-                        <Menu.Item>
-                          <Link
-                            href={`/pms/ipcrf/${item.id}/rates`}
-                            target="_blank"
-                            className="app__dropdown_item"
-                          >
-                            <PencilIcon className="w-4 h-4" />
-                            <span>Edit Ratings</span>
-                          </Link>
-                        </Menu.Item>
+                        {(session.user.id === item.user_id ||
+                          session.user.id === item.rater_id) && (
+                          <Menu.Item>
+                            <Link
+                              href={`/pms/ipcrf/${item.id}/rates`}
+                              target="_blank"
+                              className="app__dropdown_item"
+                            >
+                              <PencilIcon className="w-4 h-4" />
+                              <span>Edit Ratings</span>
+                            </Link>
+                          </Menu.Item>
+                        )}
                         <Menu.Item>
                           <Link
                             href={`/pms/ipcrf/${item.id}/summary?period=1st`}
@@ -119,24 +123,24 @@ export const List = () => {
                             <span>2nd Period Ratings Summary</span>
                           </Link>
                         </Menu.Item>
-                        <Menu.Item>
-                          <div
-                            onClick={() => handleDeleteConfirmation(item)}
-                            className="app__dropdown_item"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                            <span>Delete</span>
-                          </div>
-                        </Menu.Item>
+                        {session.user.id === item.user_id && (
+                          <Menu.Item>
+                            <div
+                              onClick={() => handleDeleteConfirmation(item)}
+                              className="app__dropdown_item"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                              <span>Delete</span>
+                            </div>
+                          </Menu.Item>
+                        )}
                       </div>
                     </Menu.Items>
                   </Transition>
                 </Menu>
               </td>
               <td className="app__td">
-                <div>
-                  #{item.ipcrf_template_id} {item.description}
-                </div>
+                <div>{item.description}</div>
                 <div className="mt-2">
                   {item.template?.status === 'Disabled' ? (
                     <Badge variant="outline">Rating Disabled</Badge>

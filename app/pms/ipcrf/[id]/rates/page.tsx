@@ -170,11 +170,14 @@ export default async function IPCRFRatingPage({
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-xl font-bold mb-4 text-center">IPCRF Ratings</h1>
+      <h1 className="text-xl font-bold mb-4 text-center">
+        {ipcrfData.template.type} Ratings
+      </h1>
       <div>Description: {ipcrfData.description}</div>
       <div className="mb-6">Rating Period: {ipcrfData.template?.status}</div>
       {ipcrfData.template?.status !== 'Disabled' && (
         <RatingForm
+          ipcrf={ipcrfData}
           objectives={objectives as IpcrfTemplatesObjectives[]}
           competencies={competencies as IpcrfTemplatesCompetencyTypes[]}
           onSubmit={handleSubmit}

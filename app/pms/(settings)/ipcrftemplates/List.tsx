@@ -226,9 +226,7 @@ export const List = () => {
                 </Menu>
               </td>
               <td className="app__td">
-                <div>
-                  #{item.id} {item.description}
-                </div>
+                <div>{item.description}</div>
                 <div className="mt-2">
                   {item.status === 'Disabled' ? (
                     <Badge variant="outline">Rating Disabled</Badge>

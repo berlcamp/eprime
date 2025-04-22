@@ -55,6 +55,7 @@ interface ModalProps {
 const FormSchema = z.object({
   objective_id: z.coerce.number().min(1, 'Objective is required'),
   weight: z.coerce.number().min(1, 'Weight is required'),
+  target: z.string().optional(),
   timeline: z.string().min(1, 'Timeline is required'),
   quality: z.boolean().default(false).optional(),
   efficiency: z.boolean().default(false).optional(),
@@ -101,6 +102,7 @@ export const AddObjectiveModal = ({
     defaultValues: {
       objective_id: 0,
       weight: 0,
+      target: '',
       timeline: '',
       quality: true,
       efficiency: false,
@@ -134,6 +136,7 @@ export const AddObjectiveModal = ({
         ipcrf_template_id: templateId,
         objective_id: formdata.objective_id,
         timeline: formdata.timeline,
+        target: formdata.target,
         weight: formdata.weight,
         quality: formdata.quality,
         efficiency: formdata.efficiency,
@@ -226,6 +229,7 @@ export const AddObjectiveModal = ({
   useEffect(() => {
     form.reset({
       objective_id: editData?.objective_id ?? 0,
+      target: editData?.target ?? '',
       timeline: editData?.timeline ?? '',
       weight: editData?.weight ?? 0,
       quality: editData?.quality ?? true,
@@ -278,7 +282,7 @@ export const AddObjectiveModal = ({
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="col-span-2">
+                  <div>
                     <FormField
                       control={form.control}
                       name="objective_id"
@@ -351,6 +355,27 @@ export const AddObjectiveModal = ({
                               </Command>
                             </PopoverContent>
                           </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="target"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="app__formlabel_standard">
+                            Target
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              className="app__input_standard"
+                              placeholder="(Optional)"
+                              {...field}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}

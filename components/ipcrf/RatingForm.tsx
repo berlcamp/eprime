@@ -1,12 +1,14 @@
 'use client'
 import {
   IpcrfTemplatesCompetencyTypes,
-  IpcrfTemplatesObjectives
+  IpcrfTemplatesObjectives,
+  IpcrfTypes
 } from '@/types/pmsTypes'
 import { useState } from 'react'
 import { Button } from '../ui/button'
 
 interface Props {
+  ipcrf: IpcrfTypes
   objectives: IpcrfTemplatesObjectives[]
   competencies: IpcrfTemplatesCompetencyTypes[]
   onSubmit: (ratings: {
@@ -21,6 +23,7 @@ interface Props {
 }
 
 export default function RatingForm({
+  ipcrf,
   objectives,
   competencies,
   onSubmit,
@@ -50,6 +53,9 @@ export default function RatingForm({
         <div key={obj.id} className="mb-4 border p-4 rounded space-y-2">
           <div className="font-semibold">{obj.objective?.title}</div>
           <div className="italic font-semibold">(Weight: {obj.weight})</div>
+          {ipcrf.template?.type === 'OPCRF' && (
+            <div className="italic font-semibold">(Target: {obj.target})</div>
+          )}
           {obj.quality && (
             <div>
               <label>Quality:</label>

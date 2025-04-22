@@ -77,6 +77,7 @@ export interface IpcrfTypes {
   ipcrf_template_id: number
   template: IpcrfTemplatesTypes
   description: string
+  type: 'OPCRF' | 'IPCRF'
   rater: Employee
   ratee: Employee
 }

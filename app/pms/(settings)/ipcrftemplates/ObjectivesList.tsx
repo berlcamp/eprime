@@ -157,6 +157,11 @@ export const ObjectivesList = ({
                       <Badge>Timeline: {item.timeline}</Badge>
                       <Badge>Weight: {item.weight}</Badge>
                     </div>
+                    {item.target && (
+                      <div className="space-x-2">
+                        <Badge>Target: {item.target ?? ''}</Badge>
+                      </div>
+                    )}
                   </div>
                 </td>
                 <td className="app__td">

@@ -27,7 +27,6 @@ import { addItem } from '@/GlobalRedux/Features/listSlice'
 import { cn } from '@/lib/utils'
 import { Employee } from '@/types'
 import {
-  IpcrfTemplatesObjectives,
   IpcrfTemplatesPositionsTypes,
   IpcrfTemplatesTypes,
   IpcrfTypes
@@ -44,9 +43,9 @@ import { z } from 'zod'
 // Always update this on other pages
 type ItemType = IpcrfTypes
 const table = 'pms_ipcrf'
-const title = 'IPCRF'
 
 interface ModalProps {
+  title?: string
   isOpen: boolean
   onClose: () => void
   editData?: ItemType | null // Optional prop for editing existing item
@@ -58,7 +57,12 @@ const FormSchema = z.object({
 })
 type FormType = z.infer<typeof FormSchema>
 
-export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
+export const AddModal = ({
+  title = 'IPCRF',
+  isOpen,
+  onClose,
+  editData
+}: ModalProps) => {
   //
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [ipcrfs, setIpcrfs] = useState<IpcrfTemplatesTypes[]>([])
@@ -93,6 +97,8 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
       const newData = {
         ipcrf_template_id: formdata.ipcrf_template_id,
         rater_id: formdata.rater_id,
+        type: title,
+        status: 'Disabled',
         user_id: session.user.id,
         description: ipcrfs.find(
           (i) => i.id.toString() === formdata.ipcrf_template_id.toString()
@@ -108,51 +114,6 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
       if (error) {
         console.error('Error adding:', error)
       } else {
-        // Copy all objects from templates
-        const insertData: any[] = []
-
-        ipcrfs
-          .find(
-            (i) => i.id.toString() === formdata.ipcrf_template_id.toString()
-          )
-          ?.objectives.forEach((obj: IpcrfTemplatesObjectives) => {
-            insertData.push({
-              ipcrf_id: data[0].id,
-              objective_id: obj.objective_id,
-              timeline: obj.timeline,
-              weight: obj.weight,
-              quality: obj.quality,
-              efficiency: obj.efficiency,
-              timeliness: obj.timeliness,
-              quality_outstanding: obj.quality_outstanding,
-              quality_very_satisfactory: obj.quality_very_satisfactory,
-              quality_satisfactory: obj.quality_satisfactory,
-              quality_unsatisfactory: obj.quality_unsatisfactory,
-              quality_poor: obj.quality_poor,
-              efficiency_outstanding: obj.efficiency_outstanding,
-              efficiency_very_satisfactory: obj.efficiency_very_satisfactory,
-              efficiency_satisfactory: obj.efficiency_satisfactory,
-              efficiency_unsatisfactory: obj.efficiency_unsatisfactory,
-              efficiency_poor: obj.efficiency_poor,
-              timeliness_outstanding: obj.timeliness_outstanding,
-              timeliness_very_satisfactory: obj.timeliness_very_satisfactory,
-              timeliness_satisfactory: obj.timeliness_satisfactory,
-              timeliness_unsatisfactory: obj.timeliness_unsatisfactory,
-              timeliness_poor: obj.timeliness_poor
-            })
-          })
-
-        console.log(insertData)
-
-        // Add new one
-        const { error: errorObj } = await supabase
-          .from('pms_ipcrf_ratings')
-          .insert(insertData)
-
-        if (errorObj) {
-          console.error('Error adding:', errorObj)
-        }
-
         // Insert new item to Redux
         dispatch(
           addItem({
@@ -192,37 +153,46 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Get the position ID of the logged-in user
-        const user = systemUsers.find((u) => u.id === session.user.id)
-        if (!user?.position_id) return
+        if (title === 'IPCRF') {
+          // Get the position ID of the logged-in user
+          const user = systemUsers.find((u) => u.id === session.user.id)
+          if (!user?.position_id) return
 
-        // Fetch related template-position mappings
-        const { data: positionMappings } = await supabase
-          .from('pms_ipcrf_positions')
-          .select()
-          .eq('position_id', user.position_id)
+          // Fetch related template-position mappings if IPCRF
+          const { data: positionMappings } = await supabase
+            .from('pms_ipcrf_positions')
+            .select()
+            .eq('position_id', user.position_id)
 
-        if (!positionMappings?.length) return
+          if (!positionMappings?.length) return
 
-        // Extract unique template IDs
-        const templateIds = positionMappings.map(
-          (p: IpcrfTemplatesPositionsTypes) => p.ipcrf_template_id
-        )
+          // Extract unique template IDs
+          const templateIds = positionMappings.map(
+            (p: IpcrfTemplatesPositionsTypes) => p.ipcrf_template_id
+          )
 
-        if (!templateIds.length) return
+          if (!templateIds.length) return
 
-        // Fetch the templates with objectives
-        const { data: templates } = await supabase
-          .from('pms_ipcrf_templates')
-          .select('*,objectives:pms_ipcrf_template_objectives(*)')
-          .eq('status', 'Published')
-          .in('id', templateIds)
+          // Fetch the IPCRF templates with objectives
+          const { data: templates } = await supabase
+            .from('pms_ipcrf_templates')
+            .select('*,objectives:pms_ipcrf_template_objectives(*)')
+            .in('id', templateIds)
+            .eq('type', 'IPCRF')
 
-        console.log('templates', templates)
-        setIpcrfs(templates)
+          setIpcrfs(templates)
+        } else {
+          // Fetch the OPCRF templates with objectives
+          const { data: templates } = await supabase
+            .from('pms_ipcrf_templates')
+            .select('*,objectives:pms_ipcrf_template_objectives(*)')
+            .eq('type', 'OPCRF')
+
+          setIpcrfs(templates)
+        }
       } catch (error) {
         // Optionally handle errors
-        console.error('Error fetching IPCRF templates:', error)
+        console.error('Error fetching templates:', error)
       }
     }
 
@@ -270,7 +240,7 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
                       render={({ field }) => (
                         <FormItem className="">
                           <FormLabel className="app__formlabel_standard">
-                            IPCRF Template
+                            Choose Template
                           </FormLabel>
                           <Popover open={open} onOpenChange={setOpen}>
                             <PopoverTrigger asChild>

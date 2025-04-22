@@ -9,10 +9,9 @@ import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { SchoolTypes } from '@/types'
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { AddModal } from './AddModal'
-import { Filter } from './Filter'
-import { List } from './List'
-
+import { AddModal } from '../ipcrf/AddModal'
+import { Filter } from '../ipcrf/Filter'
+import { List } from '../ipcrf/List'
 const Page: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0)
   const [page, setPage] = useState(1)
@@ -47,7 +46,7 @@ const Page: React.FC = () => {
           }
         )
         .ilike('description', `%${filter}%`)
-        .eq('type', 'IPCRF')
+        .eq('type', 'OPCRF')
         .or(`user_id.eq.${session.user.id},rater_id.eq.${session.user.id}`)
         .range((page - 1) * PER_PAGE, page * PER_PAGE - 1)
         .order('id', { ascending: false })
@@ -64,6 +63,20 @@ const Page: React.FC = () => {
     void fetchData()
   }, [page, filter, dispatch]) // Add `dispatch` to dependency array
 
+  if (!isHead) {
+    return (
+      <>
+        <Sidebar>
+          <PmsSideBar />
+        </Sidebar>
+        <TopBar />
+        <div className="app__main">
+          <div className="p-4 text-lg">Only School Head can use OPCRF</div>
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
       <Sidebar>
@@ -73,12 +86,10 @@ const Page: React.FC = () => {
       <div className="app__main">
         <div>
           <div className="app__title">
-            <Title title="IPCRF" />
-            {!isHead && (
-              <Button onClick={() => setModalAddOpen(true)} className="ml-auto">
-                Create IPCRF
-              </Button>
-            )}
+            <Title title="OPCRF" />
+            <Button onClick={() => setModalAddOpen(true)} className="ml-auto">
+              Create OPCRF
+            </Button>
           </div>
 
           {/* Filters */}
@@ -116,6 +127,7 @@ const Page: React.FC = () => {
           )}
 
           <AddModal
+            title="OPCRF"
             isOpen={modalAddOpen}
             onClose={() => setModalAddOpen(false)}
           />
