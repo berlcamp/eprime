@@ -98,7 +98,6 @@ export const AddModal = ({
         ipcrf_template_id: formdata.ipcrf_template_id,
         rater_id: formdata.rater_id,
         type: title,
-        status: 'Disabled',
         user_id: session.user.id,
         description: ipcrfs.find(
           (i) => i.id.toString() === formdata.ipcrf_template_id.toString()
