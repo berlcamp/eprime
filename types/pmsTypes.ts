@@ -121,6 +121,7 @@ export interface IpcrfObjectiveRating {
   id: number
   ipcrf_id: number
   template_objective_id: number
+  template: IpcrfTemplatesObjectives
   rater_type: RaterType
   period: 1 | 2
   quality?: number
@@ -136,4 +137,18 @@ export interface IpcrfCompetencyRating {
   rater_type: RaterType
   period: 1 | 2
   item_ids: number[]
+}
+
+export type Idp = {
+  id?: number
+  ipcrf_id: number
+  type: 'weak' | 'strength'
+  comp_type: 'objective' | 'compentency'
+  objective_id: number
+  competency_item_id: number
+  weak_competency_item: number
+  learning_objective: string
+  intervention: string
+  timeline: string
+  resources: string
 }

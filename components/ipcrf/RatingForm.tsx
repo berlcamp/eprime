@@ -100,6 +100,9 @@ export default function RatingForm({
                   )}
                 </label>
               ))}
+              <div className="my-4 text-sm">
+                Attach MOV <input type="file" />
+              </div>
             </div>
           )}
           {obj.efficiency && (
@@ -145,6 +148,9 @@ export default function RatingForm({
                   )}
                 </label>
               ))}
+              <div className="my-4 text-sm">
+                Attach MOV <input type="file" />
+              </div>
             </div>
           )}
           {obj.timeliness && (
@@ -190,6 +196,9 @@ export default function RatingForm({
                   )}
                 </label>
               ))}
+              <div className="my-4 text-sm">
+                Attach MOV <input type="file" />
+              </div>
             </div>
           )}
         </div>

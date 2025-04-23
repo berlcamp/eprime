@@ -82,6 +82,11 @@ export const List = () => {
         .eq('id', selectedItem.id)
 
       if (error) {
+        if (error.code === '23503') {
+          toast.error(
+            'This template cannot be deleted as it is used on Employees IPCRF'
+          )
+        }
         console.error('Error deleting:', error.message)
       } else {
         toast.success('Successfully deleted!')

@@ -8,7 +8,13 @@ import { deleteItem } from '@/GlobalRedux/Features/listSlice'
 import { RootState } from '@/types' // Import the RootState type
 import { IpcrfTypes } from '@/types/pmsTypes'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDown, EyeIcon, PencilIcon, TrashIcon } from 'lucide-react'
+import {
+  ChevronDown,
+  EyeIcon,
+  Lightbulb,
+  PencilIcon,
+  TrashIcon
+} from 'lucide-react'
 import Link from 'next/link'
 import { Fragment, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -121,6 +127,16 @@ export const List = () => {
                           >
                             <EyeIcon className="w-4 h-4" />
                             <span>2nd Period Ratings Summary</span>
+                          </Link>
+                        </Menu.Item>
+                        <Menu.Item>
+                          <Link
+                            href={`/pms/ipcrf/${item.id}/idp`}
+                            target="_blank"
+                            className="app__dropdown_item"
+                          >
+                            <Lightbulb className="w-4 h-4" />
+                            <span>Individual Development Plan</span>
                           </Link>
                         </Menu.Item>
                         {session.user.id === item.user_id && (

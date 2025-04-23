@@ -1,5 +1,6 @@
 // components/AddItemTypeModal.tsx
 'use client'
+
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -26,7 +27,7 @@ import {
 import { useSupabase } from '@/context/SupabaseProvider'
 import { addItem, editList } from '@/GlobalRedux/Features/listSlice'
 import { cn } from '@/lib/utils'
-import { KraObjectiveTypes, KraTypes } from '@/types/pmsTypes'
+import { Idp, IpcrfObjectiveRating } from '@/types/pmsTypes'
 import { Dialog } from '@headlessui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check, ChevronsUpDown } from 'lucide-react'
@@ -37,54 +38,67 @@ import { useDispatch } from 'react-redux'
 import { z } from 'zod'
 
 // Always update this on other pages
-type ItemType = KraObjectiveTypes
-type FormType = {
-  kra_id: number
-  title: string
-}
-const table = 'pms_objectives'
-const title = 'Objective'
+type ItemType = Idp
+const table = 'pms_ids'
 
 interface ModalProps {
   isOpen: boolean
+  type: string
+  objRatings: IpcrfObjectiveRating[]
   onClose: () => void
   editData?: ItemType | null // Optional prop for editing existing item
 }
 
 const FormSchema = z.object({
-  kra_id: z.coerce.number().min(1, 'KRA is required'),
-  title: z.string().min(1, 'Title is required')
+  objective_id: z.coerce.number().min(1, 'Objective is required'),
+  learning_objective: z.string().min(1, 'Learning Objective is required'),
+  intervention: z.string().min(1, 'Intervention is required'),
+  timeline: z.string().min(1, 'Timeline is required'),
+  resources: z.string().min(1, 'Resources needed is required')
 })
+type FormType = z.infer<typeof FormSchema>
 
-export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
+export const AddFuncModal = ({
+  isOpen,
+  type,
+  objRatings,
+  onClose,
+  editData
+}: ModalProps) => {
   //
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [kras, setKras] = useState<KraTypes[]>([])
-
-  // Kras Dropdown
-  const [open, setOpen] = useState(false)
-
   const dispatch = useDispatch()
+
+  // Obj Dropdown
+  const [open, setOpen] = useState(false)
 
   const { supabase } = useSupabase()
 
   const form = useForm<FormType>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      kra_id: 0,
-      title: ''
+      objective_id: undefined,
+      learning_objective: '',
+      intervention: '',
+      timeline: '',
+      resources: ''
     }
   })
 
   // Submit handler
-  const onSubmit = async (data: FormType) => {
+  const onSubmit = async (formdata: FormType) => {
     if (isSubmitting) return // 🚫 Prevent double-submit
     setIsSubmitting(true)
 
     try {
       const newData = {
-        title: data.title,
-        kra_id: data.kra_id
+        objective_id: formdata.objective_id,
+        type,
+        comp_type: 'objective',
+        learning_objective: formdata.learning_objective,
+        intervention: formdata.intervention,
+        timeline: formdata.timeline,
+        resources: formdata.resources
       }
 
       // If exists (editing), update it
@@ -98,15 +112,7 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
           console.error('Error updating:', error)
         } else {
           // Update list on redux
-          dispatch(
-            editList({
-              ...newData,
-              kra: kras?.find(
-                (i) => i.id.toString() === newData.kra_id.toString()
-              ),
-              id: editData.id
-            })
-          ) // ✅ Update Redux with new data
+          dispatch(editList({ ...newData, id: editData.id })) // ✅ Update Redux with new data
           onClose()
         }
       } else {
@@ -120,15 +126,7 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
           console.error('Error adding:', error)
         } else {
           // Insert new item to Redux
-          dispatch(
-            addItem({
-              ...newData,
-              kra: kras?.find(
-                (i) => i.id.toString() === newData.kra_id.toString()
-              ),
-              id: data[0].id
-            })
-          )
+          dispatch(addItem({ ...newData, id: data[0].id }))
           onClose()
         }
       }
@@ -141,24 +139,13 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
     }
   }
 
-  // Fetch on page load
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data } = await supabase
-        .from('pms_kras')
-        .select()
-        .order('title', { ascending: true })
-
-      setKras(data)
-    }
-
-    void fetchData()
-  }, [])
-
   useEffect(() => {
     form.reset({
-      kra_id: editData ? editData.kra_id : 0,
-      title: editData?.title ?? ''
+      objective_id: editData?.objective_id ?? 0,
+      learning_objective: editData?.learning_objective ?? '',
+      intervention: editData?.intervention ?? '',
+      timeline: editData?.timeline ?? '',
+      resources: editData?.resources ?? ''
     })
   }, [form, editData, isOpen])
 
@@ -181,7 +168,7 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
           {/* Sticky Header */}
           <div className="app__modal_dialog_title_container">
             <Dialog.Title as="h3" className="text-base font-medium">
-              {editData ? 'Edit' : 'Add'} {title}
+              IDP Details
             </Dialog.Title>
           </div>
           {/* Scrollable Form Content */}
@@ -192,11 +179,11 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
                   <div>
                     <FormField
                       control={form.control}
-                      name="kra_id"
+                      name="objective_id"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="">
                           <FormLabel className="app__formlabel_standard">
-                            Domain
+                            Objective
                           </FormLabel>
                           <Popover open={open} onOpenChange={setOpen}>
                             <PopoverTrigger asChild>
@@ -210,11 +197,11 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
                                   )}
                                 >
                                   {field.value
-                                    ? kras?.find(
+                                    ? objRatings?.find(
                                         (i) =>
-                                          i.id.toString() ===
-                                          field.value?.toString()
-                                      )?.title
+                                          i.template?.objective_id.toString() ===
+                                          field.value.toString()
+                                      )?.template?.objective?.title
                                     : 'Select'}
                                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -229,12 +216,21 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
                                 <CommandList>
                                   <CommandEmpty>No results found.</CommandEmpty>
                                   <CommandGroup>
-                                    {kras?.map((i) => (
+                                    {objRatings?.map((i) => (
                                       <CommandItem
+                                        value={i.template.objective.title}
                                         key={i.id}
-                                        value={i.title} // for search
-                                        onSelect={() => {
-                                          field.onChange(i.id) // store the id
+                                        onSelect={(selectedName) => {
+                                          const selectedItem = objRatings.find(
+                                            (k) =>
+                                              k.template.objective.title ===
+                                              selectedName.toLowerCase()
+                                          )
+                                          if (selectedItem) {
+                                            field.onChange(
+                                              selectedItem.template.objective_id
+                                            ) // store category.id in form
+                                          }
                                           setOpen(false)
                                         }}
                                       >
@@ -247,7 +243,7 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
                                               : 'opacity-0'
                                           )}
                                         />
-                                        {i.title}
+                                        {i.template.objective.title}
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
@@ -263,16 +259,16 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
                   <div>
                     <FormField
                       control={form.control}
-                      name="title"
+                      name="learning_objective"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="app__formlabel_standard">
-                            Objective Title
+                            Learning Objective
                           </FormLabel>
                           <FormControl>
                             <Input
                               className="app__input_standard"
-                              placeholder="Title"
+                              placeholder="Learning Objective"
                               type="text"
                               {...field}
                             />
