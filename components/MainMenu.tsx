@@ -16,6 +16,7 @@ import {
   UserIcon,
   UsersIcon
 } from '@heroicons/react/20/solid'
+import { BookIcon } from 'lucide-react'
 import Link from 'next/link'
 import { MdOutlineMoreTime } from 'react-icons/md'
 
@@ -83,6 +84,17 @@ const MainMenu = () => {
             >
               <CalendarIcon className="w-6 h-6" />
               <div className="app__menu_item_label">My Service Credits</div>
+            </Link>
+            <div className="text-gray-700 text-lg font-semibold mt-10">
+              Help and Support
+            </div>
+            <Link
+              target="_blank"
+              href="/usermanual.pdf"
+              className="app__menu_item"
+            >
+              <BookIcon className="w-6 h-6" />
+              <div className="app__menu_item_label">User Manual</div>
             </Link>
           </div>
           <div className="px-2 py-4 lg:w-96 border text-gray-600 rounded-lg bg-white shadow-md flex flex-col space-y-2">
