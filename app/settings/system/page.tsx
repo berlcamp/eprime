@@ -107,11 +107,18 @@ const Page: React.FC = () => {
                   users={users}
                   title="Who can manage PMS"
                 />
+
                 <ChooseUsers
                   multiple={true}
                   type="land_hrd"
                   users={users}
                   title="L & D HRD"
+                />
+                <ChooseUsers
+                  multiple={true}
+                  type="randr_manager"
+                  users={users}
+                  title="Who can manage R&R"
                 />
                 <ChooseUsers
                   multiple={true}

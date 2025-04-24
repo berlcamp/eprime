@@ -5,28 +5,28 @@ import { Button } from '@/components/ui/button'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { deleteItem } from '@/GlobalRedux/Features/listSlice'
 import { RootState } from '@/types' // Import the RootState type
-import { Idp, IpcrfObjectiveRating } from '@/types/pmsTypes'
+import { Idp, IpcrfCompetencyRating } from '@/types/pmsTypes'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDown, PencilIcon, TrashIcon } from 'lucide-react'
 import { Fragment, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useDispatch, useSelector } from 'react-redux'
-import { AddFuncModal } from './AddFuncModal'
+import { AddCompModal } from './AddCompModal'
 
 // Always update this on other pages
 type ItemType = Idp
 const table = 'pms_idp'
 
-export const List = ({
+export const ListComp = ({
   ipcrfId,
-  objRatings
+  compRatings
 }: {
   ipcrfId: number
-  objRatings: IpcrfObjectiveRating[]
+  compRatings: IpcrfCompetencyRating[]
 }) => {
   // Redux staff
   const dispatch = useDispatch()
-  const list = useSelector((state: RootState) => state.list.value)
+  const list = useSelector((state: RootState) => state.list2.value)
 
   const [modalAdd, setModalAdd] = useState(false)
   const [type, setType] = useState('')
@@ -80,9 +80,9 @@ export const List = ({
   }
 
   return (
-    <div className="overflow-x-none">
+    <div className="overflow-x-none mt-10">
       <div className="flex space-x-2 mb-2">
-        <div className="flex-1 text-xl font-medium">Objectives</div>
+        <div className="flex-1 text-xl font-medium">Compentencies</div>
         <Button onClick={() => handleAdd('strength')} className="ml-auto">
           Add Strength
         </Button>
@@ -150,18 +150,28 @@ export const List = ({
               <td className="app__td">
                 {item.type === 'strength' && (
                   <div>
-                    {item.is_custom_objective
-                      ? item.custom_objective
-                      : item.objective?.title}
+                    {item.is_custom_competency ? (
+                      item.custom_competency
+                    ) : (
+                      <span>
+                        {item.competency_item?.competency?.title} -{' '}
+                        {item.competency_item?.title}
+                      </span>
+                    )}
                   </div>
                 )}
               </td>
               <td className="app__td">
                 {item.type === 'weak' && (
                   <div>
-                    {item.is_custom_objective
-                      ? item.custom_objective
-                      : item.objective?.title}
+                    {item.is_custom_competency ? (
+                      item.custom_competency
+                    ) : (
+                      <span>
+                        {item.competency_item?.competency?.title} -{' '}
+                        {item.competency_item?.title}
+                      </span>
+                    )}
                   </div>
                 )}
               </td>
@@ -191,10 +201,10 @@ export const List = ({
         onConfirm={handleDelete}
         message="Are you sure you want to delete this?"
       />
-      <AddFuncModal
+      <AddCompModal
         type={type}
         ipcrfId={ipcrfId}
-        objRatings={objRatings}
+        compRatings={compRatings}
         isOpen={modalAdd}
         editData={selectedItem}
         onClose={() => setModalAdd(false)}

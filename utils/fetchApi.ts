@@ -1675,8 +1675,6 @@ export async function fetchDocuments(
       trackerIds.push(item.tracker_id)
     })
 
-    console.log('trackerIds', trackerIds.length)
-
     let query = supabase
       .from('hrm_request_trackers')
       .select(

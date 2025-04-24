@@ -5,6 +5,7 @@ import {
   IpcrfTypes
 } from '@/types/pmsTypes'
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 import { Button } from '../ui/button'
 
 interface Props {
@@ -39,6 +40,7 @@ export default function RatingForm({
 
   const handleSubmit = () => {
     onSubmit({ objectiveRatings, competencyRatings })
+    toast.success('Rating successfully saved')
   }
 
   return (

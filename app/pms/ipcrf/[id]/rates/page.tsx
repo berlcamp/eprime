@@ -164,8 +164,6 @@ export default async function IPCRFRatingPage({
           onConflict: 'ipcrf_id,competency_item_id,rater_type,period'
         })
     }
-
-    console.log('Ratings saved successfully.')
   }
 
   return (

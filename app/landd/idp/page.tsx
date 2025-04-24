@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 'use client'
 import { Sidebar, Title, TopBar } from '@/components/index'
-import PmsSideBar from '@/components/Sidebars/PmsSideBar'
+import LandDSidebar from '@/components/Sidebars/LandDSidebar'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { updateList as updateList2 } from '@/GlobalRedux/Features/list2Slice'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
@@ -10,15 +11,17 @@ import { useDispatch } from 'react-redux'
 import { List } from './List'
 import { ListComp } from './ListComp'
 
-type entriesType = {
-  competencyId: any
-  items: any
-  score: any
+type compEntriesType = {
+  id: string
+  title: string
+  competency_id: string
+  competency: {
+    title: string
+  }
 }
 
-export default function IDPPage({ params }: { params: { id: string } }) {
+export default function IDPPage() {
   const { supabase } = useSupabase()
-  const ipcrfId = Number(params.id)
 
   // Redux staff
   const dispatch = useDispatch()
@@ -29,11 +32,15 @@ export default function IDPPage({ params }: { params: { id: string } }) {
   const [topWeaknessesObj, setTopWeaknessesObj] = useState<
     IpcrfObjectiveRating[]
   >([])
-  const [topStrengthsComp, setTopStrengthsComp] = useState<entriesType[]>([])
-  const [topWeaknessesComp, setTopWeaknessesComp] = useState<entriesType[]>([])
+  const [topStrengthsComp, setTopStrengthsComp] = useState<compEntriesType[]>(
+    []
+  )
+  const [topWeaknessesComp, setTopWeaknessesComp] = useState<compEntriesType[]>(
+    []
+  )
 
-  const [objRatings, setObjRatings] = useState<IpcrfObjectiveRating[]>([])
-  const [compRatings, setCompRatings] = useState<IpcrfCompetencyRating[]>([])
+  // const [objRatings, setObjRatings] = useState<IpcrfObjectiveRating[]>([])
+  // const [compRatings, setCompRatings] = useState<IpcrfCompetencyRating[]>([])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,10 +49,10 @@ export default function IDPPage({ params }: { params: { id: string } }) {
         .select(
           '*, template:template_objective_id(id,objective_id, objective:objective_id(id, title), weight)'
         )
-        .eq('ipcrf_id', ipcrfId)
+        // .eq('ipcrf_id', ipcrfId)
         .eq('rater_type', 'self')
 
-      setObjRatings(objectiveRatings)
+      // setObjRatings(objectiveRatings)
 
       const ratings = (objectiveRatings ?? []) as IpcrfObjectiveRating[]
 
@@ -74,41 +81,46 @@ export default function IDPPage({ params }: { params: { id: string } }) {
         .select(
           '*, competency_item:competency_item_id(id, title, competency_id, competency:competency_id(title)), competency:competency_item_id(competency_id,title)'
         )
-        .eq('ipcrf_id', ipcrfId)
+        // .eq('ipcrf_id', ipcrfId)
         .eq('rater_type', 'self')
 
-      setCompRatings(competencyRatingsData)
+      // setCompRatings(competencyRatingsData)
 
-      const competencyRatings: IpcrfCompetencyRating[] | null =
-        competencyRatingsData
-      const grouped = new Map()
+      const competencyRatings: IpcrfCompetencyRating[] =
+        competencyRatingsData ?? []
 
-      for (const r of competencyRatings ?? []) {
-        const compId = r.competency_item.competency_id
-        const title = r.competency_item.title
+      // Count how many times each competency item appears
+      const itemCountMap = new Map<string, { item: any; count: number }>()
 
-        if (!grouped.has(compId)) grouped.set(compId, [])
-        grouped.get(compId).push(title)
+      for (const r of competencyRatings) {
+        const itemId = r.competency_item.id.toString()
+        if (!itemCountMap.has(itemId)) {
+          itemCountMap.set(itemId, { item: r.competency_item, count: 1 })
+        } else {
+          itemCountMap.get(itemId)!.count++
+        }
       }
 
-      const entries = Array.from(grouped.entries()).map(
-        ([competencyId, items]) => ({
-          competencyId,
-          items,
-          score: items.length
-        })
-      )
+      // Convert to array, sort by count descending
+      const sortedItems = Array.from(itemCountMap.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3) // Get top 3
 
-      const sortedComp = [...entries].sort((a, b) => b.score - a.score)
-      setTopStrengthsComp(sortedComp.slice(0, 3))
-      setTopWeaknessesComp(sortedComp.slice(-3).reverse())
+      // Set state or return
+      setTopStrengthsComp(sortedItems.map((entry) => entry.item))
+      setTopWeaknessesComp(
+        sortedItems
+          .slice(-3)
+          .reverse()
+          .map((entry) => entry.item)
+      ) // least rated
 
       // Fetch User IDP
       const { data: funcData } = await supabase
         .from('pms_idp')
         .select('*, objective:objective_id(title)')
         .eq('comp_type', 'objective')
-        .eq('ipcrf_id', ipcrfId)
+      // .eq('ipcrf_id', ipcrfId)
 
       const { data: compData } = await supabase
         .from('pms_idp')
@@ -116,7 +128,7 @@ export default function IDPPage({ params }: { params: { id: string } }) {
           '*, competency_item:competency_item_id(title,competency:competency_id(title))'
         )
         .eq('comp_type', 'competency')
-        .eq('ipcrf_id', ipcrfId)
+      // .eq('ipcrf_id', ipcrfId)
 
       // Update the list in Redux store
       dispatch(updateList(funcData))
@@ -128,7 +140,7 @@ export default function IDPPage({ params }: { params: { id: string } }) {
   return (
     <>
       <Sidebar>
-        <PmsSideBar />
+        <LandDSidebar />
       </Sidebar>
       <TopBar />
       <div className="app__main">
@@ -138,7 +150,7 @@ export default function IDPPage({ params }: { params: { id: string } }) {
         <div className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
             <div className="p-4 border bg-gray-100 rounded-xl">
-              <h2 className="font-bold mb-2">Objectives Ratings</h2>
+              <h2 className="font-bold mb-2 text-center">Objectives Ratings</h2>
               <div>
                 <h3 className="font-semibold">Top 3 Strengths</h3>
                 <ul className="list-disc list-inside">
@@ -158,28 +170,34 @@ export default function IDPPage({ params }: { params: { id: string } }) {
             </div>
 
             <div className="p-4 border bg-gray-100 rounded-xl">
-              <h2 className="font-bold mb-2">Competency Ratings</h2>
+              <h2 className="font-bold mb-2 text-center">Competency Ratings</h2>
+
               <div>
                 <h3 className="font-semibold">Top 3 Strengths</h3>
                 <ul className="list-disc list-inside">
                   {topStrengthsComp.map((r, i) => (
-                    <li key={i}>{r.items.join(', ')}</li>
+                    <li key={i}>
+                      {r.competency.title} - {r.title}
+                    </li>
                   ))}
                 </ul>
               </div>
+
               <div className="mt-4">
                 <h3 className="font-semibold">Top 3 Weaknesses</h3>
                 <ul className="list-disc list-inside">
                   {topWeaknessesComp.map((r, i) => (
-                    <li key={i}>{r.items.join(', ')}</li>
+                    <li key={i}>
+                      {r.competency.title} - {r.title}
+                    </li>
                   ))}
                 </ul>
               </div>
             </div>
           </div>
           <div className="mt-8">
-            <List ipcrfId={ipcrfId} objRatings={objRatings} />
-            <ListComp ipcrfId={ipcrfId} compRatings={compRatings} />
+            <List />
+            <ListComp />
           </div>
         </div>
       </div>

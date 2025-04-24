@@ -192,6 +192,19 @@ export const leaveTypes = [
   'Others'
 ]
 
+export const interventions = [
+  'Training/Capability Building',
+  'Mentoring',
+  'Coaching',
+  'Shadowing',
+  'LAC Session',
+  'JEL (Job Embedded Learning)',
+  'RDL (Relationship Discussion-Based Learning)',
+  'Short Courses',
+  'Scholarship',
+  'Self Directed Learning'
+]
+
 export const superAdmins = [
   'berlcamp@gmail.com',
   'scorpionkean.112688@gmail.com'

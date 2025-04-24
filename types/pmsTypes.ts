@@ -13,6 +13,7 @@ export interface CompetencyTypes {
 export interface CompetencyItemTypes {
   id: number
   competency_id: number
+  competency: CompetencyTypes
   title: string
 }
 export interface KraObjectiveTypes {
@@ -145,10 +146,17 @@ export type Idp = {
   type: 'weak' | 'strength'
   comp_type: 'objective' | 'compentency'
   objective_id: number
+  objective: KraObjectiveTypes
   competency_item_id: number
-  weak_competency_item: number
+  competency_item: CompetencyItemTypes
   learning_objective: string
   intervention: string
   timeline: string
   resources: string
+  custom_objective: string
+  custom_competency: string
+  custom_intervention: string
+  is_custom_objective: boolean
+  is_custom_competency: boolean
+  is_custom_intervention: boolean
 }

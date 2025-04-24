@@ -15,8 +15,7 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
-  FormMessage
+  FormLabel
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import {
@@ -24,6 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { interventions } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { addItem, editList } from '@/GlobalRedux/Features/listSlice'
 import { cn } from '@/lib/utils'
@@ -39,9 +39,10 @@ import { z } from 'zod'
 
 // Always update this on other pages
 type ItemType = Idp
-const table = 'pms_ids'
+const table = 'pms_idp'
 
 interface ModalProps {
+  ipcrfId: number
   isOpen: boolean
   type: string
   objRatings: IpcrfObjectiveRating[]
@@ -50,15 +51,18 @@ interface ModalProps {
 }
 
 const FormSchema = z.object({
-  objective_id: z.coerce.number().min(1, 'Objective is required'),
-  learning_objective: z.string().min(1, 'Learning Objective is required'),
+  objective_id: z.union([z.string(), z.number()]),
+  custom_objective: z.string().optional(),
   intervention: z.string().min(1, 'Intervention is required'),
+  custom_intervention: z.string().optional(),
+  learning_objective: z.string().min(1, 'Learning Objective is required'),
   timeline: z.string().min(1, 'Timeline is required'),
   resources: z.string().min(1, 'Resources needed is required')
 })
 type FormType = z.infer<typeof FormSchema>
 
 export const AddFuncModal = ({
+  ipcrfId,
   isOpen,
   type,
   objRatings,
@@ -71,6 +75,7 @@ export const AddFuncModal = ({
 
   // Obj Dropdown
   const [open, setOpen] = useState(false)
+  const [openIntervention, setOpenIntervention] = useState(false)
 
   const { supabase } = useSupabase()
 
@@ -78,8 +83,10 @@ export const AddFuncModal = ({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       objective_id: undefined,
-      learning_objective: '',
+      custom_objective: '',
       intervention: '',
+      custom_intervention: '',
+      learning_objective: '',
       timeline: '',
       resources: ''
     }
@@ -91,18 +98,23 @@ export const AddFuncModal = ({
     setIsSubmitting(true)
 
     try {
-      const newData = {
-        objective_id: formdata.objective_id,
-        type,
-        comp_type: 'objective',
-        learning_objective: formdata.learning_objective,
-        intervention: formdata.intervention,
-        timeline: formdata.timeline,
-        resources: formdata.resources
-      }
-
       // If exists (editing), update it
       if (editData?.id) {
+        const newData = {
+          objective_id:
+            formdata.objective_id !== 'others' ? formdata.objective_id : null,
+          custom_objective: formdata.custom_objective,
+          learning_objective: formdata.learning_objective,
+          intervention: formdata.intervention,
+          custom_intervention: formdata.custom_intervention,
+          timeline: formdata.timeline,
+          resources: formdata.resources,
+          is_custom_objective:
+            formdata.objective_id === 'others' ? true : false,
+          is_custom_intervention:
+            formdata.intervention === 'others' ? true : false
+        }
+
         const { error } = await supabase
           .from(table)
           .update(newData)
@@ -112,11 +124,40 @@ export const AddFuncModal = ({
           console.error('Error updating:', error)
         } else {
           // Update list on redux
-          dispatch(editList({ ...newData, id: editData.id })) // ✅ Update Redux with new data
+          dispatch(
+            editList({
+              ...editData,
+              objective: objRatings.find(
+                (i) =>
+                  i.template?.objective_id.toString() ===
+                  formdata.objective_id.toString()
+              )?.template?.objective,
+              ...newData,
+              id: editData.id
+            })
+          ) // ✅ Update Redux with new data
           onClose()
         }
       } else {
         // Add new one
+        const newData = {
+          ipcrf_id: ipcrfId,
+          type,
+          comp_type: 'objective',
+          objective_id:
+            formdata.objective_id !== 'others' ? formdata.objective_id : null,
+          custom_objective: formdata.custom_objective,
+          learning_objective: formdata.learning_objective,
+          intervention: formdata.intervention,
+          custom_intervention: formdata.custom_intervention,
+          timeline: formdata.timeline,
+          resources: formdata.resources,
+          is_custom_objective:
+            formdata.objective_id === 'others' ? true : false,
+          is_custom_intervention:
+            formdata.intervention === 'others' ? true : false
+        }
+
         const { data, error } = await supabase
           .from(table)
           .insert([newData])
@@ -126,7 +167,17 @@ export const AddFuncModal = ({
           console.error('Error adding:', error)
         } else {
           // Insert new item to Redux
-          dispatch(addItem({ ...newData, id: data[0].id }))
+          dispatch(
+            addItem({
+              ...newData,
+              objective: objRatings.find(
+                (i) =>
+                  i.template?.objective_id.toString() ===
+                  formdata.objective_id.toString()
+              )?.template?.objective,
+              id: data[0].id
+            })
+          )
           onClose()
         }
       }
@@ -141,9 +192,13 @@ export const AddFuncModal = ({
 
   useEffect(() => {
     form.reset({
-      objective_id: editData?.objective_id ?? 0,
+      objective_id: editData?.is_custom_objective
+        ? 'others'
+        : editData?.objective_id ?? '',
+      custom_objective: editData?.custom_objective ?? '',
       learning_objective: editData?.learning_objective ?? '',
       intervention: editData?.intervention ?? '',
+      custom_intervention: editData?.custom_intervention ?? '',
       timeline: editData?.timeline ?? '',
       resources: editData?.resources ?? ''
     })
@@ -168,7 +223,7 @@ export const AddFuncModal = ({
           {/* Sticky Header */}
           <div className="app__modal_dialog_title_container">
             <Dialog.Title as="h3" className="text-base font-medium">
-              IDP Details
+              IDP Details <span className="capitalize">({type})</span>
             </Dialog.Title>
           </div>
           {/* Scrollable Form Content */}
@@ -181,7 +236,7 @@ export const AddFuncModal = ({
                       control={form.control}
                       name="objective_id"
                       render={({ field }) => (
-                        <FormItem className="">
+                        <FormItem>
                           <FormLabel className="app__formlabel_standard">
                             Objective
                           </FormLabel>
@@ -196,13 +251,18 @@ export const AddFuncModal = ({
                                     !field.value && 'text-muted-foreground'
                                   )}
                                 >
-                                  {field.value
-                                    ? objRatings?.find(
-                                        (i) =>
-                                          i.template?.objective_id.toString() ===
-                                          field.value.toString()
-                                      )?.template?.objective?.title
-                                    : 'Select'}
+                                  {field.value === 'others'
+                                    ? 'Others, I want to specifiy below'
+                                    : objRatings
+                                        ?.find(
+                                          (i) =>
+                                            i.template?.objective?.id.toString() ===
+                                            field.value?.toString()
+                                        )
+                                        ?.template?.objective?.title?.slice(
+                                          0,
+                                          100
+                                        ) ?? 'Select'}
                                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                               </FormControl>
@@ -216,21 +276,32 @@ export const AddFuncModal = ({
                                 <CommandList>
                                   <CommandEmpty>No results found.</CommandEmpty>
                                   <CommandGroup>
+                                    {/* Others option */}
+                                    <CommandItem
+                                      value="Others"
+                                      onSelect={() => {
+                                        field.onChange('others')
+                                        setOpen(false)
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          'mr-2 h-4 w-4',
+                                          field.value === 'others'
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                      Others, I want to specifiy below
+                                    </CommandItem>
                                     {objRatings?.map((i) => (
                                       <CommandItem
-                                        value={i.template.objective.title}
                                         key={i.id}
-                                        onSelect={(selectedName) => {
-                                          const selectedItem = objRatings.find(
-                                            (k) =>
-                                              k.template.objective.title ===
-                                              selectedName.toLowerCase()
+                                        value={i.template?.objective?.title}
+                                        onSelect={() => {
+                                          field.onChange(
+                                            i.template?.objective?.id
                                           )
-                                          if (selectedItem) {
-                                            field.onChange(
-                                              selectedItem.template.objective_id
-                                            ) // store category.id in form
-                                          }
                                           setOpen(false)
                                         }}
                                       >
@@ -243,7 +314,7 @@ export const AddFuncModal = ({
                                               : 'opacity-0'
                                           )}
                                         />
-                                        {i.template.objective.title}
+                                        {i.template?.objective?.title}
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
@@ -251,7 +322,27 @@ export const AddFuncModal = ({
                               </Command>
                             </PopoverContent>
                           </Popover>
-                          <FormMessage />
+
+                          {/* Show input when "Others" is selected */}
+                          {field.value === 'others' && (
+                            <FormField
+                              control={form.control}
+                              name="custom_objective"
+                              render={({ field }) => (
+                                <FormItem className="mt-2">
+                                  <FormLabel className="app__formlabel_standard">
+                                    Specify Objective
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="Enter custom objective"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          )}
                         </FormItem>
                       )}
                     />
@@ -273,7 +364,157 @@ export const AddFuncModal = ({
                               {...field}
                             />
                           </FormControl>
-                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="intervention"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="app__formlabel_standard">
+                            Intervention
+                          </FormLabel>
+                          <Popover
+                            open={openIntervention}
+                            onOpenChange={setOpenIntervention}
+                          >
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className={cn(
+                                    'w-full justify-between hover:bg-white',
+                                    !field.value && 'text-muted-foreground'
+                                  )}
+                                >
+                                  {field.value === 'others'
+                                    ? 'Others, I want to specifiy below'
+                                    : field.value !== ''
+                                    ? field.value
+                                    : 'Select intervention'}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              align="start"
+                              className="p-0 w-[var(--radix-popover-trigger-width)]"
+                            >
+                              <Command>
+                                <CommandInput placeholder="Search..." />
+                                <CommandList>
+                                  <CommandEmpty>No results found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {/* Others option */}
+                                    <CommandItem
+                                      value="Others"
+                                      onSelect={() => {
+                                        field.onChange('others')
+                                        setOpenIntervention(false)
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          'mr-2 h-4 w-4',
+                                          field.value === 'others'
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                      Others, I want to specifiy below
+                                    </CommandItem>
+                                    {interventions?.map((intervention) => (
+                                      <CommandItem
+                                        key={intervention}
+                                        value={intervention}
+                                        onSelect={() => {
+                                          field.onChange(intervention)
+                                          setOpenIntervention(false)
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            'mr-2 h-4 w-4',
+                                            intervention === field.value
+                                              ? 'opacity-100'
+                                              : 'opacity-0'
+                                          )}
+                                        />
+                                        {intervention}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+
+                          {/* Show input when "Others" is selected */}
+                          {field.value === 'others' && (
+                            <FormField
+                              control={form.control}
+                              name="custom_intervention"
+                              render={({ field }) => (
+                                <FormItem className="mt-2">
+                                  <FormLabel className="app__formlabel_standard">
+                                    Specify Intervention
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="Enter other Intervention"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          )}
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="timeline"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="app__formlabel_standard">
+                            Timeline
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              className="app__input_standard"
+                              placeholder="Timeline"
+                              type="text"
+                              {...field}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="resources"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="app__formlabel_standard">
+                            Resources Needed
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              className="app__input_standard"
+                              placeholder="Resources Needed"
+                              type="text"
+                              {...field}
+                            />
+                          </FormControl>
                         </FormItem>
                       )}
                     />
