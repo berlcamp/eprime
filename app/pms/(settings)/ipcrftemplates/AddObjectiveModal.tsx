@@ -484,7 +484,7 @@ export const AddObjectiveModal = ({
                           name="quality_outstanding"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Outstanding</FormLabel>
+                              <FormLabel>5 - Outstanding</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -501,7 +501,7 @@ export const AddObjectiveModal = ({
                           name="quality_very_satisfactory"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Very Satisfactory</FormLabel>
+                              <FormLabel>4 - Very Satisfactory</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -518,7 +518,7 @@ export const AddObjectiveModal = ({
                           name="quality_satisfactory"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Very Satisfactory</FormLabel>
+                              <FormLabel>3 - Satisfactory</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -535,7 +535,7 @@ export const AddObjectiveModal = ({
                           name="quality_unsatisfactory"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Unsatisfactory</FormLabel>
+                              <FormLabel>2 - Unsatisfactory</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -552,7 +552,7 @@ export const AddObjectiveModal = ({
                           name="quality_poor"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Poor</FormLabel>
+                              <FormLabel>1 - Poor</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -578,7 +578,7 @@ export const AddObjectiveModal = ({
                           name="efficiency_outstanding"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Outstanding</FormLabel>
+                              <FormLabel>5 - Outstanding</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -595,7 +595,7 @@ export const AddObjectiveModal = ({
                           name="efficiency_very_satisfactory"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Very Satisfactory</FormLabel>
+                              <FormLabel>4 - Very Satisfactory</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -612,7 +612,7 @@ export const AddObjectiveModal = ({
                           name="efficiency_satisfactory"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Very Satisfactory</FormLabel>
+                              <FormLabel>3 - Satisfactory</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -629,7 +629,7 @@ export const AddObjectiveModal = ({
                           name="efficiency_unsatisfactory"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Unsatisfactory</FormLabel>
+                              <FormLabel>2 - Unsatisfactory</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -646,7 +646,7 @@ export const AddObjectiveModal = ({
                           name="efficiency_poor"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Poor</FormLabel>
+                              <FormLabel>1 - Poor</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -672,7 +672,7 @@ export const AddObjectiveModal = ({
                           name="timeliness_outstanding"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Outstanding</FormLabel>
+                              <FormLabel>5 - Outstanding</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -689,7 +689,7 @@ export const AddObjectiveModal = ({
                           name="timeliness_very_satisfactory"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Very Satisfactory</FormLabel>
+                              <FormLabel>4 - Very Satisfactory</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -706,7 +706,7 @@ export const AddObjectiveModal = ({
                           name="timeliness_satisfactory"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Very Satisfactory</FormLabel>
+                              <FormLabel>3 - Satisfactory</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -723,7 +723,7 @@ export const AddObjectiveModal = ({
                           name="timeliness_unsatisfactory"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Unsatisfactory</FormLabel>
+                              <FormLabel>2 - Unsatisfactory</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
@@ -740,7 +740,7 @@ export const AddObjectiveModal = ({
                           name="timeliness_poor"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Poor</FormLabel>
+                              <FormLabel>1 - Poor</FormLabel>
                               <FormControl>
                                 <Textarea
                                   className="resize-none bg-white"
