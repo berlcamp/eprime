@@ -282,12 +282,12 @@ export const AddObjectiveModal = ({
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
+                  <div className="col-span-2">
                     <FormField
                       control={form.control}
                       name="objective_id"
                       render={({ field }) => (
-                        <FormItem className="">
+                        <FormItem>
                           <FormLabel className="app__formlabel_standard">
                             Objective
                           </FormLabel>
@@ -306,7 +306,7 @@ export const AddObjectiveModal = ({
                                     ? objectives?.find(
                                         (i) =>
                                           i.id.toString() ===
-                                          field.value.toString()
+                                          field.value?.toString()
                                       )?.title
                                     : 'Select'}
                                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -324,17 +324,10 @@ export const AddObjectiveModal = ({
                                   <CommandGroup>
                                     {objectives?.map((i) => (
                                       <CommandItem
-                                        value={i.title}
                                         key={i.id}
-                                        onSelect={(selectedName) => {
-                                          const selectedItem = objectives.find(
-                                            (k) =>
-                                              k.title.toLowerCase() ===
-                                              selectedName.toLowerCase()
-                                          )
-                                          if (selectedItem) {
-                                            field.onChange(selectedItem.id) // store category.id in form
-                                          }
+                                        value={i.title} // for search
+                                        onSelect={() => {
+                                          field.onChange(i.id) // store the id
                                           setOpen(false)
                                         }}
                                       >
@@ -360,7 +353,7 @@ export const AddObjectiveModal = ({
                       )}
                     />
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <FormField
                       control={form.control}
                       name="target"

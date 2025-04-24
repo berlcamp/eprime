@@ -1675,6 +1675,8 @@ export async function fetchDocuments(
       trackerIds.push(item.tracker_id)
     })
 
+    console.log('trackerIds', trackerIds.length)
+
     let query = supabase
       .from('hrm_request_trackers')
       .select(
@@ -1761,8 +1763,8 @@ export async function fetchDocuments(
 
     // Order By
     query = query.order('id', { ascending: true })
-
     const { data, count, error } = await query
+    console.log('count', count)
 
     if (error) {
       throw new Error(error.message)
