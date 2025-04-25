@@ -57,7 +57,7 @@ const Page: React.FC = () => {
       <div className="app__main">
         <div>
           <div className="app__title">
-            <Title title="Reward and Recognation Ranking" />
+            <Title title="Pasidungog Ranking" />
             <Button
               onClick={() => setModalRankingOpen(true)}
               className="ml-auto"
