@@ -1,16 +1,22 @@
 'use client'
 import { ConfirmationModal } from '@/components/ConfirmationModal'
-import { SearchUserInput, UserBlock } from '@/components/index'
 import { Button } from '@/components/ui/button'
-import { Form } from '@/components/ui/form'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
   addItem,
   deleteItem,
   updateList
 } from '@/GlobalRedux/Features/list2Slice'
-import { Employee, RootState } from '@/types'
-import { RrRanking, RrRater } from '@/types/rrTypes'
+import { RootState } from '@/types'
+import { RrCriterion, RrRanking } from '@/types/rrTypes'
 import { Dialog, Menu, Transition } from '@headlessui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ChevronDown, TrashIcon } from 'lucide-react'
@@ -21,8 +27,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { z } from 'zod'
 
 // Always update this on other pages
-type ItemType = RrRater
-const table = 'rr_raters'
+type ItemType = RrCriterion
+const table = 'rr_criteria'
 
 interface ModalProps {
   isOpen: boolean
@@ -31,11 +37,12 @@ interface ModalProps {
 }
 
 const FormSchema = z.object({
-  rater_id: z.string().min(1, 'Rater is required')
+  weight: z.coerce.number().min(1, 'Weight is required'),
+  name: z.string().min(1, 'Criteria name is required')
 })
 type FormType = z.infer<typeof FormSchema>
 
-export const ModalRaters = ({ isOpen, onClose, editData }: ModalProps) => {
+export const ModalCriteria = ({ isOpen, onClose, editData }: ModalProps) => {
   //
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedItem, setSelectedItem] = useState<ItemType | null>(null)
@@ -44,13 +51,13 @@ export const ModalRaters = ({ isOpen, onClose, editData }: ModalProps) => {
   const dispatch = useDispatch()
   const list = useSelector((state: RootState) => state.list2.value)
 
-  const { supabase, systemUsers: users } = useSupabase()
-  const systemUsers: Employee[] = users
+  const { supabase } = useSupabase()
 
   const form = useForm<FormType>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      rater_id: ''
+      weight: 0,
+      name: ''
     }
   })
 
@@ -60,15 +67,12 @@ export const ModalRaters = ({ isOpen, onClose, editData }: ModalProps) => {
 
     if (isSubmitting) return // 🚫 Prevent double-submit
 
-    const isValid = await form.trigger(['rater_id']) // Validate specific fields
-
-    if (!isValid) return
-
     setIsSubmitting(true)
 
     try {
       const newData = {
-        rater_id: formdata.rater_id,
+        weight: formdata.weight,
+        name: formdata.name,
         ranking_id: editData.id
       }
 
@@ -80,21 +84,19 @@ export const ModalRaters = ({ isOpen, onClose, editData }: ModalProps) => {
 
       if (error) {
         console.error('Error adding:', error)
-        if (error.code === '23505') {
-          toast.error('This is already added')
-        }
       } else {
         // Insert new item to Redux
         dispatch(
           addItem({
             ...newData,
-            rater: systemUsers.find(
-              (i) => i.id.toString() === formdata.rater_id.toString()
-            ),
             id: data[0].id
           })
         )
         toast.success('Successfully saved!')
+        form.reset({
+          weight: 0,
+          name: ''
+        })
       }
     } catch (err) {
       console.error(err)
@@ -103,16 +105,6 @@ export const ModalRaters = ({ isOpen, onClose, editData }: ModalProps) => {
       setIsSubmitting(false)
     }
   }
-
-  const handleSelectedUsers = async (selectedUsers: Employee[]) => {
-    if (selectedUsers.length > 0) {
-      const selectedUser = selectedUsers[0]
-      form.setValue('rater_id', selectedUser.id)
-    } else {
-      form.clearErrors('rater_id')
-    }
-  }
-
   // Handle opening the confirmation modal for deleting a supplier
   const handleDeleteConfirmation = (item: ItemType) => {
     setSelectedItem(item)
@@ -147,11 +139,7 @@ export const ModalRaters = ({ isOpen, onClose, editData }: ModalProps) => {
     dispatch(updateList([]))
 
     const fetchData = async () => {
-      const { data, error } = await supabase
-        .from('rr_raters')
-        .select(
-          '*, rater:rater_id(id,firstname,middlename,lastname,avatar_url)'
-        )
+      const { data, error } = await supabase.from(table).select()
 
       if (error) {
         console.error(error)
@@ -163,6 +151,18 @@ export const ModalRaters = ({ isOpen, onClose, editData }: ModalProps) => {
 
     void fetchData()
   }, [isOpen])
+
+  useEffect(() => {
+    form.reset({
+      weight: 0,
+      name: ''
+    })
+  }, [isOpen])
+
+  const totalWeight = (list as ItemType[]).reduce(
+    (total, item) => total + item.weight,
+    0
+  )
 
   return (
     <Dialog
@@ -183,7 +183,7 @@ export const ModalRaters = ({ isOpen, onClose, editData }: ModalProps) => {
           {/* Sticky Header */}
           <div className="app__modal_dialog_title_container">
             <Dialog.Title as="h3" className="text-base font-medium">
-              Raters
+              Critiaria
             </Dialog.Title>
             <Button type="button" onClick={onClose} variant="outline">
               Close
@@ -193,30 +193,69 @@ export const ModalRaters = ({ isOpen, onClose, editData }: ModalProps) => {
           <div className="app__modal_dialog_content">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <SearchUserInput
-                      isMultiple={false}
-                      handleSelectedUsers={handleSelectedUsers}
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="app__formlabel_standard">
+                            Criteria
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              className="app__input_standard"
+                              placeholder="Criteria"
+                              type="text"
+                              {...field}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
                     />
-                    {form.formState.errors.rater_id && (
-                      <div className="app__error_message">
-                        {form.formState.errors.rater_id.message}
-                      </div>
-                    )}
+                  </div>
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="weight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="app__formlabel_standard">
+                            weight
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              className="app__input_standard"
+                              placeholder="Title"
+                              min={0}
+                              max={100}
+                              type="number"
+                              {...field}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
                 <div className="mt-2 text-right">
-                  <Button type="submit">Add Rater</Button>
+                  <Button type="submit">Add Criteria</Button>
                 </div>
               </form>
             </Form>
             <div className="pb-10">
+              <div className="app__title">
+                <h1 className="capitalize flex-1">
+                  Total Weight: {totalWeight}
+                </h1>
+              </div>
               <table className="app__table">
                 <thead className="app__thead">
                   <tr>
                     <th className="app__th"></th>
-                    <th className="app__th">Rater</th>
+                    <th className="app__th">Criteria</th>
+                    <th className="app__th">Weight</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -260,9 +299,8 @@ export const ModalRaters = ({ isOpen, onClose, editData }: ModalProps) => {
                           </Transition>
                         </Menu>
                       </td>
-                      <td className="app__td">
-                        <UserBlock user={item.rater} />
-                      </td>
+                      <td className="app__td">{item.name}</td>
+                      <td className="app__td">{item.weight}</td>
                     </tr>
                   ))}
                   {list.length === 0 && (

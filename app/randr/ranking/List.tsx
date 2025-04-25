@@ -6,11 +6,18 @@ import { deleteItem } from '@/GlobalRedux/Features/listSlice'
 import { RootState } from '@/types' // Import the RootState type
 import { RrRanking } from '@/types/rrTypes'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDown, PencilIcon, TrashIcon, User2Icon } from 'lucide-react'
+import {
+  ChevronDown,
+  ListCheck,
+  PencilIcon,
+  TrashIcon,
+  User2Icon
+} from 'lucide-react'
 import { Fragment, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useDispatch, useSelector } from 'react-redux'
 import { AddRankingModal } from './AddRankingModal'
+import { ModalCriteria } from './ModalCriteria'
 import { ModalEmployees } from './ModalEmployees'
 import { ModalRaters } from './ModalRaters'
 
@@ -27,6 +34,7 @@ export const List = () => {
 
   const [modalRatersOpen, setModalRatersOpen] = useState(false)
   const [modalEmployeeOpen, setModalEmployeeOpen] = useState(false)
+  const [modalCriteriaOpen, setModalCriteriaOpen] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalAddOpen, setModalAddOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<ItemType | null>(null)
@@ -48,6 +56,10 @@ export const List = () => {
   const handleManageRaters = (item: ItemType) => {
     setSelectedItem(item)
     setModalRatersOpen(true)
+  }
+  const handleManageCriteria = (item: ItemType) => {
+    setSelectedItem(item)
+    setModalCriteriaOpen(true)
   }
 
   // Delete
@@ -124,6 +136,15 @@ export const List = () => {
                         </Menu.Item>
                         <Menu.Item>
                           <div
+                            onClick={() => handleManageCriteria(item)}
+                            className="app__dropdown_item"
+                          >
+                            <ListCheck className="w-4 h-4" />
+                            <span>Manage Ranking Criteria</span>
+                          </div>
+                        </Menu.Item>
+                        <Menu.Item>
+                          <div
                             onClick={() => handleEdit(item)}
                             className="app__dropdown_item"
                           >
@@ -183,6 +204,11 @@ export const List = () => {
         isOpen={modalRatersOpen}
         editData={selectedItem}
         onClose={() => setModalRatersOpen(false)}
+      />
+      <ModalCriteria
+        isOpen={modalCriteriaOpen}
+        editData={selectedItem}
+        onClose={() => setModalCriteriaOpen(false)}
       />
     </div>
   )

@@ -80,6 +80,9 @@ export const ModalEmployees = ({ isOpen, onClose, editData }: ModalProps) => {
 
       if (error) {
         console.error('Error adding:', error)
+        if (error.code === '23505') {
+          toast.error('This is already added')
+        }
       } else {
         // Insert new item to Redux
         dispatch(
@@ -91,9 +94,8 @@ export const ModalEmployees = ({ isOpen, onClose, editData }: ModalProps) => {
             id: data[0].id
           })
         )
+        toast.success('Successfully saved!')
       }
-
-      toast.success('Successfully saved!')
     } catch (err) {
       console.error(err)
       toast.error(`Submission error: ${err}`)
