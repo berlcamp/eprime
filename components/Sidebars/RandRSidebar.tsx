@@ -1,74 +1,69 @@
 'use client'
-import { useFilter } from '@/context/FilterContext'
-import { ChartBarSquareIcon, Cog6ToothIcon } from '@heroicons/react/24/solid'
+import { Cog6ToothIcon } from '@heroicons/react/24/solid'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const RandRSidebar = () => {
-  const { hasAccess } = useFilter()
-
   const currentRoute = usePathname()
-
-  const hasAccessSettings = hasAccess('randr_manager')
 
   return (
     <>
       <ul className="pt-8 mt-4 space-y-2 border-t border-gray-700">
         <li>
           <div className="flex items-center text-gray-500 items-centers space-x-1 px-2">
-            <ChartBarSquareIcon className="w-4 h-4" />
-            <span>My R&R</span>
+            <Cog6ToothIcon className="w-4 h-4" />
+            <span>Rewards & Recognition</span>
           </div>
         </li>
         <li>
           <Link
-            href="/randr"
+            href="/randr/ranking"
             className={`app__menu_link ${
-              currentRoute === '/randr' ? 'app_menu_link_active' : ''
+              currentRoute === '/randr/ranking' ? 'app_menu_link_active' : ''
             }`}
           >
-            <span className="flex-1 ml-3 whitespace-nowrap">HOME</span>
+            <span className="flex-1 ml-3 whitespace-nowrap">Pasidungog</span>
           </Link>
         </li>
         <li>
           <Link
-            href="/randr/myrr"
+            href="/randr/serviceawards"
             className={`app__menu_link ${
-              currentRoute === '/pms/myrr' ? 'app_menu_link_active' : ''
+              currentRoute === '/randr/serviceawards'
+                ? 'app_menu_link_active'
+                : ''
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">
-              Rewards & Recognation
+              Service Awards
+            </span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/randr/gawadagad"
+            className={`app__menu_link ${
+              currentRoute === '/randr/gawadagad' ? 'app_menu_link_active' : ''
+            }`}
+          >
+            <span className="flex-1 ml-3 whitespace-nowrap">Gawad Agad</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/randr/meritorious"
+            className={`app__menu_link ${
+              currentRoute === '/randr/meritorious'
+                ? 'app_menu_link_active'
+                : ''
+            }`}
+          >
+            <span className="flex-1 ml-3 whitespace-nowrap">
+              Meritorious Award
             </span>
           </Link>
         </li>
       </ul>
-      {hasAccessSettings && (
-        <>
-          <ul className="pt-8 mt-4 space-y-2 border-t border-gray-700">
-            <li>
-              <div className="flex items-center text-gray-500 items-centers space-x-1 px-2">
-                <Cog6ToothIcon className="w-4 h-4" />
-                <span>SETTINGS</span>
-              </div>
-            </li>
-            <li>
-              <Link
-                href="/randr/ranking"
-                className={`app__menu_link ${
-                  currentRoute === '/randr/ranking'
-                    ? 'app_menu_link_active'
-                    : ''
-                }`}
-              >
-                <span className="flex-1 ml-3 whitespace-nowrap">
-                  R&R Ranking
-                </span>
-              </Link>
-            </li>
-          </ul>
-        </>
-      )}
     </>
   )
 }

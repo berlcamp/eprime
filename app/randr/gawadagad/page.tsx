@@ -12,13 +12,13 @@ export default function Page() {
       <TopBar />
       <div className="app__main">
         <div className="app__title">
-          <Title title="Rewards and Recognation" />
+          <Title title="Gawad Agad" />
         </div>
         <div className="p-4">
           <table className="app__table">
             <thead className="app__thead">
               <tr>
-                <th className="app__th">Rewards</th>
+                <th className="app__th">Awards</th>
                 <th className="app__th">Description</th>
               </tr>
             </thead>
