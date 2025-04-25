@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 'use client'
 import { Sidebar, Title, TopBar } from '@/components/index'
-import LandDSidebar from '@/components/Sidebars/LandDSidebar'
+import RandRSidebar from '@/components/Sidebars/RandRSidebar'
 
 export default function Page() {
   return (
     <>
       <Sidebar>
-        <LandDSidebar />
+        <RandRSidebar />
       </Sidebar>
       <TopBar />
       <div className="app__main">
