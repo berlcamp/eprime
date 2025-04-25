@@ -47,9 +47,11 @@ const LandDSidebar = () => {
 
         <li>
           <Link
-            href="#"
+            href="/landd/trainingneedsassessment"
             className={`app__menu_link ${
-              currentRoute === '/#' ? 'app_menu_link_active' : ''
+              currentRoute === '/landd/trainingneedsassessment'
+                ? 'app_menu_link_active'
+                : ''
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">
@@ -64,9 +66,11 @@ const LandDSidebar = () => {
         </li>
         <li>
           <Link
-            href="#"
+            href="/landd/learningactionplan"
             className={`app__menu_link ${
-              currentRoute === '/#' ? 'app_menu_link_active' : ''
+              currentRoute === '/landd/learningactionplan'
+                ? 'app_menu_link_active'
+                : ''
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">
@@ -81,9 +85,11 @@ const LandDSidebar = () => {
         </li>
         <li>
           <Link
-            href="#"
+            href="/landd/programproposal"
             className={`app__menu_link ${
-              currentRoute === '/#' ? 'app_menu_link_active' : ''
+              currentRoute === '/landd/programproposal'
+                ? 'app_menu_link_active'
+                : ''
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">
@@ -98,9 +104,11 @@ const LandDSidebar = () => {
         </li>
         <li>
           <Link
-            href="#"
+            href="/landd/implementedprogram"
             className={`app__menu_link ${
-              currentRoute === '/#' ? 'app_menu_link_active' : ''
+              currentRoute === '/landd/implementedprogram'
+                ? 'app_menu_link_active'
+                : ''
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">
@@ -110,9 +118,11 @@ const LandDSidebar = () => {
         </li>
         <li>
           <Link
-            href="#"
+            href="/landd/pooloffacilitators"
             className={`app__menu_link ${
-              currentRoute === '/#' ? 'app_menu_link_active' : ''
+              currentRoute === '/landd/pooloffacilitators'
+                ? 'app_menu_link_active'
+                : ''
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">
@@ -122,9 +132,11 @@ const LandDSidebar = () => {
         </li>
         <li>
           <Link
-            href="#"
+            href="/landd/externalserviceprovider"
             className={`app__menu_link ${
-              currentRoute === '/#' ? 'app_menu_link_active' : ''
+              currentRoute === '/landd/externalserviceprovider'
+                ? 'app_menu_link_active'
+                : ''
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">
@@ -134,9 +146,11 @@ const LandDSidebar = () => {
         </li>
         <li>
           <Link
-            href="#"
+            href="/landd/programmanagementteam"
             className={`app__menu_link ${
-              currentRoute === '/#' ? 'app_menu_link_active' : ''
+              currentRoute === '/landd/programmanagementteam'
+                ? 'app_menu_link_active'
+                : ''
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">

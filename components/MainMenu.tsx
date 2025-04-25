@@ -224,7 +224,7 @@ const MainMenu = () => {
                 </div>
               </div>
             </Link>
-            <Link href="#">
+            <Link href="/randr">
               <div className="app__menu_item">
                 <div className="pt-1">
                   <TrophyIcon className="w-8 h-8" />

@@ -32,12 +32,14 @@ const RandRSidebar = () => {
         </li>
         <li>
           <Link
-            href="/randr/myrar"
+            href="/randr/myrr"
             className={`app__menu_link ${
-              currentRoute === '/pms/ipcrf' ? 'app_menu_link_active' : ''
+              currentRoute === '/pms/myrr' ? 'app_menu_link_active' : ''
             }`}
           >
-            <span className="flex-1 ml-3 whitespace-nowrap">R&R Ranking</span>
+            <span className="flex-1 ml-3 whitespace-nowrap">
+              Rewards & Recognation
+            </span>
           </Link>
         </li>
       </ul>

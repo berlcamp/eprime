@@ -296,7 +296,7 @@
   @apply w-full mx-4 max-w-6xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 shadow-lg backdrop-blur-2xl;
 }
 .app__modal_dialog_title_container {
-  @apply border-b px-4 py-2 sticky top-0 bg-gray-100 dark:bg-gray-950 z-10;
+  @apply border-b px-4 py-2 sticky top-0 bg-gray-100 dark:bg-gray-950 z-10 flex justify-between;
 }
 .app__modal_dialog_content {
   @apply overflow-y-auto p-6 space-y-4;
