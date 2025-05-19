@@ -203,7 +203,7 @@
   @apply outline-none text-xs py-1;
 }
 .app__norecordsfound {
-  @apply text-sm p-4 text-gray-700;
+  @apply text-lg p-4 text-gray-700;
 }
 .app__menu_item {
   @apply flex items-start space-x-2 rounded-lg p-2 hover:bg-gray-100;

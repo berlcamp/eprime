@@ -25,6 +25,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
   const [totalHours, setTotalHours] = useState('')
   const [serviceCreditEquivalent, setServiceCreditEquivalent] = useState('')
+
   const [isHolidayChecked, setIsHolidayChecked] = useState(false)
 
   // Redux staff
@@ -186,7 +187,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleHoursChange = (hours: string) => {
-    const perHour = 0.1875
+    const perHour = !isHolidayChecked ? 0.15625 : 0.1875
     const sc = Number(hours) * perHour
     setServiceCreditEquivalent(`(Equivalent Service Credit: ${sc})`)
     setTotalHours(hours)
@@ -199,6 +200,11 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
 
       const perHour = 0.1875
       const coc = Number(editData.total_hours) * perHour
+
+      if (coc !== Number(editData.service_credits)) {
+        setIsHolidayChecked(true)
+      }
+
       setServiceCreditEquivalent(`(Equivalent Service Credit: ${coc})`)
     }
 

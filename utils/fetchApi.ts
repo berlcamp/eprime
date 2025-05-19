@@ -9,7 +9,6 @@ import type {
   DesignationTypes,
   Employee,
   excludedItemsTypes,
-  FlowListTypes,
   FollowersTypes,
   ItemTypes,
   LeaveCreditTypes
@@ -1663,18 +1662,18 @@ export async function fetchDocuments(
   perPageCount: number,
   rangeFrom: number
 ) {
+  if (filterUrl && filterUrl === 'search') {
+    if (
+      (typeof filters.filterKeyword === 'undefined' ||
+        filters.filterKeyword.trim() === '') &&
+      (typeof filters.filterRequester === 'undefined' ||
+        filters.filterRequester === '')
+    ) {
+      return { data: [], count: 0 }
+    }
+  }
+
   try {
-    // Get ID within Tracker Flow
-    const { data: trackerFlow } = await supabase
-      .from('hrm_tracker_flow')
-      .select()
-      .or(`user_id.eq.${userId},receiver_id.eq.${userId}`)
-
-    const trackerIds: string[] = []
-    trackerFlow?.forEach((item: FlowListTypes) => {
-      trackerIds.push(item.tracker_id)
-    })
-
     let query = supabase
       .from('hrm_request_trackers')
       .select(
@@ -1682,23 +1681,11 @@ export async function fetchDocuments(
         { count: 'exact' }
       )
 
-    // Exclude kean and berl
-    if (
-      userId !== '1a8173ad-f4c5-4869-a587-7466a1d6e951' &&
-      userId !== '1761de66-1104-492d-aa95-b8f4521eaef1'
-    ) {
-      query = query.in('id', trackerIds)
-    }
-
-    // Full text search
     if (
       typeof filters.filterKeyword !== 'undefined' &&
       filters.filterKeyword.trim() !== ''
     ) {
-      // query = query.or(`agency.ilike.%${filters.filterKeyword}%,particulars.ilike.%${filters.filterKeyword}%,name.ilike.%${filters.filterKeyword}%,routing_slip_no.ilike.%${filters.filterKeyword}%,amount.ilike.%${filters.filterKeyword}%`)
       query = query.eq('reference_code', filters.filterKeyword.trim())
-      // fulltext search from trackersearch posgres function
-      // query = query.textSearch('trackersearch', fullTextQuery(filters.filterKeyword))
     }
 
     // Filter type
@@ -1750,6 +1737,13 @@ export async function fetchDocuments(
       query = query.neq('current_status', 'Approved')
     }
 
+    const isDefaultView = !['search', 'forwarded', 'following'].includes(
+      filterUrl ?? ''
+    )
+    if (isDefaultView) {
+      query = query.eq('created_by', userId)
+    }
+
     // Perform count before paginations
     // const { count } = await query
 
@@ -1762,7 +1756,6 @@ export async function fetchDocuments(
     // Order By
     query = query.order('id', { ascending: false })
     const { data, count, error } = await query
-    console.log('count', count)
 
     if (error) {
       throw new Error(error.message)

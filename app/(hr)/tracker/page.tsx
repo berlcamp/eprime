@@ -32,6 +32,7 @@ import type {
 } from '@/types'
 
 // Redux imports
+import LoadingSkeleton from '@/components/Loading/LoadingSkeleton'
 import { PrintLeaveForm } from '@/components/Printables/PrintLeaveForm'
 import { PrintLocatorSlipForm } from '@/components/Printables/PrintLocatorSlipForm'
 import { PrintPassSlipForm } from '@/components/Printables/PrintPassSlipForm'
@@ -43,6 +44,7 @@ import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { useSearchParams } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
 import { useReactToPrint } from 'react-to-print'
+import Search from './Search'
 import StickiesModal from './StickiesModal'
 
 const Page: React.FC = () => {
@@ -62,6 +64,8 @@ const Page: React.FC = () => {
   const [resultsCount, setResultsCount] = useState<number>(0)
 
   const searchParams = useSearchParams()
+  const filterUrl = searchParams.get('filter')
+  const isSearchView = filterUrl && filterUrl === 'search'
 
   const { session, supabase } = useSupabase()
 
@@ -106,8 +110,6 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const filterUrl = searchParams.get('filter')
-
       const result = await fetchDocuments(
         { filterKeyword, filterType, filterStatus, filterRequester },
         filterUrl,
@@ -205,7 +207,9 @@ const Page: React.FC = () => {
           {/* Header */}
           <TopBar />
           <div className="app__title">
-            <Title title="Request Tracker" />
+            <Title
+              title={isSearchView ? 'Search Request' : 'Request Tracker'}
+            />
 
             <CustomButton
               containerStyles="app__btn_yellow flex items-center space-x-2"
@@ -225,167 +229,184 @@ const Page: React.FC = () => {
           </div>
 
           {/* Filters */}
-          <div className="app__filters">
-            <Filters
-              setFilterKeyword={setFilterKeyword}
-              setFilterStatus={setFilterStatus}
-              setFilterRequester={setFilterRequester}
-              setFilterType={setFilterType}
-            />
-          </div>
+          {isSearchView ? (
+            <div className="app__filters">
+              <Search
+                setFilterKeyword={setFilterKeyword}
+                setFilterRequester={setFilterRequester}
+              />
+            </div>
+          ) : (
+            <div className="app__filters">
+              <Filters
+                setFilterStatus={setFilterStatus}
+                setFilterType={setFilterType}
+              />
+            </div>
+          )}
 
           {/* Per Page */}
-          <PerPage
-            showingCount={showingCount}
-            resultsCount={resultsCount}
-            perPageCount={perPageCount}
-            setPerPageCount={setPerPageCount}
-          />
+          {!loading && !isDataEmpty && (
+            <PerPage
+              showingCount={showingCount}
+              resultsCount={resultsCount}
+              perPageCount={perPageCount}
+              setPerPageCount={setPerPageCount}
+            />
+          )}
+
+          {loading && <LoadingSkeleton />}
 
           {/* Main Content */}
           <div>
-            <table className="app__table">
-              <thead className="app__thead">
-                <tr>
-                  <th className="app__th pl-4"></th>
-                  <th className="app__th w-16"></th>
-                  <th className="app__th">Reference Code</th>
-                  <th className="app__th">Request Type</th>
-                  <th className="hidden sm:table-cell app__th">Details</th>
-                  <th className="hidden sm:table-cell app__th">Requester</th>
-                  <th className="hidden sm:table-cell app__th">
-                    Current Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {!isDataEmpty &&
-                  list.map((item: DocumentTypes, index: number) => (
-                    <tr key={index} className="app__tr">
-                      <td className="w-6 pl-4 app__td">
-                        <Menu as="div" className="app__menu_container">
-                          <div>
-                            <Menu.Button className="app__dropdown_btn">
-                              <ChevronDownIcon
-                                className="h-5 w-5"
-                                aria-hidden="true"
-                              />
-                            </Menu.Button>
-                          </div>
+            {!loading && !isDataEmpty && (
+              <table className="app__table">
+                <thead className="app__thead">
+                  <tr>
+                    <th className="app__th pl-4"></th>
+                    <th className="app__th w-16"></th>
+                    <th className="app__th">Reference Code</th>
+                    <th className="app__th">Request Type</th>
+                    <th className="hidden sm:table-cell app__th">Details</th>
+                    <th className="hidden sm:table-cell app__th">Requester</th>
+                    <th className="hidden sm:table-cell app__th">
+                      Current Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {!isDataEmpty &&
+                    list.map((item: DocumentTypes, index: number) => (
+                      <tr key={index} className="app__tr">
+                        <td className="w-6 pl-4 app__td">
+                          <Menu as="div" className="app__menu_container">
+                            <div>
+                              <Menu.Button className="app__dropdown_btn">
+                                <ChevronDownIcon
+                                  className="h-5 w-5"
+                                  aria-hidden="true"
+                                />
+                              </Menu.Button>
+                            </div>
 
-                          <Transition
-                            as={Fragment}
-                            enter="transition ease-out duration-100"
-                            enterFrom="transform opacity-0 scale-95"
-                            enterTo="transform opacity-100 scale-100"
-                            leave="transition ease-in duration-75"
-                            leaveFrom="transform opacity-100 scale-100"
-                            leaveTo="transform opacity-0 scale-95"
-                          >
-                            <Menu.Items className="app__dropdown_items">
-                              <div className="py-1">
-                                {[
-                                  'Leave',
-                                  'Locator Slip',
-                                  'Pass Slip',
-                                  'Undertime Permit',
-                                  'Service Record Print Request',
-                                  'Travel Authority'
-                                ].includes(item.type) &&
-                                  item.current_status === 'Approved' && (
-                                    <Menu.Item>
-                                      <div
-                                        onClick={() => handlePrint(item)}
-                                        className="app__dropdown_item"
-                                      >
-                                        <PrinterIcon className="w-4 h-4" />
-                                        <span>Print Form</span>
-                                      </div>
-                                    </Menu.Item>
-                                  )}
-                              </div>
-                            </Menu.Items>
-                          </Transition>
-                        </Menu>
-                      </td>
-                      <td className="pl-4 app__td">
-                        <div>
-                          <button
-                            onClick={() => handleShowDetailsModal(item)}
-                            className="bg-emerald-500 hover:bg-emerald-600 border border-emerald-600 font-medium px-1 py-px text-xs text-white rounded-sm"
-                          >
-                            Request&nbsp;Details
-                          </button>
-                        </div>
-                      </td>
-                      <td className="app__td">
-                        <div className="font-medium">{item.reference_code}</div>
-                      </td>
-                      <td className="app__td">
-                        <div className="font-medium">{item.type}</div>
-                      </td>
-                      <td className="hidden sm:table-cell app__td">
-                        {item.particulars && item.particulars.trim() !== '' && (
+                            <Transition
+                              as={Fragment}
+                              enter="transition ease-out duration-100"
+                              enterFrom="transform opacity-0 scale-95"
+                              enterTo="transform opacity-100 scale-100"
+                              leave="transition ease-in duration-75"
+                              leaveFrom="transform opacity-100 scale-100"
+                              leaveTo="transform opacity-0 scale-95"
+                            >
+                              <Menu.Items className="app__dropdown_items">
+                                <div className="py-1">
+                                  {[
+                                    'Leave',
+                                    'Locator Slip',
+                                    'Pass Slip',
+                                    'Undertime Permit',
+                                    'Service Record Print Request',
+                                    'Travel Authority'
+                                  ].includes(item.type) &&
+                                    item.current_status === 'Approved' && (
+                                      <Menu.Item>
+                                        <div
+                                          onClick={() => handlePrint(item)}
+                                          className="app__dropdown_item"
+                                        >
+                                          <PrinterIcon className="w-4 h-4" />
+                                          <span>Print Form</span>
+                                        </div>
+                                      </Menu.Item>
+                                    )}
+                                </div>
+                              </Menu.Items>
+                            </Transition>
+                          </Menu>
+                        </td>
+                        <td className="pl-4 app__td">
                           <div>
-                            <span className="font-light">Particulars:</span>{' '}
-                            <span className="font-medium">
-                              {item.particulars}
-                            </span>
+                            <button
+                              onClick={() => handleShowDetailsModal(item)}
+                              className="bg-emerald-500 hover:bg-emerald-600 border border-emerald-600 font-medium px-1 py-px text-xs text-white rounded-sm"
+                            >
+                              Request&nbsp;Details
+                            </button>
                           </div>
-                        )}
-                        <div>
-                          <div className="font-light">Date Requested:</div>{' '}
+                        </td>
+                        <td className="app__td">
                           <div className="font-medium">
-                            {format(
-                              new Date(item.created_at),
-                              'MMM dd, yyyy h:mm a'
+                            {item.reference_code}
+                          </div>
+                        </td>
+                        <td className="app__td">
+                          <div className="font-medium">{item.type}</div>
+                        </td>
+                        <td className="hidden sm:table-cell app__td">
+                          {item.particulars &&
+                            item.particulars.trim() !== '' && (
+                              <div>
+                                <span className="font-light">Particulars:</span>{' '}
+                                <span className="font-medium">
+                                  {item.particulars}
+                                </span>
+                              </div>
+                            )}
+                          <div>
+                            <div className="font-light">Date Requested:</div>{' '}
+                            <div className="font-medium">
+                              {format(
+                                new Date(item.created_at),
+                                'MMM dd, yyyy h:mm a'
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="hidden sm:table-cell app__td">
+                          <UserBlock user={item.creator} />
+                        </td>
+                        <td className="hidden sm:table-cell app__td">
+                          <div>
+                            {item.current_status === 'Cancelled' && (
+                              <span className="text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium">
+                                {item.current_status}
+                              </span>
+                            )}
+                            {item.current_status === 'Approval Recommended' && (
+                              <span className="text-green-700 px-1 bg-green-100 border border-green-500 font-medium">
+                                {item.current_status}
+                              </span>
+                            )}
+                            {item.current_status === 'Approved' && (
+                              <span className="text-green-900 px-1 bg-green-300 border border-green-700 font-medium">
+                                {item.current_status}
+                              </span>
+                            )}
+                            {item.current_status === 'Disapproved' && (
+                              <span className="text-red-700 px-1 bg-red-100 border border-red-500 font-medium">
+                                {item.current_status}
+                              </span>
+                            )}
+                            {item.current_status === 'For Verification' && (
+                              <span className="text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium">
+                                {item.current_status}
+                              </span>
                             )}
                           </div>
-                        </div>
-                      </td>
-                      <td className="hidden sm:table-cell app__td">
-                        <UserBlock user={item.creator} />
-                      </td>
-                      <td className="hidden sm:table-cell app__td">
-                        <div>
-                          {item.current_status === 'Cancelled' && (
-                            <span className="text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium">
-                              {item.current_status}
+                          <div className="mt-1">
+                            <span>
+                              Forwarded to {item.receiver.firstname}{' '}
+                              {item.receiver.middlename}{' '}
+                              {item.receiver.lastname}
                             </span>
-                          )}
-                          {item.current_status === 'Approval Recommended' && (
-                            <span className="text-green-700 px-1 bg-green-100 border border-green-500 font-medium">
-                              {item.current_status}
-                            </span>
-                          )}
-                          {item.current_status === 'Approved' && (
-                            <span className="text-green-900 px-1 bg-green-300 border border-green-700 font-medium">
-                              {item.current_status}
-                            </span>
-                          )}
-                          {item.current_status === 'Disapproved' && (
-                            <span className="text-red-700 px-1 bg-red-100 border border-red-500 font-medium">
-                              {item.current_status}
-                            </span>
-                          )}
-                          {item.current_status === 'For Verification' && (
-                            <span className="text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium">
-                              {item.current_status}
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-1">
-                          <span>
-                            Forwarded to {item.receiver.firstname}{' '}
-                            {item.receiver.middlename} {item.receiver.lastname}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                {loading && <TableRowLoading cols={7} rows={2} />}
-              </tbody>
-            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  {loading && <TableRowLoading cols={7} rows={2} />}
+                </tbody>
+              </table>
+            )}
             {!loading && isDataEmpty && (
               <div className="app__norecordsfound">No records found.</div>
             )}
