@@ -1651,6 +1651,7 @@ export async function fetchErrorLogs(perPageCount: number, rangeFrom: number) {
 export interface DocumentFilterTypes {
   filterKeyword?: string
   filterStatus?: string
+  filterDate?: string
   filterType?: string
   filterRequester?: string
 }
@@ -1667,7 +1668,13 @@ export async function fetchDocuments(
       (typeof filters.filterKeyword === 'undefined' ||
         filters.filterKeyword.trim() === '') &&
       (typeof filters.filterRequester === 'undefined' ||
-        filters.filterRequester === '')
+        filters.filterRequester === '') &&
+      (typeof filters.filterType === 'undefined' ||
+        filters.filterType === '') &&
+      (typeof filters.filterDate === 'undefined' ||
+        filters.filterDate === '') &&
+      (typeof filters.filterStatus === 'undefined' ||
+        filters.filterStatus === '')
     ) {
       return { data: [], count: 0 }
     }
@@ -1696,11 +1703,20 @@ export async function fetchDocuments(
       query = query.eq('type', filters.filterType)
     }
 
+    // Filter Status
     if (
       typeof filters.filterStatus !== 'undefined' &&
       filters.filterStatus !== ''
     ) {
       query = query.eq('current_status', filters.filterStatus)
+    }
+
+    // Filter Date
+    if (
+      typeof filters.filterDate !== 'undefined' &&
+      filters.filterDate !== ''
+    ) {
+      query = query.eq('date_created', filters.filterDate)
     }
 
     // Filter Requester

@@ -1,60 +1,94 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-import { CustomButton, UserBlock } from '@/components/index'
+'use client'
+
+import { UserBlock } from '@/components/index'
+import { requestTypes } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
-import type { Employee, namesType } from '@/types'
+import { Employee, namesType } from '@/types'
+import { useState } from 'react'
+
 import {
+  CalendarIcon,
   MagnifyingGlassIcon,
   UserIcon,
   XMarkIcon
 } from '@heroicons/react/20/solid'
-import React, { useState } from 'react'
+
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 
 interface PropTypes {
   setFilterKeyword: (keyword: string) => void
   setFilterRequester: (status: string) => void
+  setFilterDate: (date: string) => void
+  setFilterType: (type: string) => void
+  setFilterStatus: (status: string) => void
 }
 
-const Search = ({ setFilterKeyword, setFilterRequester }: PropTypes) => {
+const Search = ({
+  setFilterKeyword,
+  setFilterRequester,
+  setFilterDate,
+  setFilterType,
+  setFilterStatus
+}: PropTypes) => {
   const [keyword, setKeyword] = useState('')
-
-  // Search employee
   const [searchHead, setSearchHead] = useState('')
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
+  const [searchResults, setSearchResults] = useState<Employee[]>([])
+  const [selectedItems, setSelectedItems] = useState<namesType[]>([])
   const [selectedRequesterId, setSelectedRequesterId] = useState('')
+
+  const [dateRequested, setDateRequested] = useState('')
+  const [type, setType] = useState('')
+  const [status, setStatus] = useState('')
 
   const { systemUsers } = useSupabase()
 
   const handleApply = () => {
-    if (keyword.trim() === '' && selectedRequesterId === '') return
+    if (
+      keyword.trim() === '' &&
+      selectedRequesterId === '' &&
+      !dateRequested &&
+      !type &&
+      !status
+    )
+      return
 
-    // pass filter values to parent
     setFilterKeyword(keyword)
     setFilterRequester(selectedRequesterId)
+    setFilterDate(dateRequested)
+    setFilterType(type)
+    setFilterStatus(status)
   }
 
-  const handleSubmit = () => {
-    if (keyword.trim() === '' && selectedRequesterId === '') return
-
-    // pass filter values to parent
-    setFilterKeyword(keyword)
-    setFilterRequester(selectedRequesterId)
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    handleApply()
   }
 
-  // clear all filters
   const handleClear = () => {
-    if (keyword.trim() === '' && selectedRequesterId === '') return
-
-    // pass filter values to parent
-    setFilterKeyword('')
-    setFilterRequester('')
-
     setKeyword('')
     setSelectedRequesterId('')
     setSelectedItems([])
+    setSearchHead('')
+    setDateRequested('')
+    setType('')
+    setStatus('')
+
+    setFilterKeyword('')
+    setFilterRequester('')
+    setFilterDate('')
+    setFilterType('')
+    setFilterStatus('')
   }
 
-  // Search employees
   const handleSearchUser = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value
     setSearchHead(searchTerm)
@@ -64,8 +98,7 @@ const Search = ({ setFilterKeyword, setFilterRequester }: PropTypes) => {
       return
     }
 
-    // Search user
-    const searchWords = e.target.value.split(' ')
+    const searchWords = searchTerm.toLowerCase().split(' ')
     const results = systemUsers.filter((user: any) => {
       const fullName =
         `${user.lastname} ${user.firstname} ${user.middlename}`.toLowerCase()
@@ -78,97 +111,141 @@ const Search = ({ setFilterKeyword, setFilterRequester }: PropTypes) => {
   const handleSelected = (item: namesType) => {
     setSelectedRequesterId(item.id)
     setSelectedItems([item])
-
     setSearchResults([])
     setSearchHead('')
   }
+
   const handleRemoveSelected = (id: string) => {
-    setSelectedItems((prevSelectedItems) =>
-      prevSelectedItems.filter((item) => item.id !== id)
-    )
+    setSelectedItems((prev) => prev.filter((item) => item.id !== id))
+    setSelectedRequesterId('')
     setFilterRequester('')
   }
-  // End - Search employees
 
   return (
-    <div className="">
-      <div className="items-center space-y-2 space-x-1">
-        <form
-          onSubmit={handleSubmit}
-          className="inline-flex items-center app__filter_field_container"
-        >
-          <div className="items-center space-y-1">
-            <div className="app__filter_container">
-              <MagnifyingGlassIcon className="w-4 h-4 mr-1" />
-              <input
-                placeholder="Reference Code"
-                value={keyword}
-                type="text"
-                onChange={(e) => setKeyword(e.target.value)}
-                className="app__filter_input"
-              />
-            </div>
-            <div className="app__filter_container">
-              <UserIcon className="w-4 h-4 mr-1" />
-              {selectedItems.length > 0 &&
-                selectedItems.map((item, index) => (
-                  <div
-                    key={index}
-                    className="text-gray-500 focus:ring-0 focus:outline-none text-xs py-1 text-left inline-flex items-center dark:bg-gray-300"
-                  >
-                    <span className="inline-flex items-center text-xs border border-gray-400 rounded-sm px-1 bg-gray-300">
-                      {item.firstname} {item.middlename} {item.lastname}
-                      <XMarkIcon
-                        onClick={() => handleRemoveSelected(item.id)}
-                        className="w-4 h-4 ml-2 cursor-pointer"
-                      />
-                    </span>
-                  </div>
-                ))}
-              {selectedItems.length === 0 && (
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Requester"
-                    value={searchHead}
-                    onChange={async (e) => await handleSearchUser(e)}
-                    className="app__filter_input"
-                  />
-
-                  {searchResults.length > 0 && (
-                    <div className="app__search_user_results_container">
-                      {searchResults.map((user: Employee, index) => (
-                        <div
-                          key={index}
-                          onClick={() => handleSelected(user)}
-                          className="app__search_user_results"
-                        >
-                          <UserBlock user={user} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+    <form onSubmit={handleSubmit}>
+      <div className="grid grid-cols-2 gap-4">
+        {/* Reference Code */}
+        <div className="space-y-2">
+          <Label htmlFor="keyword">Reference Code</Label>
+          <div className="relative flex items-center">
+            <MagnifyingGlassIcon className="w-4 h-4 absolute left-2 text-muted-foreground" />
+            <Input
+              id="keyword"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              placeholder="Enter code"
+              className="pl-8"
+            />
           </div>
-        </form>
+        </div>
+
+        {/* Requester */}
+        <div className="space-y-2">
+          <Label htmlFor="requester">Requester</Label>
+          <div className="relative">
+            {selectedItems.length > 0 ? (
+              selectedItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center text-sm bg-muted px-2 py-1 rounded-md"
+                >
+                  {item.firstname} {item.middlename} {item.lastname}
+                  <XMarkIcon
+                    className="w-4 h-4 ml-2 cursor-pointer text-muted-foreground"
+                    onClick={() => handleRemoveSelected(item.id)}
+                  />
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="relative flex items-center">
+                  <UserIcon className="w-4 h-4 absolute left-2 text-muted-foreground" />
+                  <Input
+                    id="requester"
+                    value={searchHead}
+                    onChange={handleSearchUser}
+                    placeholder="Search requester"
+                    className="pl-8"
+                  />
+                </div>
+
+                {searchResults.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-md border bg-white dark:bg-black shadow-md">
+                    {searchResults.map((user, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleSelected(user)}
+                        className="cursor-pointer px-4 py-2 hover:bg-muted"
+                      >
+                        <UserBlock user={user} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Date Requested */}
+        <div className="space-y-2">
+          <Label htmlFor="date">Date Requested</Label>
+          <div className="relative flex items-center">
+            <CalendarIcon className="w-4 h-4 absolute left-2 text-muted-foreground" />
+            <Input
+              id="date"
+              type="date"
+              value={dateRequested}
+              onChange={(e) => setDateRequested(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+        </div>
+
+        {/* Type */}
+        <div className="space-y-2">
+          <Label htmlFor="type">Type</Label>
+          <Select value={type} onValueChange={setType}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Type" />
+            </SelectTrigger>
+            <SelectContent>
+              {requestTypes.map((t, index) => (
+                <SelectItem key={index} value={t}>
+                  {t}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Status */}
+        <div className="space-y-2">
+          <Label htmlFor="status">Status</Label>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Approved">Approved</SelectItem>
+              <SelectItem value="Approval Recommended">
+                Approval Recommended
+              </SelectItem>
+              <SelectItem value="For Verification">For Verification</SelectItem>
+              <SelectItem value="Disapproved">Disapproved</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <div className="flex items-center space-x-2 mt-4">
-        <CustomButton
-          containerStyles="app__btn_green"
-          title="Search"
-          btnType="button"
-          handleClick={handleApply}
-        />
-        <CustomButton
-          containerStyles="app__btn_gray"
-          title="Clear"
-          btnType="button"
-          handleClick={handleClear}
-        />
+
+      {/* Action Buttons */}
+      <div className="flex gap-2 pt-2">
+        <Button type="submit">Search</Button>
+        <Button type="button" variant="secondary" onClick={handleClear}>
+          Clear
+        </Button>
       </div>
-    </div>
+    </form>
   )
 }
 

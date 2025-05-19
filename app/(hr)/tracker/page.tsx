@@ -54,10 +54,14 @@ const Page: React.FC = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showStickiesModal, setShowStickiesModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState<DocumentTypes | null>(null)
+
+  // Filters
   const [filterKeyword, setFilterKeyword] = useState('')
   const [filterType, setFilterType] = useState('')
+  const [filterDate, setFilterDate] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterRequester, setFilterRequester] = useState('')
+
   const [list, setList] = useState<DocumentTypes[]>([])
   const [perPageCount, setPerPageCount] = useState<number>(10)
   const [showingCount, setShowingCount] = useState<number>(0)
@@ -86,7 +90,13 @@ const Page: React.FC = () => {
       const filterUrl = searchParams.get('filter')
 
       const result = await fetchDocuments(
-        { filterKeyword, filterType, filterStatus, filterRequester },
+        {
+          filterKeyword,
+          filterDate,
+          filterType,
+          filterStatus,
+          filterRequester
+        },
         filterUrl,
         session.user.id,
         perPageCount,
@@ -191,6 +201,7 @@ const Page: React.FC = () => {
     filterType,
     filterStatus,
     perPageCount,
+    filterDate,
     filterRequester,
     searchParams,
     refresh
@@ -232,6 +243,9 @@ const Page: React.FC = () => {
           {isSearchView ? (
             <div className="app__filters">
               <Search
+                setFilterStatus={setFilterStatus}
+                setFilterType={setFilterType}
+                setFilterDate={setFilterDate}
                 setFilterKeyword={setFilterKeyword}
                 setFilterRequester={setFilterRequester}
               />

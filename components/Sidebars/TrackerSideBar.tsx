@@ -8,7 +8,6 @@ import { useSelector } from 'react-redux'
 
 const TrackerSideBar = () => {
   const [forwardedCount, setForwardedCount] = useState(0)
-  const [myRequestCount, setMyRequestCount] = useState(0)
 
   const searchParams = useSearchParams()
 
@@ -28,13 +27,6 @@ const TrackerSideBar = () => {
       .neq('current_status', 'Approved')
       .neq('current_status', 'Cancelled')
       .neq('current_status', 'Disapproved')
-
-    const { count: myReq }: { count: number } = await supabase
-      .from('hrm_request_trackers')
-      .select('id', { count: 'exact' })
-      .eq('created_by', session.user.id)
-
-    setMyRequestCount(myReq)
     setForwardedCount(forwarded)
   }
   useEffect(() => {
@@ -68,13 +60,6 @@ const TrackerSideBar = () => {
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">My Requests</span>
-            {myRequestCount > 0 && (
-              <span className="inline-flex items-center justify-center rounded-full bg-red-500 w-5 h-5">
-                <span className="rounded-full px-1 text-white text-xs">
-                  {myRequestCount}
-                </span>
-              </span>
-            )}
           </Link>
         </li>
         <li>
