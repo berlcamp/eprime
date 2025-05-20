@@ -1722,8 +1722,6 @@ export async function fetchDocuments(
     }
   }
 
-  console.log(userIds)
-
   try {
     let query = supabase
       .from('hrm_request_trackers')

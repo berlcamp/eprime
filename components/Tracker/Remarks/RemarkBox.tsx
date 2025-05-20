@@ -9,6 +9,7 @@ import { CustomButton } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { DocumentTypes, Employee, FollowersTypes } from '@/types'
+import { sanitizeFileName } from '@/utils/text-helper'
 import { PaperClipIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import { useDropzone, type FileWithPath } from 'react-dropzone'
 import { useDispatch, useSelector } from 'react-redux'
@@ -71,7 +72,8 @@ export default function RemarkBox({ document }: ModalProps) {
     try {
       const attachments: string[] = []
       selectedImages.forEach((file: { name: string }) => {
-        attachments.push(file.name)
+        const safeFileName = sanitizeFileName(file.name)
+        attachments.push(safeFileName)
       })
 
       const newData = {
@@ -92,23 +94,27 @@ export default function RemarkBox({ document }: ModalProps) {
         return
       }
 
+      const remarksId = data[0].id
+
       // Upload attachments
       await Promise.all(
         selectedImages.map(async (file: { name: string }) => {
-          const { error } = await supabase.storage
-            .from('hrm_document_remarks')
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            .upload(`remarks/${data[0].id}/${file.name}`, file)
+          const safeFileName = sanitizeFileName(file.name)
 
-          if (error) {
-            console.log(error)
+          const { error: uploadError } = await supabase.storage
+            .from('hrm_documents')
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            .upload(`remarks/${remarksId}/${safeFileName}`, file)
+
+          if (uploadError) {
+            console.log('Upload error:', uploadError)
           }
         })
       )
 
       // Append new remarks to remarks redux
       const updatedData = {
-        id: data[0].id,
+        id: remarksId,
         hrm_remarks_comments: [],
         hrm_users: user,
         created_at: data[0].created_at,
@@ -119,7 +125,7 @@ export default function RemarkBox({ document }: ModalProps) {
       setRemarks('')
 
       // Notify followers and departments
-      void handleNotify()
+      void handleNotify(remarksId)
 
       setSaving(false)
       setSelectedImages([])
@@ -138,7 +144,7 @@ export default function RemarkBox({ document }: ModalProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileRejections])
 
-  const handleNotify = async () => {
+  const handleNotify = async (remarksId: string) => {
     //
     try {
       const userIds: string[] = []
@@ -175,7 +181,7 @@ export default function RemarkBox({ document }: ModalProps) {
           url: `/tracker/${document.reference_code}`,
           type: 'Remarks',
           user_id: userId,
-          remark_id: document.id,
+          remark_id: remarksId,
           reference_table: 'hrm_request_trackers'
         })
       })

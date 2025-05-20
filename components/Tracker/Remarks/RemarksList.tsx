@@ -33,8 +33,8 @@ function Attachment({ id, file }: { id: string; file: string }) {
     setDownloading(true)
 
     const { data, error } = await supabase.storage
-      .from('hrm_document_remarks')
-      .download(`${id}/${file}`)
+      .from('hrm_documents')
+      .download(`/remarks/${id}/${file}`)
 
     if (error) console.error(error)
 

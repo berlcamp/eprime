@@ -55,3 +55,6 @@ export function generateRandomAlphaNumber(length: number) {
   }
   return result
 }
+
+export const sanitizeFileName = (name: string) =>
+  name.replace(/[^a-zA-Z0-9.\-_]/g, '_') // replace special characters
