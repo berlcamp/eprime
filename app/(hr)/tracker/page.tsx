@@ -60,6 +60,8 @@ const Page: React.FC = () => {
   const [filterType, setFilterType] = useState('')
   const [filterDate, setFilterDate] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [filterOffice, setFilterOffice] = useState('')
+  const [filterSchool, setFilterSchool] = useState('')
   const [filterRequester, setFilterRequester] = useState('')
 
   const [list, setList] = useState<DocumentTypes[]>([])
@@ -95,6 +97,8 @@ const Page: React.FC = () => {
           filterDate,
           filterType,
           filterStatus,
+          filterSchool,
+          filterOffice,
           filterRequester
         },
         filterUrl,
@@ -121,7 +125,14 @@ const Page: React.FC = () => {
 
     try {
       const result = await fetchDocuments(
-        { filterKeyword, filterType, filterStatus, filterRequester },
+        {
+          filterKeyword,
+          filterType,
+          filterStatus,
+          filterSchool,
+          filterOffice,
+          filterRequester
+        },
         filterUrl,
         session.user.id,
         perPageCount,
@@ -191,21 +202,20 @@ const Page: React.FC = () => {
     setList(globallist)
   }, [globallist])
 
-  // Featch data
   useEffect(() => {
-    setList([])
     void fetchData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    filterKeyword,
-    filterType,
-    filterStatus,
-    perPageCount,
-    filterDate,
-    filterRequester,
-    searchParams,
-    refresh
-  ])
+  }, [refresh])
+
+  // Reset filters when URL changes (e.g., tab switched)
+  useEffect(() => {
+    console.log('Filter URL changed:', filterUrl)
+    setFilterKeyword('')
+    setFilterType('')
+    setFilterDate('')
+    setFilterStatus('')
+    setFilterRequester('')
+    setRefresh((prev) => !prev) // 👈 ensure data is re-fetched
+  }, [filterUrl])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
   return (
@@ -243,18 +253,31 @@ const Page: React.FC = () => {
           {isSearchView ? (
             <div className="app__filters">
               <Search
-                setFilterStatus={setFilterStatus}
-                setFilterType={setFilterType}
-                setFilterDate={setFilterDate}
+                filterKeyword={filterKeyword}
+                filterRequester={filterRequester}
+                filterDate={filterDate}
+                filterType={filterType}
+                filterStatus={filterStatus}
+                filterSchool={filterSchool}
+                filterOffice={filterOffice}
                 setFilterKeyword={setFilterKeyword}
                 setFilterRequester={setFilterRequester}
+                setFilterDate={setFilterDate}
+                setFilterType={setFilterType}
+                setFilterStatus={setFilterStatus}
+                setFilterSchool={setFilterSchool}
+                setFilterOffice={setFilterOffice}
+                setRefresh={() => setRefresh((prev) => !prev)} // ✅ toggle
               />
             </div>
           ) : (
             <div className="app__filters">
               <Filters
-                setFilterStatus={setFilterStatus}
+                filterType={filterType}
+                filterStatus={filterStatus}
                 setFilterType={setFilterType}
+                setFilterStatus={setFilterStatus}
+                setRefresh={() => setRefresh((prev) => !prev)} // ✅ toggle
               />
             </div>
           )}

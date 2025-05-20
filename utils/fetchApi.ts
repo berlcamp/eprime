@@ -1653,6 +1653,8 @@ export interface DocumentFilterTypes {
   filterStatus?: string
   filterDate?: string
   filterType?: string
+  filterSchool?: string
+  filterOffice?: string
   filterRequester?: string
 }
 
@@ -1674,11 +1676,53 @@ export async function fetchDocuments(
       (typeof filters.filterDate === 'undefined' ||
         filters.filterDate === '') &&
       (typeof filters.filterStatus === 'undefined' ||
-        filters.filterStatus === '')
+        filters.filterStatus === '') &&
+      (typeof filters.filterSchool === 'undefined' ||
+        filters.filterSchool === '') &&
+      (typeof filters.filterOffice === 'undefined' ||
+        filters.filterOffice === '')
     ) {
       return { data: [], count: 0 }
     }
   }
+
+  // If School or Office is selected on filters
+  const schoolId =
+    typeof filters.filterSchool !== 'undefined' && filters.filterSchool !== ''
+      ? filters.filterSchool
+      : null
+
+  const officeId =
+    typeof filters.filterOffice !== 'undefined' && filters.filterOffice !== ''
+      ? filters.filterOffice
+      : null
+
+  let userIds: string[] = []
+
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+  if (schoolId || officeId) {
+    // Build base query
+    let query = supabase.from('hrm_users').select('id')
+
+    // Apply filters
+    if (schoolId) {
+      query = query.eq('school_id', schoolId)
+    }
+
+    if (officeId) {
+      query = query.eq('office_id', officeId)
+    }
+
+    const { data: usersData, error } = await query
+
+    if (error) {
+      console.error('Error fetching users:', error)
+    } else {
+      userIds = usersData?.map((u: any) => u.id) || []
+    }
+  }
+
+  console.log(userIds)
 
   try {
     let query = supabase
@@ -1693,6 +1737,11 @@ export async function fetchDocuments(
       filters.filterKeyword.trim() !== ''
     ) {
       query = query.eq('reference_code', filters.filterKeyword.trim())
+    }
+
+    // Filter School/Office thru user ids
+    if (userIds.length > 0) {
+      query = query.in('created_by', userIds)
     }
 
     // Filter type

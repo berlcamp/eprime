@@ -9,28 +9,37 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { requestTypes } from '@/constants'
-import { useEffect, useState } from 'react'
 
 interface PropTypes {
+  filterType: string
+  filterStatus: string
   setFilterType: (type: string) => void
   setFilterStatus: (status: string) => void
+  setRefresh: () => void
 }
 
-const Filters = ({ setFilterType, setFilterStatus }: PropTypes) => {
-  const [type, setType] = useState('')
-  const [status, setStatus] = useState('')
+const Filters = ({
+  filterType,
+  filterStatus,
+  setFilterType,
+  setFilterStatus,
+  setRefresh
+}: PropTypes) => {
+  const handleTypeChange = (val: string) => {
+    setFilterType(val === 'All' ? '' : val)
+    setRefresh()
+  }
 
-  useEffect(() => {
-    if (status.trim() === '' && type.trim() === '') return
-    setFilterType(type === 'All' ? '' : type)
-    setFilterStatus(status === 'All' ? '' : status)
-  }, [type, status, setFilterType, setFilterStatus])
+  const handleStatusChange = (val: string) => {
+    setFilterStatus(val === 'All' ? '' : val)
+    setRefresh()
+  }
 
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="space-y-2">
         <Label htmlFor="type-select">Type</Label>
-        <Select value={type} onValueChange={setType}>
+        <Select value={filterType || 'All'} onValueChange={handleTypeChange}>
           <SelectTrigger id="type-select" className="w-[200px]">
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
@@ -47,7 +56,10 @@ const Filters = ({ setFilterType, setFilterStatus }: PropTypes) => {
 
       <div className="space-y-2">
         <Label htmlFor="status-select">Status</Label>
-        <Select value={status} onValueChange={setStatus}>
+        <Select
+          value={filterStatus || 'All'}
+          onValueChange={handleStatusChange}
+        >
           <SelectTrigger id="status-select" className="w-[200px]">
             <SelectValue placeholder="Select status" />
           </SelectTrigger>

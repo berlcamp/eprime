@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 'use client'
 
 import { UserBlock } from '@/components/index'
 import { requestTypes } from '@/constants'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { Employee, namesType } from '@/types'
-import { useState } from 'react'
+import { Employee, namesType, Office, SchoolTypes } from '@/types'
+import { useEffect, useState } from 'react'
 
 import {
   CalendarIcon,
@@ -25,47 +26,122 @@ import {
 } from '@/components/ui/select'
 
 interface PropTypes {
+  filterKeyword: string
+  filterRequester: string
+  filterDate: string
+  filterType: string
+  filterStatus: string
+  filterSchool: string
+  filterOffice: string
   setFilterKeyword: (keyword: string) => void
-  setFilterRequester: (status: string) => void
+  setFilterRequester: (id: string) => void
   setFilterDate: (date: string) => void
   setFilterType: (type: string) => void
   setFilterStatus: (status: string) => void
+  setFilterSchool: (school: string) => void
+  setFilterOffice: (office: string) => void
+  setRefresh: () => void
 }
 
 const Search = ({
+  filterKeyword,
+  filterRequester,
+  filterDate,
+  filterType,
+  filterStatus,
+  filterSchool,
+  filterOffice,
   setFilterKeyword,
   setFilterRequester,
   setFilterDate,
   setFilterType,
-  setFilterStatus
+  setFilterStatus,
+  setFilterSchool,
+  setFilterOffice,
+  setRefresh
 }: PropTypes) => {
-  const [keyword, setKeyword] = useState('')
+  // Local state synced with props for controlled inputs
+  const [keyword, setKeyword] = useState(filterKeyword)
   const [searchHead, setSearchHead] = useState('')
   const [searchResults, setSearchResults] = useState<Employee[]>([])
   const [selectedItems, setSelectedItems] = useState<namesType[]>([])
-  const [selectedRequesterId, setSelectedRequesterId] = useState('')
+  const [dateRequested, setDateRequested] = useState(filterDate)
+  const [type, setType] = useState(filterType)
+  const [status, setStatus] = useState(filterStatus)
+  const [school, setSchool] = useState(filterSchool)
+  const [office, setOffice] = useState(filterOffice)
 
-  const [dateRequested, setDateRequested] = useState('')
-  const [type, setType] = useState('')
-  const [status, setStatus] = useState('')
+  const {
+    systemSchools,
+    systemOffices,
+    systemUsers
+  }: {
+    systemSchools: SchoolTypes[]
+    systemOffices: Office[]
+    systemUsers: any
+  } = useSupabase()
 
-  const { systemUsers } = useSupabase()
+  // Sync internal state when props change (e.g. on reset)
+  useEffect(() => {
+    setKeyword(filterKeyword)
+  }, [filterKeyword])
+
+  useEffect(() => {
+    setDateRequested(filterDate)
+  }, [filterDate])
+
+  useEffect(() => {
+    setType(filterType)
+  }, [filterType])
+
+  useEffect(() => {
+    setStatus(filterStatus)
+  }, [filterStatus])
+
+  useEffect(() => {
+    setSchool(filterSchool)
+  }, [filterSchool])
+
+  useEffect(() => {
+    setOffice(filterOffice)
+  }, [filterOffice])
+
+  useEffect(() => {
+    // When filterRequester changes externally, update selectedItems accordingly
+    if (!filterRequester) {
+      setSelectedItems([])
+      setSearchHead('')
+    } else {
+      // Find user by id and update selectedItems
+      const user = systemUsers.find(
+        (u: { id: string }) => u.id === filterRequester
+      )
+      if (user) setSelectedItems([user])
+    }
+  }, [filterRequester, systemUsers])
 
   const handleApply = () => {
     if (
       keyword.trim() === '' &&
-      selectedRequesterId === '' &&
+      filterRequester === '' &&
       !dateRequested &&
       !type &&
+      !school &&
+      !office &&
       !status
-    )
+    ) {
       return
+    }
 
     setFilterKeyword(keyword)
-    setFilterRequester(selectedRequesterId)
     setFilterDate(dateRequested)
     setFilterType(type)
     setFilterStatus(status)
+    setFilterSchool(school)
+    setFilterOffice(office)
+
+    // refresh data from parent
+    setRefresh()
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -75,21 +151,22 @@ const Search = ({
 
   const handleClear = () => {
     setKeyword('')
-    setSelectedRequesterId('')
-    setSelectedItems([])
     setSearchHead('')
+    setSelectedItems([])
     setDateRequested('')
     setType('')
     setStatus('')
-
     setFilterKeyword('')
     setFilterRequester('')
     setFilterDate('')
     setFilterType('')
     setFilterStatus('')
+    setFilterSchool('')
+    setFilterOffice('')
+    setRefresh()
   }
 
-  const handleSearchUser = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchUser = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value
     setSearchHead(searchTerm)
 
@@ -109,21 +186,20 @@ const Search = ({
   }
 
   const handleSelected = (item: namesType) => {
-    setSelectedRequesterId(item.id)
     setSelectedItems([item])
     setSearchResults([])
     setSearchHead('')
+    setFilterRequester(item.id)
   }
 
   const handleRemoveSelected = (id: string) => {
     setSelectedItems((prev) => prev.filter((item) => item.id !== id))
-    setSelectedRequesterId('')
     setFilterRequester('')
   }
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Reference Code */}
         <div className="space-y-2">
           <Label htmlFor="keyword">Reference Code</Label>
@@ -135,6 +211,7 @@ const Search = ({
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="Enter code"
               className="pl-8"
+              autoComplete="off"
             />
           </div>
         </div>
@@ -166,6 +243,7 @@ const Search = ({
                     onChange={handleSearchUser}
                     placeholder="Search requester"
                     className="pl-8"
+                    autoComplete="off"
                   />
                 </div>
 
@@ -198,6 +276,7 @@ const Search = ({
               value={dateRequested}
               onChange={(e) => setDateRequested(e.target.value)}
               className="pl-8"
+              autoComplete="off"
             />
           </div>
         </div>
@@ -236,10 +315,52 @@ const Search = ({
             </SelectContent>
           </Select>
         </div>
+        {/* School */}
+        <div className="space-y-2">
+          <Label htmlFor="status">School</Label>
+          <Select value={school} onValueChange={setSchool}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select School">
+                {school
+                  ? systemSchools.find((item) => item.id.toString() === school)
+                      ?.name || 'Select School'
+                  : 'Select School'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {systemSchools.map((item, index) => (
+                <SelectItem key={index} value={item.id}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {/* Office */}
+        <div className="space-y-2">
+          <Label htmlFor="office">Office</Label>
+          <Select value={office} onValueChange={setOffice}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Office">
+                {office
+                  ? systemOffices.find((item) => item.id.toString() === office)
+                      ?.name || 'Select Office'
+                  : 'Select Office'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {systemOffices.map((item, index) => (
+                <SelectItem key={index} value={item.id}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-2 pt-2">
+      <div className="flex gap-2 pt-6">
         <Button type="submit">Search</Button>
         <Button type="button" variant="secondary" onClick={handleClear}>
           Clear
