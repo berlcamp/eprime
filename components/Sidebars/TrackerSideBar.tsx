@@ -1,4 +1,5 @@
 'use client'
+import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { SearchIcon } from 'lucide-react'
 import Link from 'next/link'
@@ -14,6 +15,7 @@ const TrackerSideBar = () => {
   const filter = searchParams.get('filter')
 
   const { supabase, session } = useSupabase()
+  const { hasAccess } = useFilter()
 
   // Redux staff
   const recountStatus = useSelector((state: any) => state.recount.value)
@@ -40,18 +42,24 @@ const TrackerSideBar = () => {
             <span>Request Tracker</span>
           </div>
         </li>
-        <li>
-          <Link
-            href="/tracker?filter=search"
-            className={`app__menu_link ${
-              filter === 'search' ? 'app_menu_link_active' : ''
-            }`}
-          >
-            <span className="flex space-x-2 flex-1 ml-3 whitespace-nowrap">
-              <SearchIcon className="w-4 h-4" /> <span>Search Requests</span>
-            </span>
-          </Link>
-        </li>
+        {(hasAccess('hr') ||
+          hasAccess('sds') ||
+          hasAccess('asds') ||
+          hasAccess('records') ||
+          hasAccess('settings')) && (
+          <li>
+            <Link
+              href="/tracker?filter=search"
+              className={`app__menu_link ${
+                filter === 'search' ? 'app_menu_link_active' : ''
+              }`}
+            >
+              <span className="flex space-x-2 flex-1 ml-3 whitespace-nowrap">
+                <SearchIcon className="w-4 h-4" /> <span>Search Requests</span>
+              </span>
+            </Link>
+          </li>
+        )}
         <li>
           <Link
             href="/tracker"

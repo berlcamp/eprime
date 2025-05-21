@@ -1,4 +1,4 @@
-export default async function NotFound() {
+export default function NotFound() {
   return (
     <>
       <div className="app__home">

@@ -32,6 +32,7 @@ import type {
 } from '@/types'
 
 // Redux imports
+import NotFound from '@/app/not-found'
 import LoadingSkeleton from '@/components/Loading/LoadingSkeleton'
 import { PrintLeaveForm } from '@/components/Printables/PrintLeaveForm'
 import { PrintLocatorSlipForm } from '@/components/Printables/PrintLocatorSlipForm'
@@ -39,6 +40,7 @@ import { PrintPassSlipForm } from '@/components/Printables/PrintPassSlipForm'
 import { PrintServiceRecord } from '@/components/Printables/PrintServiceRecord'
 import { PrintTravelForm } from '@/components/Printables/PrintTravelForm'
 import { PrintUndertimeForm } from '@/components/Printables/PrintUndertimeForm'
+import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { useSearchParams } from 'next/navigation'
@@ -74,6 +76,7 @@ const Page: React.FC = () => {
   const isSearchView = filterUrl && filterUrl === 'search'
 
   const { session, supabase } = useSupabase()
+  const { hasAccess } = useFilter()
 
   const componentRef = React.useRef(null)
   const printFn = useReactToPrint({
@@ -89,8 +92,6 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const filterUrl = searchParams.get('filter')
-
       const result = await fetchDocuments(
         {
           filterKeyword,
@@ -218,6 +219,18 @@ const Page: React.FC = () => {
   }, [filterUrl])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
+
+  if (
+    filterUrl === 'search' &&
+    !hasAccess('hr') &&
+    !hasAccess('sds') &&
+    !hasAccess('asds') &&
+    !hasAccess('records') &&
+    hasAccess('settings')
+  ) {
+    return <NotFound />
+  }
+
   return (
     <>
       <Sidebar>
