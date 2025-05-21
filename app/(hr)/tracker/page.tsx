@@ -226,7 +226,7 @@ const Page: React.FC = () => {
     !hasAccess('sds') &&
     !hasAccess('asds') &&
     !hasAccess('records') &&
-    hasAccess('settings')
+    !hasAccess('settings')
   ) {
     return <NotFound />
   }
