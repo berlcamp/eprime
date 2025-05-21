@@ -59,11 +59,11 @@ const Page: React.FC = () => {
     officeIds = systemOffices.map((obj) => obj.id)
   } else {
     const filteredSchools = systemSchools.filter(
-      (s) => s.head_user_id === session.user.id
+      (s) => s.head_user_id === session?.user.id
     )
 
     const filteredOffices = systemOffices.filter(
-      (s) => s.head_user_id === session.user.id
+      (s) => s.head_user_id === session?.user.id
     )
     schoolIds = filteredSchools.map((obj) => obj.id)
     officeIds = filteredOffices.map((obj) => obj.id)

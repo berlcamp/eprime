@@ -184,7 +184,7 @@ const Page: React.FC = () => {
   // Check access from permission settings or Super Admins
   if (
     !hasAccess('employee_accounts') &&
-    !superAdmins.includes(session.user.email)
+    !superAdmins.includes(session?.user.email ?? '')
   )
     return <Unauthorized />
 

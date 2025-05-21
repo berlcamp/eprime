@@ -27,7 +27,7 @@ const PassSlipForm = ({ hideModal }: ModalProps) => {
   const [approverError, setApproverError] = useState('')
 
   const currentUser: Employee = systemUsers.find(
-    (user: Employee) => user.id === session.user.id
+    (user: Employee) => user.id === session?.user.id
   )
 
   // selected approver
@@ -73,8 +73,8 @@ const PassSlipForm = ({ hideModal }: ModalProps) => {
         pass_slip_fixed_time_to: formdata.fixed_time_to,
         pass_slip_purpose: formdata.purpose,
         pass_slip_reason: formdata.reason,
-        created_by: session.user.id,
-        current_approver_id: session.user.id,
+        created_by: session?.user.id,
+        current_approver_id: session?.user.id,
         receiver_id: user.id,
         current_status: 'For Verification',
         current_tracker: 'Forwarded'
@@ -390,7 +390,7 @@ const PassSlipForm = ({ hideModal }: ModalProps) => {
               </div>
               <SearchUserInput
                 isMultiple={false}
-                excludedIds={[session.user.id]}
+                excludedIds={session ? [session.user.id] : []}
                 handleSelectedUsers={handleSelectedUsers}
               />
               {approverError !== '' && (

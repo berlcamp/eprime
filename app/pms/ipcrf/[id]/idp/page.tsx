@@ -45,7 +45,7 @@ export default function IDPPage({ params }: { params: { id: string } }) {
         .eq('ipcrf_id', ipcrfId)
         .eq('rater_type', 'self')
 
-      setObjRatings(objectiveRatings)
+      setObjRatings(objectiveRatings ?? [])
 
       const ratings = (objectiveRatings ?? []) as IpcrfObjectiveRating[]
 
@@ -77,7 +77,7 @@ export default function IDPPage({ params }: { params: { id: string } }) {
         .eq('ipcrf_id', ipcrfId)
         .eq('rater_type', 'self')
 
-      setCompRatings(competencyRatingsData)
+      setCompRatings(competencyRatingsData ?? [])
 
       const competencyRatings: IpcrfCompetencyRating[] | null =
         competencyRatingsData
@@ -119,8 +119,12 @@ export default function IDPPage({ params }: { params: { id: string } }) {
         .eq('ipcrf_id', ipcrfId)
 
       // Update the list in Redux store
-      dispatch(updateList(funcData))
-      dispatch(updateList2(compData))
+      if (funcData) {
+        dispatch(updateList(funcData))
+      }
+      if (compData) {
+        dispatch(updateList2(compData))
+      }
     }
     void fetchData()
   }, [])

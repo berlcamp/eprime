@@ -21,15 +21,15 @@ const TrackerSideBar = () => {
   const recountStatus = useSelector((state: any) => state.recount.value)
 
   const counter = async () => {
-    const { count: forwarded }: { count: number } = await supabase
+    const { count: forwarded } = await supabase
       .from('hrm_request_trackers')
       .select('id', { count: 'exact' })
-      .eq('receiver_id', session.user.id)
+      .eq('receiver_id', session?.user.id)
       .eq('current_tracker', 'Forwarded')
       .neq('current_status', 'Approved')
       .neq('current_status', 'Cancelled')
       .neq('current_status', 'Disapproved')
-    setForwardedCount(forwarded)
+    setForwardedCount(forwarded ?? 0)
   }
   useEffect(() => {
     void counter()

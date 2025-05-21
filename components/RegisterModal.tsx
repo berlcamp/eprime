@@ -95,7 +95,7 @@ const RegisterModal = ({ hideModal }: ModalProps) => {
 
       if (hrmUsersError) throw new Error(hrmUsersError.message)
 
-      if (count > 0 || hrmUserCount > 0) {
+      if ((count ?? 0) > 0 || (hrmUserCount ?? 0) > 0) {
         setError('This email already registered')
         throw new Error('This email already registered.')
       } else {

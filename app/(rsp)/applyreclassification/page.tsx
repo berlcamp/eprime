@@ -230,7 +230,7 @@ const Page: React.FC = () => {
         .from('hrm_ranking_applicant_flow')
         .insert({
           applicant_id: data[0].id,
-          user_id: session.user.id,
+          user_id: session?.user.id,
           receiver_id: user?.id,
           status: 'Forwarded'
         })
@@ -268,7 +268,7 @@ const Page: React.FC = () => {
       const { data: existingApplicant } = await supabase
         .from('hrm_ranking_applicants')
         .select()
-        .eq('email', session.user.email)
+        .eq('email', session?.user.email)
         .eq('type', 'Reclassification')
         .eq('status', 'Active')
 
@@ -282,7 +282,7 @@ const Page: React.FC = () => {
       const { data } = await supabase
         .from('hrm_users')
         .select('*,hrm_item:item_id(*),hrm_positions:position_id(name)')
-        .eq('id', session.user.id)
+        .eq('id', session?.user.id)
         .maybeSingle()
 
       if (data) {
@@ -629,7 +629,7 @@ const Page: React.FC = () => {
                           </div>
                           <SearchUserInput
                             isMultiple={false}
-                            excludedIds={[session.user.id]}
+                            excludedIds={session ? [session.user.id] : []}
                             handleSelectedUsers={handleSelectedUsers}
                           />
                           {errors.current_approver_id && (

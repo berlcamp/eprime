@@ -1,12 +1,7 @@
 'use client'
 
 import { useSupabase } from '@/context/SupabaseProvider'
-import type {
-  CtoUserTypes,
-  DocumentTypes,
-  Employee,
-  LeaveCreditTypes
-} from '@/types'
+import type { CtoUserTypes, Employee, LeaveCreditTypes } from '@/types'
 import { useEffect, useState } from 'react'
 
 interface ModalProps {
@@ -104,7 +99,7 @@ export default function LeaveBalanceBoxes({ user, refresh }: ModalProps) {
           const reqIds: string[] = []
 
           if (leaveRequests && leaveRequests.length > 0) {
-            leaveRequests.forEach((lr: DocumentTypes) => {
+            leaveRequests.forEach((lr) => {
               reqIds.push(lr.id)
             })
           }

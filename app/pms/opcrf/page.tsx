@@ -26,7 +26,7 @@ const Page: React.FC = () => {
     useSupabase()
 
   const isHead = systemSchools.find(
-    (school) => school.head_user_id === session.user.id
+    (school) => school.head_user_id === session?.user.id
   )
     ? true
     : false
@@ -47,7 +47,7 @@ const Page: React.FC = () => {
         )
         .ilike('description', `%${filter}%`)
         .eq('type', 'OPCRF')
-        .or(`user_id.eq.${session.user.id},rater_id.eq.${session.user.id}`)
+        .or(`user_id.eq.${session?.user.id},rater_id.eq.${session?.user.id}`)
         .range((page - 1) * PER_PAGE, page * PER_PAGE - 1)
         .order('id', { ascending: false })
 

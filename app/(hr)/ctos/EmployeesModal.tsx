@@ -170,14 +170,16 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       if (error) throw new Error(error.message)
 
       // insert to notifications
-      const { error2 } = await supabase.from('hrm_notifications').insert({
-        message: 'Your <b>CTO</b> has been approved.',
-        url: `/profile/${selectedRow.hrm_user_id}?page=ctos`,
-        type: 'cto',
-        user_id: selectedRow.hrm_user_id,
-        cto_id: ctoData.id,
-        reference_table: 'hrm_ctos'
-      })
+      const { error: error2 } = await supabase
+        .from('hrm_notifications')
+        .insert({
+          message: 'Your <b>CTO</b> has been approved.',
+          url: `/profile/${selectedRow.hrm_user_id}?page=ctos`,
+          type: 'cto',
+          user_id: selectedRow.hrm_user_id,
+          cto_id: ctoData.id,
+          reference_table: 'hrm_ctos'
+        })
 
       if (error2) throw new Error(error2.message)
 

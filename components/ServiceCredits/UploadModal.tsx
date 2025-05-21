@@ -10,7 +10,7 @@ import { type FileWithPath, useDropzone } from 'react-dropzone'
 import uuid from 'react-uuid'
 
 // types
-import type { ServiceCreditUserTypes } from '@/types'
+import type { Attachment, ServiceCreditUserTypes } from '@/types'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 
 interface ModalProps {
@@ -26,7 +26,7 @@ export default function UploadModal({ editData, hideModal }: ModalProps) {
   const [selectedFile, setSelectedFile] = useState('')
   const [saving, setSaving] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
-  const [attachments, setAttachments] = useState([])
+  const [attachments, setAttachments] = useState<Attachment[]>([])
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
     setSelectedImages(
@@ -77,7 +77,7 @@ export default function UploadModal({ editData, hideModal }: ModalProps) {
   const handleUploadFiles = async (id: string) => {
     // Upload attachments
     await Promise.all(
-      selectedImages.map(async (file: { name: string }) => {
+      selectedImages.map(async (file: File) => {
         const { error } = await supabase.storage
           .from('hrm')
           .upload(`servicecredits/${id}/${file.name}`, file)
@@ -115,14 +115,16 @@ export default function UploadModal({ editData, hideModal }: ModalProps) {
 
     if (error) console.error(error)
 
-    const url = window.URL.createObjectURL(new Blob([data]))
+    if (data) {
+      const url = window.URL.createObjectURL(data)
 
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', file)
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', file)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    }
   }
 
   const handleConfirm = async () => {
@@ -170,7 +172,7 @@ export default function UploadModal({ editData, hideModal }: ModalProps) {
 
     if (error) console.error(error)
 
-    setAttachments(data)
+    setAttachments(data ?? [])
   }
 
   const handleNotify = async (fullname: string, id: string) => {

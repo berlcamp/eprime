@@ -38,15 +38,16 @@ function Attachment({ id, file }: { id: string; file: string }) {
 
     if (error) console.error(error)
 
-    const url = window.URL.createObjectURL(new Blob([data]))
+    if (data) {
+      const url = window.URL.createObjectURL(data)
 
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', file)
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', file)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    }
     setDownloading(false)
   }
 
@@ -80,7 +81,7 @@ export default function RemarksList({ reply, document }: ModalProps) {
   const dispatch = useDispatch()
 
   const user: Employee = systemUsers.find(
-    (user: Employee) => user.id === session.user.id
+    (user: Employee) => user.id === session?.user.id
   )
 
   // Delete confirmation
@@ -98,7 +99,7 @@ export default function RemarksList({ reply, document }: ModalProps) {
   }
   const handleDeleteReply = async () => {
     try {
-      const { error }: { error: { message: string } } = await supabase
+      const { error } = await supabase
         .from('hrm_remarks')
         .delete()
         .eq('id', selectedId)
@@ -122,7 +123,7 @@ export default function RemarksList({ reply, document }: ModalProps) {
       const newData = {
         message: remarks
       }
-      const { error }: { error: { message: string } } = await supabase
+      const { error } = await supabase
         .from('hrm_remarks')
         .update(newData)
         .eq('id', reply.id)
@@ -143,10 +144,10 @@ export default function RemarksList({ reply, document }: ModalProps) {
   }
 
   // Only enable Edit/delete to author
-  const isAuthor = reply.sender_id === session.user.id
+  const isAuthor = reply.sender_id === session?.user.id
 
   // Only display private note to author
-  if (reply.is_private && reply.sender_id !== session.user.id) return
+  if (reply.is_private && reply.sender_id !== session?.user.id) return
 
   return (
     <div

@@ -235,7 +235,7 @@ export default function Trainings({ userId }: { userId: string }) {
                             )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id &&
+                          {userId === session?.user.id &&
                           item.status !== 'Approved' ? (
                             <div>
                               <input
@@ -264,7 +264,7 @@ export default function Trainings({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id &&
+                          {userId === session?.user.id &&
                           item.status !== 'Approved' ? (
                             <div className="space-y-2">
                               <div className="flex items-start space-x-1">
@@ -306,7 +306,7 @@ export default function Trainings({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id &&
+                          {userId === session?.user.id &&
                           item.status !== 'Approved' ? (
                             <div>
                               <input
@@ -328,7 +328,7 @@ export default function Trainings({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id &&
+                          {userId === session?.user.id &&
                           item.status !== 'Approved' ? (
                             <div>
                               <input
@@ -350,7 +350,7 @@ export default function Trainings({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id &&
+                          {userId === session?.user.id &&
                           item.status !== 'Approved' ? (
                             <div>
                               <input
@@ -370,7 +370,7 @@ export default function Trainings({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id &&
+                          {userId === session?.user.id &&
                           item.status !== 'Approved' ? (
                             <div>
                               <input
@@ -390,7 +390,7 @@ export default function Trainings({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id && (
+                          {userId === session?.user.id && (
                             <CustomButton
                               containerStyles="app__btn_red"
                               title="Remove"
@@ -406,7 +406,7 @@ export default function Trainings({ userId }: { userId: string }) {
               )}
             </div>
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
                 <form onSubmit={handleSubmit(onSubmitRow)} className="text-xs">

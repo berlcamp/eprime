@@ -89,15 +89,17 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       }
 
       // insert to notifications
-      const { error2 } = await supabase.from('hrm_notifications').insert({
-        message:
-          'You are added to a <b>Promotion</b>, please upload supporting documents.',
-        url: `/profile/${user.id}?page=promotions`,
-        type: 'promotion',
-        user_id: user.id,
-        promotion_id: data[0].id,
-        reference_table: 'hrm_promotions'
-      })
+      const { error: error2 } = await supabase
+        .from('hrm_notifications')
+        .insert({
+          message:
+            'You are added to a <b>Promotion</b>, please upload supporting documents.',
+          url: `/profile/${user.id}?page=promotions`,
+          type: 'promotion',
+          user_id: user.id,
+          promotion_id: data[0].id,
+          reference_table: 'hrm_promotions'
+        })
 
       if (error2) {
         throw new Error(error2.message)

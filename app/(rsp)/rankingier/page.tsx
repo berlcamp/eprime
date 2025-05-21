@@ -46,9 +46,9 @@ const Page: React.FC = () => {
           }
         )
         .eq('ranking_id', filterRanking)
-        .order('lastname', { assending: true })
-      console.log(data)
-      setList(data)
+        .order('lastname', { ascending: true })
+
+      setList(data ?? [])
     } catch (e) {
       console.error(e)
     } finally {
@@ -156,7 +156,7 @@ const Page: React.FC = () => {
   if (
     !hasAccess('rsp_manager') &&
     !hasAccess('hr') &&
-    !superAdmins.includes(session.user.email)
+    !superAdmins.includes(session?.user.email ?? '')
   )
     return <Unauthorized />
 

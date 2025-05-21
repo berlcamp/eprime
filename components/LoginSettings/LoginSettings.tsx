@@ -39,7 +39,7 @@ export default function LoginSettings({ userId }: { userId: string }) {
       return
     }
 
-    if (userId === session.user.id) {
+    if (userId === session?.user.id) {
       const { error } = await supabase.auth.updateUser({
         password: data.newPassword
       })

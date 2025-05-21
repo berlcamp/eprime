@@ -1056,3 +1056,8 @@ export interface RankingEvaluatorTypes {
   hrm_user: Employee
   ranking_id: string
 }
+
+export interface Attachment {
+  name: string
+  [key: string]: any // Optional: if you want to allow other metadata fields
+}

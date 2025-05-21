@@ -121,7 +121,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       // Insert qualifications to db
       const insertPromises = formdata.qualifications.map(
         async (qualification) => {
-          return supabase.from('hrm_ranking_qualifications').insert({
+          return await supabase.from('hrm_ranking_qualifications').insert({
             ranking_id: data[0].id,
             name: qualification.name,
             description: qualification.description,
@@ -230,7 +230,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
         .eq('ranking_id', editData.id)
 
       if (fetchError) {
-        throw fetchError
+        throw new Error(fetchError.message)
       }
 
       const existingQualificationIds = existingQualifications.map(
@@ -255,7 +255,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
           .eq('id', qual.id)
 
         if (updateQualError) {
-          throw updateQualError
+          throw new Error(updateQualError.message)
         }
       }
 
@@ -273,7 +273,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
           .insert(newQualifications)
 
         if (insertError) {
-          throw insertError
+          throw new Error(insertError.message)
         }
       }
 
@@ -292,7 +292,7 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
           .in('id', qualificationsToDelete) // Remove them from the database
 
         if (deleteError) {
-          throw deleteError
+          throw new Error(deleteError.message)
         }
       }
 

@@ -26,7 +26,7 @@ export default function CommentsList({ comment, reply }: ModalProps) {
   const { setToast } = useFilter()
 
   // Only enable Edit/delete to author
-  const isAuthor = comment.sender_id === session.user.id
+  const isAuthor = comment.sender_id === session?.user.id
 
   // Redux staff
   const globalremarks = useSelector((state: any) => state.remarks.value)

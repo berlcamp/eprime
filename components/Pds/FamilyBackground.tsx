@@ -168,7 +168,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Spouse First Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.spouse_firstname}
                     </div>
@@ -186,7 +186,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Spouse Middle Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.spouse_middlename}
                     </div>
@@ -204,7 +204,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Spouse Last Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.spouse_lastname}
                     </div>
@@ -222,7 +222,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Spouse Name Ext:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.spouse_ext}
                     </div>
@@ -240,7 +240,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Spouse Occupation:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.spouse_occupation}
                     </div>
@@ -260,7 +260,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
                   <div className="app__label_standard">
                     Spouse Employeer/Business Name:
                   </div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.spouse_employer}
                     </div>
@@ -278,7 +278,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Business Address:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.spouse_business_address}
                     </div>
@@ -296,7 +296,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Telephone No:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.spouse_business_telephone}
                     </div>
@@ -325,7 +325,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Father First Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.father_firstname}
                     </div>
@@ -343,7 +343,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Father Middle Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.father_middlename}
                     </div>
@@ -361,7 +361,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Father Last Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.father_lastname}
                     </div>
@@ -379,7 +379,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Father Name Ext:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.father_ext}
                     </div>
@@ -404,7 +404,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Mother First Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.mother_firstname}
                     </div>
@@ -422,7 +422,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Mother Middle Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.mother_middlename}
                     </div>
@@ -440,7 +440,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Mother Last Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.mother_lastname}
                     </div>
@@ -486,7 +486,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id && (
+                          {userId === session?.user.id && (
                             <CustomButton
                               containerStyles="app__btn_red"
                               title="Remove"
@@ -502,7 +502,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
               )}
             </div>
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
                 <div>

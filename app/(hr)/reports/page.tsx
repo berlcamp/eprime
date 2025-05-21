@@ -293,7 +293,7 @@ export default function Page() {
     !hasAccess('hr') &&
     !hasAccess('asds') &&
     !hasAccess('sds') &&
-    !superAdmins.includes(session.user.email)
+    !superAdmins.includes(session?.user.email ?? '')
   )
     return <Unauthorized />
 

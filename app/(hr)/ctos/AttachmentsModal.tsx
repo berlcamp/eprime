@@ -11,26 +11,34 @@ interface ModalProps {
   id: string
 }
 
+interface Attachment {
+  name: string
+  [key: string]: any // Optional: if you want to allow other metadata fields
+}
+
 export default function AttachmentsModal({ id, hideModal }: ModalProps) {
   const { supabase } = useSupabase()
 
-  const [attachments, setAttachments] = useState([])
+  const [attachments, setAttachments] = useState<Attachment[]>([])
 
   const handleDownloadFile = async (file: string) => {
     const { data, error } = await supabase.storage
       .from('hrm')
       .download(`ctos/${id}/${file}`)
 
-    if (error) console.error(error)
+    if (error || !data) {
+      console.error('Download error:', error)
+      return
+    }
 
-    const url = window.URL.createObjectURL(new Blob([data]))
-
+    const url = window.URL.createObjectURL(data) // `data` is already a Blob
     const link = document.createElement('a')
     link.href = url
     link.setAttribute('download', file)
     document.body.appendChild(link)
     link.click()
     link.remove()
+    window.URL.revokeObjectURL(url) // Clean up URL object
   }
 
   const fetchAttachments = async () => {
@@ -42,9 +50,12 @@ export default function AttachmentsModal({ id, hideModal }: ModalProps) {
         sortBy: { column: 'name', order: 'asc' }
       })
 
-    if (error) console.error(error)
+    if (error) {
+      console.error('List error:', error)
+      return
+    }
 
-    setAttachments(data)
+    setAttachments(data ?? [])
   }
 
   useEffect(() => {

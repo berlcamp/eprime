@@ -131,8 +131,12 @@ export default function IDPPage() {
       // .eq('ipcrf_id', ipcrfId)
 
       // Update the list in Redux store
-      dispatch(updateList(funcData))
-      dispatch(updateList2(compData))
+      if (funcData) {
+        dispatch(updateList(funcData))
+      }
+      if (compData) {
+        dispatch(updateList2(compData))
+      }
     }
     void fetchData()
   }, [])

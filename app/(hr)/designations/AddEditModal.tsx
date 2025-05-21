@@ -325,7 +325,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       separation_date: '',
       separation_cause: '',
       remarks: '',
-      created_by: session.user.id
+      created_by: session?.user.id
     }
 
     try {
@@ -392,16 +392,15 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       query = query.eq('hrm_user_id', user?.id)
     }
 
-    const { data, error }: { data: DesignationTypes[]; error: any } =
-      await query
+    const { data, error } = await query
 
     if (error) console.error(error)
 
-    if (data.length === 0) return false
+    if (data?.length === 0) return false
 
     const validationErrors: string[] = []
 
-    data.forEach((item) => {
+    data?.forEach((item) => {
       let station = ''
       if (item.area_assigned !== null) {
         if (item.area_assigned === 'school') {

@@ -204,7 +204,7 @@ const Page: React.FC = () => {
                                     <span>Edit</span>
                                   </div>
                                 </Menu.Item>
-                                {session.user.email ===
+                                {session?.user.email ===
                                   'berlcamp@gmail.com' && (
                                   <Menu.Item>
                                     <div

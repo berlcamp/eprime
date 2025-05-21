@@ -168,7 +168,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">First Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.firstname}
                     </div>
@@ -193,7 +193,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Middle Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.middlename}
                     </div>
@@ -211,7 +211,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Last Name:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">{userData?.lastname}</div>
                   ) : (
                     <div>
@@ -234,7 +234,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Name Ext:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">{userData?.ext}</div>
                   ) : (
                     <div>
@@ -250,7 +250,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Birthday:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">{userData?.birthday}</div>
                   ) : (
                     <div>
@@ -266,7 +266,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Place of Birth:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.place_of_birth}
                     </div>
@@ -284,7 +284,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Gender:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">{userData?.gender}</div>
                   ) : (
                     <div>
@@ -303,7 +303,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Civil Status:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.civil_status}
                     </div>
@@ -321,7 +321,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Height (inches):</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">{userData?.height}</div>
                   ) : (
                     <div>
@@ -337,7 +337,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Weight (kg):</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">{userData?.weight}</div>
                   ) : (
                     <div>
@@ -353,7 +353,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Blood Type:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.blood_type}
                     </div>
@@ -371,7 +371,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Citizenship:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.citizenship}
                     </div>
@@ -389,7 +389,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Telephone:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.telephone}
                     </div>
@@ -407,7 +407,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Mobile Number:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.mobile_number}
                     </div>
@@ -432,7 +432,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">GSIS ID No:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">{userData?.gsis_no}</div>
                   ) : (
                     <div>
@@ -448,7 +448,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">PAGIBIG ID No:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.pagibig_no}
                     </div>
@@ -466,7 +466,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">PhilHealth ID No:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.philhealth_no}
                     </div>
@@ -484,7 +484,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">SSS ID No:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">{userData?.sss_no}</div>
                   ) : (
                     <div>
@@ -500,7 +500,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">TIN ID No:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">{userData?.tin_no}</div>
                   ) : (
                     <div>
@@ -516,7 +516,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Agency Employee No:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.agency_employee_no}
                     </div>
@@ -545,7 +545,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">House No:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.residential_house_no}
                     </div>
@@ -563,7 +563,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Street:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.residential_street}
                     </div>
@@ -583,7 +583,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
                   <div className="app__label_standard">
                     Subdivision/Village:
                   </div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.residential_subdivision}
                     </div>
@@ -601,7 +601,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Barangay:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.residential_barangay}
                     </div>
@@ -619,7 +619,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">City/Municipality:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.residential_city}
                     </div>
@@ -637,7 +637,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Province:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.residential_province}
                     </div>
@@ -655,7 +655,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Zip Code:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.residential_zip}
                     </div>
@@ -680,7 +680,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">House No:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.permanent_house_no}
                     </div>
@@ -698,7 +698,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Street:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.permanent_street}
                     </div>
@@ -718,7 +718,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
                   <div className="app__label_standard">
                     Subdivision/Village:
                   </div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.permanent_subdivision}
                     </div>
@@ -736,7 +736,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Barangay:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.permanent_barangay}
                     </div>
@@ -754,7 +754,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">City/Municipality:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.permanent_city}
                     </div>
@@ -772,7 +772,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Province:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.permanent_province}
                     </div>
@@ -790,7 +790,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Zip Code:</div>
-                  {userId !== session.user.id ? (
+                  {userId !== session?.user.id ? (
                     <div className="app__label_value">
                       {userData?.permanent_zip}
                     </div>
@@ -808,7 +808,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
             </div>
             {/* End Second Column */}
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <hr className="my-6 mx-4" />
               <div className="w-full px-4">

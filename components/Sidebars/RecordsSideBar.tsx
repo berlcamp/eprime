@@ -3,7 +3,6 @@
 
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import type { CtoTypes, ServiceCreditTypes } from '@/types'
 import { TableCellsIcon } from '@heroicons/react/20/solid'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -30,7 +29,7 @@ const RecordsSideBar = () => {
         .select('id', { count: 'exact' })
         .eq('status', 'For Final Approval')
 
-      if (promotionCount > 0)
+      if (promotionCount && promotionCount > 0)
         setPromotionsCount(`For Approval (${promotionCount})`)
     } else if (hasAccess('verify_promotions')) {
       const { count: promotionCount } = await supabase
@@ -38,7 +37,7 @@ const RecordsSideBar = () => {
         .select('id', { count: 'exact' })
         .eq('status', 'For Verification')
 
-      if (promotionCount > 0)
+      if (promotionCount && promotionCount > 0)
         setPromotionsCount(`For Verification (${promotionCount})`)
     }
 
@@ -52,8 +51,8 @@ const RecordsSideBar = () => {
 
       if (data) {
         let count = 0
-        const ctos: CtoTypes[] = data
-        ctos.forEach((item) => {
+
+        data.forEach((item) => {
           const users = item.hrm_cto_users?.filter((user) => !user.is_approved)
           count += users ? users.length : 0
         })
@@ -70,8 +69,7 @@ const RecordsSideBar = () => {
 
       if (scData) {
         let count = 0
-        const sc: ServiceCreditTypes[] = scData
-        sc.forEach((item) => {
+        scData.forEach((item) => {
           const users = item.hrm_service_credit_users?.filter(
             (user) => !user.is_approved
           )
@@ -87,7 +85,8 @@ const RecordsSideBar = () => {
         .from('hrm_registrations')
         .select('id', { count: 'exact' })
 
-      if (registrationsCount > 0) setRegistrationCount(registrationsCount)
+      if (registrationsCount && registrationsCount > 0)
+        setRegistrationCount(registrationsCount.toString())
     }
   }
   useEffect(() => {

@@ -9,7 +9,7 @@ export default function Page() {
   const router = useRouter()
   const { session } = useSupabase()
 
-  router.push(`/profile/${session.user.id}`)
+  router.push(`/profile/${session?.user.id}`)
 
   return (
     <>

@@ -204,7 +204,7 @@ export const AddIpcrfModal = ({ isOpen, onClose, editData }: ModalProps) => {
         .select()
         .order('name', { ascending: true })
 
-      setPositions(data)
+      setPositions(data ?? [])
     }
 
     void fetchData()

@@ -153,7 +153,7 @@ export const AddCompetencyModal = ({
         .select('*, compentency_items:pms_competency_items(*)')
         .order('title', { ascending: true })
 
-      setCompetencies(data)
+      setCompetencies(data ?? [])
     }
 
     void fetchData()

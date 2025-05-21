@@ -148,7 +148,7 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
         .from('hrm_ranking_criterias')
         .select()
         .eq('ranking_id', rankingId)
-      setList(data)
+      setList(data ?? [])
     }
 
     void fetchData()

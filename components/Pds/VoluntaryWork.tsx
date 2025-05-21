@@ -175,7 +175,7 @@ export default function VoluntaryWork({ userId }: { userId: string }) {
                     {workExperienceArray.map((item, index) => (
                       <tr key={index} className="app__tr">
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.organization_name_address}
@@ -222,7 +222,7 @@ export default function VoluntaryWork({ userId }: { userId: string }) {
                           </div>
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.hours}
@@ -241,7 +241,7 @@ export default function VoluntaryWork({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.position}
@@ -260,7 +260,7 @@ export default function VoluntaryWork({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id && (
+                          {userId === session?.user.id && (
                             <CustomButton
                               containerStyles="app__btn_red"
                               title="Remove"
@@ -276,7 +276,7 @@ export default function VoluntaryWork({ userId }: { userId: string }) {
               )}
             </div>
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
                 <form onSubmit={handleSubmit(onSubmitRow)} className="text-xs">

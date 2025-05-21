@@ -32,7 +32,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
   const hasAccess = (type: string) => {
     const find = systemAccess.find((item: UserAccessTypes) => {
       return (
-        item.type === type && item.hrm_user?.id.toString() === session.user.id
+        item.type === type && item.hrm_user?.id.toString() === session?.user.id
       )
     })
 
@@ -45,7 +45,8 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
 
   // Check if school head
   const isSchoolHead = async () => {
-    return await CheckIfSchoolHead(session.user.id)
+    if (!session) return
+    return await CheckIfSchoolHead(session?.user.id)
   }
 
   useEffect(() => {

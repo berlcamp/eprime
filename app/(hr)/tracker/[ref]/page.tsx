@@ -46,7 +46,7 @@ export default function Page({ params }: { params: { ref: string } }) {
       const result = await fetchDocuments(
         { filterKeyword: refCode },
         null,
-        session.user.id,
+        session?.user.id,
         10,
         0
       )

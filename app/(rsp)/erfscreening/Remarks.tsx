@@ -51,7 +51,7 @@ export default function Remarks({ document }: ModalProps) {
           <span className="font-bold">Remarks:</span>
         </div>
         {/* Only receiving department can make remarks */}
-        {document.current_approver_id === session.user.id && (
+        {document.current_approver_id === session?.user.id && (
           <RemarkBox document={document} />
         )}
         {/* Added extra height if no remarks found */}

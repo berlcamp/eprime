@@ -44,6 +44,7 @@ module.exports = {
     '@typescript-eslint/naming-convention': 'off',
     'react/no-unescaped-entities': 'off',
     'react/display-name': 'off',
+    '@typescript-eslint/prefer-nullish-coalescing': 'off',
     curly: 'off',
     '@typescript-eslint/consistent-type-imports': 'off',
     '@typescript-eslint/no-misused-promises': [

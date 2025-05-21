@@ -8,7 +8,7 @@ import { updateRemarksList } from '@/GlobalRedux/Features/remarksSlice'
 import { CustomButton } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import type { DocumentTypes, Employee, FollowersTypes } from '@/types'
+import type { DocumentTypes, Employee } from '@/types'
 import { sanitizeFileName } from '@/utils/text-helper'
 import { PaperClipIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import { useDropzone, type FileWithPath } from 'react-dropzone'
@@ -29,7 +29,7 @@ export default function RemarkBox({ document }: ModalProps) {
   const dispatch = useDispatch()
 
   const user: Employee = systemUsers.find(
-    (u: { id: string }) => u.id === session.user.id
+    (u: { id: string }) => u.id === session?.user.id
   )
 
   const [replyType, setReplyType] = useState('Public')
@@ -78,7 +78,7 @@ export default function RemarkBox({ document }: ModalProps) {
 
       const newData = {
         tracker_id: document.id,
-        sender_id: session.user.id,
+        sender_id: session?.user.id,
         message: remarks,
         is_private: replyType === 'Private Note',
         files: attachments
@@ -98,7 +98,7 @@ export default function RemarkBox({ document }: ModalProps) {
 
       // Upload attachments
       await Promise.all(
-        selectedImages.map(async (file: { name: string }) => {
+        selectedImages.map(async (file: File) => {
           const safeFileName = sanitizeFileName(file.name)
 
           const { error: uploadError } = await supabase.storage
@@ -155,7 +155,7 @@ export default function RemarkBox({ document }: ModalProps) {
         .select('user_id')
         .eq('tracker_id', document.id)
 
-      followers.forEach((user: FollowersTypes) => {
+      followers?.forEach((user) => {
         userIds.push(user.user_id.toString())
       })
 

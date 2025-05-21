@@ -172,7 +172,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                     {educationArray.map((item, index) => (
                       <tr key={index} className="app__tr">
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.level}
@@ -191,7 +191,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.level}
@@ -210,7 +210,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.course}
@@ -229,7 +229,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.from}
@@ -246,7 +246,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                           ) : (
                             <div>{item.from}</div>
                           )}
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.to}
@@ -261,7 +261,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.level_earned}
@@ -280,7 +280,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.year_graduated}
@@ -299,7 +299,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.scholarship_received}
@@ -318,7 +318,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id && (
+                          {userId === session?.user.id && (
                             <CustomButton
                               containerStyles="app__btn_red"
                               title="Remove"
@@ -334,7 +334,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
               )}
             </div>
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
                 <form onSubmit={handleSubmit(onSubmitRow)} className="text-xs">

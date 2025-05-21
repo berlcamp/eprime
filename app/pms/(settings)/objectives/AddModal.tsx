@@ -149,7 +149,7 @@ export const AddModal = ({ isOpen, onClose, editData }: ModalProps) => {
         .select()
         .order('title', { ascending: true })
 
-      setKras(data)
+      setKras(data ?? [])
     }
 
     void fetchData()

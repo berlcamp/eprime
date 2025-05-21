@@ -28,7 +28,7 @@ export default function RemarkBox({ document }: ModalProps) {
   const dispatch = useDispatch()
 
   const user: Employee = systemUsers.find(
-    (u: { id: string }) => u.id === session.user.id
+    (u: { id: string }) => u.id === session?.user.id
   )
 
   const [replyType, setReplyType] = useState('Public')
@@ -76,7 +76,7 @@ export default function RemarkBox({ document }: ModalProps) {
 
       const newData = {
         applicant_id: document.id,
-        sender_id: session.user.id,
+        sender_id: session?.user.id,
         message: remarks,
         is_private: replyType === 'Private Note',
         files: attachments
@@ -94,7 +94,7 @@ export default function RemarkBox({ document }: ModalProps) {
 
       // Upload attachments
       await Promise.all(
-        selectedImages.map(async (file: { name: string }) => {
+        selectedImages.map(async (file: File) => {
           const { error } = await supabase.storage
             .from('hrm_document_remarks')
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

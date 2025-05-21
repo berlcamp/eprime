@@ -42,7 +42,7 @@ export default function IerData({
       .from('hrm_ranking_applicant_ier')
       .select()
       .eq('applicant_id', applicantId)
-    setList(data)
+    setList(data ?? [])
   }
   useEffect(() => {
     void fetchData()

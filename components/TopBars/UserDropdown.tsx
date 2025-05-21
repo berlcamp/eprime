@@ -33,8 +33,10 @@ const UserDropdown = () => {
   }
 
   const user: Employee = systemUsers.find(
-    (u: { id: string }) => u.id === session.user.id
+    (u: { id: string }) => u.id === session?.user.id
   )
+
+  if (!session) return null
 
   return (
     <div className="pt-1">
@@ -70,7 +72,7 @@ const UserDropdown = () => {
               <Menu.Item>
                 <div className="px-4 py-2">
                   <Link
-                    href={`/profile/${session.user.id}`}
+                    href={`/profile/${session?.user.id}`}
                     className="app__user_menu_items"
                   >
                     <UserIcon className="w-5 h-5" />
@@ -109,7 +111,7 @@ const UserDropdown = () => {
       {/* Add/Edit Modal */}
       {showAccountDetailsModal && (
         <AccountDetails
-          id={session.user.id}
+          id={session?.user.id}
           shouldUpdateRedux={false}
           hideModal={() => setShowAccountDetailsModal(false)}
         />

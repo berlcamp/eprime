@@ -4,7 +4,7 @@ import { ConfirmModal, CustomButton, UserBlock } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
-import type { PromotionTypes } from '@/types'
+import type { Attachment, PromotionTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
 import { format } from 'date-fns'
@@ -24,7 +24,7 @@ export default function DetailsModal({ promotionData, hideModal }: ModalProps) {
   const [confirmModal, setConfirmModal] = useState('')
   const [confirmMessage, setConfirmMessage] = useState('')
 
-  const [attachments, setAttachments] = useState([])
+  const [attachments, setAttachments] = useState<Attachment[]>([])
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -37,14 +37,16 @@ export default function DetailsModal({ promotionData, hideModal }: ModalProps) {
 
     if (error) console.error(error)
 
-    const url = window.URL.createObjectURL(new Blob([data]))
+    if (data) {
+      const url = window.URL.createObjectURL(data)
 
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', file)
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', file)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    }
   }
 
   const fetchAttachments = async () => {
@@ -58,7 +60,7 @@ export default function DetailsModal({ promotionData, hideModal }: ModalProps) {
 
     if (error) console.error(error)
 
-    setAttachments(data)
+    setAttachments(data ?? [])
   }
 
   // display confirm modal

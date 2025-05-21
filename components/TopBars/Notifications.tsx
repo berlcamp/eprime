@@ -1,18 +1,18 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
-import React, { Fragment, useRef, useEffect, useState } from 'react'
-import { BellAlertIcon } from '@heroicons/react/24/solid'
-import { Menu, Transition } from '@headlessui/react'
-import { useRouter } from 'next/navigation'
-import uuid from 'react-uuid'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { formatDistance } from 'date-fns'
+import { Menu, Transition } from '@headlessui/react'
 import { ExclamationCircleIcon } from '@heroicons/react/20/solid'
+import { BellAlertIcon } from '@heroicons/react/24/solid'
+import { formatDistance } from 'date-fns'
+import { useRouter } from 'next/navigation'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import uuid from 'react-uuid'
 
 // types
+import { recount } from '@/GlobalRedux/Features/recountSlice'
 import type { NotificationTypes } from '@/types'
 import { useDispatch } from 'react-redux'
-import { recount } from '@/GlobalRedux/Features/recountSlice'
 
 interface propTypes {
   darkMode?: boolean
@@ -30,7 +30,7 @@ const Notifications = ({ darkMode }: propTypes) => {
 
   const dispatch = useDispatch()
 
-  const userId: string = session.user.id
+  const userId: string | undefined = session?.user.id
 
   const [list, setList] = useState<NotificationTypes[] | null>(null)
   const [count, setCount] = useState(0)
@@ -79,15 +79,21 @@ const Notifications = ({ darkMode }: propTypes) => {
 
     const { data, error } = await query
 
-    if (error) console.error(error)
-
-    setList([...list, ...data])
+    if (error) {
+      console.error(error)
+    } else {
+      setList([...list, ...data])
+    }
   }
 
   const handleScroll = () => {
     const scrollContainer = scrollContainerRef.current
 
-    if (scrollContainer && (scrollContainer.scrollTop + scrollContainer.clientHeight === scrollContainer.scrollHeight)) {
+    if (
+      scrollContainer &&
+      scrollContainer.scrollTop + scrollContainer.clientHeight ===
+        scrollContainer.scrollHeight
+    ) {
       void handleShowMore()
     }
   }
@@ -99,7 +105,7 @@ const Notifications = ({ darkMode }: propTypes) => {
       .eq('is_read', false)
       .eq('user_id', userId)
 
-    setCount(unreadCount)
+    setCount(unreadCount ?? 0)
   }
 
   // Mark as read
@@ -124,7 +130,7 @@ const Notifications = ({ darkMode }: propTypes) => {
         .select('id', { count: 'exact' })
         .eq('user_id', userId)
 
-      setTotal(notiTotal)
+      setTotal(notiTotal ?? 0)
     }
     void countTotal()
     void fetchData()
@@ -149,25 +155,37 @@ const Notifications = ({ darkMode }: propTypes) => {
       .channel('realtime notifications')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'hrm_notifications', filter: `user_id=eq.${userId}` },
+        {
+          event: '*',
+          schema: 'public',
+          table: 'hrm_notifications',
+          filter: `user_id=eq.${userId}`
+        },
         () => {
           void fetchData()
-        })
+        }
+      )
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      void supabase.removeChannel(channel)
     }
   }, [])
 
   return (
-    <div className='pt-1 cursor-pointer'>
+    <div className="pt-1 cursor-pointer">
       <Menu as="div" className="relative inline-block text-left mr-2">
         <div>
           <Menu.Button className="relative focus:ring-0 focus:outline-none ">
-            <span className={`inline-flex items-center justify-center rounded-full ${darkMode ? 'bg-white' : 'bg-gray-500 bg-opacity-30'} w-8 h-8`}>
-              <span className='absolute z-30 top-0 -right-2 bg-red-500 rounded-full px-1 text-white text-[8px]'>{count}</span>
-              <BellAlertIcon className='w-6 h-6 text-gray-700 dark:text-gray-200'/>
+            <span
+              className={`inline-flex items-center justify-center rounded-full ${
+                darkMode ? 'bg-white' : 'bg-gray-500 bg-opacity-30'
+              } w-8 h-8`}
+            >
+              <span className="absolute z-30 top-0 -right-2 bg-red-500 rounded-full px-1 text-white text-[8px]">
+                {count}
+              </span>
+              <BellAlertIcon className="w-6 h-6 text-gray-700 dark:text-gray-200" />
             </span>
           </Menu.Button>
         </div>
@@ -182,38 +200,71 @@ const Notifications = ({ darkMode }: propTypes) => {
           leaveTo="transform opacity-0 scale-95"
         >
           <Menu.Items className="absolute right-0 z-30 mt-2 w-80 origin-top-right bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-            <div onScroll={handleScroll} ref={scrollContainerRef} className="overflow-y-auto h-[calc(100vh-170px)] pt-8">
-              <div className='bg-gray-200 w-full px-4 py-2 fixed top-0 left-0'>
-                <label className='flex items-center space-x-1'>
+            <div
+              onScroll={handleScroll}
+              ref={scrollContainerRef}
+              className="overflow-y-auto h-[calc(100vh-170px)] pt-8"
+            >
+              <div className="bg-gray-200 w-full px-4 py-2 fixed top-0 left-0">
+                <label className="flex items-center space-x-1">
                   <input
                     onChange={() => setIsUnreadChecked(!isUnreadChecked)}
                     checked={isUnreadChecked}
-                    type='checkbox'
-                    className=''/>
-                  <span className='text-xs'>Only display <b>Unread</b> items</span>
+                    type="checkbox"
+                    className=""
+                  />
+                  <span className="text-xs">
+                    Only display <b>Unread</b> items
+                  </span>
                 </label>
               </div>
-              {
-                list?.map((notification: NotificationTypes) => (
-                  (!notification.is_read || !isUnreadChecked) &&
+              {list?.map(
+                (notification: NotificationTypes) =>
+                  (!notification.is_read || !isUnreadChecked) && (
                     <Menu.Item key={uuid()}>
                       <div
                         onClick={async () => await handleClick(notification)}
-                        className={`${notification.is_read ? 'text-gray-500' : 'text-gray-800 font-medium'} hover:bg-gray-100 mx-2 p-2 text-xs`}>
-                        <div className='flex items-start justify-start space-x-2'>
-                          <span className='flex-1' dangerouslySetInnerHTML={{ __html: notification.message }}/>
-                          {
-                            !notification.is_read && <ExclamationCircleIcon className={`${notification.is_read ? 'text-blue-300' : 'text-blue-500'} w-4 h-4`}/>
-                          }
+                        className={`${
+                          notification.is_read
+                            ? 'text-gray-500'
+                            : 'text-gray-800 font-medium'
+                        } hover:bg-gray-100 mx-2 p-2 text-xs`}
+                      >
+                        <div className="flex items-start justify-start space-x-2">
+                          <span
+                            className="flex-1"
+                            dangerouslySetInnerHTML={{
+                              __html: notification.message
+                            }}
+                          />
+                          {!notification.is_read && (
+                            <ExclamationCircleIcon
+                              className={`${
+                                notification.is_read
+                                  ? 'text-blue-300'
+                                  : 'text-blue-500'
+                              } w-4 h-4`}
+                            />
+                          )}
                         </div>
-                        <div className='text-blue-700'>{formatDistance(new Date(), new Date(notification.created_at))} ago</div>
+                        <div className="text-blue-700">
+                          {formatDistance(
+                            new Date(),
+                            new Date(notification.created_at)
+                          )}{' '}
+                          ago
+                        </div>
                       </div>
                     </Menu.Item>
-                ))
-              }
-              {
-                list?.length === 0 && <Menu.Item><div className='text-sm p-2 text-gray-500'>No notifications found.</div></Menu.Item>
-              }
+                  )
+              )}
+              {list?.length === 0 && (
+                <Menu.Item>
+                  <div className="text-sm p-2 text-gray-500">
+                    No notifications found.
+                  </div>
+                </Menu.Item>
+              )}
             </div>
           </Menu.Items>
         </Transition>

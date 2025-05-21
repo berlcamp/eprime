@@ -36,10 +36,10 @@ const MainMenu = () => {
     offices = systemOffices
   } else {
     schools = systemSchools.filter(
-      (school) => school.head_user_id === session.user.id
+      (school) => school.head_user_id === session?.user.id
     )
     offices = systemOffices.filter(
-      (office) => office.head_user_id === session.user.id
+      (office) => office.head_user_id === session?.user.id
     )
   }
 
@@ -51,35 +51,35 @@ const MainMenu = () => {
           <div className="px-2 py-4 border text-gray-600 rounded-lg bg-white shadow-md flex flex-col lg:mx-2 space-y-1">
             <div className="text-gray-700 text-lg font-semibold">Shortcuts</div>
             <Link
-              href={`/profile/${session.user.id}?page=requests`}
+              href={`/profile/${session?.user.id}?page=requests`}
               className="app__menu_item"
             >
               <CalendarDaysIcon className="w-6 h-6" />
               <div className="app__menu_item_label">My Requests</div>
             </Link>
             <Link
-              href={`/profile/${session.user.id}?page=leavecard`}
+              href={`/profile/${session?.user.id}?page=leavecard`}
               className="app__menu_item"
             >
               <TableCellsIcon className="w-6 h-6" />
               <div className="app__menu_item_label">My Leave Card</div>
             </Link>
             <Link
-              href={`/profile/${session.user.id}?page=servicerecords`}
+              href={`/profile/${session?.user.id}?page=servicerecords`}
               className="app__menu_item"
             >
               <TableCellsIcon className="w-6 h-6" />
               <div className="app__menu_item_label">My Service Records</div>
             </Link>
             <Link
-              href={`/profile/${session.user.id}?page=ctos`}
+              href={`/profile/${session?.user.id}?page=ctos`}
               className="app__menu_item"
             >
               <MdOutlineMoreTime className="w-6 h-6" />
               <div className="app__menu_item_label">My CTO&apos;s</div>
             </Link>
             <Link
-              href={`/profile/${session.user.id}?page=servicecredits`}
+              href={`/profile/${session?.user.id}?page=servicecredits`}
               className="app__menu_item"
             >
               <CalendarIcon className="w-6 h-6" />

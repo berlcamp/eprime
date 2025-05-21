@@ -22,7 +22,7 @@ const Page: React.FC = () => {
         .eq('status', 'Open')
         .eq('display_on_portal', true)
 
-      setRankings(data)
+      setRankings(data ?? [])
       setLoading(false)
     }
     void fetchRankins()

@@ -220,7 +220,7 @@ export const AddObjectiveModal = ({
         .select()
         .order('title', { ascending: true })
 
-      setObjectives(data)
+      setObjectives(data ?? [])
     }
 
     void fetchData()

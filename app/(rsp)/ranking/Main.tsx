@@ -62,12 +62,14 @@ const Page: React.FC = () => {
   const { session, supabase } = useSupabase()
 
   const fetchData = async () => {
+    if (!session) return
+
     setLoading(true)
 
     try {
       const result = await fetchRankings(
         {
-          userId: hasAccess('rsp_manager') ? null : session.user.id,
+          userId: hasAccess('rsp_manager') ? undefined : session?.user.id,
           filterStatus,
           filterPosition
         },
@@ -99,7 +101,7 @@ const Page: React.FC = () => {
     try {
       const result = await fetchRankings(
         {
-          userId: hasAccess('rsp_manager') ? null : session.user.id,
+          userId: hasAccess('rsp_manager') ? undefined : session?.user.id,
           filterStatus,
           filterPosition
         },
@@ -137,7 +139,7 @@ const Page: React.FC = () => {
         status: 'Confirmed'
       })
       .eq('ranking_id', selectedId)
-      .eq('user_id', session.user.id)
+      .eq('user_id', session?.user.id)
     if (!error) {
       setList((prevItems) =>
         prevItems.map((item) =>
@@ -147,7 +149,7 @@ const Page: React.FC = () => {
                 committees: item.committees.map((c) =>
                   c.type === 'Original Member' &&
                   c.status === 'Pending Confirmation' &&
-                  c.user_id === session.user.id
+                  c.user_id === session?.user.id
                     ? { ...c, status: 'Confirmed' }
                     : c
                 )
@@ -285,7 +287,7 @@ const Page: React.FC = () => {
                             <Menu.Items className="app__dropdown_items">
                               <div className="py-1">
                                 {(hasAccess('rsp_manager') ||
-                                  item.chairman_id === session.user.id) && (
+                                  item.chairman_id === session?.user.id) && (
                                   <>
                                     <Menu.Item>
                                       <div
@@ -403,7 +405,7 @@ const Page: React.FC = () => {
                       </th>
                       <td className="hidden md:table-cell app__td">
                         {item.type} - {item.year} -
-                        {session.user.email === 'berlcamp@gmail.com' && (
+                        {session?.user.email === 'berlcamp@gmail.com' && (
                           <span>#{item.id}</span>
                         )}
                       </td>
@@ -452,7 +454,7 @@ const Page: React.FC = () => {
                           (c) =>
                             c.type === 'Original Member' &&
                             c.status === 'Pending Confirmation' &&
-                            c.user_id === session.user.id
+                            c.user_id === session?.user.id
                         ) &&
                           item.status === 'Closed' && (
                             <div>
@@ -476,7 +478,7 @@ const Page: React.FC = () => {
                           (c) =>
                             c.type === 'Original Member' &&
                             c.status === 'Confirmed' &&
-                            c.user_id === session.user.id
+                            c.user_id === session?.user.id
                         ) &&
                           item.status === 'Closed' && (
                             <div className="font-bold text-green-600">

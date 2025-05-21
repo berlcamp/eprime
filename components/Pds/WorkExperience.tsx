@@ -213,7 +213,7 @@ export default function WorkExperience({ userId }: { userId: string }) {
                           </div>
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.position_title}
@@ -232,7 +232,7 @@ export default function WorkExperience({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.company}
@@ -251,7 +251,7 @@ export default function WorkExperience({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.monthly_salary}
@@ -270,7 +270,7 @@ export default function WorkExperience({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.salary_grade}
@@ -289,7 +289,7 @@ export default function WorkExperience({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.status}
@@ -308,7 +308,7 @@ export default function WorkExperience({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.government_service}
@@ -327,7 +327,7 @@ export default function WorkExperience({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id && (
+                          {userId === session?.user.id && (
                             <CustomButton
                               containerStyles="app__btn_red"
                               title="Remove"
@@ -343,7 +343,7 @@ export default function WorkExperience({ userId }: { userId: string }) {
               )}
             </div>
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
                 <form onSubmit={handleSubmit(onSubmitRow)} className="text-xs">

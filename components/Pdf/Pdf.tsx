@@ -8,12 +8,17 @@ import { nanoid } from 'nanoid'
 import { useCallback, useEffect, useState } from 'react'
 import { type FileWithPath, useDropzone } from 'react-dropzone'
 
+interface Attachment {
+  name: string
+  [key: string]: any // Optional: if you want to allow other metadata fields
+}
+
 export default function Pdf({ userId }: { userId: string }) {
   const [selectedImages, setSelectedImages] = useState<any>([])
   const [selectedFile, setSelectedFile] = useState('')
   const [saving, setSaving] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
-  const [attachments, setAttachments] = useState([])
+  const [attachments, setAttachments] = useState<Attachment[]>([])
 
   const { supabase } = useSupabase()
   const { setToast } = useFilter()
@@ -61,7 +66,7 @@ export default function Pdf({ userId }: { userId: string }) {
   const handleUploadFiles = async () => {
     // Upload attachments
     await Promise.all(
-      selectedImages.map(async (file: { name: string }) => {
+      selectedImages.map(async (file: File) => {
         const { error } = await supabase.storage
           .from('hrm')
           .upload(`pdf/${userId}/${file.name}`, file)
@@ -99,9 +104,12 @@ export default function Pdf({ userId }: { userId: string }) {
         sortBy: { column: 'name', order: 'asc' }
       })
 
-    if (error) console.error(error)
-
-    setAttachments(data)
+    if (error) {
+      console.error(error)
+      setAttachments([]) // Clear attachments on error to avoid stale data
+    } else {
+      setAttachments(data ?? []) // fallback to empty array if data is null or undefined
+    }
   }
 
   const handleDownloadFile = async (file: string) => {
@@ -111,14 +119,16 @@ export default function Pdf({ userId }: { userId: string }) {
 
     if (error) console.error(error)
 
-    const url = window.URL.createObjectURL(new Blob([data]))
+    if (data) {
+      const url = window.URL.createObjectURL(data)
 
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', file)
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', file)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    }
   }
 
   const handleConfirm = async () => {

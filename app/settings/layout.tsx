@@ -15,7 +15,10 @@ export default function PmsLayout({ children }: { children: React.ReactNode }) {
   }
 
   // Check access from permission settings or Super Admins
-  if (!hasAccess('settings') && !superAdmins.includes(session.user.email))
+  if (
+    !hasAccess('settings') &&
+    !superAdmins.includes(session?.user.email ?? '')
+  )
     return <Unauthorized />
 
   return <>{children}</>

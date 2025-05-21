@@ -110,15 +110,17 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
       dispatch(updateList(items))
 
       // insert to notifications
-      const { error2 } = await supabase.from('hrm_notifications').insert({
-        message:
-          'You are added to a <b>Service Credit</b>, please upload supporting documents if necessary.',
-        url: `/profile/${user.id}?page=servicecredits&id=${data[0].id}`,
-        type: 'service_credit_users',
-        user_id: user.id,
-        service_credit_user_id: data[0].id,
-        reference_table: 'hrm_service_credit_users'
-      })
+      const { error: error2 } = await supabase
+        .from('hrm_notifications')
+        .insert({
+          message:
+            'You are added to a <b>Service Credit</b>, please upload supporting documents if necessary.',
+          url: `/profile/${user.id}?page=servicecredits&id=${data[0].id}`,
+          type: 'service_credit_users',
+          user_id: user.id,
+          service_credit_user_id: data[0].id,
+          reference_table: 'hrm_service_credit_users'
+        })
 
       if (error2) {
         throw new Error(error2.message)
@@ -168,14 +170,16 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
       if (error) throw new Error(error.message)
 
       // insert to notifications
-      const { error2 } = await supabase.from('hrm_notifications').insert({
-        message: 'Your <b>Service Credit</b> has been approved.',
-        url: `/myservicecredits/${refCode}`,
-        type: 'service_credits',
-        user_id: selectedRow?.hrm_user_id,
-        service_credit_user_id: selectedRow?.id,
-        reference_table: 'hrm_service_credit_users'
-      })
+      const { error: error2 } = await supabase
+        .from('hrm_notifications')
+        .insert({
+          message: 'Your <b>Service Credit</b> has been approved.',
+          url: `/myservicecredits/${refCode}`,
+          type: 'service_credits',
+          user_id: selectedRow?.hrm_user_id,
+          service_credit_user_id: selectedRow?.id,
+          reference_table: 'hrm_service_credit_users'
+        })
 
       if (error2) throw new Error(error2.message)
 
@@ -281,7 +285,7 @@ const EmployeesModal = ({ hideModal, scData }: ModalProps) => {
       if (error) throw new Error(error.message)
 
       // delete to notifications
-      const { error2 } = await supabase
+      const { error: error2 } = await supabase
         .from('hrm_notifications')
         .delete()
         .eq('reference_table', 'hrm_service_credit_users')

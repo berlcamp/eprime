@@ -55,7 +55,7 @@ export default function StickiesModal({ hideModal }: ModalProps) {
   }
   const handleDeleteReply = async () => {
     try {
-      const { error }: { error: { message: string } } = await supabase
+      const { error } = await supabase
         .from('hrm_request_tracker_stickies')
         .delete()
         .eq('id', selectedId)
@@ -77,11 +77,11 @@ export default function StickiesModal({ hideModal }: ModalProps) {
       .select(
         '*, tracker:tracker_id(id, reference_code, type, creator:created_by(firstname,middlename,lastname,avatar_url))'
       )
-      .eq('user_id', session.user.id)
+      .eq('user_id', session?.user.id)
       .order('id', { ascending: true })
 
     // Store list to redux
-    setList(data)
+    setList(data ?? [])
   }
 
   useEffect(() => {

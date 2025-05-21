@@ -141,7 +141,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       level: formdata.level,
       tin_no: formdata.tin_no,
       umid_no: formdata.umid_no,
-      updated_by: session.user.id,
+      updated_by: session?.user.id,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
 
@@ -166,7 +166,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       }
 
       if (user) {
-        const { error2 } = await supabase
+        const { error: error2 } = await supabase
           .from('hrm_users')
           .update({
             item_id: data[0].id,
@@ -267,7 +267,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       level: formdata.level,
       tin_no: formdata.tin_no,
       umid_no: formdata.umid_no,
-      updated_by: session.user.id
+      updated_by: session?.user.id
     }
 
     try {

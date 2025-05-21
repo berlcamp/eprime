@@ -167,7 +167,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
       leave_days_with_pay: withPay,
       leave_days_without_pay: withoutPay,
       certification_as_of: format(new Date(), 'MMMM d, yyyy'),
-      certified_by: session.user.id,
+      certified_by: session?.user.id,
       credits_used: creditsUsed
     }
 
@@ -239,7 +239,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         const newData = {
           message: 'Leave Credits Certified',
           tracker_flow_id: data.id,
-          user_id: session.user.id
+          user_id: session?.user.id
         }
 
         const { error: error2 } = await supabase
@@ -521,7 +521,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         .from('hrm_leave_credits')
         .select()
         .eq('user_id', documentData.creator?.id)
-      setLeaveCreditBalances(data)
+      setLeaveCreditBalances(data ?? [])
     }
     void fetchBalances()
   }, [])
@@ -632,7 +632,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                 )
             }
             {hasAccess('certify_leave_credits') &&
-              documentData.receiver_id === session.user.id &&
+              documentData.receiver_id === session?.user.id &&
               documentData.current_status !== 'Disapproved' &&
               documentData.current_status !== 'Approved' &&
               documentData.current_status !== 'Cancelled' && (

@@ -141,7 +141,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       if (error) throw new Error(error.message)
 
       // update service_credits of service credit users
-      const { error2 } = await supabase
+      const { error: error2 } = await supabase
         .from('hrm_service_credit_users')
         .update({
           service_credits: serviceCredits

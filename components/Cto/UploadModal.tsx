@@ -18,6 +18,14 @@ interface ModalProps {
   editData: CtoUserTypes | null
 }
 
+type Attachment = {
+  name: string
+  id?: string
+  updated_at?: string
+  created_at?: string
+  // ... other properties depending on your storage listing response
+}
+
 export default function UploadModal({ editData, hideModal }: ModalProps) {
   const { setToast } = useFilter()
   const { supabase } = useSupabase()
@@ -26,7 +34,7 @@ export default function UploadModal({ editData, hideModal }: ModalProps) {
   const [selectedFile, setSelectedFile] = useState('')
   const [saving, setSaving] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
-  const [attachments, setAttachments] = useState([])
+  const [attachments, setAttachments] = useState<Attachment[]>([])
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
     setSelectedImages(
@@ -84,23 +92,28 @@ export default function UploadModal({ editData, hideModal }: ModalProps) {
   const handleUploadFiles = async (id: string) => {
     try {
       await Promise.all(
-        selectedImages.map(async (file: { name: string }) => {
+        selectedImages.map(async (file: File) => {
           // Generate a safe filename
           const safeFileName = file.name
             .replace(/\s+/g, '_') // Replace spaces with underscores
             .replace(/[^a-zA-Z0-9_.-]/g, '') // Remove special characters except dots, underscores, and dashes
-            .toLowerCase() // Convert to lowercase for consistency
+            .toLowerCase() // Convert to lowercase
 
           const { error } = await supabase.storage
             .from('hrm')
             .upload(`ctos/${id}/${safeFileName}`, file)
 
-          if (error)
+          if (error) {
             throw new Error(`Failed to upload ${file.name}: ${error.message}`)
+          }
         })
       )
-    } catch (error) {
-      throw new Error(`File upload failed: ${error}`)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(`File upload failed: ${error.message}`)
+      } else {
+        throw new Error('File upload failed due to an unknown error')
+      }
     }
   }
 
@@ -127,20 +140,20 @@ export default function UploadModal({ editData, hideModal }: ModalProps) {
   const handleDownloadFile = async (file: string) => {
     if (!editData) return
 
-    const { data, error } = await supabase.storage
+    const { data } = await supabase.storage
       .from('hrm')
       .download(`ctos/${editData.id}/${file}`)
 
-    if (error) console.error(error)
+    if (data) {
+      const url = window.URL.createObjectURL(data)
 
-    const url = window.URL.createObjectURL(new Blob([data]))
-
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', file)
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', file)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    }
   }
 
   const handleConfirm = async () => {
@@ -176,7 +189,7 @@ export default function UploadModal({ editData, hideModal }: ModalProps) {
   }
 
   const fetchAttachments = async () => {
-    if (!editData) return
+    if (!editData?.id) return
 
     const { data, error } = await supabase.storage
       .from('hrm')
@@ -186,9 +199,13 @@ export default function UploadModal({ editData, hideModal }: ModalProps) {
         sortBy: { column: 'name', order: 'asc' }
       })
 
-    if (error) console.error(error)
+    if (error) {
+      console.error('Error fetching attachments:', error.message)
+      setAttachments([]) // Clear attachments on error
+      return
+    }
 
-    setAttachments(data)
+    setAttachments(data ?? [])
   }
 
   const handleNotify = async (fullname: string, id: string) => {

@@ -176,12 +176,11 @@ const RankingEvaluators = ({ hideModal, rankingId }: ModalProps) => {
       const { data } = await supabase
         .from('hrm_ranking_evaluators')
         .select(
-          '*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url))'
+          '*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url)'
         )
         .eq('ranking_id', rankingId)
-      if (data) {
-        setList(data)
-      }
+
+      setList(data ?? [])
     }
 
     void fetchEvaluators()

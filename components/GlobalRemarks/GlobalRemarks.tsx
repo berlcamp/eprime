@@ -1,16 +1,19 @@
+import { useFilter } from '@/context/FilterContext'
+import { useSupabase } from '@/context/SupabaseProvider'
 import type { Employee, GlobalRemarksTypes } from '@/types'
 import { useEffect, useState } from 'react'
-import { useSupabase } from '@/context/SupabaseProvider'
-import GlobalRemarksList from './GlobalRemarksList'
-import { useFilter } from '@/context/FilterContext'
 import CustomButton from '../CustomButton'
+import GlobalRemarksList from './GlobalRemarksList'
 
 interface ModalProps {
   referenceColumn: string
   referenceValue: string
 }
 
-export default function GlobalRemarks ({ referenceColumn, referenceValue }: ModalProps) {
+export default function GlobalRemarks({
+  referenceColumn,
+  referenceValue
+}: ModalProps) {
   //
   const [remarksData, setRemarksData] = useState<GlobalRemarksTypes[] | []>([])
   const [saving, setSaving] = useState(false)
@@ -20,7 +23,9 @@ export default function GlobalRemarks ({ referenceColumn, referenceValue }: Moda
   const { setToast } = useFilter()
   const { supabase, session, systemUsers } = useSupabase()
 
-  const user: Employee = systemUsers.find((u: { id: string }) => u.id === session.user.id)
+  const user: Employee = systemUsers.find(
+    (u: { id: string }) => u.id === session?.user.id
+  )
 
   const fetchRemarks = async () => {
     const { data } = await supabase
@@ -33,7 +38,7 @@ export default function GlobalRemarks ({ referenceColumn, referenceValue }: Moda
   }
 
   const handleSubmit = async () => {
-    if (saving) return
+    if (saving || !session) return
 
     if (remarks.trim() === '') {
       setRemarks('')
@@ -56,14 +61,20 @@ export default function GlobalRemarks ({ referenceColumn, referenceValue }: Moda
         .from('hrm_global_remarks')
         .insert(newData)
         .select()
+        .single()
 
       if (error) {
-        console.error('naai error', error)
+        console.error('naai error', error.message)
         return
       }
 
       // Append new remarks to remarks redux
-      const updatedData = { id: data[0].id, hrm_users: user, created_at: data[0].created_at, ...newData }
+      const updatedData = {
+        id: data.id,
+        hrm_users: user,
+        created_at: data.created_at,
+        ...newData
+      }
       setRemarksData([updatedData, ...remarksData])
 
       setRemarks('')
@@ -82,37 +93,34 @@ export default function GlobalRemarks ({ referenceColumn, referenceValue }: Moda
   }, [])
 
   return (
-    <div className='w-full relative'>
-      <div className='mt-4 mx-2 mb-10 outline-none overflow-x-hidden overflow-y-auto text-xs text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-400'>
-        <div className='flex space-x-2 px-4 py-4'>
-          <span className='font-bold'>Remarks:</span>
+    <div className="w-full relative">
+      <div className="mt-4 mx-2 mb-10 outline-none overflow-x-hidden overflow-y-auto text-xs text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+        <div className="flex space-x-2 px-4 py-4">
+          <span className="font-bold">Remarks:</span>
         </div>
-        <div className='w-full flex-col space-y-2 px-4 mb-5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400'>
+        <div className="w-full flex-col space-y-2 px-4 mb-5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400">
           <textarea
-            onChange={e => setRemarks(e.target.value)}
+            onChange={(e) => setRemarks(e.target.value)}
             value={remarks}
             disabled={saving}
-            placeholder='Write your remarks here..'
-            className='w-full h-20 border resize-none focus:ring-0 focus:outline-none p-2 text-sm text-gray-700 dark:bg-gray-900 dark:text-gray-300'/>
-          <div className='flex items-start'>
-            <span className='flex-1'>&nbsp;</span>
+            placeholder="Write your remarks here.."
+            className="w-full h-20 border resize-none focus:ring-0 focus:outline-none p-2 text-sm text-gray-700 dark:bg-gray-900 dark:text-gray-300"
+          />
+          <div className="flex items-start">
+            <span className="flex-1">&nbsp;</span>
 
             <CustomButton
-              containerStyles='app__btn_green'
+              containerStyles="app__btn_green"
               title={saving ? 'Saving...' : 'Submit'}
               isDisabled={saving}
-              btnType='button'
+              btnType="button"
               handleClick={handleSubmit}
             />
           </div>
         </div>
-        {
-          remarksData?.map((reply, index) => (
-            <GlobalRemarksList
-              key={index}
-              reply={reply}/>
-          ))
-        }
+        {remarksData?.map((reply, index) => (
+          <GlobalRemarksList key={index} reply={reply} />
+        ))}
       </div>
     </div>
   )

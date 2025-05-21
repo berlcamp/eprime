@@ -30,7 +30,7 @@ const LocatorSlipForm = ({ hideModal }: ModalProps) => {
   const [approverError, setApproverError] = useState('')
 
   const currentUser: Employee = systemUsers.find(
-    (user: Employee) => user.id === session.user.id
+    (user: Employee) => user.id === session?.user.id
   )
 
   // selected approver
@@ -96,8 +96,8 @@ const LocatorSlipForm = ({ hideModal }: ModalProps) => {
         locator_slip_time: formdata.time,
         locator_slip_return_time: formdata.return_time,
         locator_slip_destination: formdata.destination,
-        created_by: session.user.id,
-        current_approver_id: session.user.id,
+        created_by: session?.user.id,
+        current_approver_id: session?.user.id,
         receiver_id: user.id,
         current_status: 'For Verification',
         current_tracker: 'Forwarded'
@@ -428,7 +428,7 @@ const LocatorSlipForm = ({ hideModal }: ModalProps) => {
               </div>
               <SearchUserInput
                 isMultiple={false}
-                excludedIds={[session.user.id]}
+                excludedIds={session ? [session.user.id] : []}
                 handleSelectedUsers={handleSelectedUsers}
               />
               {approverError !== '' && (

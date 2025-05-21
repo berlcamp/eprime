@@ -152,7 +152,7 @@ export default function References({ userId }: { userId: string }) {
                         <td className="app__td">{item.address}</td>
                         <td className="app__td">{item.telephone}</td>
                         <td className="app__td">
-                          {userId === session.user.id && (
+                          {userId === session?.user.id && (
                             <CustomButton
                               containerStyles="app__btn_red"
                               title="Remove"
@@ -168,7 +168,7 @@ export default function References({ userId }: { userId: string }) {
               )}
             </div>
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
                 <form onSubmit={handleSubmit(onSubmitRow)} className="text-xs">

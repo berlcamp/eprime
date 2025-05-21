@@ -30,7 +30,7 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
   const dispatch = useDispatch()
 
   const user: Employee = systemUsers.find(
-    (user: Employee) => user.id === session.user.id
+    (user: Employee) => user.id === session?.user.id
   )
 
   const {
@@ -69,7 +69,7 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
       separation_date: formdata.separation_date,
       separation_cause: formdata.separation_cause,
       remarks: formdata.remarks,
-      created_by: session.user.id
+      created_by: session?.user.id
     }
 
     let newId
@@ -138,7 +138,7 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
       separation_date: formdata.separation_date,
       separation_cause: formdata.separation_cause,
       remarks: formdata.remarks,
-      created_by: session.user.id
+      created_by: session?.user.id
     }
 
     try {
@@ -164,7 +164,7 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
       // Update data in redux
       const items = [...globallist]
       const user: Employee = systemUsers.find(
-        (user: Employee) => user.id === session.user.id
+        (user: Employee) => user.id === session?.user.id
       )
       const updatedData = { ...newData, hrm_user: user, id: editData.id }
       const foundIndex = items.findIndex((x) => x.id === updatedData.id)

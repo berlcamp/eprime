@@ -60,7 +60,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   const [user, setUser] = useState<Employee | null>(null)
 
   const currentUser: Employee = systemUsers.find(
-    (user: Employee) => user.id === session.user.id
+    (user: Employee) => user.id === session?.user.id
   )
 
   // Redux staff
@@ -195,8 +195,8 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         leave_from: formdata.leave_from,
         leave_to: formdata.leave_to,
         leave_commutation: formdata.commutation,
-        created_by: session.user.id,
-        current_approver_id: session.user.id,
+        created_by: session?.user.id,
+        current_approver_id: session?.user.id,
         receiver_id: user.id,
         current_status: 'For Verification',
         current_tracker: 'Forwarded'
@@ -541,8 +541,8 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
       const { data } = await supabase
         .from('hrm_leave_credits')
         .select()
-        .eq('user_id', session.user.id)
-      setLeaveCreditBalances(data)
+        .eq('user_id', session?.user.id)
+      setLeaveCreditBalances(data ?? [])
     }
 
     void fetchBalances()
@@ -1023,7 +1023,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
               </div>
               <SearchUserInput
                 isMultiple={false}
-                excludedIds={[session.user.id]}
+                excludedIds={session ? [session.user.id] : []}
                 handleSelectedUsers={handleSelectedUsers}
               />
               {approverError !== '' && (

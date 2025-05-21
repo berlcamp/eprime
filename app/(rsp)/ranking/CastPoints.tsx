@@ -64,11 +64,11 @@ const CastPoints = ({
       const { error } = await supabase
         .from('hrm_ranking_applicant_points')
         .upsert(upsertData, {
-          onConflict: ['committee_criteria_id', 'applicant_id'] // Define conflict columns
+          onConflict: 'committee_criteria_id, applicant_id'
         })
 
       if (error) {
-        void logError(
+        await logError(
           'Cast points',
           'hrm_ranking_applicant_points',
           JSON.stringify(upsertData),
@@ -81,13 +81,13 @@ const CastPoints = ({
         throw new Error(error.message)
       }
 
-      // pop up the success message
       setToast('success', 'Successfully saved.')
-
       setSaving(false)
       refetch()
     } catch (e) {
-      console.error(e)
+      console.error('Upsert Error:', e)
+      setToast('error', 'An unexpected error occurred.')
+      setSaving(false)
     }
   }
 

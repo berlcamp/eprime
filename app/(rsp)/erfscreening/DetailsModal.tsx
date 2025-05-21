@@ -44,7 +44,7 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   const user: Employee = systemUsers.find(
-    (user: Employee) => user.id === session.user.id
+    (user: Employee) => user.id === session?.user.id
   )
 
   // Redux staff
@@ -478,7 +478,7 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
           <div className="flex space-x-2 items-center justify-between border-b p-4 bg-orange-50">
             <div className="w-full">
               {/* Verify button */}
-              {documentData.current_approver_id === session.user.id && (
+              {documentData.current_approver_id === session?.user.id && (
                 <div className="mb-6">
                   <div className="space-x-2">
                     {documentData.status === 'For AO Verification' && (
@@ -520,7 +520,7 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
               )}
 
               {/* Forward */}
-              {documentData.current_approver_id === session.user.id && (
+              {documentData.current_approver_id === session?.user.id && (
                 <div className="">
                   <div className="font-medium text-sm text-gray-700">
                     Forward this to:
@@ -528,7 +528,7 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
                   <div className="flex w-full space-x-2">
                     <SearchUserInput
                       isMultiple={false}
-                      excludedIds={[session.user.id]}
+                      excludedIds={session ? [session.user.id] : []}
                       classNames="w-1/2"
                       handleSelectedUsers={handleSelectedUsers}
                     />

@@ -1661,7 +1661,7 @@ export interface DocumentFilterTypes {
 export async function fetchDocuments(
   filters: DocumentFilterTypes,
   filterUrl: string | null,
-  userId: string,
+  userId: string | undefined,
   perPageCount: number,
   rangeFrom: number
 ) {

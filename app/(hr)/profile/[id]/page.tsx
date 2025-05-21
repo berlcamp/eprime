@@ -66,7 +66,8 @@ export default function Page({ params }: { params: { id: string } }) {
       .is('status', null)
       .lte('expiration', filterDate)
 
-    if (ctoCounter > 0) setMyctoCount(`Expiring soon (${ctoCounter})`)
+    if (ctoCounter && ctoCounter > 0)
+      setMyctoCount(`Expiring soon (${ctoCounter})`)
   }
 
   const handleUploadPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -117,19 +118,17 @@ export default function Page({ params }: { params: { id: string } }) {
   const handleFetchAvatar = async (path: string) => {
     try {
       // get the public avatar url
-      const { data, error } = await supabase.storage
+      const { data } = supabase.storage
         .from('hrm_public')
         .getPublicUrl(`${path}`)
 
-      if (error) throw new Error(error.message)
-
       // update avatar url on hrm_users table
-      const { error2 } = await supabase
+      const { error } = await supabase
         .from('hrm_users')
         .update({ avatar_url: data.publicUrl })
         .eq('id', userId)
 
-      if (error2) throw new Error(error2.message)
+      if (error) throw new Error(error.message)
 
       setAvatarUrl(data.publicUrl)
     } catch (error) {
@@ -194,7 +193,7 @@ export default function Page({ params }: { params: { id: string } }) {
                         className="rounded"
                       />
                     </div>
-                    {userId === session.user.id && (
+                    {userId === session?.user.id && (
                       <div className="absolute bottom-2 right-12">
                         <input
                           type="file"
@@ -420,8 +419,8 @@ export default function Page({ params }: { params: { id: string } }) {
                     </span>
                   </Link>
                 </li>
-                {(superAdmins.includes(session.user.email) ||
-                  userId === session.user.id) && (
+                {(superAdmins.includes(session?.user.email ?? '') ||
+                  userId === session?.user.id) && (
                   <>
                     <li>
                       <Link
@@ -503,8 +502,8 @@ export default function Page({ params }: { params: { id: string } }) {
             {page && page === 'plantilla' && <Plantilla userId={userId} />}
             {page &&
               page === 'loginsettings' &&
-              (superAdmins.includes(session.user.email) ||
-                userId === session.user.id) && (
+              (superAdmins.includes(session?.user.email ?? '') ||
+                userId === session?.user.id) && (
                 <LoginSettings userId={userId} />
               )}
           </div>

@@ -283,7 +283,7 @@ export default function Cto({ userId }: { userId: string }) {
                     </td>
                     <td className="hidden md:table-cell app__td">
                       {item.hrm_ctos?.status !== 'Expired' &&
-                        userId === session.user.id && (
+                        userId === session?.user.id && (
                           <CustomButton
                             btnType="button"
                             title="Supporting&nbsp;Documents"

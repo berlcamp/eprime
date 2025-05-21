@@ -11,7 +11,7 @@ export default function Announcements() {
     try {
       const { data } = await supabase.from('hrm_announcements').select()
 
-      setList(data)
+      setList(data ?? [])
     } catch (e) {
       console.error(e)
     }

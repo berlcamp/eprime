@@ -139,7 +139,7 @@ const Page: React.FC = () => {
       } else {
         const filteredList = globallist.filter(
           (d: ApplicantTypes) =>
-            d.current_approver_id || d.user_id === session.user.id
+            d.current_approver_id || d.user_id === session?.user.id
         )
         setList(filteredList)
       }

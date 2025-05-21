@@ -21,7 +21,7 @@ const Page: React.FC = () => {
         .eq('status', 'Closed')
         .eq('display_on_portal', true)
 
-      setRankings(data)
+      setRankings(data ?? [])
       setLoading(false)
     }
     void fetchRankins()

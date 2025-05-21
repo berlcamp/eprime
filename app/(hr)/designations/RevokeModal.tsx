@@ -356,7 +356,7 @@ const RevokeModal = ({ hideModal, editData }: ModalProps) => {
       separation_date: '',
       separation_cause: '',
       remarks: '',
-      created_by: session.user.id
+      created_by: session?.user.id
     }
 
     try {

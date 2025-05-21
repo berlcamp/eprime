@@ -30,7 +30,7 @@ const TravelForm = ({ hideModal }: ModalProps) => {
   const [approverError, setApproverError] = useState('')
 
   const currentUser: Employee = systemUsers.find(
-    (user: Employee) => user.id === session.user.id
+    (user: Employee) => user.id === session?.user.id
   )
 
   // selected approver
@@ -99,8 +99,8 @@ const TravelForm = ({ hideModal }: ModalProps) => {
         travel_destination: formdata.destination,
         travel_fund_source: formdata.fund_source,
         travel_with: formdata.with,
-        created_by: session.user.id,
-        current_approver_id: session.user.id,
+        created_by: session?.user.id,
+        current_approver_id: session?.user.id,
         receiver_id: user.id,
         current_status: 'For Verification',
         current_tracker: 'Forwarded'
@@ -489,7 +489,7 @@ const TravelForm = ({ hideModal }: ModalProps) => {
               </div>
               <SearchUserInput
                 isMultiple={false}
-                excludedIds={[session.user.id]}
+                excludedIds={session ? [session.user.id] : []}
                 handleSelectedUsers={handleSelectedUsers}
               />
               {approverError !== '' && (

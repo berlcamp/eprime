@@ -1,12 +1,8 @@
-import { FilterProvider } from '@/context/FilterContext'
-import SupabaseProvider from '@/context/SupabaseProvider'
-import { Providers } from '@/GlobalRedux/provider'
-import SupabaseListener from '@/utils/supabase-listener'
 import { createServerClient } from '@/utils/supabase-server'
-import { Toaster } from 'react-hot-toast'
 import 'server-only'
 import './globals.css'
 
+import ClientProviders from '@/components/ClientProviders'
 import type { Employee, Office, SchoolTypes, UserAccessTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import type { Metadata } from 'next'
@@ -106,24 +102,15 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`relative ${session ? 'bg-white' : 'bg-gray-200'}`}>
-        <SupabaseProvider
-          systemAccess={sysAccess}
+        <ClientProviders
           session={session}
+          systemAccess={sysAccess}
           systemUsers={sysUsers}
           systemSchools={sysSchools}
           systemOffices={sysOffices}
         >
-          <SupabaseListener serverAccessToken={session?.access_token} />
-          {!session && <>{children}</>}
-          {session && (
-            <Providers>
-              <FilterProvider>
-                <Toaster />
-                {children}
-              </FilterProvider>
-            </Providers>
-          )}
-        </SupabaseProvider>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   )

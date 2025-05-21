@@ -289,9 +289,9 @@ const RankingApplicants = ({
           }
         )
         .eq('ranking_id', rankingId)
-        .order('lastname', { assending: true })
+        .order('lastname', { ascending: true })
 
-      if (data.length > 0) {
+      if (data && data.length > 0) {
         const structguredData: ListTypes[] = []
         data.forEach((d: ApplicantTypes) => {
           const accumulatedPoints: Record<string, number> | null =
@@ -336,7 +336,7 @@ const RankingApplicants = ({
           '*,committee_criterias:hrm_ranking_committee_criterias(*,criteria:criteria_id(*),criteria_points:hrm_ranking_applicant_points(*))'
         )
         .eq('ranking_id', rankingId)
-        .eq('user_id', session.user.id)
+        .eq('user_id', session?.user.id)
         .maybeSingle()
 
       const committeeData: RankingCommitteeTypes = data
@@ -356,7 +356,7 @@ const RankingApplicants = ({
         .from('hrm_ranking_evaluators')
         .select()
         .eq('ranking_id', rankingId)
-      setEvaluators(evaluatorsData)
+      setEvaluators(evaluatorsData ?? [])
     }
 
     void fetchEvaluators()
@@ -437,7 +437,7 @@ const RankingApplicants = ({
                               <Menu.Items className="app__dropdown_items">
                                 <div className="py-1">
                                   {item.ranking.chairman_id ===
-                                    session.user.id && (
+                                    session?.user.id && (
                                     <Menu.Item>
                                       <div
                                         onClick={() =>
@@ -475,7 +475,7 @@ const RankingApplicants = ({
                                   </Menu.Item>
                                   {evaluators.some(
                                     (evaluator) =>
-                                      evaluator.user_id === session.user.id
+                                      evaluator.user_id === session?.user.id
                                   ) && (
                                     <>
                                       {item.applicant.evaluation_status !==
@@ -574,7 +574,7 @@ const RankingApplicants = ({
                                   )}
                                   {!item.applicant.eir_email_sent &&
                                     item.ranking.chairman_id ===
-                                      session.user.id && (
+                                      session?.user.id && (
                                       <Menu.Item>
                                         <div
                                           onClick={() =>

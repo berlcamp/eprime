@@ -1,16 +1,16 @@
-import type { DocumentTypes, RemarksTypes } from '@/types'
-import { useEffect, useState } from 'react'
-import RemarkBox from './RemarkBox'
-import RemarksList from './RemarksList'
-import { useSelector, useDispatch } from 'react-redux'
 import { updateRemarksList } from '@/GlobalRedux/Features/remarksSlice'
 import { useSupabase } from '@/context/SupabaseProvider'
+import type { DocumentTypes, RemarksTypes } from '@/types'
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import RemarkBox from './RemarkBox'
+import RemarksList from './RemarksList'
 
 interface ModalProps {
   document: DocumentTypes
 }
 
-export default function Remarks ({ document }: ModalProps) {
+export default function Remarks({ document }: ModalProps) {
   //
   const [remarksData, setRemarksData] = useState<RemarksTypes[] | []>([])
 
@@ -24,7 +24,9 @@ export default function Remarks ({ document }: ModalProps) {
     // Fetch Document Replies
     const { data: remarksData } = await supabase
       .from('hrm_remarks')
-      .select('*,hrm_users:sender_id(firstname,middlename,lastname,avatar_url),hrm_remarks_comments(*, hrm_users:sender_id(firstname,middlename,lastname,avatar_url))')
+      .select(
+        '*,hrm_users:sender_id(firstname,middlename,lastname,avatar_url),hrm_remarks_comments(*, hrm_users:sender_id(firstname,middlename,lastname,avatar_url))'
+      )
       .eq('tracker_id', document.id)
       .order('id', { ascending: false })
 
@@ -43,28 +45,25 @@ export default function Remarks ({ document }: ModalProps) {
   }, [])
 
   return (
-    <div className='w-full relative'>
-      <div className='mt-4 mx-2 mb-10 outline-none overflow-x-hidden overflow-y-auto text-xs text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-400'>
-        <div className='flex space-x-2 px-4 py-4'>
-          <span className='font-bold'>Remarks:</span>
+    <div className="w-full relative">
+      <div className="mt-4 mx-2 mb-10 outline-none overflow-x-hidden overflow-y-auto text-xs text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+        <div className="flex space-x-2 px-4 py-4">
+          <span className="font-bold">Remarks:</span>
         </div>
         {/* Only receiving department can make remarks */}
-        {
-          (document.receiver_id === session.user.id && document.current_status !== 'Approved' && document.current_status !== 'Disapproved' && document.current_status !== 'Cancelled') &&
-            <RemarkBox document={document}/>
-        }
+        {document.receiver_id === session?.user.id &&
+          document.current_status !== 'Approved' &&
+          document.current_status !== 'Disapproved' &&
+          document.current_status !== 'Cancelled' && (
+            <RemarkBox document={document} />
+          )}
         {/* Added extra height if no remarks found */}
-        {
-          remarksData?.length === 0 && <div className='h-20 px-4'>No remarks found.&nbsp;</div>
-        }
-        {
-          remarksData?.map((reply, index) => (
-            <RemarksList
-              key={index}
-              document={document}
-              reply={reply}/>
-          ))
-        }
+        {remarksData?.length === 0 && (
+          <div className="h-20 px-4">No remarks found.&nbsp;</div>
+        )}
+        {remarksData?.map((reply, index) => (
+          <RemarksList key={index} document={document} reply={reply} />
+        ))}
       </div>
     </div>
   )

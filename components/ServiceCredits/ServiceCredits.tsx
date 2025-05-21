@@ -282,7 +282,7 @@ export default function ServiceCredits({ userId }: { userId: string }) {
                       </div>
                     </td>
                     <td className="hidden md:table-cell app__td">
-                      {userId === session.user.id && (
+                      {userId === session?.user.id && (
                         <CustomButton
                           btnType="button"
                           title="Supporting&nbsp;Documents"

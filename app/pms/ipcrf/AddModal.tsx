@@ -98,7 +98,7 @@ export const AddModal = ({
         ipcrf_template_id: formdata.ipcrf_template_id,
         rater_id: formdata.rater_id,
         type: title,
-        user_id: session.user.id,
+        user_id: session?.user.id,
         description: ipcrfs.find(
           (i) => i.id.toString() === formdata.ipcrf_template_id.toString()
         )?.description
@@ -120,7 +120,9 @@ export const AddModal = ({
             rater: systemUsers.find(
               (i) => i.id.toString() === formdata.rater_id.toString()
             ),
-            ratee: systemUsers.find((i) => i.id.toString() === session.user.id),
+            ratee: systemUsers.find(
+              (i) => i.id.toString() === session?.user.id
+            ),
             ipcrf: ipcrfs.find(
               (i) => i.id.toString() === formdata.ipcrf_template_id.toString()
             ),
@@ -154,7 +156,7 @@ export const AddModal = ({
       try {
         if (title === 'IPCRF') {
           // Get the position ID of the logged-in user
-          const user = systemUsers.find((u) => u.id === session.user.id)
+          const user = systemUsers.find((u) => u.id === session?.user.id)
           if (!user?.position_id) return
 
           // Fetch related template-position mappings if IPCRF
@@ -179,7 +181,7 @@ export const AddModal = ({
             .in('id', templateIds)
             .eq('type', 'IPCRF')
 
-          setIpcrfs(templates)
+          setIpcrfs(templates ?? [])
         } else {
           // Fetch the OPCRF templates with objectives
           const { data: templates } = await supabase
@@ -187,7 +189,7 @@ export const AddModal = ({
             .select('*,objectives:pms_ipcrf_template_objectives(*)')
             .eq('type', 'OPCRF')
 
-          setIpcrfs(templates)
+          setIpcrfs(templates ?? [])
         }
       } catch (error) {
         // Optionally handle errors

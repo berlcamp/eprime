@@ -52,7 +52,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       ...(editData.logs ?? []),
       {
         date: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
-        user_name: session.user.email,
+        user_name: session?.user.email,
         message: `Updated salary from ${formatToPesos(
           Number(editData.salary)
         )} to ${formatToPesos(Number(formdata.salary))}`

@@ -103,7 +103,7 @@ const Page: React.FC = () => {
           filterRequester
         },
         filterUrl,
-        session.user.id,
+        session?.user.id,
         perPageCount,
         0
       )
@@ -135,7 +135,7 @@ const Page: React.FC = () => {
           filterRequester
         },
         filterUrl,
-        session.user.id,
+        session?.user.id,
         perPageCount,
         list.length
       )
@@ -166,7 +166,7 @@ const Page: React.FC = () => {
       // place of birthday data
       const { data: pds } = await supabase
         .from('hrm_pds')
-        .select('place_of_birth')
+        .select()
         .eq('user_id', item.created_by)
         .maybeSingle()
 
@@ -177,7 +177,7 @@ const Page: React.FC = () => {
         .eq('user_id', item.created_by)
 
       pdsData = pds
-      serviceRecordsData = sr
+      serviceRecordsData = sr ?? []
     }
 
     setTimeout(() => {

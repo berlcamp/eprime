@@ -142,9 +142,9 @@ const Page: React.FC = () => {
       )
       .eq('evaluation_status', 'Qualified')
       .eq('ranking_id', filterRanking)
-      .order('lastname', { assending: true })
+      .order('lastname', { ascending: true })
 
-    if (data.length > 0) {
+    if (data && data.length > 0) {
       const structguredData: ListTypes[] = []
       data.forEach((d: ApplicantTypes) => {
         const accumulatedPoints: Record<string, number> | null =

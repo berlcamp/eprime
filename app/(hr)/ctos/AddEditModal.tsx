@@ -179,7 +179,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       }
 
       // update coc  of user ctos
-      const { error2 } = await supabase
+      const { error: error2 } = await supabase
         .from('hrm_cto_users')
         .update({
           coc

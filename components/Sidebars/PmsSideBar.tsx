@@ -18,13 +18,13 @@ const PmsSideBar = () => {
   const currentRoute = usePathname()
 
   const isHead = systemSchools.find(
-    (school) => school.head_user_id === session.user.id
+    (school) => school.head_user_id === session?.user.id
   )
     ? true
     : false
 
   const isOfficeHead = systemOffices.find(
-    (office) => office.head_user_id === session.user.id
+    (office) => office.head_user_id === session?.user.id
   )
     ? true
     : false

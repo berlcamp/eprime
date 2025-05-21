@@ -172,7 +172,7 @@ export default function Eligibility({ userId }: { userId: string }) {
                     {eligibilityArray.map((item, index) => (
                       <tr key={index} className="app__tr">
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.eligibility}
@@ -191,7 +191,7 @@ export default function Eligibility({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.rating}
@@ -210,7 +210,7 @@ export default function Eligibility({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 type="date"
@@ -230,7 +230,7 @@ export default function Eligibility({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.exam_place}
@@ -249,7 +249,7 @@ export default function Eligibility({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 value={item.license_number}
@@ -268,7 +268,7 @@ export default function Eligibility({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id ? (
+                          {userId === session?.user.id ? (
                             <div>
                               <input
                                 type="date"
@@ -288,7 +288,7 @@ export default function Eligibility({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="app__td">
-                          {userId === session.user.id && (
+                          {userId === session?.user.id && (
                             <CustomButton
                               containerStyles="app__btn_red"
                               title="Remove"
@@ -304,7 +304,7 @@ export default function Eligibility({ userId }: { userId: string }) {
               )}
             </div>
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
                 <form onSubmit={handleSubmit(onSubmitRow)} className="text-xs">

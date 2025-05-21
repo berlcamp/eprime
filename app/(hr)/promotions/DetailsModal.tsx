@@ -17,6 +17,11 @@ interface ModalProps {
   promotionData: PromotionTypes
 }
 
+interface Attachment {
+  name: string
+  [key: string]: any // For other possible metadata like lastModified, size, etc.
+}
+
 export default function DetailsModal({ promotionData, hideModal }: ModalProps) {
   const { supabase } = useSupabase()
   const { setToast, hasAccess } = useFilter()
@@ -24,7 +29,7 @@ export default function DetailsModal({ promotionData, hideModal }: ModalProps) {
   const [confirmModal, setConfirmModal] = useState('')
   const [confirmMessage, setConfirmMessage] = useState('')
 
-  const [attachments, setAttachments] = useState([])
+  const [attachments, setAttachments] = useState<Attachment[]>([])
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -35,16 +40,19 @@ export default function DetailsModal({ promotionData, hideModal }: ModalProps) {
       .from('hrm')
       .download(`promotions/${promotionData.id}/${file}`)
 
-    if (error) console.error(error)
+    if (error || !data) {
+      console.error('Download error:', error)
+      return
+    }
 
-    const url = window.URL.createObjectURL(new Blob([data]))
-
+    const url = window.URL.createObjectURL(data) // `data` is already Blob
     const link = document.createElement('a')
     link.href = url
     link.setAttribute('download', file)
     document.body.appendChild(link)
     link.click()
     link.remove()
+    window.URL.revokeObjectURL(url) // cleanup
   }
 
   const fetchAttachments = async () => {
@@ -56,9 +64,12 @@ export default function DetailsModal({ promotionData, hideModal }: ModalProps) {
         sortBy: { column: 'name', order: 'asc' }
       })
 
-    if (error) console.error(error)
+    if (error) {
+      console.error('List error:', error)
+      return
+    }
 
-    setAttachments(data)
+    setAttachments(data ?? [])
   }
 
   // display confirm modal

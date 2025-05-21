@@ -26,7 +26,7 @@ const UndertimeForm = ({ hideModal }: ModalProps) => {
   const [approverError, setApproverError] = useState('')
 
   const currentUser: Employee = systemUsers.find(
-    (user: Employee) => user.id === session.user.id
+    (user: Employee) => user.id === session?.user.id
   )
 
   // selected approver
@@ -66,8 +66,8 @@ const UndertimeForm = ({ hideModal }: ModalProps) => {
         reference_code: refCode,
         undertime_permit_reason: formdata.reason,
         undertime_permit_time: formdata.time,
-        created_by: session.user.id,
-        current_approver_id: session.user.id,
+        created_by: session?.user.id,
+        current_approver_id: session?.user.id,
         receiver_id: user.id,
         current_status: 'For Verification',
         current_tracker: 'Forwarded'
@@ -250,7 +250,7 @@ const UndertimeForm = ({ hideModal }: ModalProps) => {
               </div>
               <SearchUserInput
                 isMultiple={false}
-                excludedIds={[session.user.id]}
+                excludedIds={session ? [session.user.id] : []}
                 handleSelectedUsers={handleSelectedUsers}
               />
               {approverError !== '' && (

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 'use client'
@@ -23,7 +24,6 @@ import type {
   AttachmentTypes,
   DocumentTypes,
   Employee,
-  FollowersTypes,
   LeaveCreditTypes,
   namesType
 } from '@/types'
@@ -55,22 +55,37 @@ function Attachment({ id, file }: { id: string; file: string }) {
 
     setDownloading(true)
 
-    const { data, error } = await supabase.storage
-      .from('hrm_documents')
-      .download(`requests/${id}/${file}`)
+    try {
+      const { data, error } = await supabase.storage
+        .from('hrm_documents')
+        .download(`requests/${id}/${file}`)
 
-    if (error) console.error(error)
+      if (error) {
+        console.error('File download error:', error.message)
+        return
+      }
 
-    const url = window.URL.createObjectURL(new Blob([data]))
+      if (!data) {
+        console.error('Downloaded file data is null')
+        return
+      }
 
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', file)
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
+      const url = URL.createObjectURL(data)
 
-    setDownloading(false)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', file)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+
+      // Cleanup
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Unexpected error downloading file:', err)
+    } finally {
+      setDownloading(false)
+    }
   }
 
   return (
@@ -120,7 +135,7 @@ export default function DetailsModal({
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   const user: Employee = systemUsers.find(
-    (user: Employee) => user.id === session.user.id
+    (user: Employee) => user.id === session?.user.id
   )
 
   // Redux staff
@@ -174,9 +189,11 @@ export default function DetailsModal({
         .select('user_id')
         .eq('tracker_id', document.id)
 
-      followers.forEach((user: FollowersTypes) => {
-        userIds.push(user.user_id.toString())
-      })
+      if (followers) {
+        followers.forEach((user) => {
+          userIds.push(user.user_id.toString())
+        })
+      }
 
       // Notify the origin
       userIds.push(document.created_by)
@@ -376,8 +393,8 @@ export default function DetailsModal({
 
     const newData = {
       current_status: 'Approved',
-      current_approver_id: session.user.id,
-      approved_by: session.user.id,
+      current_approver_id: session?.user.id,
+      approved_by: session?.user.id,
       date_approved: format(new Date(), 'yyyy-MM-dd')
     }
     try {
@@ -413,7 +430,7 @@ export default function DetailsModal({
         const newData = {
           message: 'Approved',
           tracker_flow_id: data.id,
-          user_id: session.user.id
+          user_id: session?.user.id
         }
 
         const { error: error2 } = await supabase
@@ -525,7 +542,7 @@ export default function DetailsModal({
             const bal = balances.find((b) => b.type === c.type)
 
             if (bal) {
-              return supabase
+              return await supabase
                 .from('hrm_leave_credits')
                 .update({
                   credits: Number(bal.balance) - Number(c.value)
@@ -538,6 +555,7 @@ export default function DetailsModal({
         await Promise.all(updateLeaveCreditsPromises)
 
         // Update Cto balances to db
+        // Update CTO balances in the database
         const { data: leaveCocRecords, error: leaveError } = await supabase
           .from('hrm_leave_coc')
           .select('use_coc, user_cto_id')
@@ -545,42 +563,54 @@ export default function DetailsModal({
 
         if (leaveError) {
           void logError(
-            'Leave request - update cto balance',
-            'hrm_leave_cards',
+            'Leave request - fetch leave coc records',
+            'hrm_leave_coc',
             '',
             leaveError.message
           )
           throw new Error(leaveError.message)
         }
 
-        // Loop through the leaveCocRecords and update coc in hrm_cto_users
+        if (!leaveCocRecords || leaveCocRecords.length === 0) {
+          console.warn('No COC records found for this tracker ID.')
+        }
+
+        // Process and update each CTO balance
         for (const record of leaveCocRecords) {
           const { use_coc, user_cto_id } = record
 
-          // Fetch current coc value for the user
-          const { data: userCto } = await supabase
+          const { data: userCto, error: fetchCtoError } = await supabase
             .from('hrm_cto_users')
-            .select('coc')
+            .select('coc, used_coc')
             .eq('id', user_cto_id)
-            .single()
+            .maybeSingle()
+
+          if (fetchCtoError || !userCto) {
+            void logError(
+              'Leave request - fetch current CTO user',
+              'hrm_cto_users',
+              user_cto_id,
+              fetchCtoError?.message || 'CTO user not found'
+            )
+            throw new Error(fetchCtoError?.message || 'CTO user not found')
+          }
 
           const newCocValue = userCto.coc - use_coc
-          const usedCocValue = userCto.used_coc - use_coc
+          const newUsedCocValue = (userCto.used_coc ?? 0) - use_coc
 
           totalCredits += Number(use_coc)
           usedCredits.push(`COC (${use_coc})`)
 
-          // Update the coc value for the user
           const { error: updateError } = await supabase
             .from('hrm_cto_users')
-            .update({ coc: newCocValue, used_coc: usedCocValue })
+            .update({ coc: newCocValue, used_coc: newUsedCocValue })
             .eq('id', user_cto_id)
 
           if (updateError) {
             void logError(
-              'Leave request - update cto balance',
-              'hrm_leave_cards',
-              '',
+              'Leave request - update CTO user balance',
+              'hrm_cto_users',
+              user_cto_id,
               updateError.message
             )
             throw new Error(updateError.message)
@@ -620,7 +650,7 @@ export default function DetailsModal({
             designation: documentData.creator.hrm_positions?.name,
             days_without_pay: documentData.leave_days_without_pay,
             remarks: documentData.leave_type,
-            created_by: session.user.id
+            created_by: session?.user.id
           }
 
           const { error: insertSRError } = await supabase
@@ -659,7 +689,7 @@ export default function DetailsModal({
       // End: Add entry to employees leave card if type of request is Leave
 
       // Update data in redux
-      const items: DocumentTypes[] = [...globallist]
+      const items = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
       const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
@@ -691,7 +721,7 @@ export default function DetailsModal({
 
     const newData = {
       current_status: 'For Verification',
-      current_approver_id: session.user.id
+      current_approver_id: session?.user.id
     }
     try {
       const { error } = await supabase
@@ -726,7 +756,7 @@ export default function DetailsModal({
         const newData = {
           message: 'For Reverification',
           tracker_flow_id: data.id,
-          user_id: session.user.id
+          user_id: session?.user.id
         }
 
         const { error: error2 } = await supabase
@@ -745,7 +775,7 @@ export default function DetailsModal({
       }
 
       // Update data in redux
-      const items: DocumentTypes[] = [...globallist]
+      const items = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
       const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
@@ -775,8 +805,8 @@ export default function DetailsModal({
 
     const newData = {
       current_status: 'Approval Recommended',
-      current_approver_id: session.user.id,
-      recommended_by: session.user.id,
+      current_approver_id: session?.user.id,
+      recommended_by: session?.user.id,
       date_recommeded: format(new Date(), 'yyyy-MM-dd')
     }
     try {
@@ -812,7 +842,7 @@ export default function DetailsModal({
         const newData = {
           message: 'Approval Recommended',
           tracker_flow_id: data.id,
-          user_id: session.user.id
+          user_id: session?.user.id
         }
 
         const { error: error2 } = await supabase
@@ -831,7 +861,7 @@ export default function DetailsModal({
       }
 
       // Update data in redux
-      const items: DocumentTypes[] = [...globallist]
+      const items = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
       const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
@@ -861,7 +891,7 @@ export default function DetailsModal({
 
     const newData = {
       current_status: 'Cancelled',
-      current_approver_id: session.user.id
+      current_approver_id: session?.user.id
     }
     try {
       const { error } = await supabase
@@ -896,7 +926,7 @@ export default function DetailsModal({
         const newData = {
           message: 'Cancelled',
           tracker_flow_id: data.id,
-          user_id: session.user.id
+          user_id: session?.user.id
         }
 
         const { error: error2 } = await supabase
@@ -918,7 +948,7 @@ export default function DetailsModal({
       await deleteleaveDays()
 
       // Update data in redux
-      const items: DocumentTypes[] = [...globallist]
+      const items = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
       const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
@@ -942,7 +972,7 @@ export default function DetailsModal({
 
     const newData = {
       current_status: 'Disapproved',
-      current_approver_id: session.user.id
+      current_approver_id: session?.user.id
     }
     try {
       const { error } = await supabase
@@ -967,7 +997,7 @@ export default function DetailsModal({
       // add to tracker flow
       const { error: error2 } = await supabase.from('hrm_tracker_flow').insert({
         tracker_id: documentData.id,
-        user_id: session.user.id,
+        user_id: session?.user.id,
         status: 'Disapproved'
       })
 
@@ -984,7 +1014,7 @@ export default function DetailsModal({
       await deleteleaveDays()
 
       // Update data in redux
-      const items: DocumentTypes[] = [...globallist]
+      const items = [...globallist]
       const updatedData = { ...newData, id: documentData.id }
       const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
@@ -1028,19 +1058,18 @@ export default function DetailsModal({
   const fetchAttachments = async () => {
     setLoadingReplies(true)
 
-    const { data, error }: { data: AttachmentTypes[] | []; error: unknown } =
-      await supabase.storage
-        .from('hrm_documents')
-        .list(`requests/${documentData.id}`, {
-          limit: 100,
-          offset: 0,
-          sortBy: { column: 'name', order: 'asc' }
-        })
+    const { data, error } = await supabase.storage
+      .from('hrm_documents')
+      .list(`requests/${documentData.id}`, {
+        limit: 100,
+        offset: 0,
+        sortBy: { column: 'name', order: 'asc' }
+      })
 
     if (error) console.error(error)
     setLoadingReplies(false)
 
-    setAttachments(data)
+    setAttachments(data ?? [])
   }
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
@@ -1072,19 +1101,27 @@ export default function DetailsModal({
     setUploading(true)
 
     // Upload attachments
-    await Promise.all(
-      selectedImages.map(async (file: { name: string }) => {
+    // Ensure selectedImages is an array of File objects
+    const uploads = await Promise.all(
+      selectedImages.map(async (file: File) => {
         const { error } = await supabase.storage
           .from('hrm_documents')
           .upload(`requests/${id}/${file.name}`, file)
 
         if (error) {
-          console.log(error)
-        } else {
-          newAttachments.push({ name: file.name })
+          console.error(`Failed to upload ${file.name}:`, error.message)
+          return null
         }
+
+        return { name: file.name }
       })
     )
+
+    // Filter out failed uploads and update attachments
+    const successfulUploads = uploads.filter(
+      (file): file is { name: string } => file !== null
+    )
+    newAttachments.push(...successfulUploads)
 
     setSelectedImages([])
     setUploading(false)
@@ -1138,25 +1175,25 @@ export default function DetailsModal({
 
   useEffect(() => {
     const checkedFollowStatus = async () => {
-      const { count }: { count: number } = await supabase
+      const { count } = await supabase
         .from('hrm_tracker_followers')
         .select('*', { count: 'exact' })
         .eq('user_id', user.id)
         .eq('tracker_id', documentData.id)
 
-      if (count > 0) {
+      if (count && count > 0) {
         setHideFollowButton(true)
       }
     }
 
     const checkedIfStickyStatus = async () => {
-      const { count }: { count: number } = await supabase
+      const { count } = await supabase
         .from('hrm_request_tracker_stickies')
         .select('*', { count: 'exact' })
         .eq('user_id', user.id)
         .eq('tracker_id', documentData.id)
 
-      if (count > 0) {
+      if (count && count > 0) {
         setHideStickyButton(true)
       }
     }
@@ -1230,7 +1267,7 @@ export default function DetailsModal({
           <div className="flex space-x-2 items-center justify-between border-b p-4 bg-orange-50">
             <div className="w-full">
               {/* Cancel Request */}
-              {documentData.created_by === session.user.id &&
+              {documentData.created_by === session?.user.id &&
                 documentData.current_status !== 'Approved' &&
                 documentData.current_status !== 'Disapproved' &&
                 documentData.current_status !== 'Cancelled' && (
@@ -1252,8 +1289,8 @@ export default function DetailsModal({
                 )}
               {/* Recommending Approval */}
               {
-                // documentData.current_approver_id !== session.user.id &&
-                documentData.receiver_id === session.user.id &&
+                // documentData.current_approver_id !== session?.user.id &&
+                documentData.receiver_id === session?.user.id &&
                   documentData.current_status !== 'Approval Recommended' &&
                   documentData.current_status !== 'Approved' &&
                   documentData.current_status !== 'Disapproved' &&
@@ -1285,13 +1322,13 @@ export default function DetailsModal({
                   )
               }
               {/* Final Approval */}
-              {documentData.receiver_id === session.user.id &&
+              {documentData.receiver_id === session?.user.id &&
                 (documentData.current_status === 'Approval Recommended' ||
                   hasAccess('sds') ||
                   hasAccess('asds')) &&
                 (hasAccess('sds') ||
                   hasAccess('asds') ||
-                  session.user.email === 'berlcamp@gmail.com') && (
+                  session?.user.email === 'berlcamp@gmail.com') && (
                   <div className="mb-6">
                     <div className="space-x-2">
                       <CustomButton
@@ -1321,7 +1358,7 @@ export default function DetailsModal({
                   </div>
                 )}
               {/* Forward */}
-              {((documentData.receiver_id === session.user.id &&
+              {((documentData.receiver_id === session?.user.id &&
                 documentData.current_status !== 'Disapproved' &&
                 documentData.current_status !== 'Cancelled' &&
                 documentData.current_status !== 'Approved') ||
@@ -1334,7 +1371,7 @@ export default function DetailsModal({
                   <div className="flex w-full space-x-2">
                     <SearchUserInput
                       isMultiple={false}
-                      excludedIds={[session.user.id]}
+                      excludedIds={session ? [session.user.id] : []}
                       classNames="w-1/2"
                       handleSelectedUsers={handleSelectedUsers}
                     />

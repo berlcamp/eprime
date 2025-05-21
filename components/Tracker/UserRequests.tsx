@@ -231,7 +231,7 @@ export default function UserRequests({
         <>
           <div className="app__title">
             <Title title="Requests" />
-            {userId === session.user.id && (
+            {userId === session?.user.id && (
               <CustomButton
                 containerStyles="app__btn_green"
                 title="Create New Request"

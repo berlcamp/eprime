@@ -149,7 +149,7 @@ export default function Promotions({ userId }: { userId: string }) {
                     <td className="w-6 pl-4 app__td"></td>
                     <th className="app__td">
                       {item.status !== 'Approved' &&
-                        session.user.id === userId && (
+                        session?.user.id === userId && (
                           <CustomButton
                             btnType="button"
                             title="Supporting Documents"

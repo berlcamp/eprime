@@ -221,7 +221,7 @@ export default function Other({ userId }: { userId: string }) {
                       <tr key={index} className="app__tr">
                         <td className="app__td">{item.title}</td>
                         <td className="app__td">
-                          {userId === session.user.id && (
+                          {userId === session?.user.id && (
                             <CustomButton
                               containerStyles="app__btn_red"
                               title="Remove"
@@ -237,7 +237,7 @@ export default function Other({ userId }: { userId: string }) {
               )}
             </div>
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
                 <form
@@ -312,7 +312,7 @@ export default function Other({ userId }: { userId: string }) {
                       <tr key={index} className="app__tr">
                         <td className="app__td">{item.title}</td>
                         <td className="app__td">
-                          {userId === session.user.id && (
+                          {userId === session?.user.id && (
                             <CustomButton
                               containerStyles="app__btn_red"
                               title="Remove"
@@ -328,7 +328,7 @@ export default function Other({ userId }: { userId: string }) {
               )}
             </div>
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
                 <form
@@ -407,7 +407,7 @@ export default function Other({ userId }: { userId: string }) {
                       <tr key={index} className="app__tr">
                         <td className="app__td">{item.title}</td>
                         <td className="app__td">
-                          {userId === session.user.id && (
+                          {userId === session?.user.id && (
                             <CustomButton
                               containerStyles="app__btn_red"
                               title="Remove"
@@ -423,7 +423,7 @@ export default function Other({ userId }: { userId: string }) {
               )}
             </div>
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
                 <form
@@ -477,7 +477,7 @@ export default function Other({ userId }: { userId: string }) {
               </div>
             </>
           )}
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <>
               <hr className="my-6 mx-4" />
               <form onSubmit={handleSubmit4(onSubmit)} className="w-full">

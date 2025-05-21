@@ -189,7 +189,10 @@ export default function Page() {
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
-  if (!hasAccess('records') && !superAdmins.includes(session.user.email)) {
+  if (
+    !hasAccess('records') &&
+    !superAdmins.includes(session?.user.email ?? '')
+  ) {
     return <Unauthorized />
   }
 

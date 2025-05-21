@@ -95,7 +95,7 @@ const ApplicantDetails = ({
         .select()
         .eq('applicant_id', applicantData.id)
 
-      setApplicantQualifications(data)
+      setApplicantQualifications(data ?? [])
     }
 
     const fetchRankingQualificationsData = async () => {
@@ -104,7 +104,7 @@ const ApplicantDetails = ({
         .select()
         .eq('ranking_id', applicantData.ranking_id)
 
-      setRankingQualifications(data)
+      setRankingQualifications(data ?? [])
     }
 
     const fetchPreviousQualificationsData = async () => {
@@ -149,7 +149,7 @@ const ApplicantDetails = ({
         .from('hrm_ranking_evaluators')
         .select()
         .eq('ranking_id', applicantData.ranking_id)
-      setEvaluators(evaluatorsData)
+      setEvaluators(evaluatorsData ?? [])
     }
 
     void fetchQualificationsData()
@@ -334,7 +334,7 @@ const ApplicantDetails = ({
                                         {evaluators.some(
                                           (evaluator) =>
                                             evaluator.user_id ===
-                                            session.user.id
+                                            session?.user.id
                                         ) && (
                                           <div className="flex space-x-2">
                                             <CustomButton
@@ -446,7 +446,7 @@ const ApplicantDetails = ({
                 )}
               <div className="mt-8 text-center">IER Data</div>
               {evaluators.some(
-                (evaluator) => evaluator.user_id === session.user.id
+                (evaluator) => evaluator.user_id === session?.user.id
               ) && (
                 <div className="m-4 p-4 text-sm border grid md:grid-cols-2 gap-2 bg-gray-100">
                   <IerInput
@@ -458,7 +458,7 @@ const ApplicantDetails = ({
               <div className="m-4">
                 <IerData
                   canDelete={evaluators.some(
-                    (evaluator) => evaluator.user_id === session.user.id
+                    (evaluator) => evaluator.user_id === session?.user.id
                   )}
                   refreshIer={refreshIer}
                   applicantId={applicantData.id}

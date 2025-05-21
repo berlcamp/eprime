@@ -24,7 +24,7 @@ function StatusFlow({
         )
         .eq('applicant_id', documentId)
 
-      setFlowList(data)
+      setFlowList(data ?? [])
     }
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps

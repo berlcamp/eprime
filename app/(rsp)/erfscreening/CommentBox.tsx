@@ -19,7 +19,7 @@ export default function CommentBox({ reply, document }: ModalProps) {
   const [saving, setSaving] = useState(false)
 
   const user: Employee = systemUsers.find(
-    (u: { id: string }) => u.id === session.user.id
+    (u: { id: string }) => u.id === session?.user.id
   )
 
   // Redux staff
@@ -44,7 +44,7 @@ export default function CommentBox({ reply, document }: ModalProps) {
       // Insert into reply to database table
       const commentData = {
         remarks_id: reply.id,
-        sender_id: session.user.id,
+        sender_id: session?.user.id,
         message: comment
       }
       const { data, error } = await supabase
@@ -58,7 +58,7 @@ export default function CommentBox({ reply, document }: ModalProps) {
       }
 
       const user: Employee = systemUsers.find(
-        (u: { id: string }) => u.id === session.user.id
+        (u: { id: string }) => u.id === session?.user.id
       )
 
       // Update data in remarks redux

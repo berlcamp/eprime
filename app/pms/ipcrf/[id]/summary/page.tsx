@@ -66,7 +66,7 @@ export default function IPCRFSummaryPage() {
           .from('pms_ipcrf_template_competencies')
           .select(
             `
-            id,
+            *,
             competency:competency_id (
               id,
               title,
@@ -77,7 +77,7 @@ export default function IPCRFSummaryPage() {
           .eq('ipcrf_template_id', ipcrf.ipcrf_template_id),
         supabase
           .from('pms_ipcrf_competency_ratings')
-          .select('competency_item_id')
+          .select()
           .eq('ipcrf_id', ipcrfId)
           .eq('rater_type', 'self')
           .eq('period', period)

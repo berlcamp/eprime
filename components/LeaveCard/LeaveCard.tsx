@@ -113,7 +113,7 @@ export default function LeaveCard({ userId, userData }: PageProps) {
         remarks: formdata.remarks,
         user_id: userId,
         particulars,
-        updated_by: session.user.id
+        updated_by: session?.user.id
       }
 
       const { error } = await supabase

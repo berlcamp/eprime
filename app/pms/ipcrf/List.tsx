@@ -96,8 +96,8 @@ export const List = () => {
                   >
                     <Menu.Items className="app__dropdown_items">
                       <div className="py-1">
-                        {(session.user.id === item.user_id ||
-                          session.user.id === item.rater_id) && (
+                        {(session?.user.id === item.user_id ||
+                          session?.user.id === item.rater_id) && (
                           <Menu.Item>
                             <Link
                               href={`/pms/ipcrf/${item.id}/rates`}
@@ -139,7 +139,7 @@ export const List = () => {
                             <span>Individual Development Plan</span>
                           </Link>
                         </Menu.Item>
-                        {session.user.id === item.user_id && (
+                        {session?.user.id === item.user_id && (
                           <Menu.Item>
                             <div
                               onClick={() => handleDeleteConfirmation(item)}

@@ -265,7 +265,7 @@ export default function ProfileDashboard({
               )}
             </div>
           </div>
-          {userId === session.user.id && (
+          {userId === session?.user.id && (
             <div className="container mx-auto p-2 lg:grid lg:grid-cols-1 lg:gap-2">
               <div className="bg-white p-4 rounded-md shadow-md mb-4">
                 <h2 className="text-sm font-semibold mb-4 text-gray-600">
