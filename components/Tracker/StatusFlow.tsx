@@ -91,7 +91,7 @@ function StatusFlow({
                     item.hrm_tracker_logs.map((log, index) => (
                       <div key={index} className="text-[11px]">
                         {log.message === 'Approval Recommended' && (
-                          <span className="text-green-700 px-1 bg-green-100 border border-green-500 font-medium">
+                          <span className="app__status_green">
                             {log.message}
                           </span>
                         )}

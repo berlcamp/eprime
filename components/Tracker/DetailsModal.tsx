@@ -1415,28 +1415,28 @@ export default function DetailsModal({
                         <td>
                           {documentData.current_status ===
                             'For Verification' && (
-                            <span className="text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium text-sm">
+                            <span className="app__status_orange">
                               {documentData.current_status}
                             </span>
                           )}
                           {documentData.current_status ===
                             'Approval Recommended' && (
-                            <span className="text-green-700 px-1 bg-green-100 border border-green-500 font-medium text-sm">
+                            <span className="app__status_green">
                               {documentData.current_status}
                             </span>
                           )}
                           {documentData.current_status === 'Cancelled' && (
-                            <span className="text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium text-sm">
+                            <span className="app__status_blue">
                               {documentData.current_status}
                             </span>
                           )}
                           {documentData.current_status === 'Approved' && (
-                            <span className="text-green-900 px-1 bg-green-300 border border-green-700 font-medium text-sm">
+                            <span className="app__status_green">
                               {documentData.current_status}
                             </span>
                           )}
                           {documentData.current_status === 'Disapproved' && (
-                            <span className="text-red-700 px-1 bg-red-100 border border-red-500 font-medium text-sm">
+                            <span className="app__status_red">
                               {documentData.current_status}
                             </span>
                           )}
