@@ -96,27 +96,25 @@ function StatusFlow({
                           </span>
                         )}
                         {log.message === 'For Reverification' && (
-                          <span className="text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium">
+                          <span className="app__status_orange">
                             {log.message}
                           </span>
                         )}
                         {log.message === 'Cancelled' && (
-                          <span className="text-blue-700 px-1 bg-blue-100 border border-blue-500 font-medium">
+                          <span className="app__status_blue">
                             {log.message}
                           </span>
                         )}
                         {log.message === 'Approved' && (
-                          <span className="text-green-900 px-1 bg-green-300 border border-green-700 font-medium">
+                          <span className="app__status_green">
                             {log.message}
                           </span>
                         )}
                         {log.message === 'Disapproved' && (
-                          <span className="text-red-700 px-1 bg-red-100 border border-red-500 font-medium">
-                            {log.message}
-                          </span>
+                          <span className="app__status_red">{log.message}</span>
                         )}
                         {log.message === 'Leave Credits Certified' && (
-                          <span className="text-orange-700 px-1 bg-orange-100 border border-orange-500 font-medium">
+                          <span className="app__status_orange">
                             {log.message}
                           </span>
                         )}
