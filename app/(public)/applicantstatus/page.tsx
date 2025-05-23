@@ -319,10 +319,7 @@ const Page: React.FC = () => {
                         Individual Evaluation Sheet (IES).
                       </Link>
                     </div>
-                    <div className="pl-4 italic">
-                      (Your Password will be EMAIL_AGE. Example,
-                      john.delacruz@gmail.com_25)
-                    </div>
+
                     <div className="mt-2">
                       2. Sign the document as confirmation.{' '}
                     </div>
