@@ -32,7 +32,7 @@ export default function Page({ params }: { params: { applicantid: string } }) {
       const expectedPassword = `${applicantData.email}_${applicantData.age}`
 
       const userPassword = prompt(
-        'Enter the Email and AGE you use during application as your password to download attachments.\nFormat: EMAIL_AGE (example johndelacruz@gmail.com_25)'
+        'Enter password to download attachments.\nFormat: EMAIL_AGE\nNote: the AGE must be your age during your application'
       )
 
       if (userPassword !== expectedPassword) {
