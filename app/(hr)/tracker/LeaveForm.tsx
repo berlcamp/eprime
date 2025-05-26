@@ -499,6 +499,25 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   }, [fileRejections])
 
   useEffect(() => {
+    if (
+      [
+        '15 days Maternity Leave Extension for Solo Parent (with pay)',
+        '7 days Additional Paternity Leave (from wife-maternity leave)'
+      ].includes(watchedType)
+    ) {
+      setWithPay(Number(watchedDays))
+      setWithoutPay(0)
+      return
+    }
+
+    if (
+      ['30 days Maternity Leave Extension (without pay)'].includes(watchedType)
+    ) {
+      setWithPay(0)
+      setWithoutPay(Number(watchedDays))
+      return
+    }
+
     let type = watchedType
     if (
       currentUser.position_type === 'Teaching' &&

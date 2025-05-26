@@ -27,6 +27,7 @@ import Filters from './Filters'
 // Types
 import type {
   DocumentTypes,
+  Office,
   PdsPersonalInfomationTypes,
   SchoolTypes,
   ServiceRecordTypes
@@ -76,7 +77,7 @@ const Page: React.FC = () => {
   const filterUrl = searchParams.get('filter')
   const isSearchView = filterUrl && filterUrl === 'search'
 
-  const { session, supabase, systemSchools } = useSupabase()
+  const { session, supabase, systemSchools, systemOffices } = useSupabase()
   const { hasAccess } = useFilter()
 
   const componentRef = React.useRef(null)
@@ -227,9 +228,16 @@ const Page: React.FC = () => {
     ? true
     : false
 
+  const isOfficeHead = systemOffices.find(
+    (office: Office) => office.head_user_id === session?.user.id
+  )
+    ? true
+    : false
+
   if (
     filterUrl === 'search' &&
     !isSchoolHead &&
+    !isOfficeHead &&
     !hasAccess('hr') &&
     !hasAccess('sds') &&
     !hasAccess('asds') &&

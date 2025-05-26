@@ -1,7 +1,7 @@
 'use client'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { SchoolTypes } from '@/types'
+import { Office, SchoolTypes } from '@/types'
 import { SearchIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -15,7 +15,7 @@ const TrackerSideBar = () => {
 
   const filter = searchParams.get('filter')
 
-  const { supabase, session, systemSchools } = useSupabase()
+  const { supabase, session, systemSchools, systemOffices } = useSupabase()
   const { hasAccess } = useFilter()
 
   // Redux staff
@@ -43,6 +43,12 @@ const TrackerSideBar = () => {
     ? true
     : false
 
+  const isOfficeHead = systemOffices.find(
+    (office: Office) => office.head_user_id === session?.user.id
+  )
+    ? true
+    : false
+
   return (
     <>
       <ul className="pt-8 mt-6 space-y-2 border-gray-700">
@@ -52,6 +58,7 @@ const TrackerSideBar = () => {
           </div>
         </li>
         {(isSchoolHead ||
+          isOfficeHead ||
           hasAccess('hr') ||
           hasAccess('sds') ||
           hasAccess('asds') ||

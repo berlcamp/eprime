@@ -311,6 +311,17 @@ export default function CreditsCertification({ requestData }: PropTypes) {
   }
 
   useEffect(() => {
+    if (
+      [
+        '15 days Maternity Leave Extension for Solo Parent (with pay)',
+        '7 days Additional Paternity Leave (from wife-maternity leave)'
+      ].includes(requestData.leave_type)
+    ) {
+      setWithPay(Number(requestData.leave_days))
+      setWithoutPay(0)
+      return
+    }
+
     const balances: Array<{
       type: string
       balance: number

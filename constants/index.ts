@@ -189,6 +189,9 @@ export const leaveTypes = [
   'Special Emergency (Calamity) Leave',
   'Adoption Leave',
   'Terminal/Monetization Leave',
+  '30 days Maternity Leave Extension (without pay)',
+  '15 days Maternity Leave Extension for Solo Parent (with pay)',
+  '7 days Additional Paternity Leave (from wife-maternity leave)',
   'Others'
 ]
 
