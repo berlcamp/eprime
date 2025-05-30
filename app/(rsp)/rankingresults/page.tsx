@@ -492,10 +492,44 @@ const Page: React.FC = () => {
                             {item.applicant.middlename}
                           </div>
                           <div className="font-light">
-                            Address: {item.applicant.address}
+                            Application Code: {item.applicant.code}
                           </div>
                           <div className="font-light">
-                            Application Code: {item.applicant.code}
+                            Age: {item.applicant.age}
+                          </div>
+                          <div className="font-light">
+                            Sex: {item.applicant.sex}
+                          </div>
+                          <div className="font-light">
+                            Civil Status: {item.applicant.civil_status}
+                          </div>
+                          <div className="font-light">
+                            Contact Number: {item.applicant.contact_number}
+                          </div>
+                          <div className="font-light">
+                            Religion: {item.applicant.religion}
+                          </div>
+                          <div className="font-light">
+                            Disability: {item.applicant.disability}
+                          </div>
+                          <div className="font-light">
+                            Special Skills: {item.applicant.special_skills}
+                          </div>
+                          <div className="font-light">
+                            Solo Parent: {item.applicant.solo_parent}
+                          </div>
+                          <div className="font-light">
+                            Member of Ethnic Group: {item.applicant.ethnicity}{' '}
+                            {item.applicant.ethnicity_detail}
+                          </div>
+                          <div className="font-light">
+                            Latin Honor: {item.applicant.latin_honor_yesno}{' '}
+                            {item.applicant.latin_honor}
+                          </div>
+                          <div className="font-light">
+                            Special Program Beneficiary?:{' '}
+                            {item.applicant.special_program_beneficiary_yesno}{' '}
+                            {item.applicant.special_program_beneficiary}
                           </div>
                           <div className="font-light">
                             Major: {item.applicant.specific_major}
