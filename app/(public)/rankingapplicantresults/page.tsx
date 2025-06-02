@@ -64,7 +64,8 @@ const Page: React.FC = () => {
                           item.type === 'CAR-RQA (Special Items)') &&
                           'Registry of Quallified Applicants'}
                         {(item.type === 'CAR (Teaching)' ||
-                          item.type === 'CAR (Non-Teaching)') &&
+                          item.type === 'CAR (Non-Teaching)' ||
+                          item.type === 'CAR (Teaching-Related)') &&
                           'Comparative Assessment Result'}
                       </Link>
                     )}

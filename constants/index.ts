@@ -107,6 +107,7 @@ export const rankingTypes = [
   'CAR-RQA (Special Items)',
   'CAR (Teaching)',
   'CAR (Non-teaching)',
+  'CAR (Teaching-Related)',
   'Reclassification'
 ]
 
