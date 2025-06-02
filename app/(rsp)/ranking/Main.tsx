@@ -410,7 +410,7 @@ const Page: React.FC = () => {
                           <span>#{item.id}</span>
                         )}
                       </td>
-                      {/* <td className="hidden md:table-cell app__td">
+                      <td className="hidden md:table-cell app__td">
                         {item.display_on_portal ? (
                           <span>
                             From{' '}
@@ -427,13 +427,13 @@ const Page: React.FC = () => {
                         ) : (
                           'No'
                         )}
-                      </td> */}
+                      </td>
                       <td className="hidden md:table-cell app__td">
                         <UserBlock user={item.chairman} />
                       </td>
-                      <td className="hidden md:table-cell app__td">
+                      {/* <td className="hidden md:table-cell app__td">
                         {format(new Date(item.created_at), 'MMM d, yyyy')}
-                      </td>
+                      </td> */}
                       <td className="hidden md:table-cell app__td">
                         {item.status === 'Open' && <span>Open</span>}
                         {item.status === 'Closed' && (
