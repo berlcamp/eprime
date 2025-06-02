@@ -824,6 +824,7 @@ export interface PdsFamilyBackgroundTypes {
 
 export interface RankingTypes {
   id: string
+  created_at: string
   type: string
   position_id: string
   position: PositionTypes

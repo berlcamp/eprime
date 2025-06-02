@@ -254,6 +254,7 @@ const Page: React.FC = () => {
                     Duration of Posting
                   </th>
                   <th className="hidden md:table-cell app__th">Chairman</th>
+                  <th className="hidden md:table-cell app__th">Date Created</th>
                   <th className="hidden md:table-cell app__th">Status</th>
                   <th className="hidden md:table-cell app__th">
                     Committee Member Action
@@ -429,6 +430,9 @@ const Page: React.FC = () => {
                       </td>
                       <td className="hidden md:table-cell app__td">
                         <UserBlock user={item.chairman} />
+                      </td>
+                      <td className="hidden md:table-cell app__td">
+                        {format(new Date(item.created_at), 'MMM d, yyyy')}
                       </td>
                       <td className="hidden md:table-cell app__td">
                         {item.status === 'Open' && <span>Open</span>}
