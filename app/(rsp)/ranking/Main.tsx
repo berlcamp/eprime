@@ -254,7 +254,7 @@ const Page: React.FC = () => {
                     Duration of Posting
                   </th>
                   <th className="hidden md:table-cell app__th">Chairman</th>
-                  <th className="hidden md:table-cell app__th">Date Created</th>
+                  {/* <th className="hidden md:table-cell app__th">Date Created</th> */}
                   <th className="hidden md:table-cell app__th">Status</th>
                   <th className="hidden md:table-cell app__th">
                     Committee Member Action
@@ -410,7 +410,7 @@ const Page: React.FC = () => {
                           <span>#{item.id}</span>
                         )}
                       </td>
-                      <td className="hidden md:table-cell app__td">
+                      {/* <td className="hidden md:table-cell app__td">
                         {item.display_on_portal ? (
                           <span>
                             From{' '}
@@ -427,7 +427,7 @@ const Page: React.FC = () => {
                         ) : (
                           'No'
                         )}
-                      </td>
+                      </td> */}
                       <td className="hidden md:table-cell app__td">
                         <UserBlock user={item.chairman} />
                       </td>
