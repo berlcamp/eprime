@@ -23,6 +23,7 @@ export const PrintLeaveForm = React.forwardRef<
       }
     })
   }
+
   return (
     <div className="invisible">
       <div ref={ref} className="w-[816px] bg-white py-2 px-4">
@@ -110,13 +111,7 @@ export const PrintLeaveForm = React.forwardRef<
                   <div className="inline-flex">
                     <span>4. POSITION: </span>
                     <span className="font-bold underline uppercase">
-                      {selectedItem.creator.hrm_item ? (
-                        <span>
-                          {selectedItem.creator.hrm_item.hrm_position?.name}
-                        </span>
-                      ) : (
-                        <span>{selectedItem.creator.hrm_positions?.name}</span>
-                      )}
+                      <span>{selectedItem.creator.hrm_positions?.name}</span>
                     </span>
                   </div>
                   <div className="inline-flex">
