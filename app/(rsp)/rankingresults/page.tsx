@@ -495,6 +495,9 @@ const Page: React.FC = () => {
                             Application Code: {item.applicant.code}
                           </div>
                           <div className="font-light">
+                            Address: {item.applicant.address}
+                          </div>
+                          <div className="font-light">
                             Age: {item.applicant.age}
                           </div>
                           <div className="font-light">
