@@ -46,7 +46,7 @@ const Page: React.FC = () => {
           }
         )
         .eq('ranking_id', filterRanking)
-        .order('lastname', { ascending: true })
+        .order('ranking_id', { ascending: true })
 
       setList(data ?? [])
     } catch (e) {

@@ -77,7 +77,6 @@ const Page: React.FC = () => {
         )
         .eq('evaluation_status', 'Qualified')
         .eq('ranking_id', filterRanking)
-        .order('ranking_id', { ascending: true })
 
       const { data, error } = await query
 
