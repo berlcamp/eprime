@@ -44,6 +44,7 @@ const Filters = ({ setFilterRanking }: FilterTypes) => {
       const { data } = await supabase
         .from('hrm_rankings')
         .select('*,position:position_id(name)')
+        .order('id', { ascending: false })
       if (data) {
         setRankings(data)
       }

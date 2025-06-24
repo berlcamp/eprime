@@ -47,6 +47,7 @@ const Filters = ({ setFilterRanking }: FilterTypes) => {
           '*,position:position_id(name),committees:hrm_ranking_committees(*)'
         )
         .eq('status', 'Closed')
+        .order('id', { ascending: false })
       if (data) {
         // Filter rankings where majority of committee members have "Confirmed" status
         const filteredRankings = data.filter((ranking: RankingTypes) => {

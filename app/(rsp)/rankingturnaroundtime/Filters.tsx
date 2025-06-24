@@ -45,6 +45,7 @@ const Filters = ({ setFilterRanking }: FilterTypes) => {
         .from('hrm_rankings')
         .select('*,position:position_id(name)')
         .eq('status', 'Closed')
+        .order('id', { ascending: false })
       if (data) {
         setRankings(data)
       }
