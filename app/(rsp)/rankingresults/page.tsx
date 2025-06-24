@@ -171,6 +171,10 @@ const Page: React.FC = () => {
       const filteredArr = originalList.filter(
         (item) => item.applicant.specific_major === searchTerm
       )
+      // Add index "no" starting from 1
+      filteredArr.forEach((item, index) => {
+        item.no = index + 1
+      })
       setList(filteredArr)
     } else {
       setList(originalList)
