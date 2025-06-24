@@ -28,6 +28,7 @@ import { CheckIcon, EyeIcon } from 'lucide-react'
 import Image from 'next/image'
 
 interface ListTypes {
+  no?: number
   applicant: ApplicantTypes
   accumulated_points: Record<string, number> | null
   overall_score: string
@@ -109,6 +110,11 @@ const Page: React.FC = () => {
             const scoreA = parseFloat(a.overall_score || '0')
             const scoreB = parseFloat(b.overall_score || '0')
             return scoreB - scoreA // Sort in descending order
+          })
+
+          // Add index "no" starting from 1
+          structguredData.forEach((item, index) => {
+            item.no = index + 1
           })
 
           // Extract unique majors using Array.from() to avoid spread operator issues
@@ -435,6 +441,7 @@ const Page: React.FC = () => {
                 <thead className="app__thead">
                   <tr>
                     <th className="app__th pl-4"></th>
+                    <th className="app__th pl-4">Rank</th>
                     <th className="app__th w-[300px]">Applicant</th>
                     <th className="app__th w-40"></th>
                     <th className="app__th">Accumulated Points</th>
@@ -485,6 +492,7 @@ const Page: React.FC = () => {
                             </Transition>
                           </Menu>
                         </td>
+                        <td className="w-6 pl-4 app__td text-lg">{item.no}</td>
                         <th className="app__th_firstcol">
                           <div className="font-medium">
                             {item.applicant.lastname},{' '}
