@@ -191,19 +191,43 @@ export async function IesAttachment(item: ListTypes) {
   tableBody.push(['TOTAL', '100', '', '', item.overall_score])
 
   // Table Content
+  // autoTable(doc, {
+  //   startY: y,
+  //   head: tableHeaders,
+  //   body: tableBody,
+  //   theme: 'grid', // Ensures grid-like borders
+  //   styles: {
+  //     fontSize: 10,
+  //     lineWidth: 0.3,
+  //     lineColor: [0, 0, 0]
+  //   }, // Black border for all cells
+  //   headStyles: { fillColor: [102, 204, 0], textColor: [0, 0, 0] },
+  //   didParseCell: function (data) {
+  //     const rowData = data.row.raw as string[] // Explicitly assert as an array
+  //     if (rowData && rowData[0] === 'TOTAL') {
+  //       data.cell.styles.fontStyle = 'bold'
+  //       data.cell.styles.textColor = [0, 0, 0]
+  //     }
+  //   }
+  // })
   autoTable(doc, {
     startY: y,
     head: tableHeaders,
     body: tableBody,
-    theme: 'grid', // Ensures grid-like borders
+    theme: 'grid',
     styles: {
-      fontSize: 10,
+      fontSize: 9, // Set font size to 9px
       lineWidth: 0.3,
-      lineColor: [0, 0, 0]
-    }, // Black border for all cells
-    headStyles: { fillColor: [102, 204, 0], textColor: [0, 0, 0] },
+      lineColor: [0, 0, 0],
+      cellPadding: { top: 1, bottom: 1, left: 2, right: 2 } // Reduce vertical padding
+    },
+    headStyles: {
+      fillColor: [102, 204, 0],
+      textColor: [0, 0, 0],
+      cellPadding: { top: 1, bottom: 1, left: 2, right: 2 } // Also apply to head
+    },
     didParseCell: function (data) {
-      const rowData = data.row.raw as string[] // Explicitly assert as an array
+      const rowData = data.row.raw as string[]
       if (rowData && rowData[0] === 'TOTAL') {
         data.cell.styles.fontStyle = 'bold'
         data.cell.styles.textColor = [0, 0, 0]
