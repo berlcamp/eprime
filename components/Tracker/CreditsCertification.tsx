@@ -1158,7 +1158,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                   Absence without Pay: 0
                 </div>
                 <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-                  Monetization: {documentData.leave_days} days
+                  {documentData.leave_other_purpose ===
+                  'Monetization of Leave Credits'
+                    ? 'Monetization'
+                    : 'Terminal'}
+                  : {documentData.leave_days} days
                 </div>
               </>
             ) : (
