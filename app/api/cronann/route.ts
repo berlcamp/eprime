@@ -19,6 +19,7 @@ export async function GET() {
     )
 
     if (incrementError) {
+      console.log('incrementError', incrementError)
       throw new Error(incrementError.message)
     }
 

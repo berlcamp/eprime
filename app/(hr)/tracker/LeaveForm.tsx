@@ -221,8 +221,8 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         throw new Error(error.message)
       }
 
-      // Generate an array of all dates in the range
-      if (watchedType !== 'Terminal/Monetization Leave') {
+      // Generate an array of all dates in the range zzz
+      if (watchedOtherPurpose !== 'Monetization of Leave Credits') {
         let dateRange = []
         if (formdata.leave_from !== '' && formdata.leave_to !== '') {
           // dateRange = eachDayOfInterval({
@@ -773,12 +773,10 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
-                    <div className="app__label_standard">
-                      Other Purpose (Optional)
-                    </div>
+                    <div className="app__label_standard">Other Purpose</div>
                     <div>
                       <select
-                        {...register('other_purpose')}
+                        {...register('other_purpose', { required: true })}
                         className="app__select_standard"
                       >
                         <option value="">Choose</option>
@@ -787,11 +785,16 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                         </option>
                         <option value="Terminal Leave">Terminal Leave</option>
                       </select>
+                      {errors.other_purpose && (
+                        <div className="app__error_message">
+                          Purpose is required
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
                 {watchedType === 'Terminal/Monetization Leave' &&
-                  watchedOtherPurpose !== '' && (
+                  watchedOtherPurpose === 'Monetization of Leave Credits' && (
                     <div className="app__form_field_container">
                       <LeaveBalanceBoxes user={currentUser} />
                     </div>
@@ -822,7 +825,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
             )}
 
             {watchedType === 'Terminal/Monetization Leave' &&
-              watchedOtherPurpose !== '' && (
+              watchedOtherPurpose === 'Monetization of Leave Credits' && (
                 <div className="">
                   <div className="app__label_standard mb-0!">
                     Money Value:{' '}
@@ -842,7 +845,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
           {/* End First Column */}
           {/* Begin Second Column */}
           <div className="w-full px-4">
-            {watchedType !== 'Terminal/Monetization Leave' && (
+            {watchedOtherPurpose !== 'Monetization of Leave Credits' && (
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Inclusive Date/s</div>
@@ -965,7 +968,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                   </span>
                 </div>
                 <div>
-                  {watchedType !== 'Terminal/Monetization Leave' ? (
+                  {watchedOtherPurpose !== 'Monetization of Leave Credits' ? (
                     <input
                       {...register('days', { required: true })}
                       type="hidden"
