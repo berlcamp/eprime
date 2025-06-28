@@ -1152,18 +1152,21 @@ export default function CreditsCertification({ requestData }: PropTypes) {
             {documentData.leave_type === 'Terminal/Monetization Leave' ? (
               <>
                 <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-                  Absence with Pay: 0
+                  Absence with Pay:{' '}
+                  {documentData.leave_other_purpose === 'Terminal Leave' ? (
+                    <span> {documentData.leave_days}</span>
+                  ) : (
+                    <span>0</span>
+                  )}
                 </div>
                 <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
                   Absence without Pay: 0
                 </div>
-                <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-                  {documentData.leave_other_purpose ===
-                  'Monetization of Leave Credits'
-                    ? 'Monetization'
-                    : 'Terminal'}
-                  : {documentData.leave_days} days
-                </div>
+                {documentData.leave_other_purpose !== 'Terminal Leave' && (
+                  <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
+                    Monetization: {documentData.leave_days} days
+                  </div>
+                )}
               </>
             ) : (
               <>
