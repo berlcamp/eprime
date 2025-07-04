@@ -24,11 +24,11 @@ export const RankingAppointmentTemplate: React.FC<
         We are pleased to inform you that after careful evaluation and
         deliberation of your qualifications during the ranking and selection
         process, you have been appointed to the position of {position} at
-        Department of Education - sBayugan City Division.
+        Department of Education - Bayugan City Division.
       </div>
       <br />
       <div>
-        Your dedication, competence, and commitment to the Department${"'"}s
+        Your dedication, competence, and commitment to the Department{"'"}s
         vision of delivering quality, accessible, relevant, and liberating basic
         education have been duly recognized. We are confident that you will
         continue to uphold the standards of excellence expected in this role and
@@ -48,13 +48,9 @@ export const RankingAppointmentTemplate: React.FC<
       <br />
       <div>Best regards,</div>
       <br />
-      <br />
       <div>Ma Teresa M. Real</div>
-      <br />
       <div>OIC-Schools Division Superintendent</div>
-      <br />
       <div>Bayugan City DivisionDepartment of Education</div>
-      <br />
     </div>
   )
 }
