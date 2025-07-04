@@ -24,6 +24,7 @@ import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
 import { logError } from '@/utils/fetchApi'
+import axios from 'axios'
 import { CheckIcon, EyeIcon } from 'lucide-react'
 import Image from 'next/image'
 
@@ -72,7 +73,7 @@ const Page: React.FC = () => {
       const query = supabase
         .from('hrm_ranking_applicants')
         .select(
-          '*, hrm_item:item_id(implementing_unit:implementing_unit_id(*),hrm_position:position_id(*)),ranking:ranking_id(type,passing_score,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, signature_path, hrm_positions:position_id(name)), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          '*, hrm_item:item_id(implementing_unit:implementing_unit_id(*),hrm_position:position_id(*)),ranking:ranking_id(type,year,passing_score,position:position_id(name),committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, signature_path, hrm_positions:position_id(name)), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
           {
             count: 'exact'
           }
@@ -219,6 +220,37 @@ const Page: React.FC = () => {
         )
         throw new Error(error.message)
       }
+
+      // Email the applicant on the server side
+      axios
+        .post('/api/appointemail', {
+          position: selectedItem?.ranking?.position?.name,
+          type: selectedItem?.ranking?.type,
+          code: selectedItem.code,
+          email: selectedItem.email,
+          firstname: selectedItem.firstname,
+          middlename: selectedItem.middlename,
+          lastname: selectedItem.lastname
+        })
+        .then(function () {
+          //
+        })
+        .catch(function (error) {
+          void logError(
+            'Approving registration',
+            'hrm_registrations',
+            JSON.stringify({
+              position: selectedItem?.ranking?.position?.name,
+              type: selectedItem?.ranking?.type,
+              code: selectedItem.code,
+              firstname: selectedItem.firstname,
+              middlename: selectedItem.middlename,
+              lastname: selectedItem.lastname
+            }),
+            JSON.stringify(error)
+          )
+          console.error(error)
+        })
 
       // pop up the success message
       setToast('success', 'Successfully saved.')
