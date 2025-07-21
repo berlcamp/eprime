@@ -1295,7 +1295,8 @@ export default function DetailsModal({
                   documentData.current_status !== 'Approved' &&
                   documentData.current_status !== 'Disapproved' &&
                   documentData.current_status !== 'Cancelled' &&
-                  !hasAccess('sds') && (
+                  !hasAccess('sds') &&
+                  !hasAccess('temporary_approver') && (
                     <div className="mb-6">
                       <div className="space-x-2">
                         <CustomButton
@@ -1323,10 +1324,9 @@ export default function DetailsModal({
               }
               {/* Final Approval */}
               {documentData.receiver_id === session?.user.id &&
-                (documentData.current_status === 'Approval Recommended' ||
+                documentData.current_status === 'Approval Recommended' &&
+                (hasAccess('temporary_approver') ||
                   hasAccess('sds') ||
-                  hasAccess('asds')) &&
-                (hasAccess('sds') ||
                   hasAccess('asds') ||
                   session?.user.email === 'berlcamp@gmail.com') && (
                   <div className="mb-6">

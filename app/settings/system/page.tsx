@@ -144,6 +144,12 @@ const Page: React.FC = () => {
                   users={users}
                   title="Current ASDS"
                 />
+                <ChooseUsers
+                  multiple={false}
+                  type="temporary_approver"
+                  users={users}
+                  title="Temporary Request Approver"
+                />
                 {/* L&D */}
                 <ChooseUsers
                   multiple={true}
