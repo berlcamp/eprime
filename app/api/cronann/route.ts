@@ -14,21 +14,11 @@ export async function GET() {
 
   try {
     // Monthly VL/SL increments
-    const { data, error: incrementError } = await supabase.rpc(
-      'increment_monthly_leave_credits'
-    )
+    console.log('Calling increment_monthly_leave_credits...')
+    const { error } = await supabase.rpc('increment_monthly_leave_credits')
+    if (error) throw new Error(error.message)
 
-    if (incrementError) {
-      console.log('incrementError', incrementError)
-      throw new Error(incrementError.message)
-    }
-
-    console.log('data', data)
-
-    if (data[0].status && data[0].status === 'Error') {
-      throw new Error(`Increment failed: ${data[0].status}`)
-    }
-
+    console.log('increment_monthly_leave_credits succeeded')
     // CTO expiration cron
     const { error: ctoError } = await supabase.rpc('automate_cto_expiration')
     if (ctoError) {
