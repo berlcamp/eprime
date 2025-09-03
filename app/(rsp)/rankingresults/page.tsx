@@ -399,6 +399,7 @@ const Page: React.FC = () => {
         <style>
           body { font-family: "Times New Roman", serif; line-height: 1.6; }
           header { padding:5px; text-align:center; border-bottom: 1px solid #000 }
+          .separator { padding:5px; border-bottom: 1px solid #000 }
           header img { height: 120px; }
           header title { margin:0; font-size:12px; font-weight:bold; }
           h2 { text-align: center; text-decoration: underline; margin-top: 30px; }
@@ -448,23 +449,25 @@ const Page: React.FC = () => {
         <div><b>Office of the Schools Division Superintendent</b></div>
         <div class="meta">
       
-        <div class="label">From:</div>
-        <div class="value">MA. TERESA M. REAL</div>
-        <div class="sub">OIC-Schools Division Superintendent</div>
+          <div class="label">From:</div>
+          <div class="value">MA. TERESA M. REAL</div>
+          <div class="sub">OIC-Schools Division Superintendent</div>
 
-        <div class="label">To:</div>
-        <div class="value">
-          ${applicant.firstname} ${applicant.middlename || ''} ${
+          <div class="label">To:</div>
+          <div class="value">
+            ${applicant.firstname} ${applicant.middlename || ''} ${
       applicant.lastname
     }
+          </div>
+
+          <div class="label">Date:</div>
+          <div class="value">${selectedDate}</div>
+
+          <div class="label">Subject:</div>
+          <div class="value">ADVICE ORDER</div>
         </div>
 
-        <div class="label">Date:</div>
-        <div class="value">${selectedDate}</div>
-
-        <div class="label">Subject:</div>
-        <div class="value">ADVICE ORDER</div>
-      </div>
+        <div class="separator"></div>
 
         <p>
           You are hereby advised of your item as <b>${
