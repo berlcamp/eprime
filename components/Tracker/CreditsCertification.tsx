@@ -1153,7 +1153,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
               <>
                 <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
                   Absence with Pay:{' '}
-                  {documentData.leave_other_purpose === 'Terminal Leave' ? (
+                  {documentData.leave_other_purpose === 'xTerminal Leave' ? (
                     <span> {documentData.leave_days}</span>
                   ) : (
                     <span>0</span>

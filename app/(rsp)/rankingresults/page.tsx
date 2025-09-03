@@ -21,6 +21,7 @@ import type { ApplicantTypes, RankingTypes } from '@/types'
 
 import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
+import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
 import { logError } from '@/utils/fetchApi'
@@ -51,6 +52,10 @@ const Page: React.FC = () => {
   const [originalList, setOriginalList] = useState<ListTypes[] | []>([])
   const [filterRanking, setFilterRanking] = useState<string>('')
   const [filterDisplay, setFilterDisplay] = useState<string>('')
+
+  const [selectedDate, setSelectedDate] = useState<string>('')
+  const [selectedLocation, setSelectedLocation] = useState<string>('')
+  const [isAdviseOrderOpen, setIsAdviseOrderOpen] = useState(false)
 
   const [rankingDetails, setRankingDetails] = useState<RankingTypes | null>(
     null
@@ -357,6 +362,159 @@ const Page: React.FC = () => {
     setDownloading(false)
   }
 
+  // Preload all images before printing
+  const preloadImages = (urls: string[]) => {
+    return Promise.all(
+      urls.map(
+        (url) =>
+          new Promise<void>((resolve) => {
+            const img = new window.Image() // ✅ explicitly use DOM Image
+            img.onload = () => resolve()
+            img.src = url
+          })
+      )
+    )
+  }
+
+  const handlePrintMemorandum = async (
+    applicant: ApplicantTypes,
+    date: string
+  ) => {
+    // ✅ Preload all images before printing
+    await preloadImages(['/logos/header.png', '/logos/footer.png'])
+
+    const selectedDate = new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }) // ⬅ replace with date from modal if available
+
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+
+    printWindow.document.write(`
+    <html>
+      <head>
+        <title>DepEd Memorandum</title>
+        <style>
+          body { font-family: "Times New Roman", serif; line-height: 1.6; }
+          header { padding:5px; text-align:center; border-bottom: 1px solid #000 }
+          header img { height: 120px; }
+          header title { margin:0; font-size:12px; font-weight:bold; }
+          h2 { text-align: center; text-decoration: underline; margin-top: 30px; }
+          /* ✅ Meta section alignment */
+      .meta {
+        margin: 20px 0;
+        display: grid;
+        grid-template-columns: 80px 1fr;
+        row-gap: 6px;
+      }
+      .meta .label {
+        
+      }
+      .meta .value {
+        font-weight: bold;
+      }
+      .meta .sub {
+        grid-column: 2; /* indent under value */
+        font-style: italic;
+        font-size: 14px;
+        margin-top: -4px;
+      }
+          footer { border-top: 1px solid #000; padding:5px; }
+
+.conformed-label {
+  text-align: right;
+    
+  margin-bottom: 30px;
+}
+
+.signature-block {
+  text-align: right;
+
+}
+
+.sig-label {
+  margin-top: 4px;
+  font-size: 14px;
+}
+        </style>
+      </head>
+      <body>
+        <header>
+          <img src="/logos/header.png" alt="DepEd Logo" />
+        </header>
+
+        <div><b>Office of the Schools Division Superintendent</b></div>
+        <div class="meta">
+      
+        <div class="label">From:</div>
+        <div class="value">MA. TERESA M. REAL</div>
+        <div class="sub">OIC-Schools Division Superintendent</div>
+
+        <div class="label">To:</div>
+        <div class="value">
+          ${applicant.firstname} ${applicant.middlename || ''} ${
+      applicant.lastname
+    }
+        </div>
+
+        <div class="label">Date:</div>
+        <div class="value">${selectedDate}</div>
+
+        <div class="label">Subject:</div>
+        <div class="value">ADVICE ORDER</div>
+      </div>
+
+        <p>
+          You are hereby advised of your item as <b>${
+            selectedItem?.ranking?.position?.name
+          }</b> of 
+          <b>${selectedLocation}</b> effective immediately.
+        </p>
+
+        <p>
+          As such you are to perform duties and responsibilities concomitant to your assignment.
+        </p>
+
+        <p>
+          You are further advised to report immediately to the School Head for specific instructions.
+        </p>
+
+        <p>Please be guided accordingly.</p>
+
+        <div class="conformed">
+  <p class="conformed-label" style="padding-right:140px;">Conformed:</p>
+  <div class="signature-block">
+    <div>
+      __________________________
+      <div class="sig-label" style="padding-right:30px;">Name & Signature</div>
+    </div>
+    <div style="margin-top:30px;">
+      ___________________
+      <div class="sig-label" style="padding-right:50px;">Date</div>
+    </div>
+  </div>
+</div>
+
+        <p><b>CC:</b><br/>
+          School Head<br/>
+          District In-Charge<br/>
+          Division Planning Officer<br/>
+          File copy
+        </p>
+
+        <footer>
+          <img src="/logos/footer.png" style="width:80%;" alt="Logo 1" />
+        </footer>
+      </body>
+    </html>
+  `)
+
+    printWindow.document.close()
+    printWindow.print()
+  }
+
   // Filter data by Display
   useEffect(() => {
     setLoading(true)
@@ -524,6 +682,19 @@ const Page: React.FC = () => {
                                     >
                                       <EyeIcon className="w-4 h-4" />
                                       <span>View Committee Points</span>
+                                    </div>
+                                  </Menu.Item>
+                                  {/* Print Memorandum */}
+                                  <Menu.Item>
+                                    <div
+                                      onClick={() => {
+                                        setIsAdviseOrderOpen(true)
+                                        setSelectedItem(item.applicant)
+                                      }}
+                                      className="app__dropdown_item space-x-2"
+                                    >
+                                      <span>🖨️</span>{' '}
+                                      <span>Print Advise Order</span>
                                     </div>
                                   </Menu.Item>
                                 </div>
@@ -702,6 +873,55 @@ const Page: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Simple modal */}
+      {isAdviseOrderOpen && selectedItem && (
+        <div className="z-50 fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg w-xl">
+            <div className="app__form_field_container">
+              <div className="w-full">
+                <div className="app__label_standard">
+                  Select Date & Assignment:
+                </div>
+                <div className="flex space-x-1">
+                  <Input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                  />
+                  <Input
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    placeholder="Assignment"
+                    className="app__input_standard"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setIsAdviseOrderOpen(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!selectedDate) {
+                    alert('Please select a date first.')
+                    return
+                  }
+                  setIsAdviseOrderOpen(false)
+                  void handlePrintMemorandum(selectedItem, selectedDate)
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Print
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Show Casted Points Modal */}
       {showCommitteePointsModal && selectedItem && (

@@ -1448,6 +1448,9 @@ export default function DetailsModal({
                         <td>
                           <span className="font-medium text-sm">
                             {documentData.reference_code}
+                            {session?.user.id ===
+                              '1a8173ad-f4c5-4869-a587-7466a1d6e951' &&
+                              documentData.id}
                           </span>
                         </td>
                       </tr>
