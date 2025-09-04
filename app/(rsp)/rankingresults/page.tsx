@@ -19,6 +19,7 @@ import Filters from './Filters'
 // Types
 import type { ApplicantTypes, RankingTypes } from '@/types'
 
+import { PrintAdviseOrder } from '@/components/Printables/PrintAdviseOrder'
 import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { Input } from '@/components/ui/input'
@@ -28,6 +29,7 @@ import { logError } from '@/utils/fetchApi'
 import axios from 'axios'
 import { CheckIcon, EyeIcon } from 'lucide-react'
 import Image from 'next/image'
+import { useReactToPrint } from 'react-to-print'
 
 interface ListTypes {
   no?: number
@@ -53,6 +55,7 @@ const Page: React.FC = () => {
   const [filterRanking, setFilterRanking] = useState<string>('')
   const [filterDisplay, setFilterDisplay] = useState<string>('')
 
+  const [selectedType, setSelectedType] = useState<string>('')
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [selectedLocation, setSelectedLocation] = useState<string>('')
   const [isAdviseOrderOpen, setIsAdviseOrderOpen] = useState(false)
@@ -67,6 +70,12 @@ const Page: React.FC = () => {
 
   const { hasAccess, setToast } = useFilter()
   const { supabase } = useSupabase()
+
+  const componentRef = React.useRef(null)
+  const printFn = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: 'request-form'
+  })
 
   const fetchData = async () => {
     if (filterRanking === '') {
@@ -376,146 +385,26 @@ const Page: React.FC = () => {
     )
   }
 
-  const handlePrintMemorandum = async (
-    applicant: ApplicantTypes,
-    date: string
-  ) => {
-    // ✅ Preload all images before printing
-    await preloadImages(['/logos/header.png', '/logos/footer.png'])
+  const handlePrint = async (item: ApplicantTypes, type: string) => {
+    await preloadImages([
+      '/deped_header.png',
+      '/logos/matatag.png',
+      '/logos/bagong.png',
+      '/logos/bayugan.png'
+    ])
 
-    const selectedDate = new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }) // ⬅ replace with date from modal if available
+    setSelectedType(type)
 
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
-
-    printWindow.document.write(`
-    <html>
-      <head>
-        <title>DepEd Memorandum</title>
-        <style>
-          body { font-family: "Times New Roman", serif; line-height: 1.6; }
-          header { padding:5px; text-align:center; border-bottom: 1px solid #000 }
-          .separator { padding:5px; border-bottom: 1px solid #000 }
-          header img { height: 120px; }
-          header title { margin:0; font-size:12px; font-weight:bold; }
-          h2 { text-align: center; text-decoration: underline; margin-top: 30px; }
-          /* ✅ Meta section alignment */
-      .meta {
-        margin: 20px 0;
-        display: grid;
-        grid-template-columns: 80px 1fr;
-        row-gap: 6px;
-      }
-      .meta .label {
-        
-      }
-      .meta .value {
-        font-weight: bold;
-      }
-      .meta .sub {
-        grid-column: 2; /* indent under value */
-        font-style: italic;
-        font-size: 14px;
-        margin-top: -4px;
-      }
-          footer { border-top: 1px solid #000; padding:5px; }
-
-.conformed-label {
-  text-align: right;
-    
-  margin-bottom: 30px;
-}
-
-.signature-block {
-  text-align: right;
-
-}
-
-.sig-label {
-  margin-top: 4px;
-  font-size: 14px;
-}
-        </style>
-      </head>
-      <body>
-        <header>
-          <img src="/logos/header.png" alt="DepEd Logo" />
-        </header>
-
-        <div><b>Office of the Schools Division Superintendent</b></div>
-        <div class="meta">
-      
-          <div class="label">From:</div>
-          <div class="value">MA. TERESA M. REAL</div>
-          <div class="sub">OIC-Schools Division Superintendent</div>
-
-          <div class="label">To:</div>
-          <div class="value">
-            ${applicant.firstname} ${applicant.middlename || ''} ${
-      applicant.lastname
-    }
-          </div>
-
-          <div class="label">Date:</div>
-          <div class="value">${selectedDate}</div>
-
-          <div class="label">Subject:</div>
-          <div class="value">ADVICE ORDER</div>
-        </div>
-
-        <div class="separator"></div>
-
-        <p>
-          You are hereby advised of your item as <b>${
-            selectedItem?.ranking?.position?.name
-          }</b> of 
-          <b>${selectedLocation}</b> effective immediately.
-        </p>
-
-        <p>
-          As such you are to perform duties and responsibilities concomitant to your assignment.
-        </p>
-
-        <p>
-          You are further advised to report immediately to the School Head for specific instructions.
-        </p>
-
-        <p>Please be guided accordingly.</p>
-
-        <div class="conformed">
-  <p class="conformed-label" style="padding-right:140px;">Conformed:</p>
-  <div class="signature-block">
-    <div>
-      __________________________
-      <div class="sig-label" style="padding-right:30px;">Name & Signature</div>
-    </div>
-    <div style="margin-top:30px;">
-      ___________________
-      <div class="sig-label" style="padding-right:50px;">Date</div>
-    </div>
-  </div>
-</div>
-
-        <p><b>CC:</b><br/>
-          School Head<br/>
-          District In-Charge<br/>
-          Division Planning Officer<br/>
-          File copy
-        </p>
-
-        <footer>
-          <img src="/logos/footer.png" style="width:80%;" alt="Logo 1" />
-        </footer>
-      </body>
-    </html>
-  `)
-
-    printWindow.document.close()
-    printWindow.print()
+    setTimeout(() => {
+      setSelectedItem({
+        ...item,
+        date: selectedDate,
+        assignment: selectedLocation
+      }) // Set the new item after a short delay
+      setTimeout(() => {
+        printFn() // Trigger the print function after re-rendering the new content
+      }, 100) // Adjust this delay if needed
+    }, 100) // This delay ensures the unmounting and re-rendering are separated
   }
 
   // Filter data by Display
@@ -877,7 +766,7 @@ const Page: React.FC = () => {
         </div>
       </div>
 
-      {/* Simple modal */}
+      {/* Advise Order Print Modal */}
       {isAdviseOrderOpen && selectedItem && (
         <div className="z-50 fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
           <div className="bg-white p-6 rounded shadow-lg w-xl">
@@ -910,12 +799,12 @@ const Page: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  if (!selectedDate) {
-                    alert('Please select a date first.')
+                  if (!selectedDate || !selectedLocation) {
+                    alert('Please select a date and assignment')
                     return
                   }
                   setIsAdviseOrderOpen(false)
-                  void handlePrintMemorandum(selectedItem, selectedDate)
+                  void handlePrint(selectedItem, 'advise-order')
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded"
               >
@@ -924,6 +813,11 @@ const Page: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Advisd Order */}
+      {selectedItem && selectedType === 'advise-order' && (
+        <PrintAdviseOrder selectedItem={selectedItem} ref={componentRef} />
       )}
 
       {/* Show Casted Points Modal */}

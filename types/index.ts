@@ -903,6 +903,9 @@ export interface ApplicantTypes {
   specific_major: string
   current_approver_id: string
 
+  date?: string
+  assignment?: string
+
   // for reclass
   professional_study: string
   professional_study_file_path: string
