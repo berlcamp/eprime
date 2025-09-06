@@ -52,8 +52,8 @@ export const PrintAdviseOrder = React.forwardRef<
               </td>
             </tr>
             <tr>
-              <td className="py-2 align-top">From</td>
-              <td className="font-bold">
+              <td className="py-2 align-top pt-6">From</td>
+              <td className="font-bold pt-6">
                 <div>: MA. TERESA M. REAL</div>
                 <div className="font-normal pl-2">
                   OIC-Schools Division Superintendent

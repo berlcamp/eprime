@@ -905,6 +905,8 @@ export interface ApplicantTypes {
 
   date?: string
   assignment?: string
+  signatory?: string
+  position?: string
 
   // for reclass
   professional_study: string

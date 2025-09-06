@@ -20,6 +20,7 @@ import Filters from './Filters'
 import type { ApplicantTypes, RankingTypes } from '@/types'
 
 import { PrintAdviseOrder } from '@/components/Printables/PrintAdviseOrder'
+import { PrintAssumption } from '@/components/Printables/PrintAssumption'
 import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { Input } from '@/components/ui/input'
@@ -30,6 +31,7 @@ import axios from 'axios'
 import { CheckIcon, EyeIcon } from 'lucide-react'
 import Image from 'next/image'
 import { useReactToPrint } from 'react-to-print'
+import AssumptionModal from './AssumptionModal'
 
 interface ListTypes {
   no?: number
@@ -59,6 +61,7 @@ const Page: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [selectedLocation, setSelectedLocation] = useState<string>('')
   const [isAdviseOrderOpen, setIsAdviseOrderOpen] = useState(false)
+  const [isAssumptionOpen, setIsAssumptionOpen] = useState(false)
 
   const [rankingDetails, setRankingDetails] = useState<RankingTypes | null>(
     null
@@ -385,7 +388,7 @@ const Page: React.FC = () => {
     )
   }
 
-  const handlePrint = async (item: ApplicantTypes, type: string) => {
+  const handlePrintAdviseOrder = async (item: ApplicantTypes, type: string) => {
     await preloadImages([
       '/deped_header.png',
       '/logos/matatag.png',
@@ -400,6 +403,36 @@ const Page: React.FC = () => {
         ...item,
         date: selectedDate,
         assignment: selectedLocation
+      }) // Set the new item after a short delay
+      setTimeout(() => {
+        printFn() // Trigger the print function after re-rendering the new content
+      }, 100) // Adjust this delay if needed
+    }, 100) // This delay ensures the unmounting and re-rendering are separated
+  }
+
+  const handlePrintAssumption = async (
+    item: ApplicantTypes,
+    date: string,
+    location: string,
+    signatory: string,
+    position: string
+  ) => {
+    await preloadImages([
+      '/deped_header.png',
+      '/logos/matatag.png',
+      '/logos/bagong.png',
+      '/logos/bayugan.png'
+    ])
+
+    setSelectedType('assumption')
+
+    setTimeout(() => {
+      setSelectedItem({
+        ...item,
+        date,
+        assignment: location,
+        signatory,
+        position
       }) // Set the new item after a short delay
       setTimeout(() => {
         printFn() // Trigger the print function after re-rendering the new content
@@ -576,7 +609,6 @@ const Page: React.FC = () => {
                                       <span>View Committee Points</span>
                                     </div>
                                   </Menu.Item>
-                                  {/* Print Memorandum */}
                                   <Menu.Item>
                                     <div
                                       onClick={() => {
@@ -587,6 +619,18 @@ const Page: React.FC = () => {
                                     >
                                       <span>🖨️</span>{' '}
                                       <span>Print Advise Order</span>
+                                    </div>
+                                  </Menu.Item>
+                                  <Menu.Item>
+                                    <div
+                                      onClick={() => {
+                                        setIsAssumptionOpen(true)
+                                        setSelectedItem(item.applicant)
+                                      }}
+                                      className="app__dropdown_item space-x-2"
+                                    >
+                                      <span>🖨️</span>{' '}
+                                      <span>Print Assumptional to Duty</span>
                                     </div>
                                   </Menu.Item>
                                 </div>
@@ -804,7 +848,7 @@ const Page: React.FC = () => {
                     return
                   }
                   setIsAdviseOrderOpen(false)
-                  void handlePrint(selectedItem, 'advise-order')
+                  void handlePrintAdviseOrder(selectedItem, 'advise-order')
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded"
               >
@@ -815,9 +859,29 @@ const Page: React.FC = () => {
         </div>
       )}
 
-      {/* Advisd Order */}
+      {/* Advise Order Print Modal */}
+      {isAssumptionOpen && selectedItem && (
+        <AssumptionModal
+          onConfirm={(date, location, signatory, position) =>
+            handlePrintAssumption(
+              selectedItem,
+              date,
+              location,
+              signatory,
+              position
+            )
+          }
+          onCancel={() => setIsAssumptionOpen(false)}
+        />
+      )}
+
+      {/* Print Advisd Order */}
       {selectedItem && selectedType === 'advise-order' && (
         <PrintAdviseOrder selectedItem={selectedItem} ref={componentRef} />
+      )}
+      {/* Print Assumption */}
+      {selectedItem && selectedType === 'assumption' && (
+        <PrintAssumption selectedItem={selectedItem} ref={componentRef} />
       )}
 
       {/* Show Casted Points Modal */}
