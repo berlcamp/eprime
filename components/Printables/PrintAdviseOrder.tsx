@@ -70,7 +70,7 @@ export const PrintAdviseOrder = React.forwardRef<
             </tr>
             <tr>
               <td className="py-2">Subject</td>
-              <td className="font-bold">: ADVISE ORDER</td>
+              <td className="font-bold">: ADVICE ORDER</td>
             </tr>
             <tr className="border-t-2 border-black">
               <td colSpan={2} className=""></td>
