@@ -34,9 +34,7 @@ const RandRSidebar = () => {
                 : ''
             }`}
           >
-            <span className="flex-1 ml-3 whitespace-nowrap">
-              Service Awards
-            </span>
+            <span className="flex-1 ml-3 whitespace-nowrap">Loyalty Award</span>
           </Link>
         </li>
         <li>

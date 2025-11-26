@@ -1,5 +1,4 @@
 'use client'
-
 import {
   CustomButton,
   DeleteModal,
@@ -23,6 +22,7 @@ import {
   TrashIcon
 } from '@heroicons/react/20/solid'
 import React, { Fragment, useEffect, useState } from 'react'
+import * as XLSX from 'xlsx'
 import Filters from './Filters'
 
 // Types
@@ -54,6 +54,7 @@ const Page: React.FC = () => {
 
   const [list, setList] = useState<NosiTypes[]>([])
   const [filterUser, setFilterUser] = useState<string>('')
+  const [filterDate, setFilterDate] = useState<string>('')
 
   const [perPageCount, setPerPageCount] = useState<number>(10)
   const [editData, setEditData] = useState<NosiTypes | null>(null)
@@ -81,7 +82,11 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchNosi({ filterUser }, perPageCount, 0)
+      const result = await fetchNosi(
+        { filterUser, filterDate },
+        perPageCount,
+        0
+      )
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -121,6 +126,47 @@ const Page: React.FC = () => {
       console.error(e)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDownloadExcel = async () => {
+    try {
+      // Fetch ALL results (not paginated)
+      const result = await fetchNosi(
+        { filterUser, filterDate },
+        999999, // large limit
+        0
+      )
+
+      const rows = result.data.map((item: any) => ({
+        Employee: item.hrm_user
+          ? `${item.hrm_user.lastname}, ${item.hrm_user.firstname} ${
+              item.hrm_user.middlename || ''
+            }`
+          : '',
+
+        'As of Date': item.as_of_date,
+        'Previous SG': item.previous_grade,
+        'Previous Step': item.previous_step,
+        'Previous Salary': Number(item.previous_amount),
+
+        'Effective Date': item.effective_date,
+        'New SG': item.new_grade,
+        'New Step': item.new_step,
+        'New Salary': Number(item.new_amount)
+      }))
+
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(rows)
+
+      // Create workbook
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'NOSI')
+
+      // Download file
+      XLSX.writeFile(workbook, 'NOSI.xlsx')
+    } catch (err) {
+      console.error('Excel download error:', err)
     }
   }
 
@@ -171,7 +217,7 @@ const Page: React.FC = () => {
     setList([])
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPageCount, filterUser])
+  }, [perPageCount, filterUser, filterDate])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -199,7 +245,19 @@ const Page: React.FC = () => {
 
           {/* Filters */}
           <div className="app__filters">
-            <Filters setFilterUser={setFilterUser} />
+            <Filters
+              setFilterUser={setFilterUser}
+              setFilterDate={setFilterDate}
+            />
+          </div>
+
+          <div className="flex p-4">
+            <CustomButton
+              title="Export to Excel"
+              containerStyles="app__btn_blue ml-auto"
+              btnType="button"
+              handleClick={handleDownloadExcel}
+            />
           </div>
 
           {/* Per Page */}

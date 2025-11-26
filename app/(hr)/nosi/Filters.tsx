@@ -7,28 +7,32 @@ import type { Employee, namesType } from '@/types'
 
 interface FilterTypes {
   setFilterUser: (employee: string) => void
+  setFilterDate: (date: string) => void
 }
 
-const Filters = ({ setFilterUser }: FilterTypes) => {
+const Filters = ({ setFilterUser, setFilterDate }: FilterTypes) => {
   const { systemUsers }: { systemUsers: Employee[] } = useSupabase()
 
   // Search employee
   const [searchHead, setSearchHead] = useState('')
+  const [adjustmentDate, setAdjustmentDate] = useState<string>('')
+
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
   const [selectedUserId, setSelectedUserId] = useState('')
 
   const handleApply = () => {
-    if (selectedUserId === '') return
+    if (selectedUserId === '' && adjustmentDate === '') return
 
     // pass filter values to parent
     setFilterUser(selectedUserId)
+    setFilterDate(adjustmentDate)
   }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (selectedUserId === '') return
+    if (selectedUserId === '' && adjustmentDate === '') return
 
     // pass filter values to parent
     setFilterUser(selectedUserId)
@@ -37,8 +41,10 @@ const Filters = ({ setFilterUser }: FilterTypes) => {
   // clear all filters
   const handleClear = () => {
     setFilterUser('')
+    setFilterDate('')
     setSelectedUserId('')
     setSelectedItems([])
+    setAdjustmentDate('')
   }
 
   // Search employees
@@ -84,50 +90,57 @@ const Filters = ({ setFilterUser }: FilterTypes) => {
           onSubmit={handleSubmit}
           className="items-center inline-flex app__filter_field_container"
         >
-          <div className="items-center space-y-1">
-            <div className="app__filter_container">
-              <UserIcon className="w-4 h-4 mr-1" />
-              {selectedItems.length > 0 &&
-                selectedItems.map((item, index) => (
-                  <div
-                    key={index}
-                    className="text-gray-500 focus:ring-0 focus:outline-none text-xs py-1 text-left inline-flex items-center dark:bg-gray-300"
-                  >
-                    <span className="inline-flex items-center text-xs border border-gray-400 rounded-sm px-1 bg-gray-300">
-                      {item.firstname} {item.middlename} {item.lastname}
-                      <XMarkIcon
-                        onClick={() => handleRemoveSelected(item.id)}
-                        className="w-4 h-4 ml-2 cursor-pointer"
-                      />
-                    </span>
-                  </div>
-                ))}
-              {selectedItems.length === 0 && (
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Employee"
-                    value={searchHead}
-                    onChange={async (e) => await handleSearchUser(e)}
-                    className="app__filter_input"
-                  />
-
-                  {searchResults.length > 0 && (
-                    <div className="app__search_user_results_container">
-                      {searchResults.map((user: Employee, index) => (
-                        <div
-                          key={index}
-                          onClick={() => handleSelected(user)}
-                          className="app__search_user_results"
-                        >
-                          <UserBlock user={user} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
+          <div className="app__filter_container">
+            <UserIcon className="w-4 h-4 mr-1" />
+            {selectedItems.length > 0 &&
+              selectedItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="text-gray-500 focus:ring-0 focus:outline-none text-xs py-1 text-left inline-flex items-center dark:bg-gray-300"
+                >
+                  <span className="inline-flex items-center text-xs border border-gray-400 rounded-sm px-1 bg-gray-300">
+                    {item.firstname} {item.middlename} {item.lastname}
+                    <XMarkIcon
+                      onClick={() => handleRemoveSelected(item.id)}
+                      className="w-4 h-4 ml-2 cursor-pointer"
+                    />
+                  </span>
                 </div>
-              )}
-            </div>
+              ))}
+            {selectedItems.length === 0 && (
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Employee"
+                  value={searchHead}
+                  onChange={async (e) => await handleSearchUser(e)}
+                  className="app__filter_input"
+                />
+
+                {searchResults.length > 0 && (
+                  <div className="app__search_user_results_container">
+                    {searchResults.map((user: Employee, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleSelected(user)}
+                        className="app__search_user_results"
+                      >
+                        <UserBlock user={user} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="app__filter_container">
+            <input
+              type="date"
+              value={adjustmentDate}
+              onChange={(e) => setAdjustmentDate(e.target.value)}
+              className="app__filter_input"
+              placeholder="Adjustment Date"
+            />
           </div>
         </form>
       </div>

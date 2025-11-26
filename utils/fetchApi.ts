@@ -926,6 +926,7 @@ export async function fetchReclassificationApplicants(
 export async function fetchNosi(
   filters: {
     filterUser?: string
+    filterDate?: string
   },
   perPageCount: number,
   rangeFrom: number
@@ -941,6 +942,10 @@ export async function fetchNosi(
     // filter user
     if (filters.filterUser && filters.filterUser !== '') {
       query = query.eq('user_id', filters.filterUser)
+    }
+    // Filter Date
+    if (filters.filterDate && filters.filterDate !== '') {
+      query = query.eq('date', filters.filterDate)
     }
 
     // Per Page from context
