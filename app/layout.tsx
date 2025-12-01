@@ -3,6 +3,7 @@ import 'server-only'
 import './globals.css'
 
 import ClientProviders from '@/components/ClientProviders'
+import Maintenance from '@/components/Maintenance'
 import type { Employee, Office, SchoolTypes, UserAccessTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import type { Metadata } from 'next'
@@ -97,6 +98,18 @@ export default async function RootLayout({
     } catch (err) {
       return 'Something went wrong, please contact the system administrator.'
     }
+  }
+
+  const isMaintenance = true
+
+  if (isMaintenance) {
+    return (
+      <html lang="en">
+        <body className="dark:bg-[#191919]" suppressHydrationWarning>
+          <Maintenance />
+        </body>
+      </html>
+    )
   }
 
   return (
