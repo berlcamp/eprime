@@ -100,7 +100,7 @@ export default async function RootLayout({
     }
   }
 
-  const isMaintenance = true
+  const isMaintenance = false
 
   if (isMaintenance) {
     return (
