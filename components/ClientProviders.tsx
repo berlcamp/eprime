@@ -7,6 +7,7 @@ import SupabaseListener from '@/utils/supabase-listener'
 import { Session } from '@supabase/supabase-js'
 import { ReactNode } from 'react'
 import { Toaster } from 'react-hot-toast'
+import TopLoadingBar from '@/components/TopLoadingBar'
 
 // Match the shape expected by SupabaseProvider
 interface ClientProvidersProps {
@@ -35,6 +36,7 @@ export default function ClientProviders({
       systemOffices={systemOffices}
     >
       <SupabaseListener serverAccessToken={session?.access_token} />
+      <TopLoadingBar />
       {session ? (
         <Providers>
           <FilterProvider>

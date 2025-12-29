@@ -1,13 +1,12 @@
-'use client'
+"use client";
 
-import { Provider } from 'react-redux'
-import { store } from './store'
+import { useRef } from "react";
+import { Provider } from "react-redux";
+import { store } from "./store";
 
-export function Providers ({ children }) {
-  return (
-    // eslint-disable-next-line react/react-in-jsx-scope
-    <Provider store={store}>
-        {children}
-    </Provider>
-  )
+export function Providers({ children }) {
+  // Use useRef to ensure Provider is stable across renders
+  const storeRef = useRef(store);
+
+  return <Provider store={storeRef.current}>{children}</Provider>;
 }
