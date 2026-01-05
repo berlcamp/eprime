@@ -1,27 +1,27 @@
 /* eslint-disable @next/next/no-img-element */
-import { DocumentTypes } from '@/types'
-import { format } from 'date-fns'
-import { SquareCheckIcon, SquareIcon } from 'lucide-react'
-import * as React from 'react'
+import { DocumentTypes } from "@/types";
+import { format } from "date-fns";
+import { SquareCheckIcon, SquareIcon } from "lucide-react";
+import * as React from "react";
 
 interface ComponentToPrintProps {
-  selectedItem: DocumentTypes
+  selectedItem: DocumentTypes;
 }
 
 export const PrintLeaveForm = React.forwardRef<
   HTMLDivElement | null,
   ComponentToPrintProps
 >((props, ref) => {
-  const { selectedItem } = props
+  const { selectedItem } = props;
 
-  const d: DocumentTypes = selectedItem
-  let daysWithPay = 0
+  const d: DocumentTypes = selectedItem;
+  let daysWithPay = 0;
   if (d.certified_by) {
     d.leave_dates.forEach((d) => {
       if (d.is_paid) {
-        daysWithPay++
+        daysWithPay++;
       }
-    })
+    });
   }
 
   return (
@@ -90,8 +90,8 @@ export const PrintLeaveForm = React.forwardRef<
                   <span> (Middle)</span>
                 </div>
                 <div className="uppercase font-bold pl-10">
-                  {selectedItem.creator.lastname},{' '}
-                  {selectedItem.creator.firstname}{' '}
+                  {selectedItem.creator.lastname},{" "}
+                  {selectedItem.creator.firstname}{" "}
                   {selectedItem.creator.middlename}
                 </div>
               </td>
@@ -104,7 +104,7 @@ export const PrintLeaveForm = React.forwardRef<
                     <span className="underline underline-offset-2 font-bold">
                       {format(
                         new Date(selectedItem.created_at),
-                        'MMMM d, yyyy'
+                        "MMMM d, yyyy"
                       )}
                     </span>
                   </div>
@@ -139,13 +139,13 @@ export const PrintLeaveForm = React.forwardRef<
                 <div>6.A TYPE OF LEAVE TO BE AVAILED OF</div>
                 <div className="pl-2">
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === 'Vacation Leave' ? (
+                    {selectedItem.leave_type === "Vacation Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      Vacation Leave{' '}
+                      Vacation Leave{" "}
                       <span className="text-[8px]">
                         (Sec. 51, Rule XVI, Omnibus Rules Implementing E.O. No.
                         292)
@@ -153,7 +153,7 @@ export const PrintLeaveForm = React.forwardRef<
                     </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === 'Mandatory/Forced Leave' ? (
+                    {selectedItem.leave_type === "Mandatory/Forced Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
@@ -167,13 +167,13 @@ export const PrintLeaveForm = React.forwardRef<
                     </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === 'Sick Leave' ? (
+                    {selectedItem.leave_type === "Sick Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      Sick Leave{' '}
+                      Sick Leave{" "}
                       <span className="text-[8px]">
                         (Sec. 43, Rule XVI, Omnibus Rules Implementing E.O. No.
                         292)
@@ -181,39 +181,39 @@ export const PrintLeaveForm = React.forwardRef<
                     </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === 'Maternity Leave' ? (
+                    {selectedItem.leave_type === "Maternity Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      Maternity Leave{' '}
+                      Maternity Leave{" "}
                       <span className="text-[8px]">
                         (R.A. No. 11210 / IRR issued by CSC, DOLE and SSS)
                       </span>
                     </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === 'Paternity Leave' ? (
+                    {selectedItem.leave_type === "Paternity Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      Paternity Leave{' '}
+                      Paternity Leave{" "}
                       <span className="text-[8px]">
                         (R.A. No. 8187 / CSC MC No. 71, s. 1998, as amended)
                       </span>
                     </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === 'Special Privilege Leave' ? (
+                    {selectedItem.leave_type === "Special Privilege Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      Special Privilege Leave{' '}
+                      Special Privilege Leave{" "}
                       <span className="text-[8px]">
                         (Sec. 21, Rule XVI, Omnibus Rules Implementing E.O. No.
                         292)
@@ -221,26 +221,26 @@ export const PrintLeaveForm = React.forwardRef<
                     </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === 'Solo Parent Leave' ? (
+                    {selectedItem.leave_type === "Solo Parent Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      Solo Parent Leave{' '}
+                      Solo Parent Leave{" "}
                       <span className="text-[8px]">
                         (RA No. 8972 / CSC MC No. 8, s. 2004)
                       </span>
                     </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === 'Study Leave' ? (
+                    {selectedItem.leave_type === "Study Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      Study Leave{' '}
+                      Study Leave{" "}
                       <span className="text-[8px]">
                         (Sec. 68, Rule XVI, Omnibus Rules Implementing E.O. No.
                         292)
@@ -248,26 +248,26 @@ export const PrintLeaveForm = React.forwardRef<
                     </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === '10-Day VAWC Leave' ? (
+                    {selectedItem.leave_type === "10-Day VAWC Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      10-Day VAWC Leave{' '}
+                      10-Day VAWC Leave{" "}
                       <span className="text-[8px]">
                         (RA No. 9262 / CSC MC No. 15, s. 2005)
                       </span>
                     </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === 'Rehabilitation Privilege' ? (
+                    {selectedItem.leave_type === "Rehabilitation Privilege" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      Rehabilitation Privilege{' '}
+                      Rehabilitation Privilege{" "}
                       <span className="text-[8px]">
                         (Sec. 55, Rule XVI, Omnibus Rules Implementing E.O. No.
                         292)
@@ -276,13 +276,13 @@ export const PrintLeaveForm = React.forwardRef<
                   </div>
                   <div className="flex items-start justify-start space-x-1">
                     {selectedItem.leave_type ===
-                    'Special Leave Benefits for Women' ? (
+                    "Special Leave Benefits for Women" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      Special Leave Benefits for Women{' '}
+                      Special Leave Benefits for Women{" "}
                       <span className="text-[8px]">
                         (RA No. 9710 / CSC MC No. 25, s. 2010)
                       </span>
@@ -290,36 +290,36 @@ export const PrintLeaveForm = React.forwardRef<
                   </div>
                   <div className="flex items-start justify-start space-x-1">
                     {selectedItem.leave_type ===
-                    'Special Emergency (Calamity) Leave' ? (
+                    "Special Emergency (Calamity) Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      Special Emergency (Calamity) Leave{' '}
+                      Special Emergency (Calamity) Leave{" "}
                       <span className="text-[8px]">
                         (CSC MC No. 2, s. 2012, as amended)
                       </span>
                     </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === 'Adoption Leave' ? (
+                    {selectedItem.leave_type === "Adoption Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
                     <span>
-                      Adoption Leave{' '}
+                      Adoption Leave{" "}
                       <span className="text-[8px]">(R.A. No. 8552) </span>
                     </span>
                   </div>
                   <div className="mt-1 italic">Others: </div>
                   <div className="mt-1">
-                    {selectedItem.leave_type === 'Others' ? (
+                    {selectedItem.leave_type === "Others" ? (
                       <span className="underline">
                         {selectedItem.leave_others_specify}
                       </span>
-                    ) : selectedItem.leave_type === 'Compensatory Time Off' ? (
+                    ) : selectedItem.leave_type === "Compensatory Time Off" ? (
                       <span className="underline">Compensatory Time Off</span>
                     ) : (
                       <span>______________________________________</span>
@@ -335,11 +335,11 @@ export const PrintLeaveForm = React.forwardRef<
                   </div>
                   <div className="flex items-start justify-start space-x-1">
                     {selectedItem.leave_location ===
-                    'Within the Philippines' ? (
+                    "Within the Philippines" ? (
                       <>
                         <SquareCheckIcon className="w-5 h-4" />
                         <span>
-                          Within the Philippines{' '}
+                          Within the Philippines{" "}
                           <span className="underline underline-offset-2">
                             {selectedItem.leave_specify_location}
                           </span>
@@ -355,11 +355,11 @@ export const PrintLeaveForm = React.forwardRef<
                     )}
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_location === 'Abroad' ? (
+                    {selectedItem.leave_location === "Abroad" ? (
                       <>
                         <SquareCheckIcon className="w-5 h-4" />
                         <span>
-                          Abroad (Specify){' '}
+                          Abroad (Specify){" "}
                           <span className="underline underline-offset-2">
                             {selectedItem.leave_specify_location}
                           </span>
@@ -378,11 +378,11 @@ export const PrintLeaveForm = React.forwardRef<
                   </div>
                   <div className="italic mt-2">In case of Sick Leave:</div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_hospitalization === 'In Hospital' ? (
+                    {selectedItem.leave_hospitalization === "In Hospital" ? (
                       <>
                         <SquareCheckIcon className="w-5 h-4" />
                         <span>
-                          In Hospital (Specify Illness){' '}
+                          In Hospital (Specify Illness){" "}
                           <span className="underline underline-offset-2">
                             {selectedItem.leave_illness}
                           </span>
@@ -398,11 +398,11 @@ export const PrintLeaveForm = React.forwardRef<
                     )}
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_hospitalization === 'Out Patient' ? (
+                    {selectedItem.leave_hospitalization === "Out Patient" ? (
                       <>
                         <SquareCheckIcon className="w-5 h-4" />
                         <span>
-                          Out Patient (Specify Illness){' '}
+                          Out Patient (Specify Illness){" "}
                           <span className="underline underline-offset-2">
                             {selectedItem.leave_illness}
                           </span>
@@ -421,10 +421,10 @@ export const PrintLeaveForm = React.forwardRef<
                     In case of Special Leave Benefits for Women:
                   </div>
                   {selectedItem.leave_type ===
-                  'Special Leave Benefits for Women' ? (
+                  "Special Leave Benefits for Women" ? (
                     <>
                       <div>
-                        (Specify Illness){' '}
+                        (Specify Illness){" "}
                         <span className="underline underline-offset-2">
                           {selectedItem.leave_women_illness}
                         </span>
@@ -442,7 +442,7 @@ export const PrintLeaveForm = React.forwardRef<
                   <div className="italic mt-2">In case of Study Leave:</div>
                   <div className="flex items-start justify-start space-x-1">
                     {selectedItem.leave_study_purpose ===
-                    'Completion of Masters Degree' ? (
+                    "Completion of Masters Degree" ? (
                       <>
                         <SquareCheckIcon className="w-5 h-4" />
                         <span>Completion of Master's Degree</span>
@@ -456,7 +456,7 @@ export const PrintLeaveForm = React.forwardRef<
                   </div>
                   <div className="flex items-start justify-start space-x-1">
                     {selectedItem.leave_study_purpose ===
-                    'BAR/Board Examination Review' ? (
+                    "BAR/Board Examination Review" ? (
                       <>
                         <SquareCheckIcon className="w-5 h-4" />
                         <span>BAR/Board Examination Review</span>
@@ -471,7 +471,7 @@ export const PrintLeaveForm = React.forwardRef<
                   <div className="italic mt-2">Other purpose:</div>
                   <div className="flex items-start justify-start space-x-1">
                     {selectedItem.leave_other_purpose ===
-                    'Monetization of Leave Credits' ? (
+                    "Monetization of Leave Credits" ? (
                       <>
                         <SquareCheckIcon className="w-5 h-4" />
                         <span>Monetization of Leave Credits</span>
@@ -484,7 +484,7 @@ export const PrintLeaveForm = React.forwardRef<
                     )}
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_other_purpose === 'Terminal Leave' ? (
+                    {selectedItem.leave_other_purpose === "Terminal Leave" ? (
                       <>
                         <SquareCheckIcon className="w-5 h-4" />
                         <span>Terminal Leave</span>
@@ -507,9 +507,9 @@ export const PrintLeaveForm = React.forwardRef<
                 </div>
                 <div className="pl-10 mt-1">INCLUSIVE DATES</div>
                 <div className="pl-10 font-bold underline uppercase">
-                  {selectedItem.leave_dates?.length > 1 ? (
+                  {selectedItem.leave_dates?.length > 5 ? (
                     <span>
-                      From{' '}
+                      From{" "}
                       <span>
                         {format(
                           new Date(
@@ -521,10 +521,10 @@ export const PrintLeaveForm = React.forwardRef<
                                   new Date(b.date).getTime()
                               )[0].date
                           ),
-                          'MMM d, yyyy'
+                          "MMM d, yyyy"
                         )}
-                      </span>{' '}
-                      to{' '}
+                      </span>{" "}
+                      to{" "}
                       <span>
                         {format(
                           new Date(
@@ -536,14 +536,15 @@ export const PrintLeaveForm = React.forwardRef<
                                   new Date(b.date).getTime()
                               )[selectedItem.leave_dates.length - 1].date
                           ),
-                          'MMM d, yyyy'
+                          "MMM d, yyyy"
                         )}
                       </span>
                     </span>
                   ) : (
-                    selectedItem.leave_dates?.map((day) => (
+                    selectedItem.leave_dates?.map((day, index) => (
                       <span key={day.id}>
-                        {format(new Date(day.date), 'MMM d, yyyy')}
+                        {format(new Date(day.date), "MMM d, yyyy")}
+                        {index < selectedItem.leave_dates.length - 1 && ", "}
                       </span>
                     ))
                   )}
@@ -553,7 +554,7 @@ export const PrintLeaveForm = React.forwardRef<
                 <div> 6.D COMMUTATION </div>
                 <div className="pl-10">
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_commutation === 'Not Requested' ? (
+                    {selectedItem.leave_commutation === "Not Requested" ? (
                       <>
                         <SquareCheckIcon className="w-5 h-4" />
                         <span>Not Requested</span>
@@ -566,7 +567,7 @@ export const PrintLeaveForm = React.forwardRef<
                     )}
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_commutation === 'Requested' ? (
+                    {selectedItem.leave_commutation === "Requested" ? (
                       <>
                         <SquareCheckIcon className="w-5 h-4" />
                         <span>Requested</span>
@@ -593,8 +594,8 @@ export const PrintLeaveForm = React.forwardRef<
                     )}
                   </div>
                   <div className="font-bold border-t border-t-black">
-                    {selectedItem.creator.lastname},{' '}
-                    {selectedItem.creator.firstname}{' '}
+                    {selectedItem.creator.lastname},{" "}
+                    {selectedItem.creator.firstname}{" "}
                     {selectedItem.creator.middlename}
                   </div>
                 </div>
@@ -612,12 +613,12 @@ export const PrintLeaveForm = React.forwardRef<
               <td className="align-top border-2 border-black p-1 text-xs">
                 <div>7.A CERTIFICATION OF LEAVE CREDITS</div>
                 <div className="pl-10 mt-2">
-                  As of{' '}
+                  As of{" "}
                   <span className="font-bold underline">
                     {selectedItem.certification_as_of &&
                       format(
                         new Date(selectedItem.certification_as_of),
-                        'MMMM d, yyyy'
+                        "MMMM d, yyyy"
                       )}
                   </span>
                 </div>
@@ -694,8 +695,8 @@ export const PrintLeaveForm = React.forwardRef<
                     )}
                   </div>
                   <div className="font-bold border-t border-t-black">
-                    {selectedItem.certifier?.lastname},{' '}
-                    {selectedItem.certifier?.firstname}{' '}
+                    {selectedItem.certifier?.lastname},{" "}
+                    {selectedItem.certifier?.firstname}{" "}
                     {selectedItem.certifier?.middlename}
                   </div>
                 </div>
@@ -729,8 +730,8 @@ export const PrintLeaveForm = React.forwardRef<
                     )}
                   </div>
                   <div className="font-bold border-t border-t-black">
-                    {selectedItem.recommender?.lastname},{' '}
-                    {selectedItem.recommender?.firstname}{' '}
+                    {selectedItem.recommender?.lastname},{" "}
+                    {selectedItem.recommender?.firstname}{" "}
                     {selectedItem.recommender?.middlename}
                   </div>
                 </div>
@@ -739,24 +740,24 @@ export const PrintLeaveForm = React.forwardRef<
             <tr className="border-t-2 border-l-2 border-r-2 border-black">
               <td className="align-top p-1 text-xs">
                 <div>7.C APPROVED FOR:</div>
-                {selectedItem.leave_type === 'Terminal/Monetization Leave' ? (
+                {selectedItem.leave_type === "Terminal/Monetization Leave" ? (
                   <div className="pl-10 mt-2">
                     <div>
                       <span className="underline underline-offset-1 font-bold">
                         0
-                      </span>{' '}
+                      </span>{" "}
                       days with pay
                     </div>
                     <div>
                       <span className="underline underline-offset-1 font-bold">
                         0
-                      </span>{' '}
+                      </span>{" "}
                       days without pay
                     </div>
                     <div>
                       <span className="underline underline-offset-1 font-bold">
                         {selectedItem.leave_days}
-                      </span>{' '}
+                      </span>{" "}
                       others (Monetization)
                     </div>
                   </div>
@@ -765,13 +766,13 @@ export const PrintLeaveForm = React.forwardRef<
                     <div>
                       <span className="underline underline-offset-1 font-bold">
                         {daysWithPay}
-                      </span>{' '}
+                      </span>{" "}
                       days with pay
                     </div>
                     <div>
                       <span className="underline underline-offset-1 font-bold">
                         {Number(selectedItem.leave_days) - daysWithPay}
-                      </span>{' '}
+                      </span>{" "}
                       days without pay
                     </div>
                     <div>________ others (Specify)</div>
@@ -803,8 +804,8 @@ export const PrintLeaveForm = React.forwardRef<
                     )}
                   </div>
                   <div className="font-bold border-t border-t-black">
-                    {selectedItem.finalapprover?.lastname},{' '}
-                    {selectedItem.finalapprover?.firstname}{' '}
+                    {selectedItem.finalapprover?.lastname},{" "}
+                    {selectedItem.finalapprover?.firstname}{" "}
                     {selectedItem.finalapprover?.middlename}
                   </div>
                 </div>
@@ -821,5 +822,5 @@ export const PrintLeaveForm = React.forwardRef<
         </table>
       </div>
     </div>
-  )
-})
+  );
+});
