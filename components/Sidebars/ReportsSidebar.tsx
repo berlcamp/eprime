@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-'use client'
+"use client";
 
-import { TableCellsIcon } from '@heroicons/react/20/solid'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { superAdmins } from "@/constants";
+import { useSupabase } from "@/context/SupabaseProvider";
+import { TableCellsIcon } from "@heroicons/react/20/solid";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const ReportsSidebar = () => {
-  const currentRoute = usePathname()
+  const currentRoute = usePathname();
+  const { session } = useSupabase();
 
   return (
     <>
@@ -21,7 +24,7 @@ const ReportsSidebar = () => {
           <Link
             href="/reports"
             className={`app__menu_link ${
-              currentRoute === '/reports' ? 'app_menu_link_active' : ''
+              currentRoute === "/reports" ? "app_menu_link_active" : ""
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">Personnel</span>
@@ -31,15 +34,31 @@ const ReportsSidebar = () => {
           <Link
             href="/reports/requests"
             className={`app__menu_link ${
-              currentRoute === '/reports/requests' ? 'app_menu_link_active' : ''
+              currentRoute === "/reports/requests" ? "app_menu_link_active" : ""
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">Requests</span>
           </Link>
         </li>
+        {superAdmins.includes(session?.user.email ?? "") && (
+          <li>
+            <Link
+              href="/reports/employees"
+              className={`app__menu_link ${
+                currentRoute === "/reports/employees"
+                  ? "app_menu_link_active"
+                  : ""
+              }`}
+            >
+              <span className="flex-1 ml-3 whitespace-nowrap">
+                Employees Records
+              </span>
+            </Link>
+          </li>
+        )}
       </ul>
     </>
-  )
-}
+  );
+};
 
-export default ReportsSidebar
+export default ReportsSidebar;
