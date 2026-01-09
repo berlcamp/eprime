@@ -77,7 +77,8 @@ export default function EmployeesRecordsPage() {
           )
         `
         )
-        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID!);
+        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID!)
+        .not("item_id", "is", null);
 
       // Apply filters
       if (filterSchool && filterSchool !== "") {
