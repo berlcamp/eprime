@@ -73,6 +73,7 @@ export default function EmployeesRecordsPage() {
             item_number,
             status,
             reason_for_removal,
+            vice,
             hrm_position:position_id(name)
           )
         `
@@ -135,6 +136,7 @@ export default function EmployeesRecordsPage() {
         { header: "Employee ID Number", key: "employee_id", width: 20 },
         { header: "Full Name", key: "full_name", width: 35 },
         { header: "Position/Designation", key: "position", width: 30 },
+        { header: "Vice", key: "vice", width: 30 },
         { header: "Mobile Number", key: "mobile_number", width: 20 },
         { header: "Date Hired", key: "date_hired", width: 15 },
         { header: "Personal Email Address", key: "email", width: 30 },
@@ -168,6 +170,9 @@ export default function EmployeesRecordsPage() {
         // Get position - prefer from item, fallback to user position
         const position =
           user.hrm_item?.hrm_position?.name || user.hrm_positions?.name || "";
+
+        // Get vice from item
+        const vice = user.hrm_item?.vice || "";
 
         // Get mobile number from PDS
         const userPds = pdsData.find((pds: any) => pds.user_id === user.id);
@@ -227,10 +232,11 @@ export default function EmployeesRecordsPage() {
           no: index + 1,
           employee_id: employeeId,
           full_name: fullName,
-          position: position,
+          position,
+          vice,
           mobile_number: mobileNumber,
           date_hired: dateHired,
-          email: email,
+          email,
           source_of_fund: sourceOfFund,
           separation_date: separationDate,
           separation_cause: separationCause,
