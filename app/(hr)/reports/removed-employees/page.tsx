@@ -3,13 +3,19 @@
 
 import { useEffect, useState } from "react";
 
-import { CustomButton, Sidebar, Title, TopBar } from "@/components/index";
+import {
+  CustomButton,
+  Sidebar,
+  Title,
+  TopBar,
+  Unauthorized,
+} from "@/components/index";
 import ReportsSidebar from "@/components/Sidebars/ReportsSidebar";
 import { Card, CardContent } from "@/components/ui/card";
-import { useSupabase } from "@/context/SupabaseProvider";
-import { useFilter } from "@/context/FilterContext";
 import { superAdmins } from "@/constants";
-import { Unauthorized } from "@/components/index";
+import { useFilter } from "@/context/FilterContext";
+import { useSupabase } from "@/context/SupabaseProvider";
+
 import { TagIcon } from "@heroicons/react/20/solid";
 import { format } from "date-fns";
 import Excel from "exceljs";
@@ -208,7 +214,10 @@ export default function RemovedEmployeesPage() {
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      saveAs(blob, `Removed Employees - ${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+      saveAs(
+        blob,
+        `Removed Employees - ${format(new Date(), "yyyy-MM-dd")}.xlsx`
+      );
     } catch (error) {
       console.error("Export error:", error);
       alert("Failed to export data. Please try again.");
@@ -370,12 +379,18 @@ export default function RemovedEmployeesPage() {
                           </td>
                           <td className="app__td">{schoolOffice}</td>
                           <td className="app__td">
-                            <div className="max-w-xs truncate" title={item.reason}>
+                            <div
+                              className="max-w-xs truncate"
+                              title={item.reason}
+                            >
                               {item.reason}
                             </div>
                           </td>
                           <td className="app__td">
-                            {format(new Date(item.removed_at), "MM/dd/yyyy HH:mm")}
+                            {format(
+                              new Date(item.removed_at),
+                              "MM/dd/yyyy HH:mm"
+                            )}
                           </td>
                           <td className="app__td">{removedByName}</td>
                         </tr>
