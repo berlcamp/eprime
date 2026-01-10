@@ -56,6 +56,20 @@ const ReportsSidebar = () => {
             </Link>
           </li>
         )}
+        <li>
+          <Link
+            href="/reports/removed-employees"
+            className={`app__menu_link ${
+              currentRoute === "/reports/removed-employees"
+                ? "app_menu_link_active"
+                : ""
+            }`}
+          >
+            <span className="flex-1 ml-3 whitespace-nowrap">
+              Removed Employees
+            </span>
+          </Link>
+        </li>
       </ul>
     </>
   );

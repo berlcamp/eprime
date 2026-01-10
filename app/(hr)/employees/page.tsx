@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import {
   AccountDetails,
@@ -11,159 +11,194 @@ import {
   Title,
   TopBar,
   Unauthorized,
-  UserBlock
-} from '@/components/index'
-import { useFilter } from '@/context/FilterContext'
-import { fetchEmployees } from '@/utils/fetchApi'
-import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/20/solid'
-import React, { useEffect, useState } from 'react'
-import Filters from './Filters'
+  UserBlock,
+} from "@/components/index";
+import { useFilter } from "@/context/FilterContext";
+import { fetchEmployees } from "@/utils/fetchApi";
+import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import React, { useEffect, useState } from "react";
+import Filters from "./Filters";
 
 // Types
 import type {
   AssignmentTypes,
   DesignationTypes,
   Employee,
-  ServiceRecordTypes
-} from '@/types'
+  ServiceRecordTypes,
+} from "@/types";
 
 // Redux imports
-import { updateList } from '@/GlobalRedux/Features/listSlice'
-import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { superAdmins } from '@/constants'
-import { useSupabase } from '@/context/SupabaseProvider'
-import Link from 'next/link'
-import { useDispatch, useSelector } from 'react-redux'
+import { updateList } from "@/GlobalRedux/Features/listSlice";
+import { updateResultCounter } from "@/GlobalRedux/Features/resultsCounterSlice";
+import { superAdmins } from "@/constants";
+import { useSupabase } from "@/context/SupabaseProvider";
+import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
 
 const Page: React.FC = () => {
-  const [loading, setLoading] = useState(false)
-  const [list, setList] = useState<Employee[]>([])
+  const [loading, setLoading] = useState(false);
+  const [list, setList] = useState<Employee[]>([]);
 
   // Filters
-  const [filterUser, setFilterUser] = useState<string>('')
-  const [filterSchool, setFilterSchool] = useState<string>('')
-  const [filterOffice, setFilterOffice] = useState<string>('')
-  const [filterSetupStatus, setFilterSetupStatus] = useState<string>('')
+  const [filterUser, setFilterUser] = useState<string>("");
+  const [filterSchool, setFilterSchool] = useState<string>("");
+  const [filterOffice, setFilterOffice] = useState<string>("");
+  const [filterSetupStatus, setFilterSetupStatus] = useState<string>("");
 
-  const [perPageCount, setPerPageCount] = useState<number>(10)
+  const [perPageCount, setPerPageCount] = useState<number>(10);
 
-  const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false)
-  const [selectedId, setSelectedId] = useState<string>('')
+  const [showAccountDetailsModal, setShowAccountDetailsModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string>("");
 
   // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
-  const resultsCounter = useSelector((state: any) => state.results.value)
-  const dispatch = useDispatch()
+  const globallist = useSelector((state: any) => state.list.value);
+  const resultsCounter = useSelector((state: any) => state.results.value);
+  const dispatch = useDispatch();
 
-  const { hasAccess, session } = useFilter()
-  const { supabase } = useSupabase()
+  const { hasAccess, session } = useFilter();
+  const { supabase } = useSupabase();
 
   const fetchData = async () => {
-    setLoading(true)
+    setLoading(true);
 
     try {
       const result = await fetchEmployees(
         { filterUser, filterSchool, filterOffice, filterSetupStatus },
         perPageCount,
         0
-      )
+      );
 
       // update the list in redux
-      dispatch(updateList(result.data))
+      dispatch(updateList(result.data));
 
       // Updating showing text in redux
       dispatch(
         updateResultCounter({
           showing: result.data.length,
-          results: result.count ? result.count : 0
+          results: result.count ? result.count : 0,
         })
-      )
+      );
     } catch (e) {
-      console.error(e)
+      console.error(e);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Append data to existing list whenever 'show more' button is clicked
   const handleShowMore = async () => {
-    setLoading(true)
+    setLoading(true);
 
     try {
       const result = await fetchEmployees(
         { filterUser, filterSchool, filterOffice, filterSetupStatus },
         perPageCount,
         list.length
-      )
+      );
 
       // update the list in redux
-      const newList = [...list, ...result.data]
-      dispatch(updateList(newList))
+      const newList = [...list, ...result.data];
+      dispatch(updateList(newList));
 
       // Updating showing text in redux
       dispatch(
         updateResultCounter({
           showing: newList.length,
-          results: result.count ? result.count : 0
+          results: result.count ? result.count : 0,
         })
-      )
+      );
     } catch (e) {
-      console.error(e)
+      console.error(e);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleViewDetails = (item: Employee) => {
-    setSelectedId(item.id)
-    setShowAccountDetailsModal(true)
-  }
+    setSelectedId(item.id);
+    setShowAccountDetailsModal(true);
+  };
+
+  const handleReactivate = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from("hrm_users")
+        .update({ status: "Active" })
+        .eq("id", userId);
+
+      if (error) {
+        console.error("Error reactivating user:", error);
+        return;
+      }
+
+      // Update data in redux
+      const items = [...globallist];
+      const updatedList = items.map((item) => {
+        if (item.id === userId) {
+          return { ...item, status: "Active" };
+        }
+        return item;
+      });
+      dispatch(updateList(updatedList));
+
+      // Update local list state
+      const updatedLocalList = list.map((item) => {
+        if (item.id === userId) {
+          return { ...item, status: "Active" };
+        }
+        return item;
+      });
+      setList(updatedLocalList);
+    } catch (err) {
+      console.error("Error reactivating user:", err);
+    }
+  };
 
   // Update list whenever list in redux updates
   useEffect(() => {
-    if (filterSetupStatus === 'No Preset Record on Service Records') {
+    if (filterSetupStatus === "No Preset Record on Service Records") {
       const filterData = async () => {
-        setLoading(true)
-        const list = globallist
+        setLoading(true);
+        const list = globallist;
         // Step 1: Get all user IDs with 'to = present'
         const { data: presentRecords, error: presentError } = await supabase
-          .from('hrm_service_records')
-          .select('*')
-          .ilike('to', '%present%')
+          .from("hrm_service_records")
+          .select("*")
+          .ilike("to", "%present%");
 
         if (!presentError) {
           // Extract user IDs
           const presentUserIds = presentRecords.map(
             (record: ServiceRecordTypes) => record.user_id
-          )
+          );
           const filteredListed = list.filter(
             (emp: Employee) => !presentUserIds.includes(emp.id)
-          )
-          setList(filteredListed)
-          setLoading(false)
+          );
+          setList(filteredListed);
+          setLoading(false);
 
           // Updating showing text in redux
           dispatch(
             updateResultCounter({
               showing: filteredListed.length,
-              results: filteredListed.length
+              results: filteredListed.length,
             })
-          )
+          );
         }
-      }
-      void filterData()
+      };
+      void filterData();
     } else {
-      setList(globallist)
+      setList(globallist);
     }
-  }, [globallist])
+  }, [globallist]);
 
   // Fetch data
   useEffect(() => {
-    setList([])
-    void fetchData()
+    setList([]);
+    void fetchData();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterUser, perPageCount, filterSchool, filterSetupStatus, filterOffice])
+  }, [filterUser, perPageCount, filterSchool, filterSetupStatus, filterOffice]);
 
   const setupCounter = (
     positionId: number,
@@ -171,22 +206,22 @@ const Page: React.FC = () => {
     salaryStep: string,
     dateOfNextStepIncrement: string
   ) => {
-    let count = 1
-    if (positionId) count++
-    if (salaryGrade !== '' && salaryStep !== '') count++
-    if (salaryStep === '8' || dateOfNextStepIncrement) count++
+    let count = 1;
+    if (positionId) count++;
+    if (salaryGrade !== "" && salaryStep !== "") count++;
+    if (salaryStep === "8" || dateOfNextStepIncrement) count++;
 
-    return count
-  }
+    return count;
+  };
 
-  const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
+  const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list;
 
   // Check access from permission settings or Super Admins
   if (
-    !hasAccess('employee_accounts') &&
-    !superAdmins.includes(session?.user.email ?? '')
+    !hasAccess("employee_accounts") &&
+    !superAdmins.includes(session?.user.email ?? "")
   )
-    return <Unauthorized />
+    return <Unauthorized />;
 
   return (
     <>
@@ -249,36 +284,53 @@ const Page: React.FC = () => {
                     <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td"></td>
                       <th className="app__th_firstcol">
-                        <Link href={`/profile/${item.id}`}>
-                          <UserBlock user={item} />
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link href={`/profile/${item.id}`}>
+                            <UserBlock user={item} />
+                          </Link>
+                          {(item.status === "Inactive" ||
+                            item.status === "inactive") && (
+                            <span className="px-2 py-1 text-xs font-semibold rounded bg-red-100 text-red-800">
+                              Inactive
+                            </span>
+                          )}
+                        </div>
                         <div className="ml-8 font-light">{item.email}</div>
                         <div className="ml-8 font-light">
                           {item.position_type}
                         </div>
-                        <div className="ml-8 mt-2 font-light">
+                        <div className="ml-8 mt-2 font-light flex gap-2">
                           <CustomButton
                             btnType="button"
                             title="Account&nbsp;Settings"
                             handleClick={() => handleViewDetails(item)}
                             containerStyles="app__btn_blue"
                           />
+                          {(item.status === "Inactive" ||
+                            item.status === "inactive") && (
+                            <CustomButton
+                              btnType="button"
+                              title="Reactivate"
+                              handleClick={() => handleReactivate(item.id)}
+                              containerStyles="app__btn_green"
+                            />
+                          )}
                         </div>
                         {/* Mobile View */}
                         <div>
                           <div className="md:hidden app__td">
                             <span className="font-light">
-                              School or Office: {item.hrm_schools?.name}{' '}
-                              {item.hrm_offices?.name}{' '}
+                              School or Office: {item.hrm_schools?.name}{" "}
+                              {item.hrm_offices?.name}{" "}
                             </span>
                           </div>
                         </div>
                         <div>
                           <div className="md:hidden app__td">
                             {item.position_id &&
-                            item.salary_grade !== '' &&
+                            item.salary_grade !== "" &&
                             item.date_of_next_step_increment &&
-                            item.salary_step !== '' ? (
+                            item.salary_step !== "" ? (
                               <>
                                 <div className="flex items-center space-x-1">
                                   <CheckCircleIcon className="w-4 h-4 text-green-500" />
@@ -295,9 +347,9 @@ const Page: React.FC = () => {
                                       item.salary_step,
                                       item.date_of_next_step_increment
                                     )}
-                                  </span>{' '}
-                                  out of{' '}
-                                  <span className="text-green-600">4</span>{' '}
+                                  </span>{" "}
+                                  out of{" "}
+                                  <span className="text-green-600">4</span>{" "}
                                   Completed
                                 </div>
                                 <div className="space-y-1 mt-2 pl-4">
@@ -314,8 +366,8 @@ const Page: React.FC = () => {
                                     <span>Set current Position</span>
                                   </div>
                                   <div className="flex items-center space-x-1">
-                                    {item.salary_grade !== '' &&
-                                    item.salary_step !== '' ? (
+                                    {item.salary_grade !== "" &&
+                                    item.salary_step !== "" ? (
                                       <CheckCircleIcon className="w-4 h-4 text-green-500" />
                                     ) : (
                                       <XMarkIcon className="w-4 h-4 text-red-500" />
@@ -324,7 +376,7 @@ const Page: React.FC = () => {
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     {item.date_of_next_step_increment ||
-                                    item.salary_step.toString() === '8' ? (
+                                    item.salary_step.toString() === "8" ? (
                                       <CheckCircleIcon className="w-4 h-4 text-green-500" />
                                     ) : (
                                       <XMarkIcon className="w-4 h-4 text-red-500" />
@@ -339,13 +391,13 @@ const Page: React.FC = () => {
                         <div>
                           <div className="md:hidden app__td">
                             <div>{item.hrm_positions?.name}</div>
-                            {item.salary_grade !== '' && (
+                            {item.salary_grade !== "" && (
                               <div>
-                                <span>Salary Grade:</span>{' '}
+                                <span>Salary Grade:</span>{" "}
                                 <span className="font-semibold">
-                                  {item.salary_grade}{' '}
+                                  {item.salary_grade}{" "}
                                 </span>
-                                <span>Step:</span>{' '}
+                                <span>Step:</span>{" "}
                                 <span className="font-semibold">
                                   {item.salary_step}
                                 </span>
@@ -358,10 +410,10 @@ const Page: React.FC = () => {
                       <td className="hidden md:table-cell app__td">
                         <div>
                           {item.position_id &&
-                          item.salary_grade !== '' &&
+                          item.salary_grade !== "" &&
                           (item.date_of_next_step_increment ||
-                            item.salary_step === '8') &&
-                          item.salary_step !== '' ? (
+                            item.salary_step === "8") &&
+                          item.salary_step !== "" ? (
                             <>
                               <div className="flex items-center space-x-1">
                                 <CheckCircleIcon className="w-4 h-4 text-green-500" />
@@ -378,8 +430,8 @@ const Page: React.FC = () => {
                                     item.salary_step,
                                     item.date_of_next_step_increment
                                   )}
-                                </span>{' '}
-                                out of <span className="text-green-600">4</span>{' '}
+                                </span>{" "}
+                                out of <span className="text-green-600">4</span>{" "}
                                 Completed
                               </div>
                               <div className="space-y-1 mt-2 pl-4">
@@ -405,7 +457,7 @@ const Page: React.FC = () => {
                                 </div>
                                 <div className="flex items-center space-x-1">
                                   {item.date_of_next_step_increment ||
-                                  item.salary_step.toString() === '8' ? (
+                                  item.salary_step.toString() === "8" ? (
                                     <CheckCircleIcon className="w-4 h-4 text-green-500" />
                                   ) : (
                                     <XMarkIcon className="w-4 h-4 text-red-500" />
@@ -429,13 +481,13 @@ const Page: React.FC = () => {
                         {item.hrm_assignments.length > 0 &&
                           item.hrm_assignments.map(
                             (assignment: AssignmentTypes, index) =>
-                              assignment.status === 'Active' &&
-                              assignment.type === 'Re-assignment' && (
+                              assignment.status === "Active" &&
+                              assignment.type === "Re-assignment" && (
                                 <div key={index}>
                                   <div className="font-semibold text-green-700">
                                     Current Assignment:
                                   </div>
-                                  {assignment.area_assigned === 'office' ? (
+                                  {assignment.area_assigned === "office" ? (
                                     <span>{assignment.hrm_offices?.name}</span>
                                   ) : (
                                     <span>{assignment.hrm_schools?.name}</span>
@@ -446,21 +498,21 @@ const Page: React.FC = () => {
                         {item.hrm_designations.length > 0 &&
                           item.hrm_designations.map(
                             (designation: DesignationTypes, index) =>
-                              designation.status === 'Active' && (
+                              designation.status === "Active" && (
                                 <div key={index}>
                                   <div className="font-semibold text-green-700">
                                     Current Designation:
                                   </div>
-                                  {designation.type === 'Function only' ? (
+                                  {designation.type === "Function only" ? (
                                     <span>{designation.designation}</span>
-                                  ) : designation.area_assigned === 'office' ? (
+                                  ) : designation.area_assigned === "office" ? (
                                     <span>
-                                      {designation.designation} -{' '}
+                                      {designation.designation} -{" "}
                                       {designation.hrm_offices?.name}
                                     </span>
                                   ) : (
                                     <span>
-                                      {designation.designation} -{' '}
+                                      {designation.designation} -{" "}
                                       {designation.hrm_schools?.name}
                                     </span>
                                   )}
@@ -472,11 +524,11 @@ const Page: React.FC = () => {
                         <div>{item.hrm_positions?.name}</div>
                         {item.salary_grade && item.salary_step && (
                           <div>
-                            <span>Salary Grade:</span>{' '}
+                            <span>Salary Grade:</span>{" "}
                             <span className="font-semibold">
-                              {item.salary_grade}{' '}
+                              {item.salary_grade}{" "}
                             </span>
-                            <span>Step:</span>{' '}
+                            <span>Step:</span>{" "}
                             <span className="font-semibold">
                               {item.salary_step}
                             </span>
@@ -508,6 +560,6 @@ const Page: React.FC = () => {
         />
       )}
     </>
-  )
-}
-export default Page
+  );
+};
+export default Page;

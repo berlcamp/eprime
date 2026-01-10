@@ -1,6 +1,6 @@
-'use client'
-import { useFilter } from '@/context/FilterContext'
-import { useSupabase } from '@/context/SupabaseProvider'
+"use client";
+import { useFilter } from "@/context/FilterContext";
+import { useSupabase } from "@/context/SupabaseProvider";
 import {
   fetchDistricts,
   fetchItems,
@@ -9,22 +9,21 @@ import {
   fetchSchools,
   handleConvertEmployeeToNonTeaching,
   handleConvertEmployeeToTeaching,
-  logError
-} from '@/utils/fetchApi'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import Avatar from 'react-avatar'
-import { useForm } from 'react-hook-form'
-import uuid from 'react-uuid'
-import OneColLayoutLoading from './Loading/OneColLayoutLoading'
+  logError,
+} from "@/utils/fetchApi";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Avatar from "react-avatar";
+import { useForm } from "react-hook-form";
+import uuid from "react-uuid";
+import OneColLayoutLoading from "./Loading/OneColLayoutLoading";
 
 // Redux imports
-import { updateList } from '@/GlobalRedux/Features/listSlice'
-import { useDispatch, useSelector } from 'react-redux'
+import { updateList } from "@/GlobalRedux/Features/listSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 // Types
-import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import type {
   DistrictTypes,
   Employee,
@@ -32,101 +31,89 @@ import type {
   LeaveCreditTypes,
   Office,
   PositionTypes,
-  SchoolTypes
-} from '@/types'
-import { createClient } from '@supabase/supabase-js'
-import { format, isValid, parseISO } from 'date-fns'
-import Link from 'next/link'
-import ConfirmDeleteAccount from './ConfirmDeleteAccount'
-import CustomButton from './CustomButton'
-import PlantillaDetails from './PlantillaDetails'
+  SchoolTypes,
+} from "@/types";
+import { format, isValid, parseISO } from "date-fns";
+import Link from "next/link";
+import ConfirmDeleteAccount from "./ConfirmDeleteAccount";
+import CustomButton from "./CustomButton";
+import PlantillaDetails from "./PlantillaDetails";
 
 interface ModalProps {
-  hideModal: () => void
-  id: string
-  shouldUpdateRedux: boolean
+  hideModal: () => void;
+  id: string;
+  shouldUpdateRedux: boolean;
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-const serviceRoleKey = process.env.NEXT_PUBLIC_SERVICE_ROLE_KEY ?? ''
-
-const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-})
-
 const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
-  const { setToast, hasAccess } = useFilter()
-  const { supabase } = useSupabase()
+  const { setToast, hasAccess } = useFilter();
+  const { supabase } = useSupabase();
 
-  const [positionTypeChange, setPositionTypeChange] = useState('')
-  const [slBalance, setSlBalance] = useState(0)
-  const [vlBalance, setVlBalance] = useState(0)
-  const [vlslBalance, setVlslBalance] = useState(0)
-  const [scBalance, setScBalance] = useState(0)
+  const [positionTypeChange, setPositionTypeChange] = useState("");
+  const [slBalance, setSlBalance] = useState(0);
+  const [vlBalance, setVlBalance] = useState(0);
+  const [vlslBalance, setVlslBalance] = useState(0);
+  const [scBalance, setScBalance] = useState(0);
 
-  const [loading, setLoading] = useState(false)
-  const [positions, setPositions] = useState<PositionTypes[] | []>([])
-  const [saving, setSaving] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState('')
+  const [loading, setLoading] = useState(false);
+  const [positions, setPositions] = useState<PositionTypes[] | []>([]);
+  const [saving, setSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState("");
 
-  const [userData, setUserData] = useState<Employee | null>(null)
+  const [userData, setUserData] = useState<Employee | null>(null);
 
-  const [loadingSchools, setLoadingSchools] = useState(false)
-  const [assignment, setAssignment] = useState('')
-  const [selectedDistrict, setSelectedDistrict] = useState('')
-  const [selectedSchool, setSelectedSchool] = useState('')
-  const [selectedOffice, setSelectedOffice] = useState('')
-  const [selectedPosition, setSelectedPosition] = useState('')
-  const [schools, setSchools] = useState<SchoolTypes[] | []>([])
-  const [districts, setDistricts] = useState<DistrictTypes[] | null>(null)
-  const [offices, setOffices] = useState<Office[] | []>([])
+  const [loadingSchools, setLoadingSchools] = useState(false);
+  const [assignment, setAssignment] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedSchool, setSelectedSchool] = useState("");
+  const [selectedOffice, setSelectedOffice] = useState("");
+  const [selectedPosition, setSelectedPosition] = useState("");
+  const [schools, setSchools] = useState<SchoolTypes[] | []>([]);
+  const [districts, setDistricts] = useState<DistrictTypes[] | null>(null);
+  const [offices, setOffices] = useState<Office[] | []>([]);
 
-  const [showItemModal, setShowItemModal] = useState(false)
-  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false)
-  const [item, setItem] = useState<ItemTypes | null>(null)
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [item, setItem] = useState<ItemTypes | null>(null);
 
   // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
-  const resultsCounter = useSelector((state: any) => state.results.value)
-  const dispatch = useDispatch()
+  const globallist = useSelector((state: any) => state.list.value);
+  const dispatch = useDispatch();
 
-  const router = useRouter()
+  const router = useRouter();
 
   // Check access from employee_accounts settings or Super Admins
-  const isAdmin = hasAccess('employee_accounts')
+  const isAdmin = hasAccess("employee_accounts");
 
   const {
     register,
     formState: { errors },
     reset,
     handleSubmit,
-    watch
+    watch,
   } = useForm<Employee>({
-    mode: 'onSubmit'
-  })
+    mode: "onSubmit",
+  });
 
-  const watchedSalaryStep = watch('salary_step')
+  const watchedSalaryStep = watch("salary_step");
 
   const onSubmit = async (formdata: Employee) => {
-    if (loading || saving) return
+    if (loading || saving) return;
 
-    void handleUpdate(formdata)
-  }
+    void handleUpdate(formdata);
+  };
 
   const handleUpdate = async (formdata: Employee) => {
-    setSaving(true)
+    setSaving(true);
 
-    let newData
+    let newData;
 
     const district =
-      formdata.assignment === 'school' ? Number(formdata.district_id) : null
+      formdata.assignment === "school" ? Number(formdata.district_id) : null;
     const school =
-      formdata.assignment === 'school' ? Number(formdata.school_id) : null
+      formdata.assignment === "school" ? Number(formdata.school_id) : null;
     const office =
-      formdata.assignment === 'office' ? Number(formdata.office_id) : null
+      formdata.assignment === "office" ? Number(formdata.office_id) : null;
 
     if (isAdmin) {
       newData = {
@@ -142,10 +129,10 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         salary_grade: formdata.salary_grade,
         salary_step: formdata.salary_step,
         date_of_next_step_increment:
-          formdata.salary_step.toString() !== '8'
+          formdata.salary_step.toString() !== "8"
             ? formdata.date_of_next_step_increment
             : null, // no more next increment if step = 8,
-        position_type: formdata.position_type
+        position_type: formdata.position_type,
         // joining date and date of last promotion has been remove as it is manage on plantilla item
         // date_of_last_promotion: formdata.date_of_last_promotion
         //   ? new Date(formdata.date_of_last_promotion)
@@ -153,7 +140,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         // joining_date: formdata.joining_date
         //   ? new Date(formdata.joining_date)
         //   : null // use the string data before storing the redux to avoid error
-      }
+      };
     } else {
       newData = {
         firstname: formdata.firstname,
@@ -163,315 +150,347 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
         birthday: formdata.birthday ? new Date(formdata.birthday) : null, // use the string data before storing the redux to avoid error
         district_id: district,
         school_id: school,
-        office_id: office
-      }
+        office_id: office,
+      };
     }
 
     try {
       const { error } = await supabase
-        .from('hrm_users')
+        .from("hrm_users")
         .update(newData)
-        .eq('id', id)
+        .eq("id", id);
 
       if (error) {
         void logError(
-          'Update account details',
-          'hrm_assignments',
+          "Update account details",
+          "hrm_assignments",
           JSON.stringify(newData),
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       // Update data in redux
       if (shouldUpdateRedux) {
-        const items = [...globallist]
-        const updatedDropdownData = getUpdatedDropdownData(formdata)
+        const items = [...globallist];
+        const updatedDropdownData = getUpdatedDropdownData(formdata);
         const updatedData = {
           ...newData,
           birthday: formdata.birthday,
           id,
-          ...updatedDropdownData
-        }
-        const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-        items[foundIndex] = { ...items[foundIndex], ...updatedData }
-        dispatch(updateList(items))
+          ...updatedDropdownData,
+        };
+        const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+        items[foundIndex] = { ...items[foundIndex], ...updatedData };
+        dispatch(updateList(items));
       }
 
       // Update leave if position type is changed
-      if (positionTypeChange === 'Non-teaching') {
+      if (positionTypeChange === "Non-teaching") {
         void handleConvertEmployeeToNonTeaching(
           id,
           formdata.date_of_next_increment
-        )
+        );
       }
-      if (positionTypeChange === 'Teaching') {
-        void handleConvertEmployeeToTeaching(id)
+      if (positionTypeChange === "Teaching") {
+        void handleConvertEmployeeToTeaching(id);
       }
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
-      setSaving(false)
+      setSaving(false);
 
-      router.refresh()
+      router.refresh();
 
       // hide the modal
-      hideModal()
+      hideModal();
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
-  const handleDelete = async () => {
+  const handleDeactivate = async () => {
     try {
-      // Delete user account
-      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
-        id
-      )
+      // Deactivate user account by setting status to 'Inactive'
+      const { error: deactivateError } = await supabase
+        .from("hrm_users")
+        .update({ status: "Inactive" })
+        .eq("id", id);
 
-      if (deleteError) {
-        setToast('error', 'Something went wrong, please reload the page.')
+      if (deactivateError) {
+        setToast("error", "Something went wrong, please reload the page.");
       } else {
-        setToast('success', 'Account deleted successfully.')
+        setToast("success", "Account deactivated successfully.");
 
         // Update data in redux
-        const items = [...globallist]
-        const updatedList = items.filter((item) => item.id !== id)
-        dispatch(updateList(updatedList))
+        const items = [...globallist];
+        const updatedList = items.map((item) => {
+          if (item.id === id) {
+            return { ...item, status: "Inactive" };
+          }
+          return item;
+        });
+        dispatch(updateList(updatedList));
 
-        // Updating showing text in redux
-        dispatch(
-          updateResultCounter({
-            showing: Number(resultsCounter.showing) - 1,
-            results: Number(resultsCounter.results) - 1
-          })
-        )
-
-        router.refresh()
+        router.refresh();
 
         // hide the modal
-        hideModal()
+        hideModal();
       }
     } catch (err) {
-      console.error(err)
-      setToast('error', 'Something went wrong, please reload the page.')
+      console.error(err);
+      setToast("error", "Something went wrong, please reload the page.");
     }
-  }
+  };
+
+  const handleReactivate = async () => {
+    try {
+      // Reactivate user account by setting status to 'Active'
+      const { error: reactivateError } = await supabase
+        .from("hrm_users")
+        .update({ status: "Active" })
+        .eq("id", id);
+
+      if (reactivateError) {
+        setToast("error", "Something went wrong, please reload the page.");
+      } else {
+        setToast("success", "Account reactivated successfully.");
+
+        // Update data in redux
+        const items = [...globallist];
+        const updatedList = items.map((item) => {
+          if (item.id === id) {
+            return { ...item, status: "Active" };
+          }
+          return item;
+        });
+        dispatch(updateList(updatedList));
+
+        router.refresh();
+
+        // hide the modal
+        hideModal();
+      }
+    } catch (err) {
+      console.error(err);
+      setToast("error", "Something went wrong, please reload the page.");
+    }
+  };
 
   const getUpdatedDropdownData = (formdata: Employee) => {
-    let json = {}
+    let json = {};
 
     // Positions
     const pos = positions.filter(
       (x) => x.id.toString() === formdata.position_id.toString()
-    )
+    );
     if (pos.length > 0) {
-      json = { ...json, hrm_positions: { id: pos[0].id, name: pos[0].name } }
+      json = { ...json, hrm_positions: { id: pos[0].id, name: pos[0].name } };
     }
 
     // schools
-    const sch = schools?.filter((x) => x.id.toString() === formdata.school_id)
+    const sch = schools?.filter((x) => x.id.toString() === formdata.school_id);
     if (sch.length > 0) {
-      json = { ...json, hrm_schools: { id: sch[0].id, name: sch[0].name } }
+      json = { ...json, hrm_schools: { id: sch[0].id, name: sch[0].name } };
     }
 
     // offices
-    const off = offices?.filter((x) => x.id.toString() === formdata.office_id)
+    const off = offices?.filter((x) => x.id.toString() === formdata.office_id);
     if (off.length > 0) {
-      json = { ...json, hrm_offices: { id: off[0].id, name: off[0].name } }
+      json = { ...json, hrm_offices: { id: off[0].id, name: off[0].name } };
     }
 
-    return json
-  }
+    return json;
+  };
 
   const handleDistrictChange = async (districtId: string) => {
-    setSelectedDistrict(districtId)
-    setLoadingSchools(true)
+    setSelectedDistrict(districtId);
+    setLoadingSchools(true);
 
-    const result = await fetchSchools({ filterDistrictId: districtId }, 300, 0)
+    const result = await fetchSchools({ filterDistrictId: districtId }, 300, 0);
 
-    setSchools(result.data.length > 0 ? result.data : [])
-    setLoadingSchools(false)
-  }
+    setSchools(result.data.length > 0 ? result.data : []);
+    setLoadingSchools(false);
+  };
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
   useEffect(() => {
     const fetchAccountDetails = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
         const { data, error } = await supabase
-          .from('hrm_users')
-          .select('*, hrm_positions:position_id(name)')
-          .eq('id', id)
+          .from("hrm_users")
+          .select("*, hrm_positions:position_id(name)")
+          .eq("id", id)
           .limit(1)
-          .single()
+          .single();
 
-        if (error) throw new Error(error.message)
+        if (error) throw new Error(error.message);
 
-        setUserData(data)
+        setUserData(data);
 
-        setAvatarUrl(data.avatar_url)
-        setAssignment(data.assignment)
-        setSelectedDistrict(data.district_id ?? '')
-        setSelectedSchool(data.school_id ?? '')
-        setSelectedOffice(data.office_id ?? '')
-        setSelectedPosition(data.position_id ?? '')
+        setAvatarUrl(data.avatar_url);
+        setAssignment(data.assignment);
+        setSelectedDistrict(data.district_id ?? "");
+        setSelectedSchool(data.school_id ?? "");
+        setSelectedOffice(data.office_id ?? "");
+        setSelectedPosition(data.position_id ?? "");
 
         // Update school list dropdown
-        if (data.assignment === 'school')
-          void handleDistrictChange(data.district_id)
+        if (data.assignment === "school")
+          void handleDistrictChange(data.district_id);
 
         reset({
-          firstname: data ? data.firstname : '',
-          middlename: data ? data.middlename : '',
-          lastname: data ? data.lastname : '',
-          assignment: data ? data.assignment : '',
-          birthday: data?.birthday ? data.birthday : '',
-          district_id: data ? data.district_id : '',
-          school_id: data ? data.school_id : '',
-          office_id: data ? data.office_id : '',
-          position_id: data ? data.position_id : '',
-          position_type: data ? data.position_type : '',
-          salary_grade: data ? data.salary_grade : '',
-          salary_step: data ? data.salary_step : '',
+          firstname: data ? data.firstname : "",
+          middlename: data ? data.middlename : "",
+          lastname: data ? data.lastname : "",
+          assignment: data ? data.assignment : "",
+          birthday: data?.birthday ? data.birthday : "",
+          district_id: data ? data.district_id : "",
+          school_id: data ? data.school_id : "",
+          office_id: data ? data.office_id : "",
+          position_id: data ? data.position_id : "",
+          position_type: data ? data.position_type : "",
+          salary_grade: data ? data.salary_grade : "",
+          salary_step: data ? data.salary_step : "",
           date_of_next_step_increment: data
             ? data.date_of_next_step_increment
-            : ''
+            : "",
           // joining date and date of last promotion has been remove as it is manage on plantilla item
           // joining_date: data?.joining_date ? data.joining_date : '',
           // date_of_last_promotion: data?.date_of_last_promotion
           //   ? data.date_of_last_promotion
           //   : ''
-        })
+        });
       } catch (e) {
-        console.error('fetch error: ', e)
+        console.error("fetch error: ", e);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
     const fetchPositionsData = async () => {
-      const result = await fetchPositions('', 300, 0)
-      setPositions(result.data.length > 0 ? result.data : [])
-    }
+      const result = await fetchPositions("", 300, 0);
+      setPositions(result.data.length > 0 ? result.data : []);
+    };
 
     const fetchDistrictsData = async () => {
-      const result = await fetchDistricts('', 300, 0)
-      setDistricts(result.data.length > 0 ? result.data : null)
-    }
+      const result = await fetchDistricts("", 300, 0);
+      setDistricts(result.data.length > 0 ? result.data : null);
+    };
 
     const fetchOfficesData = async () => {
-      const result = await fetchOffices('', 300, 0)
-      setOffices(result.data.length > 0 ? result.data : [])
-    }
+      const result = await fetchOffices("", 300, 0);
+      setOffices(result.data.length > 0 ? result.data : []);
+    };
 
     const fetchItem = async () => {
-      const result = await fetchItems({ filterUser: id }, 9, 0)
+      const result = await fetchItems({ filterUser: id }, 9, 0);
       if (result.data.length > 0) {
-        setItem(result.data[0])
+        setItem(result.data[0]);
       }
-    }
-    void fetchDistrictsData()
-    void fetchOfficesData()
+    };
+    void fetchDistrictsData();
+    void fetchOfficesData();
 
-    void fetchAccountDetails()
-    void fetchPositionsData()
-    void fetchItem()
+    void fetchAccountDetails();
+    void fetchPositionsData();
+    void fetchItem();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, reset])
+  }, [id, reset]);
 
   const handleChangePositionType = async (type: string) => {
-    if (!userData) return
+    if (!userData) return;
 
     // Current Balances
     const { data: balancesData } = await supabase
-      .from('hrm_leave_credits')
+      .from("hrm_leave_credits")
       .select()
-      .eq('user_id', id)
+      .eq("user_id", id);
 
     const balances: Array<{
-      type: string
-      balance: string
-    }> = []
+      type: string;
+      balance: string;
+    }> = [];
 
     if (balancesData && balancesData.length > 0) {
-      const creditsData: LeaveCreditTypes[] = balancesData
+      const creditsData: LeaveCreditTypes[] = balancesData;
       creditsData.forEach((credit) => {
         balances.push({
           type: credit.type,
-          balance: credit.credits.toString()
-        })
-      })
+          balance: credit.credits.toString(),
+        });
+      });
     }
 
     // Count Service Credits balance if teaching
     if (
-      (type === 'Non-teaching' || type === 'Teaching-Related') &&
-      userData.position_type === 'Teaching'
+      (type === "Non-teaching" || type === "Teaching-Related") &&
+      userData.position_type === "Teaching"
     ) {
       if (balances.length > 0) {
-        const scList = balances.find((item) => item.type === 'Service Credit')
+        const scList = balances.find((item) => item.type === "Service Credit");
 
         // first index of array should be the latest and updated balance
-        const sc = scList?.balance ?? 0
-        setScBalance(Number(sc))
+        const sc = scList?.balance ?? 0;
+        setScBalance(Number(sc));
 
         // formula to convert sc to vl/sl as amended by CSC MC No.41, s. 1998
-        const vlsl = (30 * Number(sc)) / 69
-        setVlslBalance(vlsl)
+        const vlsl = (30 * Number(sc)) / 69;
+        setVlslBalance(vlsl);
 
         // display the change to the UI
-        setPositionTypeChange(type)
+        setPositionTypeChange(type);
       }
     }
 
     // Count VL/SL balance if non-teaching
-    if (type === 'Teaching' && userData.position_type !== 'Teaching') {
+    if (type === "Teaching" && userData.position_type !== "Teaching") {
       if (balances.length > 0) {
-        const vlList = balances.find((item) => item.type === 'Vacation Leave')
-        const slList = balances.find((item) => item.type === 'Sick Leave')
+        const vlList = balances.find((item) => item.type === "Vacation Leave");
+        const slList = balances.find((item) => item.type === "Sick Leave");
 
         // first index of array should be the latest and updated balance
-        const sl = slList?.balance ?? 0
-        const vl = vlList?.balance ?? 0
-        setSlBalance(Number(sl))
-        setVlBalance(Number(vl))
+        const sl = slList?.balance ?? 0;
+        const vl = vlList?.balance ?? 0;
+        setSlBalance(Number(sl));
+        setVlBalance(Number(vl));
 
         // formula to convert vl/sl to sc as amended by CSC MC No.41, s. 1998
-        const sc = ((Number(vl) + Number(sl)) / 30) * 69
-        setScBalance(sc)
+        const sc = ((Number(vl) + Number(sl)) / 30) * 69;
+        setScBalance(sc);
 
         // display the change to the UI
-        setPositionTypeChange('Teaching')
+        setPositionTypeChange("Teaching");
       }
     }
 
-    if (type === '' || type === userData.position_type) {
-      setPositionTypeChange('')
+    if (type === "" || type === userData.position_type) {
+      setPositionTypeChange("");
     }
-  }
+  };
 
-  const salaryGradeOptions = []
+  const salaryGradeOptions = [];
   for (let i = 1; i <= 33; i++) {
     salaryGradeOptions.push(
       <option key={i} value={i}>
         {i}
       </option>
-    )
+    );
   }
-  const salaryStepOptions = []
+  const salaryStepOptions = [];
   for (let i = 1; i <= 8; i++) {
     salaryStepOptions.push(
       <option key={i} value={i}>
         {i}
       </option>
-    )
+    );
   }
 
   return (
@@ -499,7 +518,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                     {/* Begin First Column */}
                     <div className="w-full px-4">
                       <div className="text-center">
-                        {avatarUrl && avatarUrl !== '' ? (
+                        {avatarUrl && avatarUrl !== "" ? (
                           <div className="mx-auto relative rounded-full overflow-hidden h-16 w-16 border border-gray-300">
                             <Image
                               src={avatarUrl}
@@ -522,7 +541,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           <div className="app__label_standard">First Name:</div>
                           <div>
                             <input
-                              {...register('firstname', { required: true })}
+                              {...register("firstname", { required: true })}
                               type="text"
                               className="app__input_standard"
                             />
@@ -541,7 +560,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                           <div>
                             <input
-                              {...register('middlename')}
+                              {...register("middlename")}
                               type="text"
                               className="app__input_standard"
                             />
@@ -553,7 +572,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           <div className="app__label_standard">Last Name:</div>
                           <div>
                             <input
-                              {...register('lastname', { required: true })}
+                              {...register("lastname", { required: true })}
                               type="text"
                               className="app__input_standard"
                             />
@@ -570,7 +589,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           <div className="app__label_standard">Birthday:</div>
                           <div>
                             <input
-                              {...register('birthday')}
+                              {...register("birthday")}
                               type="date"
                               className="app__input_standard"
                             />
@@ -584,7 +603,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                           <div>
                             <select
-                              {...register('assignment', { required: true })}
+                              {...register("assignment", { required: true })}
                               value={assignment}
                               onChange={(e) => setAssignment(e.target.value)}
                               className="app__select_standard"
@@ -601,7 +620,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                         </div>
                       </div>
-                      {assignment === 'school' && (
+                      {assignment === "school" && (
                         <>
                           <div className="app__form_field_container">
                             <div className="w-full">
@@ -610,8 +629,8 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                               </div>
                               <div>
                                 <select
-                                  {...register('district_id', {
-                                    required: true
+                                  {...register("district_id", {
+                                    required: true,
                                   })}
                                   onChange={async (e) =>
                                     await handleDistrictChange(e.target.value)
@@ -641,7 +660,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           <OneColLayoutLoading rows={1} />
                         </div>
                       )}
-                      {assignment === 'school' && !loadingSchools && (
+                      {assignment === "school" && !loadingSchools && (
                         <>
                           <div className="app__form_field_container">
                             <div className="w-full">
@@ -650,7 +669,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                               </div>
                               <div>
                                 <select
-                                  {...register('school_id', { required: true })}
+                                  {...register("school_id", { required: true })}
                                   value={selectedSchool}
                                   onChange={(e) =>
                                     setSelectedSchool(e.target.value)
@@ -674,7 +693,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                         </>
                       )}
-                      {assignment === 'office' && (
+                      {assignment === "office" && (
                         <div className="app__form_field_container">
                           <div className="w-full">
                             <div className="app__label_standard">
@@ -682,7 +701,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                             </div>
                             <div>
                               <select
-                                {...register('office_id', { required: true })}
+                                {...register("office_id", { required: true })}
                                 value={selectedOffice}
                                 onChange={(e) =>
                                   setSelectedOffice(e.target.value)
@@ -726,12 +745,12 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                           {!isAdmin ? (
                             <div className="app__label_value">
-                              {userData ? userData.hrm_positions?.name : ''}
+                              {userData ? userData.hrm_positions?.name : ""}
                             </div>
                           ) : (
                             <div>
                               <select
-                                {...register('position_id', { required: true })}
+                                {...register("position_id", { required: true })}
                                 value={selectedPosition}
                                 onChange={(e) =>
                                   setSelectedPosition(e.target.value)
@@ -761,13 +780,13 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                           {!isAdmin ? (
                             <div className="app__label_value">
-                              {userData ? userData.position_type : ''}
+                              {userData ? userData.position_type : ""}
                             </div>
                           ) : (
                             <div>
                               <select
-                                {...register('position_type', {
-                                  required: true
+                                {...register("position_type", {
+                                  required: true,
                                 })}
                                 onChange={(e) =>
                                   handleChangePositionType(e.target.value)
@@ -795,39 +814,39 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                             Service Credit or Service Credit to VL/SL)
                           </div>
                         </div>
-                        {(positionTypeChange === 'Non-teaching' ||
-                          positionTypeChange === 'Teaching-Related') && (
+                        {(positionTypeChange === "Non-teaching" ||
+                          positionTypeChange === "Teaching-Related") && (
                           <div className="ml-4 text-xs text-gray-700">
                             <span className="text-green-700 font-bold">
                               {Number(scBalance).toFixed(3)}
-                            </span>{' '}
-                            Service Credits will be converted to{' '}
+                            </span>{" "}
+                            Service Credits will be converted to{" "}
                             <span className="text-green-700 font-bold">
                               {(vlslBalance / 2).toFixed(3)}
-                            </span>{' '}
-                            VL and{' '}
+                            </span>{" "}
+                            VL and{" "}
                             <span className="text-green-700 font-bold">
                               {(vlslBalance / 2).toFixed(3)}
-                            </span>{' '}
+                            </span>{" "}
                             SL
                           </div>
                         )}
-                        {positionTypeChange === 'Teaching' && (
+                        {positionTypeChange === "Teaching" && (
                           <div className="ml-4 text-xs text-gray-700">
                             <span className="text-green-700 font-bold">
                               {Number(vlBalance).toFixed(3)}
-                            </span>{' '}
-                            VL and{' '}
+                            </span>{" "}
+                            VL and{" "}
                             <span className="text-green-700 font-bold">
                               {Number(slBalance).toFixed(3)}
-                            </span>{' '}
-                            SL will be converted to{' '}
+                            </span>{" "}
+                            SL will be converted to{" "}
                             {Number(scBalance).toFixed(3)} Service Credit
                           </div>
                         )}
                       </div>
-                      {(positionTypeChange === 'Non-teaching' ||
-                        positionTypeChange === 'Teaching-Related') && (
+                      {(positionTypeChange === "Non-teaching" ||
+                        positionTypeChange === "Teaching-Related") && (
                         <div className="app__form_field_container">
                           <div className="w-full">
                             <div className="app__label_standard">
@@ -835,34 +854,34 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                             </div>
                             <div>
                               <input
-                                {...register('date_of_next_increment', {
+                                {...register("date_of_next_increment", {
                                   required:
-                                    'Date of next Increment is required',
+                                    "Date of next Increment is required",
                                   validate: {
                                     withinRange: (value) => {
-                                      const selectedDate = new Date(value) // User input date
-                                      const currentDate = new Date() // Today's date
+                                      const selectedDate = new Date(value); // User input date
+                                      const currentDate = new Date(); // Today's date
 
                                       // Calculate the range
-                                      const minDate = new Date()
+                                      const minDate = new Date();
                                       minDate.setMonth(
                                         currentDate.getMonth() - 5
-                                      ) // 5 months ago
+                                      ); // 5 months ago
 
-                                      const maxDate = new Date()
+                                      const maxDate = new Date();
                                       maxDate.setMonth(
                                         currentDate.getMonth() + 1
-                                      ) // 1 month from today
+                                      ); // 1 month from today
 
                                       if (selectedDate < minDate) {
-                                        return 'Date should not be older than 5 months'
+                                        return "Date should not be older than 5 months";
                                       }
                                       if (selectedDate > maxDate) {
-                                        return 'Date should not be later than 1 month from today'
+                                        return "Date should not be later than 1 month from today";
                                       }
-                                      return true // Date is valid
-                                    }
-                                  }
+                                      return true; // Date is valid
+                                    },
+                                  },
                                 })}
                                 type="date"
                                 placeholder="Updated Balance"
@@ -891,12 +910,12 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                           {!isAdmin ? (
                             <div className="app__label_value">
-                              {userData ? userData.salary_grade : ''}
+                              {userData ? userData.salary_grade : ""}
                             </div>
                           ) : (
                             <div>
                               <select
-                                {...register('salary_grade')}
+                                {...register("salary_grade")}
                                 className="app__select_standard"
                               >
                                 <option value="">Choose Salary Grade</option>
@@ -913,12 +932,12 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                           {!isAdmin ? (
                             <div className="app__label_value">
-                              {userData ? userData.salary_step : ''}
+                              {userData ? userData.salary_step : ""}
                             </div>
                           ) : (
                             <div>
                               <select
-                                {...register('salary_step')}
+                                {...register("salary_step")}
                                 className="app__select_standard"
                               >
                                 <option value="">
@@ -930,7 +949,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           )}
                         </div>
                       </div>
-                      {watchedSalaryStep !== '8' && (
+                      {watchedSalaryStep !== "8" && (
                         <div className="app__form_field_container">
                           <div className="w-full">
                             <div className="app__label_standard">
@@ -946,29 +965,29 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                                       parseISO(
                                         userData.date_of_next_step_increment
                                       ),
-                                      'MMMM d, yyyy'
+                                      "MMMM d, yyyy"
                                     )
-                                  : ''}
+                                  : ""}
                               </div>
                             ) : (
                               <div>
                                 <input
-                                  {...register('date_of_next_step_increment', {
+                                  {...register("date_of_next_step_increment", {
                                     validate: (value) => {
-                                      if (!value) return true // Allow empty values (not required)
+                                      if (!value) return true; // Allow empty values (not required)
 
-                                      const selectedDate = new Date(value)
-                                      const currentDate = new Date()
+                                      const selectedDate = new Date(value);
+                                      const currentDate = new Date();
 
                                       // Remove time part from current date for comparison
-                                      currentDate.setHours(0, 0, 0, 0)
+                                      currentDate.setHours(0, 0, 0, 0);
 
                                       if (selectedDate <= currentDate) {
-                                        return 'Date must be greater than today'
+                                        return "Date must be greater than today";
                                       }
 
-                                      return true // Validation passed
-                                    }
+                                      return true; // Validation passed
+                                    },
                                   })}
                                   type="date"
                                   className="app__input_standard"
@@ -1046,13 +1065,13 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                               ) : (
                                 <div>
                                   Employee currently do not have plantilla yet.
-                                  Go to{' '}
+                                  Go to{" "}
                                   <Link
                                     href="/items"
                                     className="font-bold text-blue-700"
                                   >
                                     Plantilla Items
-                                  </Link>{' '}
+                                  </Link>{" "}
                                   to create plantilla for this emplyee.
                                 </div>
                               )}
@@ -1060,28 +1079,55 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                           </div>
                         </>
                       )}
-                      {shouldUpdateRedux && hasAccess('settings') && (
+                      {shouldUpdateRedux && hasAccess("settings") && (
                         <>
-                          <div className="flex items-center">
-                            <div className="flex-grow bg-gray-300 h-px"></div>
-                            <div className="mx-4 my-4 text-gray-500 text-sm">
-                              Delete Account
-                            </div>
-                            <div className="flex-grow bg-gray-300 h-px"></div>
-                          </div>
-                          <div className="app__form_field_container">
-                            <div className="w-full">
-                              <CustomButton
-                                containerStyles="app__btn_red"
-                                title="Delete User Account"
-                                isDisabled={saving}
-                                btnType="button"
-                                handleClick={() =>
-                                  setShowDeleteAccountModal(true)
-                                }
-                              />
-                            </div>
-                          </div>
+                          {userData?.status === "Inactive" || userData?.status === "inactive" ? (
+                            <>
+                              <div className="flex items-center">
+                                <div className="flex-grow bg-gray-300 h-px"></div>
+                                <div className="mx-4 my-4 text-gray-500 text-sm">
+                                  Reactivate Account
+                                </div>
+                                <div className="flex-grow bg-gray-300 h-px"></div>
+                              </div>
+                              <div className="app__form_field_container">
+                                <div className="w-full">
+                                  <CustomButton
+                                    containerStyles="app__btn_green"
+                                    title="Reactivate User Account"
+                                    isDisabled={saving}
+                                    btnType="button"
+                                    handleClick={() =>
+                                      setShowDeleteAccountModal(true)
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center">
+                                <div className="flex-grow bg-gray-300 h-px"></div>
+                                <div className="mx-4 my-4 text-gray-500 text-sm">
+                                  Deactivate Account
+                                </div>
+                                <div className="flex-grow bg-gray-300 h-px"></div>
+                              </div>
+                              <div className="app__form_field_container">
+                                <div className="w-full">
+                                  <CustomButton
+                                    containerStyles="app__btn_red"
+                                    title="Deactivate User Account"
+                                    isDisabled={saving}
+                                    btnType="button"
+                                    handleClick={() =>
+                                      setShowDeleteAccountModal(true)
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </>
                       )}
                     </div>
@@ -1092,7 +1138,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                     <div className="app__label_standard">
                       <label className="flex items-center space-x-1">
                         <input
-                          {...register('confirmed', { required: true })}
+                          {...register("confirmed", { required: true })}
                           type="checkbox"
                           className=""
                         />
@@ -1110,7 +1156,7 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
                   </div>
                   <div className="app__modal_footer">
                     <button type="submit" className="app__btn_green_sm">
-                      {saving ? 'Saving..' : 'Save'}
+                      {saving ? "Saving.." : "Save"}
                     </button>
                   </div>
                 </form>
@@ -1130,12 +1176,15 @@ const AccountDetails = ({ hideModal, shouldUpdateRedux, id }: ModalProps) => {
       {/* Item Modal */}
       {showDeleteAccountModal && (
         <ConfirmDeleteAccount
-          onConfirm={handleDelete}
+          onConfirm={
+            userData?.status === "Inactive" || userData?.status === "inactive" ? handleReactivate : handleDeactivate
+          }
           onCancel={() => setShowDeleteAccountModal(false)}
+          actionType={userData?.status === "Inactive" || userData?.status === "inactive" ? "reactivate" : "deactivate"}
         />
       )}
     </>
-  )
-}
+  );
+};
 
-export default AccountDetails
+export default AccountDetails;

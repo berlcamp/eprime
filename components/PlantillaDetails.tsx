@@ -2,20 +2,20 @@ import {
   ConfirmModal,
   CustomButton,
   SearchUserInput,
-  UserBlock
-} from '@/components/index'
-import { useFilter } from '@/context/FilterContext'
-import { useSupabase } from '@/context/SupabaseProvider'
+  UserBlock,
+} from "@/components/index";
+import { useFilter } from "@/context/FilterContext";
+import { useSupabase } from "@/context/SupabaseProvider";
 import {
   fetchImplementingUnits,
   fetchOffices,
   fetchPositions,
   fetchSalaryGrades,
   fetchSchools,
-  logError
-} from '@/utils/fetchApi'
-import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+  logError,
+} from "@/utils/fetchApi";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 
 // Types
 import type {
@@ -27,50 +27,50 @@ import type {
   PositionTypes,
   SalaryGradeTypes,
   SchoolTypes,
-  namesType
-} from '@/types'
+  namesType,
+} from "@/types";
 
 // Redux imports
-import { updateList } from '@/GlobalRedux/Features/listSlice'
-import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { format } from 'date-fns'
-import { useDispatch, useSelector } from 'react-redux'
+import { updateList } from "@/GlobalRedux/Features/listSlice";
+import { updateResultCounter } from "@/GlobalRedux/Features/resultsCounterSlice";
+import { format } from "date-fns";
+import { useDispatch, useSelector } from "react-redux";
 
 interface ModalProps {
-  hideModal: () => void
-  editData: ItemTypes | null
+  hideModal: () => void;
+  editData: ItemTypes | null;
 }
 
 const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
-  const { setToast, hasAccess } = useFilter()
-  const { supabase, session } = useSupabase()
-  const [saving, setSaving] = useState(false)
+  const { setToast, hasAccess } = useFilter();
+  const { supabase, session } = useSupabase();
+  const [saving, setSaving] = useState(false);
 
-  const [reason, setReason] = useState('')
-  const [showConfirmRemoveModal, setShowConfirmRemoveModal] = useState(false)
+  const [reason, setReason] = useState("");
+  const [showConfirmRemoveModal, setShowConfirmRemoveModal] = useState(false);
 
   const [user, setUser] = useState<namesType | null>(
     editData ? editData.hrm_user : null
-  )
+  );
 
-  const [selectedSchool, setSelectedSchool] = useState('')
-  const [selectedPosition, setSelectedPosition] = useState('')
+  const [selectedSchool, setSelectedSchool] = useState("");
+  const [selectedPosition, setSelectedPosition] = useState("");
 
-  const [salaryGrades, setSalaryGrades] = useState<SalaryGradeTypes[] | []>([])
-  const [schools, setSchools] = useState<SchoolTypes[] | []>([])
-  const [offices, setOffices] = useState<Office[] | []>([])
-  const [positions, setPositions] = useState<PositionTypes[] | []>([])
+  const [salaryGrades, setSalaryGrades] = useState<SalaryGradeTypes[] | []>([]);
+  const [schools, setSchools] = useState<SchoolTypes[] | []>([]);
+  const [offices, setOffices] = useState<Office[] | []>([]);
+  const [positions, setPositions] = useState<PositionTypes[] | []>([]);
   const [implementingUnits, setImplementingUnits] = useState<
     ImplementingUnitTypes[] | []
-  >([])
+  >([]);
 
   // Check access from employee_accounts settings or Super Admins
-  const isHr = hasAccess('records')
+  const isHr = hasAccess("records");
 
   // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
-  const resultsCounter = useSelector((state: any) => state.results.value)
-  const dispatch = useDispatch()
+  const globallist = useSelector((state: any) => state.list.value);
+  const resultsCounter = useSelector((state: any) => state.results.value);
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -80,34 +80,34 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     setError,
     clearErrors,
     watch,
-    handleSubmit
+    handleSubmit,
   } = useForm<ItemTypes>({
-    mode: 'onSubmit'
-  })
+    mode: "onSubmit",
+  });
 
-  const watchedTrack = watch('track')
+  const watchedTrack = watch("track");
 
   const onSubmit = async (formdata: ItemTypes) => {
-    if (saving) return
+    if (saving) return;
 
     if (editData) {
-      void handleUpdate(formdata)
+      void handleUpdate(formdata);
     } else {
-      void handleCreate(formdata)
+      void handleCreate(formdata);
     }
-  }
+  };
 
   const handleCreate = async (formdata: ItemTypes) => {
     // if selected item holder already has an item
     if (user) {
-      const userExists = await checkExistingHolder(user.id)
+      const userExists = await checkExistingHolder(user.id);
       if (userExists) {
-        setToast('error', 'This employee already has an existing item.')
-        return
+        setToast("error", "This employee already has an existing item.");
+        return;
       }
     }
 
-    setSaving(true)
+    setSaving(true);
 
     const newData = {
       user_id: user ? user.id : null,
@@ -119,19 +119,19 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       strand: formdata.strand,
       implementing_unit_id: formdata.implementing_unit_id,
       school_id: formdata.school_id ? formdata.school_id : null,
-      office_id: formdata.office_id !== '' ? formdata.office_id : null,
+      office_id: formdata.office_id !== "" ? formdata.office_id : null,
       salary_grade: formdata.salary_grade,
       vice: formdata.vice,
       sex: formdata.sex,
       birthday: formdata.birthday
-        ? format(new Date(formdata.birthday), 'MM/dd/yyyy')
+        ? format(new Date(formdata.birthday), "MM/dd/yyyy")
         : null,
       eligibility: formdata.eligibility,
       date_of_last_promotion: formdata.date_of_last_promotion
-        ? format(new Date(formdata.date_of_last_promotion), 'MM/dd/yyyy')
+        ? format(new Date(formdata.date_of_last_promotion), "MM/dd/yyyy")
         : null,
       date_of_original_appointment: formdata.date_of_original_appointment
-        ? format(new Date(formdata.date_of_original_appointment), 'MM/dd/yyyy')
+        ? format(new Date(formdata.date_of_original_appointment), "MM/dd/yyyy")
         : null,
       status: formdata.status,
       authorized_annual_salary: formdata.authorized_annual_salary,
@@ -142,98 +142,98 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       tin_no: formdata.tin_no,
       umid_no: formdata.umid_no,
       updated_by: session?.user.id,
-      org_id: process.env.NEXT_PUBLIC_ORG_ID
-    }
+      org_id: process.env.NEXT_PUBLIC_ORG_ID,
+    };
 
     try {
       const { data, error } = await supabase
-        .from('hrm_items')
+        .from("hrm_items")
         .insert(newData)
-        .select()
+        .select();
 
       if (error) {
         void logError(
-          'Create New Plantilla',
-          'hrm_items',
+          "Create New Plantilla",
+          "hrm_items",
           JSON.stringify(newData),
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       if (user) {
         const { error: error2 } = await supabase
-          .from('hrm_users')
+          .from("hrm_users")
           .update({
             item_id: data[0].id,
             joining_date: formdata.date_of_original_appointment,
-            date_of_last_promotion: formdata.date_of_last_promotion
+            date_of_last_promotion: formdata.date_of_last_promotion,
           })
-          .eq('id', user.id)
+          .eq("id", user.id);
 
         if (error2) {
           void logError(
-            'Update user item id',
-            'hrm_users',
+            "Update user item id",
+            "hrm_users",
             JSON.stringify(newData),
             error2.message
-          )
+          );
           setToast(
-            'error',
-            'Saving failed, please reload the page and try again.'
-          )
-          throw new Error(error2.message)
+            "error",
+            "Saving failed, please reload the page and try again."
+          );
+          throw new Error(error2.message);
         }
       }
 
       // Append new data in redux
       const hrmPosition = positions.find(
         (p) => p.id.toString() === formdata.position_id
-      )
+      );
       const hrmImplementingUnit = implementingUnits.find(
         (p) => p.id.toString() === formdata.implementing_unit_id
-      )
+      );
 
       const updatedData = {
         ...newData,
         implementing_unit: hrmImplementingUnit,
         hrm_position: hrmPosition,
         hrm_user: user ?? null,
-        id: data[0].id
-      }
-      dispatch(updateList([updatedData, ...globallist]))
+        id: data[0].id,
+      };
+      dispatch(updateList([updatedData, ...globallist]));
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
       // Updating showing text in redux
       dispatch(
         updateResultCounter({
           showing: Number(resultsCounter.showing) + 1,
-          results: Number(resultsCounter.results) + 1
+          results: Number(resultsCounter.results) + 1,
         })
-      )
+      );
 
-      setSaving(false)
+      setSaving(false);
 
       // hide the modal
-      hideModal()
+      hideModal();
 
       // reset all form fields
-      reset()
+      reset();
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleUpdate = async (formdata: ItemTypes) => {
-    if (!editData) return
+    if (!editData) return;
 
-    setSaving(true)
+    setSaving(true);
 
     const newData = {
       user_id: user ? user.id : null,
@@ -244,20 +244,20 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       track: formdata.track,
       strand: formdata.strand,
       implementing_unit_id: formdata.implementing_unit_id,
-      school_id: formdata.school_id !== '' ? formdata.school_id : null,
-      office_id: formdata.office_id !== '' ? formdata.office_id : null,
+      school_id: formdata.school_id !== "" ? formdata.school_id : null,
+      office_id: formdata.office_id !== "" ? formdata.office_id : null,
       salary_grade: formdata.salary_grade,
       vice: formdata.vice,
       sex: formdata.sex,
       birthday: formdata.birthday
-        ? format(new Date(formdata.birthday), 'MM/dd/yyyy')
+        ? format(new Date(formdata.birthday), "MM/dd/yyyy")
         : null,
       eligibility: formdata.eligibility,
       date_of_last_promotion: formdata.date_of_last_promotion
-        ? format(new Date(formdata.date_of_last_promotion), 'MM/dd/yyyy')
+        ? format(new Date(formdata.date_of_last_promotion), "MM/dd/yyyy")
         : null,
       date_of_original_appointment: formdata.date_of_original_appointment
-        ? format(new Date(formdata.date_of_original_appointment), 'MM/dd/yyyy')
+        ? format(new Date(formdata.date_of_original_appointment), "MM/dd/yyyy")
         : null,
       status: formdata.status,
       authorized_annual_salary: formdata.authorized_annual_salary,
@@ -267,337 +267,374 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       level: formdata.level,
       tin_no: formdata.tin_no,
       umid_no: formdata.umid_no,
-      updated_by: session?.user.id
-    }
+      updated_by: session?.user.id,
+    };
 
     try {
       const { error } = await supabase
-        .from('hrm_items')
+        .from("hrm_items")
         .update(newData)
-        .eq('id', editData.id)
+        .eq("id", editData.id);
 
       if (error) {
         void logError(
-          'Update Plantilla',
-          'hrm_items',
+          "Update Plantilla",
+          "hrm_items",
           JSON.stringify(newData),
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       if (user) {
         const { error: error2 } = await supabase
-          .from('hrm_users')
+          .from("hrm_users")
           .update({
             item_id: editData.id,
             joining_date: formdata.date_of_original_appointment,
-            date_of_last_promotion: formdata.date_of_last_promotion
+            date_of_last_promotion: formdata.date_of_last_promotion,
           })
-          .eq('id', user.id)
+          .eq("id", user.id);
 
         if (error2) {
           void logError(
-            'Update user item id',
-            'hrm_users',
+            "Update user item id",
+            "hrm_users",
             JSON.stringify(newData),
             error2.message
-          )
+          );
           setToast(
-            'error',
-            'Saving failed, please reload the page and try again.'
-          )
-          throw new Error(error2.message)
+            "error",
+            "Saving failed, please reload the page and try again."
+          );
+          throw new Error(error2.message);
         }
       }
 
       // Update data in redux
       const hrmPosition = positions.find(
         (p) => p.id.toString() === formdata.position_id?.toString()
-      )
+      );
       const hrmImplementingUnit = implementingUnits.find(
         (p) => p.id.toString() === formdata.implementing_unit_id?.toString()
-      )
-      const items = [...globallist]
+      );
+      const items = [...globallist];
       const updatedData = {
         ...newData,
         implementing_unit: hrmImplementingUnit,
         hrm_position: hrmPosition,
         hrm_user: user ?? null,
-        id: editData.id
-      }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
+        id: editData.id,
+      };
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+      items[foundIndex] = { ...items[foundIndex], ...updatedData };
+      dispatch(updateList(items));
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
-      setSaving(false)
+      setSaving(false);
 
       // hide the modal
-      hideModal()
+      hideModal();
 
       // reset all form fields
-      reset()
+      reset();
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const checkExistingHolder = async (userId: string): Promise<boolean> => {
     const { data, error } = await supabase
-      .from('hrm_items')
-      .select('user_id')
-      .eq('user_id', userId)
-      .single() // Use .single() to fetch one record, as user_id is likely unique
+      .from("hrm_items")
+      .select("user_id")
+      .eq("user_id", userId)
+      .single(); // Use .single() to fetch one record, as user_id is likely unique
 
     if (error) {
-      console.error('Error checking user:', error.message)
-      return false
+      console.error("Error checking user:", error.message);
+      return false;
     }
 
-    return data !== null
-  }
+    return data !== null;
+  };
 
   const handleSelectedUsers = async (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
-      const selectedUser = selectedUsers[0]
+      const selectedUser = selectedUsers[0];
       if (selectedUser.item_id) {
-        setError('user_id', {
-          type: 'manual',
-          message: 'This employee currently assigned to different plantilla'
-        })
-        return
+        setError("user_id", {
+          type: "manual",
+          message: "This employee currently assigned to different plantilla",
+        });
+        return;
       }
-      clearErrors('user_id')
+      clearErrors("user_id");
       // Prepopulate assigned area
       if (selectedUser.school_id) {
-        setValue('school_id', selectedUser.school_id)
+        setValue("school_id", selectedUser.school_id);
       }
       // Prepopulate birthday
       if (selectedUser.birthday) {
         setValue(
-          'birthday',
-          format(new Date(selectedUser.birthday), 'yyyy-MM-dd')
-        )
+          "birthday",
+          format(new Date(selectedUser.birthday), "yyyy-MM-dd")
+        );
       }
       // Prepopulate sex
-      setValue('sex', selectedUser.gender)
-      setUser(selectedUser)
+      setValue("sex", selectedUser.gender);
+      setUser(selectedUser);
 
       // Prepopulate actual and authorized salary
       const matchingSalaryStepOne = salaryGrades.find(
         (sg) =>
           sg.grade.toString() === selectedUser.salary_grade.toString() &&
-          sg.step.toString() === '1'
-      )
+          sg.step.toString() === "1"
+      );
       const matchingSalaryStep = salaryGrades.find(
         (sg) =>
           sg.grade.toString() === selectedUser.salary_grade.toString() &&
           sg.step.toString() === selectedUser.salary_step.toString()
-      )
+      );
       const autorizedSalary = matchingSalaryStepOne
         ? Number(matchingSalaryStepOne.salary) * 12
-        : ''
+        : "";
       const actualSalary = matchingSalaryStep
         ? Number(matchingSalaryStep.salary) * 12
-        : ''
-      setValue('authorized_annual_salary', autorizedSalary.toString())
-      setValue('actual_annual_salary', actualSalary.toString())
+        : "";
+      setValue("authorized_annual_salary", autorizedSalary.toString());
+      setValue("actual_annual_salary", actualSalary.toString());
 
       // Prepopulate Tin No
       const { data } = await supabase
-        .from('hrm_pds')
+        .from("hrm_pds")
         .select()
-        .eq('user_id', selectedUser.id)
+        .eq("user_id", selectedUser.id)
         .limit(1)
-        .maybeSingle()
+        .maybeSingle();
 
       if (data) {
-        const pdsData: PdsPersonalInfomationTypes = data
-        setValue('tin_no', pdsData.tin_no)
+        const pdsData: PdsPersonalInfomationTypes = data;
+        setValue("tin_no", pdsData.tin_no);
       }
     } else {
-      clearErrors('user_id')
-      setUser(null)
+      clearErrors("user_id");
+      setUser(null);
     }
-  }
+  };
 
   const handleRemove = () => {
-    setShowConfirmRemoveModal(true)
-  }
+    setShowConfirmRemoveModal(true);
+  };
 
   const handleConfirmedRemove = async () => {
-    if (!editData) return
+    if (!editData) return;
 
-    if (!editData.hrm_user) return
+    if (!editData.hrm_user) return;
 
-    if (saving) return
+    if (saving) return;
 
-    setSaving(true)
+    if (!reason || reason.trim() === "") {
+      setToast("error", "Please provide a reason for removal.");
+      return;
+    }
+
+    setSaving(true);
 
     const newData = {
       user_id: null,
-      vacancy_type: 'Natural Vacancy',
+      vacancy_type: "Natural Vacancy",
       date_of_last_promotion: null,
       date_of_original_appointment: null,
-      reason_for_removal: reason
-    }
+      reason_for_removal: reason,
+    };
 
     try {
+      // Store removal record in hrm_items_removed table
+      const removalRecord = {
+        item_id: editData.id,
+        user_id: editData.hrm_user.id,
+        reason: reason.trim(),
+        removed_by: session?.user.id,
+        org_id: process.env.NEXT_PUBLIC_ORG_ID,
+        item_number: editData.item_number,
+        position_id: editData.position_id,
+        implementing_unit_id: editData.implementing_unit_id,
+        school_id: editData.school_id,
+        office_id: editData.office_id,
+        salary_grade: editData.salary_grade,
+        date_of_original_appointment: editData.date_of_original_appointment,
+        date_of_last_promotion: editData.date_of_last_promotion,
+      };
+
+      const { error: removalError } = await supabase
+        .from("hrm_items_removed")
+        .insert(removalRecord);
+
+      if (removalError) {
+        void logError(
+          "Store removal record",
+          "hrm_items_removed",
+          JSON.stringify(removalRecord),
+          removalError.message
+        );
+        setToast("error", "Failed to store removal record. Please try again.");
+        throw new Error(removalError.message);
+      }
+
       const { error } = await supabase
-        .from('hrm_items')
+        .from("hrm_items")
         .update(newData)
-        .eq('id', editData.id)
+        .eq("id", editData.id);
 
       if (error) {
         void logError(
-          'Remove employee to Plantilla',
-          'hrm_items',
-          '',
+          "Remove employee to Plantilla",
+          "hrm_items",
+          "",
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       // remove item_id from hrm_user
       const { error: error2 } = await supabase
-        .from('hrm_users')
+        .from("hrm_users")
         .update({
-          item_id: null
+          item_id: null,
         })
-        .eq('id', editData.hrm_user?.id)
+        .eq("id", editData.hrm_user?.id);
 
       if (error2) {
         void logError(
-          'Remove item_id on hrm_users',
-          'hrm_users',
-          '',
+          "Remove item_id on hrm_users",
+          "hrm_users",
+          "",
           error2.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error2.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error2.message);
       }
 
       // Update data in redux
-      const items = [...globallist]
-      const updatedData = { ...newData, hrm_user: null, id: editData.id }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
+      const items = [...globallist];
+      const updatedData = { ...newData, hrm_user: null, id: editData.id };
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+      items[foundIndex] = { ...items[foundIndex], ...updatedData };
+      dispatch(updateList(items));
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
-      setSaving(false)
+      setSaving(false);
 
       // hide the modal
-      hideModal()
+      hideModal();
 
       // reset all form fields
-      reset()
+      reset();
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   useEffect(() => {
     const fetchPositionsData = async () => {
-      const result = await fetchPositions('', 500, 0)
-      setPositions(result.data.length > 0 ? result.data : [])
-    }
+      const result = await fetchPositions("", 500, 0);
+      setPositions(result.data.length > 0 ? result.data : []);
+    };
 
     const fetchSchoolsData = async () => {
-      const result = await fetchSchools({}, 500, 0)
-      setSchools(result.data.length > 0 ? result.data : [])
-    }
+      const result = await fetchSchools({}, 500, 0);
+      setSchools(result.data.length > 0 ? result.data : []);
+    };
 
     const fetchOfficesData = async () => {
-      const result = await fetchOffices('', 500, 0)
-      setOffices(result.data.length > 0 ? result.data : [])
-    }
+      const result = await fetchOffices("", 500, 0);
+      setOffices(result.data.length > 0 ? result.data : []);
+    };
 
     const fetchIus = async () => {
-      const result = await fetchImplementingUnits('', 3000, 0)
-      setImplementingUnits(result.data.length > 0 ? result.data : [])
-    }
+      const result = await fetchImplementingUnits("", 3000, 0);
+      setImplementingUnits(result.data.length > 0 ? result.data : []);
+    };
 
     const fetchSalaryGradesData = async () => {
-      const result = await fetchSalaryGrades(999, 0)
-      setSalaryGrades(result.data.length > 0 ? result.data : [])
-    }
+      const result = await fetchSalaryGrades(999, 0);
+      setSalaryGrades(result.data.length > 0 ? result.data : []);
+    };
 
-    void fetchSalaryGradesData()
-    void fetchIus()
-    void fetchPositionsData()
-    void fetchSchoolsData()
-    void fetchOfficesData()
-  }, [])
+    void fetchSalaryGradesData();
+    void fetchIus();
+    void fetchPositionsData();
+    void fetchSchoolsData();
+    void fetchOfficesData();
+  }, []);
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
   useEffect(() => {
     // display the default values of dynamic dropdowns
     if (editData) {
-      setSelectedSchool(editData.school_id ?? '')
-      setSelectedPosition(editData.position_id ?? '')
+      setSelectedSchool(editData.school_id ?? "");
+      setSelectedPosition(editData.position_id ?? "");
     }
 
     reset({
-      implementing_unit_id: editData ? editData.implementing_unit_id : '',
-      school_id: editData ? editData.school_id : '',
-      office_id: editData ? editData.office_id : '',
-      position_id: editData ? editData.position_id : '',
-      item_number: editData ? editData.item_number : '',
-      assigned_to: editData ? editData.assigned_to : 'school',
-      vacancy_type: editData ? editData.vacancy_type : '',
-      track: editData ? editData.track : '',
-      strand: editData ? editData.strand : '',
-      salary_grade: editData ? editData.salary_grade : '',
-      vice: editData ? editData.vice : '',
-      sex: editData ? editData.sex : '',
+      implementing_unit_id: editData ? editData.implementing_unit_id : "",
+      school_id: editData ? editData.school_id : "",
+      office_id: editData ? editData.office_id : "",
+      position_id: editData ? editData.position_id : "",
+      item_number: editData ? editData.item_number : "",
+      assigned_to: editData ? editData.assigned_to : "school",
+      vacancy_type: editData ? editData.vacancy_type : "",
+      track: editData ? editData.track : "",
+      strand: editData ? editData.strand : "",
+      salary_grade: editData ? editData.salary_grade : "",
+      vice: editData ? editData.vice : "",
+      sex: editData ? editData.sex : "",
       birthday: editData
         ? editData.birthday
-          ? format(new Date(editData.birthday), 'yyyy-MM-dd')
-          : ''
-        : '',
-      eligibility: editData ? editData.eligibility : '',
+          ? format(new Date(editData.birthday), "yyyy-MM-dd")
+          : ""
+        : "",
+      eligibility: editData ? editData.eligibility : "",
       date_of_last_promotion: editData
         ? editData.date_of_last_promotion
-          ? format(new Date(editData.date_of_last_promotion), 'yyyy-MM-dd')
-          : ''
-        : '',
+          ? format(new Date(editData.date_of_last_promotion), "yyyy-MM-dd")
+          : ""
+        : "",
       date_of_original_appointment: editData
         ? editData.date_of_original_appointment
           ? format(
               new Date(editData.date_of_original_appointment),
-              'yyyy-MM-dd'
+              "yyyy-MM-dd"
             )
-          : ''
-        : '',
-      status: editData ? editData.status : '',
+          : ""
+        : "",
+      status: editData ? editData.status : "",
       authorized_annual_salary: editData
         ? editData.authorized_annual_salary
-        : '',
-      actual_annual_salary: editData ? editData.actual_annual_salary : '',
-      area_code: editData ? editData.area_code : '',
-      area_type: editData ? editData.area_type : '',
-      level: editData ? editData.level : '',
-      tin_no: editData ? editData.tin_no : '',
-      umid_no: editData ? editData.umid_no : ''
-    })
-  }, [editData, salaryGrades, implementingUnits, positions, schools, offices])
+        : "",
+      actual_annual_salary: editData ? editData.actual_annual_salary : "",
+      area_code: editData ? editData.area_code : "",
+      area_type: editData ? editData.area_type : "",
+      level: editData ? editData.level : "",
+      tin_no: editData ? editData.tin_no : "",
+      umid_no: editData ? editData.umid_no : "",
+    });
+  }, [editData, salaryGrades, implementingUnits, positions, schools, offices]);
 
   return (
     <>
@@ -626,15 +663,17 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                       <textarea
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
-                        className="text-sm py-1 px-2 text-gray-600 border border-gray-300 rounded-sm outline-none resize-none w-1/2"
-                        placeholder="Reason for removal"
+                        className="text-sm py-1 px-2 text-gray-600 border border-gray-300 rounded-sm outline-none resize-none w-full"
+                        placeholder="Reason for removal (required)"
+                        rows={3}
                       />
                     </div>
                     <CustomButton
                       containerStyles="app__btn_green"
-                      title={saving ? 'Saving...' : 'Submit'}
+                      title={saving ? "Saving..." : "Remove Employee"}
                       btnType="button"
                       handleClick={handleRemove}
+                      isDisabled={!reason || reason.trim() === ""}
                     />
                   </div>
                 </div>
@@ -649,12 +688,12 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                       <div className="app__label_standard">Item Number</div>
                       {!isHr ? (
                         <div className="app__label_value">
-                          {editData ? editData.item_number : ''}
+                          {editData ? editData.item_number : ""}
                         </div>
                       ) : (
                         <div>
                           <input
-                            {...register('item_number', { required: true })}
+                            {...register("item_number", { required: true })}
                             type="text"
                             placeholder="Item No."
                             className="app__input_standard"
@@ -674,7 +713,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
 
                       <div>
                         <select
-                          {...register('vacancy_type', { required: true })}
+                          {...register("vacancy_type", { required: true })}
                           className="app__select_standard"
                         >
                           <option value="">Choose</option>
@@ -707,7 +746,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                       ) : (
                         <div>
                           <select
-                            {...register('position_id', { required: true })}
+                            {...register("position_id", { required: true })}
                             value={selectedPosition}
                             onChange={(e) =>
                               setSelectedPosition(e.target.value)
@@ -735,7 +774,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                       <div className="app__label_standard">Track</div>
                       <div>
                         <select
-                          {...register('track')}
+                          {...register("track")}
                           className="app__select_standard"
                         >
                           <option value="">Choose</option>
@@ -750,11 +789,11 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                       <div className="app__label_standard">Strand</div>
                       <div>
                         <select
-                          {...register('strand')}
+                          {...register("strand")}
                           className="app__select_standard"
                         >
                           <option value="">Choose</option>
-                          {watchedTrack === 'Academic Track' && (
+                          {watchedTrack === "Academic Track" && (
                             <>
                               <option value="Arts">Arts</option>
                               <option value="Sports">Sports</option>
@@ -763,7 +802,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                               <option value="GAS">GAS</option>
                             </>
                           )}
-                          {watchedTrack === 'TVL Track' && (
+                          {watchedTrack === "TVL Track" && (
                             <>
                               <option value="Home Economics">
                                 Home Economics
@@ -818,8 +857,8 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                       ) : (
                         <div>
                           <select
-                            {...register('implementing_unit_id', {
-                              required: true
+                            {...register("implementing_unit_id", {
+                              required: true,
                             })}
                             className="app__input_standard"
                           >
@@ -868,9 +907,9 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                               <input
                                 type="radio"
                                 value="school"
-                                checked={watch('assigned_to') === 'school'}
-                                {...register('assigned_to', {
-                                  required: true
+                                checked={watch("assigned_to") === "school"}
+                                {...register("assigned_to", {
+                                  required: true,
                                 })}
                               />
                               <span>School</span>
@@ -880,19 +919,19 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                               <input
                                 type="radio"
                                 value="office"
-                                checked={watch('assigned_to') === 'office'}
-                                {...register('assigned_to', {
-                                  required: true
+                                checked={watch("assigned_to") === "office"}
+                                {...register("assigned_to", {
+                                  required: true,
                                 })}
                               />
                               <span>Division Office</span>
                             </label>
                           </div>
                         </div>
-                        {watch('assigned_to') === 'school' && (
+                        {watch("assigned_to") === "school" && (
                           <div>
                             <select
-                              {...register('school_id')}
+                              {...register("school_id")}
                               value={selectedSchool}
                               onChange={(e) =>
                                 setSelectedSchool(e.target.value)
@@ -908,10 +947,10 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                             </select>
                           </div>
                         )}
-                        {watch('assigned_to') === 'office' && (
+                        {watch("assigned_to") === "office" && (
                           <div>
                             <select
-                              {...register('office_id')}
+                              {...register("office_id")}
                               className="app__input_standard"
                             >
                               <option value="">Choose Division Office</option>
@@ -929,7 +968,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           <div className="app__label_standard">Vice</div>
                           <div>
                             <input
-                              {...register('vice')}
+                              {...register("vice")}
                               type="text"
                               placeholder="Vice"
                               className="app__input_standard"
@@ -942,7 +981,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           <div className="app__label_standard">Sex</div>
                           <div>
                             <select
-                              {...register('sex')}
+                              {...register("sex")}
                               className="app__select_standard"
                             >
                               <option value="">Select</option>
@@ -959,7 +998,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           </div>
                           <div>
                             <input
-                              {...register('birthday')}
+                              {...register("birthday")}
                               type="date"
                               className="app__input_standard"
                             />
@@ -973,7 +1012,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           </div>
                           <div>
                             <input
-                              {...register('eligibility')}
+                              {...register("eligibility")}
                               type="text"
                               placeholder="Civil Service Eligibility"
                               className="app__input_standard"
@@ -988,8 +1027,8 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           </div>
                           <div>
                             <input
-                              {...register('date_of_last_promotion', {
-                                required: true
+                              {...register("date_of_last_promotion", {
+                                required: true,
                               })}
                               type="date"
                               className="app__input_standard"
@@ -1009,8 +1048,8 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           </div>
                           <div>
                             <input
-                              {...register('date_of_original_appointment', {
-                                required: true
+                              {...register("date_of_original_appointment", {
+                                required: true,
                               })}
                               type="date"
                               className="app__input_standard"
@@ -1028,7 +1067,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           <div className="app__label_standard">Status</div>
                           <div>
                             <input
-                              {...register('status')}
+                              {...register("status")}
                               type="status"
                               placeholder="Status"
                               className="app__input_standard"
@@ -1043,7 +1082,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           </div>
                           <div>
                             <input
-                              {...register('authorized_annual_salary')}
+                              {...register("authorized_annual_salary")}
                               type="text"
                               placeholder="Authorized Annual Salary"
                               className="app__input_standard"
@@ -1058,7 +1097,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           </div>
                           <div>
                             <input
-                              {...register('actual_annual_salary')}
+                              {...register("actual_annual_salary")}
                               type="text"
                               placeholder="Actual Annual Salary"
                               className="app__input_standard"
@@ -1071,7 +1110,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           <div className="app__label_standard">Area Code</div>
                           <div>
                             <input
-                              {...register('area_code')}
+                              {...register("area_code")}
                               type="text"
                               placeholder="Area Code"
                               className="app__input_standard"
@@ -1084,7 +1123,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           <div className="app__label_standard">Area Type</div>
                           <div>
                             <input
-                              {...register('area_type')}
+                              {...register("area_type")}
                               type="text"
                               placeholder="Area Type"
                               className="app__input_standard"
@@ -1097,7 +1136,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           <div className="app__label_standard">Level</div>
                           <div>
                             <input
-                              {...register('level')}
+                              {...register("level")}
                               type="text"
                               placeholder="Level"
                               className="app__input_standard"
@@ -1110,7 +1149,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           <div className="app__label_standard">TIN No</div>
                           <div>
                             <input
-                              {...register('tin_no')}
+                              {...register("tin_no")}
                               type="text"
                               placeholder="TIN No"
                               className="app__input_standard"
@@ -1123,7 +1162,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                           <div className="app__label_standard">UMID No</div>
                           <div>
                             <input
-                              {...register('umid_no')}
+                              {...register("umid_no")}
                               type="text"
                               placeholder="UMID No"
                               className="app__input_standard"
@@ -1141,7 +1180,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                 <div className="app__label_standard">
                   <label className="flex items-center space-x-1">
                     <input
-                      {...register('confirmed', { required: true })}
+                      {...register("confirmed", { required: true })}
                       type="checkbox"
                       className=""
                     />
@@ -1161,7 +1200,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                 <CustomButton
                   btnType="submit"
                   isDisabled={saving}
-                  title={saving ? 'Saving...' : 'Save'}
+                  title={saving ? "Saving..." : "Save"}
                   containerStyles="app__btn_green"
                 />
               </div>
@@ -1180,7 +1219,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
         />
       )}
     </>
-  )
-}
+  );
+};
 
-export default PlantillaDetails
+export default PlantillaDetails;

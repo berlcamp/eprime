@@ -1,67 +1,69 @@
-'use client'
-import React, { useState } from 'react'
+"use client";
+import React, { useState } from "react";
 
-import { CustomButton, RegisterModal } from '@/components/index'
-import { useSupabase } from '@/context/SupabaseProvider'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { CustomButton, RegisterModal } from "@/components/index";
+import { useSupabase } from "@/context/SupabaseProvider";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // Supabase auth needs to be triggered client-side
 export default function LoginBox() {
-  const { supabase, session } = useSupabase()
-  const [signingIn, setSigningIn] = useState(false)
-  const [showRegisterModal, setShowRegisterModal] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const { supabase, session } = useSupabase();
+  const [signingIn, setSigningIn] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleEmailLogin = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    if (email.trim() === '' || password.trim() === '') return
+    if (email.trim() === "" || password.trim() === "") return;
 
-    setSigningIn(true)
+    setSigningIn(true);
 
-    const { data: signInData, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
+    // Check if the user is on hrm_users table and is active
+    const { data: user, error: userError } = await supabase
+      .from("hrm_users")
+      .select()
+      .eq("email", email)
+      .maybeSingle();
 
-    if (error) {
-      setError(error.message)
-      setSigningIn(false)
-    } else {
-      router.push(`/profile/${signInData.user.id}`)
+    if (userError) {
+      console.error(userError);
+      setError("Something went wrong. Please try again.");
+      setSigningIn(false);
+      return;
     }
 
-    // Check if the user is on hrm_users table
-    // const { data: user, error: userError } = await supabase
-    //   .from('hrm_users')
-    //   .select()
-    //   .eq('email', email)
-    //   .maybeSingle()
+    if (!user) {
+      setError("User not found.");
+      setSigningIn(false);
+      return;
+    }
 
-    // if (userError) console.error(userError)
+    if (user.status !== "Active") {
+      setError(
+        "This account is currently inactive. Please contact your administrator."
+      );
+      setSigningIn(false);
+      return;
+    }
 
-    // if (user && user.status === 'Active') {
-    //   const { data: signInData, error } =
-    //     await supabase.auth.signInWithPassword({
-    //       email,
-    //       password
-    //     })
+    // User is active, proceed with login
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    //   if (error) {
-    //     setError(error.message)
-    //     setSigningIn(false)
-    //   } else {
-    //     router.push(`/profile/${signInData.user.id}`)
-    //   }
-    // } else {
-    //   setError('This is account is currently inactive.')
-    //   setSigningIn(false)
-    // }
-  }
+    if (error) {
+      setError(error.message);
+      setSigningIn(false);
+    } else {
+      router.push(`/profile/${signInData.user.id}`);
+    }
+  };
 
   return (
     !session && (
@@ -101,7 +103,7 @@ export default function LoginBox() {
                 <CustomButton
                   containerStyles="app__btn_green_sm w-full"
                   btnType="submit"
-                  title={signingIn ? 'Signing In...' : 'Login'}
+                  title={signingIn ? "Signing In..." : "Login"}
                 />
               </div>
 
@@ -132,5 +134,5 @@ export default function LoginBox() {
         )}
       </div>
     )
-  )
+  );
 }
