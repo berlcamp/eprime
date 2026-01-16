@@ -661,6 +661,7 @@ export interface DocumentTypes {
   leave_credit_use_rehab: string
   leave_credit_use_paternity: string
   leave_credit_use_maternity: string
+  leave_credit_use_wellness: string
   leave_days_with_pay: string
   leave_days_without_pay: string
   leave_cocs: LeaveCocTypes[]

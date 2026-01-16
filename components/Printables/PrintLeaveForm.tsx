@@ -314,6 +314,16 @@ export const PrintLeaveForm = React.forwardRef<
                       <span className="text-[8px]">(R.A. No. 8552) </span>
                     </span>
                   </div>
+                  <div className="flex items-start justify-start space-x-1">
+                    {selectedItem.leave_type === "Wellness Break" ? (
+                      <SquareCheckIcon className="w-5 h-4" />
+                    ) : (
+                      <SquareIcon className="w-5 h-4" />
+                    )}
+                    <span>
+                      Wellness Break
+                    </span>
+                  </div>
                   <div className="mt-1 italic">Others: </div>
                   <div className="mt-1">
                     {selectedItem.leave_type === "Others" ? (

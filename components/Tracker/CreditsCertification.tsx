@@ -42,6 +42,7 @@ interface FormTypes {
   rehab: string
   paternity: string
   maternity: string
+  wellness: string
   cocs: CtosTypes[]
 }
 
@@ -93,6 +94,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
     rehab,
     paternity,
     maternity,
+    wellness,
     cocs
   ] = watch([
     'vl',
@@ -108,6 +110,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
     'rehab',
     'paternity',
     'maternity',
+    'wellness',
     'cocs'
   ])
 
@@ -163,6 +166,10 @@ export default function CreditsCertification({ requestData }: PropTypes) {
       leave_credit_use_maternity:
         formdata.maternity && Number(formdata.maternity) > 0
           ? formdata.maternity
+          : null,
+      leave_credit_use_wellness:
+        formdata.wellness && Number(formdata.wellness) > 0
+          ? formdata.wellness
           : null,
       leave_days_with_pay: withPay,
       leave_days_without_pay: withoutPay,
@@ -445,6 +452,15 @@ export default function CreditsCertification({ requestData }: PropTypes) {
             ?.credits ?? 0
       })
     }
+    if (Number(wellness) > 0) {
+      balances.push({
+        type: 'wellness',
+        balance: Number(wellness),
+        original_balance:
+          leaveCreditBalances.find((c) => c.type === 'Wellness Break')
+            ?.credits ?? 0
+      })
+    }
 
     setCreditsUsed(balances)
 
@@ -477,6 +493,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
     rehab,
     paternity,
     maternity,
+    wellness,
     watchedCocs,
     cocs
   ])
@@ -522,6 +539,9 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         : '',
       maternity: documentData.leave_credit_use_maternity
         ? documentData.leave_credit_use_maternity
+        : '',
+      wellness: documentData.leave_credit_use_wellness
+        ? documentData.leave_credit_use_wellness
         : ''
     })
   }, [documentData])
@@ -845,6 +865,36 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                       {errors.maternity?.message && (
                         <div className="app__error_message">
                           {errors.maternity.message}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex space-x-2 items-center">
+                      <span className="font-bold">Wellness Break:</span>
+                      <input
+                        {...register('wellness', {
+                          max: {
+                            value:
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Wellness Break'
+                              )?.credits ?? 0,
+                            message: `Cannot exceed ${
+                              leaveCreditBalances.find(
+                                (b) => b.type === 'Wellness Break'
+                              )?.credits ?? '0'
+                            }`
+                          },
+                          min: {
+                            value: 0,
+                            message: 'Invalid Input'
+                          }
+                        })}
+                        type="number"
+                        step="any"
+                        className="px-1 py-px border border-gray-300 outline-none text-sm w-20"
+                      />
+                      {errors.wellness?.message && (
+                        <div className="app__error_message">
+                          {errors.wellness.message}
                         </div>
                       )}
                     </div>

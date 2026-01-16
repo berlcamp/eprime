@@ -523,6 +523,10 @@ export default function DetailsModal({
           {
             type: 'Maternity Leave',
             value: documentData.leave_credit_use_maternity
+          },
+          {
+            type: 'Wellness Break',
+            value: documentData.leave_credit_use_wellness
           }
         ]
 

@@ -1,94 +1,94 @@
 import {
   CustomButton,
   LeaveBalanceBoxes,
-  SearchUserInput
-} from '@/components/index'
-import { useFilter } from '@/context/FilterContext'
-import { useSupabase } from '@/context/SupabaseProvider'
-import { generateReferenceCode } from '@/utils/text-helper'
-import { useCallback, useEffect, useState } from 'react'
-import 'react-calendar/dist/Calendar.css'
-import { useFieldArray, useForm } from 'react-hook-form'
+  SearchUserInput,
+} from "@/components/index";
+import { useFilter } from "@/context/FilterContext";
+import { useSupabase } from "@/context/SupabaseProvider";
+import { generateReferenceCode } from "@/utils/text-helper";
+import { useCallback, useEffect, useState } from "react";
+import "react-calendar/dist/Calendar.css";
+import { useFieldArray, useForm } from "react-hook-form";
 
 // Types
 import type {
   Employee,
   LeaveCreditTypes,
   LeaveTypes,
-  SalaryGradeTypes
-} from '@/types'
+  SalaryGradeTypes,
+} from "@/types";
 
 // Redux imports
-import { updateList } from '@/GlobalRedux/Features/listSlice'
-import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { leaveTypes } from '@/constants'
-import { fetchSalaryGrades, logError } from '@/utils/fetchApi'
-import { XMarkIcon } from '@heroicons/react/20/solid'
-import { eachDayOfInterval, format } from 'date-fns'
-import { useDropzone, type FileWithPath } from 'react-dropzone'
-import { useDispatch, useSelector } from 'react-redux'
+import { updateList } from "@/GlobalRedux/Features/listSlice";
+import { updateResultCounter } from "@/GlobalRedux/Features/resultsCounterSlice";
+import { leaveTypes } from "@/constants";
+import { fetchSalaryGrades, logError } from "@/utils/fetchApi";
+import { XMarkIcon } from "@heroicons/react/20/solid";
+import { eachDayOfInterval, format } from "date-fns";
+import { useDropzone, type FileWithPath } from "react-dropzone";
+import { useDispatch, useSelector } from "react-redux";
 
 interface ModalProps {
-  hideModal: () => void
+  hideModal: () => void;
 }
 
 const LeaveForm = ({ hideModal }: ModalProps) => {
-  const { setToast } = useFilter()
-  const { supabase, session, systemUsers } = useSupabase()
-  const [salaryGrades, setSalaryGrades] = useState<SalaryGradeTypes[] | []>([])
-  const [monetizationAmount, setMonetizationAmount] = useState('')
+  const { setToast } = useFilter();
+  const { supabase, session, systemUsers } = useSupabase();
+  const [salaryGrades, setSalaryGrades] = useState<SalaryGradeTypes[] | []>([]);
+  const [monetizationAmount, setMonetizationAmount] = useState("");
 
-  const [withPay, setWithPay] = useState(0)
-  const [withoutPay, setWithoutPay] = useState(0)
+  const [withPay, setWithPay] = useState(0);
+  const [withoutPay, setWithoutPay] = useState(0);
 
   const [leaveCreditBalances, setLeaveCreditBalances] = useState<
     LeaveCreditTypes[] | []
-  >([])
+  >([]);
 
   const [balances, setBalances] = useState<{
-    type: string
-    balance: string
-    original_balance: number
-  }>()
+    type: string;
+    balance: string;
+    original_balance: number;
+  }>();
 
-  const [selectedImages, setSelectedImages] = useState<any>([])
-  const [saving, setSaving] = useState(false)
+  const [selectedImages, setSelectedImages] = useState<any>([]);
+  const [saving, setSaving] = useState(false);
 
-  const [approverError, setApproverError] = useState('')
+  const [approverError, setApproverError] = useState("");
 
   // selected approver
-  const [user, setUser] = useState<Employee | null>(null)
+  const [user, setUser] = useState<Employee | null>(null);
 
   const currentUser: Employee = systemUsers.find(
     (user: Employee) => user.id === session?.user.id
-  )
+  );
 
   // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
-  const resultsCounter = useSelector((state: any) => state.results.value)
-  const dispatch = useDispatch()
+  const globallist = useSelector((state: any) => state.list.value);
+  const resultsCounter = useSelector((state: any) => state.results.value);
+  const dispatch = useDispatch();
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
     setSelectedImages(
       acceptedFiles.map((file) =>
         Object.assign(file, {
-          filename: file.name
+          filename: file.name,
         })
       )
-    )
-  }, [])
+    );
+  }, []);
 
-  const maxSize = 5242880 // 5 MB in bytes
+  const maxSize = 5242880; // 5 MB in bytes
   const { getRootProps, getInputProps, fileRejections } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.png', '.jpg'],
-      'application/pdf': ['.pdf'],
-      'application/msword': ['.docx'],
-      'application/vnd.ms-excel': ['.xlsx']
+      "image/*": [".jpeg", ".png", ".jpg"],
+      "application/pdf": [".pdf"],
+      "application/msword": [".docx"],
+      "application/vnd.ms-excel": [".xlsx"],
     },
-    maxSize
-  })
+    maxSize,
+  });
 
   const {
     register,
@@ -98,88 +98,90 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     setValue,
     getValues,
     control,
-    handleSubmit
+    handleSubmit,
   } = useForm<LeaveTypes>({
-    mode: 'onSubmit',
+    mode: "onSubmit",
     defaultValues: {
       leave_dates: [
         {
-          date: ''
-        }
-      ]
-    }
-  })
+          date: "",
+        },
+      ],
+    },
+  });
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'leave_dates'
-  })
+    name: "leave_dates",
+  });
 
-  const watchedType = watch('type') || ''
-  const watchedDateType = watch('date_type')
-  const watchedWeeked = watch('weekend')
-  const watchedOtherPurpose = watch('other_purpose') || ''
-  const watchedDays = watch('days') || ''
-  const watchedLeaveFrom = watch('leave_from')
-  const watchedLeaveTo = watch('leave_to')
-  const watchedLeaveDates = watch('leave_dates') || []
+  const watchedType = watch("type") || "";
+  const watchedDateType = watch("date_type");
+  const watchedWeeked = watch("weekend");
+  const watchedOtherPurpose = watch("other_purpose") || "";
+  const watchedDays = watch("days") || "";
+  const watchedLeaveFrom = watch("leave_from");
+  const watchedLeaveTo = watch("leave_to");
+  const watchedLeaveDates = watch("leave_dates") || [];
 
   const onSubmit = async (formdata: LeaveTypes) => {
     if (!user) {
-      setApproverError('This field is required')
+      setApproverError("This field is required");
     }
-    await handleCreate(formdata)
-  }
+    await handleCreate(formdata);
+  };
 
   const handleCreate = async (formdata: LeaveTypes) => {
-    if (!user) return
+    if (!user) return;
 
-    setSaving(true)
+    setSaving(true);
 
-    const refCode = generateReferenceCode()
+    const refCode = generateReferenceCode();
 
     try {
       const creditsUsed = {
         leave_credit_use_vl:
-          balances?.type === 'Vacation Leave' ? balances?.balance : null,
+          balances?.type === "Vacation Leave" ? balances?.balance : null,
         leave_credit_use_sl:
-          balances?.type === 'Sick Leave' ? balances?.balance : null,
+          balances?.type === "Sick Leave" ? balances?.balance : null,
         leave_credit_use_sc:
-          balances?.type === 'Service Credit' ? balances?.balance : null,
+          balances?.type === "Service Credit" ? balances?.balance : null,
         leave_credit_use_adoption:
-          balances?.type === 'Adoption Leave' ? balances?.balance : null,
+          balances?.type === "Adoption Leave" ? balances?.balance : null,
         leave_credit_use_vawc:
-          balances?.type === '10-Day VAWC Leave' ? balances?.balance : null,
+          balances?.type === "10-Day VAWC Leave" ? balances?.balance : null,
         leave_credit_use_emergency:
-          balances?.type === 'Special Emergency (Calamity) Leave'
+          balances?.type === "Special Emergency (Calamity) Leave"
             ? balances?.balance
             : null,
         leave_credit_use_study:
-          balances?.type === 'Study Leave' ? balances?.balance : null,
+          balances?.type === "Study Leave" ? balances?.balance : null,
         leave_credit_use_soloparent:
-          balances?.type === 'Solo Parent Leave' ? balances?.balance : null,
+          balances?.type === "Solo Parent Leave" ? balances?.balance : null,
         leave_credit_use_slbw:
-          balances?.type === 'Special Leave Benefits For Women'
+          balances?.type === "Special Leave Benefits For Women"
             ? balances?.balance
             : null,
         leave_credit_use_spl:
-          balances?.type === 'Special Privilege Leave'
+          balances?.type === "Special Privilege Leave"
             ? balances?.balance
             : null,
         leave_credit_use_rehab:
-          balances?.type === 'Rehabilitation Leave' ? balances?.balance : null,
+          balances?.type === "Rehabilitation Leave" ? balances?.balance : null,
         leave_credit_use_paternity:
-          balances?.type === 'Paternity Leave' ? balances?.balance : null,
+          balances?.type === "Paternity Leave" ? balances?.balance : null,
         leave_credit_use_maternity:
-          balances?.type === 'Maternity Leave' ? balances?.balance : null,
+          balances?.type === "Maternity Leave" ? balances?.balance : null,
+        leave_credit_use_wellness:
+          balances?.type === "Wellness Break" ? balances?.balance : null,
         leave_days_with_pay: withPay,
         leave_days_without_pay: withoutPay,
-        credits_used: [balances]
-      }
+        credits_used: [balances],
+      };
 
       const newData = {
         ...creditsUsed,
-        type: 'Leave',
+        type: "Leave",
         reference_code: refCode,
         leave_type: formdata.type,
         leave_location: formdata.location,
@@ -198,110 +200,115 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         created_by: session?.user.id,
         current_approver_id: session?.user.id,
         receiver_id: user.id,
-        current_status: 'For Verification',
-        current_tracker: 'Forwarded'
-      }
+        current_status: "For Verification",
+        current_tracker: "Forwarded",
+      };
 
       const { data, error }: { data: any; error: any } = await supabase
-        .from('hrm_request_trackers')
+        .from("hrm_request_trackers")
         .insert(newData)
-        .select()
+        .select();
 
       if (error) {
         void logError(
-          'Create Leave Request',
-          'hrm_request_trackers',
+          "Create Leave Request",
+          "hrm_request_trackers",
           JSON.stringify(newData),
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       // Generate an array of all dates in the range zzz
-      if (watchedOtherPurpose !== 'Monetization of Leave Credits') {
-        let dateRange = []
-        if (formdata.leave_from !== '' && formdata.leave_to !== '') {
+      if (watchedOtherPurpose !== "Monetization of Leave Credits") {
+        let dateRange = [];
+        if (formdata.leave_from !== "" && formdata.leave_to !== "") {
           // dateRange = eachDayOfInterval({
           //   start: new Date(formdata.leave_from),
           //   end: new Date(formdata.leave_to)
           // })
           dateRange = eachDayOfInterval({
             start: new Date(formdata.leave_from),
-            end: new Date(formdata.leave_to)
+            end: new Date(formdata.leave_to),
           }).filter(
             (date) =>
               watchedWeeked || (date.getDay() !== 0 && date.getDay() !== 6)
-          ) // Exclude weekends if watchedWeeked is false
+          ); // Exclude weekends if watchedWeeked is false
         } else {
           dateRange = formdata.leave_dates
             .filter((item) => item.date) // Ensure the date is valid (not blank)
             .map((item) => new Date(item.date))
-            .sort((a, b) => a.getTime() - b.getTime())
+            .sort((a, b) => a.getTime() - b.getTime());
         }
 
         // Map the dates to the required format
         const insertArray = dateRange.map((date, index) => ({
           tracker_id: data[0].id,
-          date: format(date, 'yyyy-MM-dd'),
-          is_paid: index < withPay // Mark as paid if within the withPay limit
-        }))
+          date: format(date, "yyyy-MM-dd"),
+          is_paid: index < withPay, // Mark as paid if within the withPay limit
+        }));
 
         // Store each leave dates
         const { error: datesError } = await supabase
-          .from('hrm_leave_dates')
-          .insert(insertArray)
+          .from("hrm_leave_dates")
+          .insert(insertArray);
 
         if (datesError) {
-          void logError('Leave Days', 'hrm_leave_dates', '', datesError.message)
+          void logError(
+            "Leave Days",
+            "hrm_leave_dates",
+            "",
+            datesError.message
+          );
           setToast(
-            'error',
-            'Saving failed, please reload the page and try again.'
-          )
-          throw new Error(datesError.message)
+            "error",
+            "Saving failed, please reload the page and try again."
+          );
+          throw new Error(datesError.message);
         }
       }
 
-      const { error: error2 } = await supabase.from('hrm_tracker_flow').insert([
+      const { error: error2 } = await supabase.from("hrm_tracker_flow").insert([
         {
           tracker_id: data[0].id,
           user_id: currentUser.id,
-          status: 'For Verification'
+          status: "For Verification",
         },
         {
           tracker_id: data[0].id,
           user_id: currentUser.id,
           receiver_id: user.id,
-          status: 'Forwarded'
-        }
-      ])
+          status: "Forwarded",
+        },
+      ]);
 
       if (error2) {
         void logError(
-          'Create Leave Request Tracker Flow',
-          'hrm_tracker_flow',
+          "Create Leave Request Tracker Flow",
+          "hrm_tracker_flow",
           JSON.stringify({
             tracker_id: data[0].id,
             user_id: currentUser.id,
-            status: 'For Verification'
+            status: "For Verification",
           }),
           error2.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error2.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error2.message);
       }
 
       // Upload files
-      await handleUploadFiles(data[0].id)
+      await handleUploadFiles(data[0].id);
 
       // Notify receiver
-      void handleNotifyReceiver(data[0].id, user.id, refCode)
+      void handleNotifyReceiver(data[0].id, user.id, refCode);
 
       // Append new data in redux
       const updatedData = {
@@ -311,114 +318,114 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         receiver: user,
         created_at: data[0].created_at,
         document_tracker_stickies: [],
-        ...newData
-      }
-      dispatch(updateList([updatedData, ...globallist]))
+        ...newData,
+      };
+      dispatch(updateList([updatedData, ...globallist]));
 
       // Updating showing text in redux
       dispatch(
         updateResultCounter({
           showing: Number(resultsCounter.showing) + 1,
-          results: Number(resultsCounter.results) + 1
+          results: Number(resultsCounter.results) + 1,
         })
-      )
+      );
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
-      setApproverError('')
+      setToast("success", "Successfully saved.");
+      setApproverError("");
 
       // reset all form fields
-      reset()
+      reset();
 
-      hideModal()
+      hideModal();
     } catch (error) {
-      console.error('error', error)
+      console.error("error", error);
     }
 
-    setSaving(false)
-  }
+    setSaving(false);
+  };
 
   useEffect(() => {
-    if (watchedOtherPurpose !== '') {
+    if (watchedOtherPurpose !== "") {
       const salary = salaryGrades.find(
         (s) =>
           s.grade.toString() === currentUser.salary_grade.toString() &&
           s.step.toString() === currentUser.salary_step.toString()
-      )
+      );
       if (salary) {
         const moneyValue =
-          Number(salary.salary) * Number(watchedDays) * 0.0478087
+          Number(salary.salary) * Number(watchedDays) * 0.0478087;
         //
         setMonetizationAmount(
-          moneyValue.toLocaleString('en-US', {
+          moneyValue.toLocaleString("en-US", {
             minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+            maximumFractionDigits: 2,
           })
-        )
+        );
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchedOtherPurpose, watchedDays, watchedType])
+  }, [watchedOtherPurpose, watchedDays, watchedType]);
 
   useEffect(() => {
     if (watchedLeaveFrom && watchedLeaveTo) {
-      const startDate = new Date(watchedLeaveFrom)
-      const endDate = new Date(watchedLeaveTo)
+      const startDate = new Date(watchedLeaveFrom);
+      const endDate = new Date(watchedLeaveTo);
 
       if (
         !isNaN(startDate.getTime()) &&
         !isNaN(endDate.getTime()) &&
         endDate >= startDate
       ) {
-        let totalDays = 0
-        let currentDate = new Date(startDate)
+        let totalDays = 0;
+        let currentDate = new Date(startDate);
 
         while (currentDate <= endDate) {
-          const dayOfWeek = currentDate.getDay() // 0 = Sunday, 6 = Saturday
+          const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
 
           if (watchedWeeked || (dayOfWeek !== 0 && dayOfWeek !== 6)) {
-            totalDays++
+            totalDays++;
           }
 
-          currentDate = new Date(currentDate.getTime() + 86400000) // Add 1 day (1000 * 60 * 60 * 24)
+          currentDate = new Date(currentDate.getTime() + 86400000); // Add 1 day (1000 * 60 * 60 * 24)
         }
 
-        setValue('days', totalDays.toString())
+        setValue("days", totalDays.toString());
       } else {
-        setValue('days', '') // Reset totalDays if leave_to is before leave_from
+        setValue("days", ""); // Reset totalDays if leave_to is before leave_from
       }
     }
-  }, [watchedLeaveFrom, watchedLeaveTo, watchedWeeked])
+  }, [watchedLeaveFrom, watchedLeaveTo, watchedWeeked]);
 
   useEffect(() => {
     // reset date values
-    setValue('leave_from', '')
-    setValue('leave_to', '')
-    setValue('leave_dates', [
+    setValue("leave_from", "");
+    setValue("leave_to", "");
+    setValue("leave_dates", [
       {
-        date: ''
-      }
-    ])
+        date: "",
+      },
+    ]);
 
     if (
       [
-        'Maternity Leave',
-        'Adoption Leave',
-        'Special Leave Benefits For Women',
-        'Rehabilitation Leave',
-        'Study Leave'
+        "Maternity Leave",
+        "Adoption Leave",
+        "Special Leave Benefits For Women",
+        "Rehabilitation Leave",
+        "Study Leave",
       ].includes(watchedType)
     ) {
-      setValue('date_type', 'Date Range')
-      setValue('weekend', true)
+      setValue("date_type", "Date Range");
+      setValue("weekend", true);
     } else {
-      setValue('weekend', false)
+      setValue("weekend", false);
     }
-  }, [watchedType])
+  }, [watchedType]);
 
   useEffect(() => {
-    setValue('days', watchedLeaveDates.length.toString())
-  }, [watchedLeaveDates])
+    setValue("days", watchedLeaveDates.length.toString());
+  }, [watchedLeaveDates]);
 
   const handleNotifyReceiver = async (
     trackerId: string,
@@ -429,42 +436,42 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     try {
       // insert to notifications
       const { error: error3 } = await supabase
-        .from('hrm_notifications')
+        .from("hrm_notifications")
         .insert({
           message: `New Leave Request #${refCode} has been forwarded to you for recommendation/approval.`,
           url: `/tracker/${refCode}`,
-          type: 'Forwarded',
+          type: "Forwarded",
           user_id: receiverId,
           request_tracker_id: trackerId,
-          reference_table: 'hrm_request_trackers'
-        })
+          reference_table: "hrm_request_trackers",
+        });
 
       if (error3) {
-        throw new Error(error3.message)
+        throw new Error(error3.message);
       }
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleUploadFiles = async (id: string) => {
     // Upload attachments
     await Promise.all(
       selectedImages.map(async (file: File) => {
         const { error } = await supabase.storage
-          .from('hrm_documents')
-          .upload(`requests/${id}/${file.name}`, file)
-        if (error) console.log(error)
+          .from("hrm_documents")
+          .upload(`requests/${id}/${file.name}`, file);
+        if (error) console.log(error);
       })
-    )
-  }
+    );
+  };
 
   const deleteFile = (file: FileWithPath) => {
     const files = selectedImages.filter(
       (f: FileWithPath) => f.path !== file.path
-    )
-    setSelectedImages(files)
-  }
+    );
+    setSelectedImages(files);
+  };
 
   const selectedFiles = selectedImages?.map((file: any, index: number) => (
     <div
@@ -477,105 +484,107 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
       />
       <span className="text-xs">{file.filename}</span>
     </div>
-  ))
+  ));
 
   const handleSelectedUsers = (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
-      setUser(selectedUsers[0])
+      setUser(selectedUsers[0]);
     } else {
-      setUser(null)
+      setUser(null);
     }
-  }
+  };
 
   const handleAddDate = () => {
-    append({ date: '' }) // Add a blank date
-  }
+    append({ date: "" }); // Add a blank date
+  };
 
   useEffect(() => {
     if (fileRejections.length > 0) {
-      setSelectedImages([])
+      setSelectedImages([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fileRejections])
+  }, [fileRejections]);
 
   useEffect(() => {
     if (
       [
-        '15 days Maternity Leave Extension for Solo Parent (with pay)',
-        '7 days Additional Paternity Leave (from wife-maternity leave)'
+        "15 days Maternity Leave Extension for Solo Parent (with pay)",
+        "7 days Additional Paternity Leave (from wife-maternity leave)",
       ].includes(watchedType)
     ) {
-      setWithPay(Number(watchedDays))
-      setWithoutPay(0)
-      return
+      setWithPay(Number(watchedDays));
+      setWithoutPay(0);
+      return;
     }
 
     if (
-      ['30 days Maternity Leave Extension (without pay)'].includes(watchedType)
+      ["30 days Maternity Leave Extension (without pay)"].includes(watchedType)
     ) {
-      setWithPay(0)
-      setWithoutPay(Number(watchedDays))
-      return
+      setWithPay(0);
+      setWithoutPay(Number(watchedDays));
+      return;
     }
 
-    let type = watchedType
+    let type = watchedType;
     if (
-      currentUser.position_type === 'Teaching' &&
-      ['Sick Leave'].includes(watchedType)
+      currentUser.position_type === "Teaching" &&
+      ["Sick Leave"].includes(watchedType)
     ) {
-      type = 'Service Credit'
+      type = "Service Credit";
     }
 
     if (
-      watchedType === 'Mandatory/Forced Leave' &&
-      currentUser.position_type !== 'Teaching'
+      watchedType === "Mandatory/Forced Leave" &&
+      currentUser.position_type !== "Teaching"
     ) {
-      type = 'Vacation Leave'
+      type = "Vacation Leave";
     }
 
     const origBal =
-      leaveCreditBalances.find((c) => c.type === type)?.credits ?? 0
-    const balance = origBal >= Number(watchedDays) ? watchedDays : origBal
+      leaveCreditBalances.find((c) => c.type === type)?.credits ?? 0;
+    const balance = origBal >= Number(watchedDays) ? watchedDays : origBal;
 
     setBalances({
       type,
       balance: balance.toString(),
-      original_balance: origBal
-    })
+      original_balance: origBal,
+    });
 
     const withpayAmount =
-      origBal >= Number(watchedDays) ? Number(watchedDays) : Math.floor(origBal)
-    const withoutpayAmount = Number(watchedDays) - withpayAmount
+      origBal >= Number(watchedDays)
+        ? Number(watchedDays)
+        : Math.floor(origBal);
+    const withoutpayAmount = Number(watchedDays) - withpayAmount;
 
-    setWithPay(withpayAmount)
-    setWithoutPay(withoutpayAmount)
-  }, [watchedType, watchedDays])
+    setWithPay(withpayAmount);
+    setWithoutPay(withoutpayAmount);
+  }, [watchedType, watchedDays]);
 
   useEffect(() => {
     const fetchSalaryGradesData = async () => {
-      const result = await fetchSalaryGrades(999, 0)
-      setSalaryGrades(result.data.length > 0 ? result.data : [])
-    }
+      const result = await fetchSalaryGrades(999, 0);
+      setSalaryGrades(result.data.length > 0 ? result.data : []);
+    };
     const fetchBalances = async () => {
       const { data } = await supabase
-        .from('hrm_leave_credits')
+        .from("hrm_leave_credits")
         .select()
-        .eq('user_id', session?.user.id)
-      setLeaveCreditBalances(data ?? [])
-    }
+        .eq("user_id", session?.user.id);
+      setLeaveCreditBalances(data ?? []);
+    };
 
-    void fetchBalances()
-    void fetchSalaryGradesData()
-  }, [])
+    void fetchBalances();
+    void fetchSalaryGradesData();
+  }, []);
 
   // Disable fields if condition is met
   const isDisabled = [
-    'Maternity Leave',
-    'Adoption Leave',
-    'Special Leave Benefits For Women',
-    'Rehabilitation Leave',
-    'Study Leave'
-  ].includes(watchedType)
+    "Maternity Leave",
+    "Adoption Leave",
+    "Special Leave Benefits For Women",
+    "Rehabilitation Leave",
+    "Study Leave",
+  ].includes(watchedType);
 
   return (
     <>
@@ -588,14 +597,14 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 <div className="app__label_standard">Leave Type</div>
                 <div>
                   <select
-                    {...register('type', { required: true })}
+                    {...register("type", { required: true })}
                     className="app__select_standard"
                   >
                     <option value="">Choose</option>
                     {leaveTypes.map((item, index) => (
                       <option key={index} value={item}>
-                        {item === 'Vacation Leave'
-                          ? 'Vacation/Personal Leave'
+                        {item === "Vacation Leave"
+                          ? "Vacation/Personal Leave"
                           : item}
                       </option>
                     ))}
@@ -606,15 +615,15 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </div>
             </div>
-            {(watchedType === 'Solo Parent Leave' ||
-              watchedType === 'Special Privilege Leave') && (
+            {(watchedType === "Solo Parent Leave" ||
+              watchedType === "Special Privilege Leave") && (
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
                     <div className="app__label_standard">Reason</div>
                     <div>
                       <input
-                        {...register('reason', { required: true })}
+                        {...register("reason", { required: true })}
                         className="app__select_standard"
                       />
                       {errors.reason && (
@@ -627,8 +636,8 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </>
             )}
-            {(watchedType === 'Vacation Leave' ||
-              watchedType === 'Special Privilege Leave') && (
+            {(watchedType === "Vacation Leave" ||
+              watchedType === "Special Privilege Leave") && (
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
@@ -637,7 +646,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                     </div>
                     <div>
                       <select
-                        {...register('location', { required: true })}
+                        {...register("location", { required: true })}
                         className="app__select_standard"
                       >
                         <option value="">Choose</option>
@@ -659,7 +668,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                     <div className="app__label_standard">Specify location</div>
                     <div>
                       <input
-                        {...register('specify_location', { required: true })}
+                        {...register("specify_location", { required: true })}
                         type="text"
                         className="app__select_standard"
                       />
@@ -674,7 +683,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
               </>
             )}
 
-            {watchedType === 'Sick Leave' && (
+            {watchedType === "Sick Leave" && (
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
@@ -683,7 +692,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                     </div>
                     <div>
                       <select
-                        {...register('hospitalization', { required: true })}
+                        {...register("hospitalization", { required: true })}
                         className="app__select_standard"
                       >
                         <option value="">Choose</option>
@@ -703,7 +712,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                     <div className="app__label_standard">Specify illness</div>
                     <div>
                       <input
-                        {...register('illness', { required: true })}
+                        {...register("illness", { required: true })}
                         type="text"
                         className="app__select_standard"
                       />
@@ -717,7 +726,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </>
             )}
-            {watchedType === 'Special Leave Benefits for Women' && (
+            {watchedType === "Special Leave Benefits for Women" && (
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
@@ -727,7 +736,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                     </div>
                     <div>
                       <input
-                        {...register('women_illness', { required: true })}
+                        {...register("women_illness", { required: true })}
                         type="text"
                         className="app__select_standard"
                       />
@@ -741,7 +750,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </>
             )}
-            {watchedType === 'Study Leave' && (
+            {watchedType === "Study Leave" && (
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">
@@ -749,7 +758,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                   </div>
                   <div>
                     <select
-                      {...register('study_purpose', { required: true })}
+                      {...register("study_purpose", { required: true })}
                       className="app__select_standard"
                     >
                       <option value="">Choose</option>
@@ -769,14 +778,14 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 </div>
               </div>
             )}
-            {watchedType === 'Terminal/Monetization Leave' && (
+            {watchedType === "Terminal/Monetization Leave" && (
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
                     <div className="app__label_standard">Other Purpose</div>
                     <div>
                       <select
-                        {...register('other_purpose', { required: true })}
+                        {...register("other_purpose", { required: true })}
                         className="app__select_standard"
                       >
                         <option value="">Choose</option>
@@ -793,8 +802,8 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                     </div>
                   </div>
                 </div>
-                {watchedType === 'Terminal/Monetization Leave' &&
-                  watchedOtherPurpose === 'Monetization of Leave Credits' && (
+                {watchedType === "Terminal/Monetization Leave" &&
+                  watchedOtherPurpose === "Monetization of Leave Credits" && (
                     <div className="app__form_field_container">
                       <LeaveBalanceBoxes user={currentUser} />
                     </div>
@@ -802,15 +811,15 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
               </>
             )}
 
-            {watchedType === 'Others' && (
+            {watchedType === "Others" && (
               <>
                 <div className="app__form_field_container">
                   <div className="w-full">
                     <div className="app__label_standard">Please Specify</div>
                     <div>
                       <input
-                        {...register('others_specify', {
-                          required: true
+                        {...register("others_specify", {
+                          required: true,
                         })}
                         type="text"
                         className="app__select_standard"
@@ -824,11 +833,11 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
               </>
             )}
 
-            {watchedType === 'Terminal/Monetization Leave' &&
-              watchedOtherPurpose === 'Monetization of Leave Credits' && (
+            {watchedType === "Terminal/Monetization Leave" &&
+              watchedOtherPurpose === "Monetization of Leave Credits" && (
                 <div className="">
                   <div className="app__label_standard mb-0!">
-                    Money Value:{' '}
+                    Money Value:{" "}
                     <span className="font-bold text-green-700">
                       P {monetizationAmount}
                     </span>
@@ -845,7 +854,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
           {/* End First Column */}
           {/* Begin Second Column */}
           <div className="w-full px-4">
-            {watchedOtherPurpose !== 'Monetization of Leave Credits' && (
+            {watchedOtherPurpose !== "Monetization of Leave Credits" && (
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Inclusive Date/s</div>
@@ -856,7 +865,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                           type="radio"
                           value="Custom Dates"
                           disabled={isDisabled}
-                          {...register('date_type')}
+                          {...register("date_type")}
                         />
                         <span>Custom Dates</span>
                       </label>
@@ -866,14 +875,14 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                           type="radio"
                           value="Date Range"
                           disabled={isDisabled}
-                          {...register('date_type')}
+                          {...register("date_type")}
                         />
                         <span>Date Range</span>
                       </label>
                     </div>
                   </div>
                   <div className="mt-2">
-                    {watchedDateType === 'Custom Dates' && (
+                    {watchedDateType === "Custom Dates" && (
                       <>
                         {fields.map((_q, index) => (
                           <div
@@ -886,7 +895,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                                   type="date"
                                   className="app__input_standard"
                                   {...register(`leave_dates.${index}.date`, {
-                                    required: true
+                                    required: true,
                                   })}
                                 />
                                 {fields.length > 1 && (
@@ -917,16 +926,16 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                         </button>
                       </>
                     )}
-                    {watchedDateType === 'Date Range' && (
+                    {watchedDateType === "Date Range" && (
                       <div className="w-full">
                         <div className="flex space-x-2">
                           <input
-                            {...register('leave_from', { required: true })}
+                            {...register("leave_from", { required: true })}
                             type="date"
                             className="app__input_standard"
                           />
                           <input
-                            {...register('leave_to', { required: true })}
+                            {...register("leave_to", { required: true })}
                             type="date"
                             className="app__input_standard"
                           />
@@ -934,7 +943,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                         <div className="app__label_standard">
                           <label className="flex items-center space-x-1">
                             <input
-                              {...register('weekend')}
+                              {...register("weekend")}
                               disabled={isDisabled}
                               type="checkbox"
                               className=""
@@ -962,21 +971,21 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
             <div className="app__form_field_container">
               <div className="w-full">
                 <div className="app__label_standard">
-                  Total Days:{' '}
+                  Total Days:{" "}
                   <span className="font-bold text-black">
-                    {getValues('days')}
+                    {getValues("days")}
                   </span>
                 </div>
                 <div>
-                  {watchedOtherPurpose !== 'Monetization of Leave Credits' ? (
+                  {watchedOtherPurpose !== "Monetization of Leave Credits" ? (
                     <input
-                      {...register('days', { required: true })}
+                      {...register("days", { required: true })}
                       type="hidden"
                       className="app__select_standard"
                     />
                   ) : (
                     <input
-                      {...register('days', { required: true })}
+                      {...register("days", { required: true })}
                       type="text"
                       className="app__select_standard"
                     />
@@ -994,7 +1003,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 <div className="app__label_standard">Commutation</div>
                 <div>
                   <select
-                    {...register('commutation')}
+                    {...register("commutation")}
                     className="app__select_standard"
                   >
                     <option value="Not Requested">Not Requested</option>
@@ -1048,7 +1057,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                 excludedIds={session ? [session.user.id] : []}
                 handleSelectedUsers={handleSelectedUsers}
               />
-              {approverError !== '' && (
+              {approverError !== "" && (
                 <div className="app__error_message">{approverError}</div>
               )}
             </div>
@@ -1059,7 +1068,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
           <div className="app__label_standard">
             <label className="flex items-center space-x-1">
               <input
-                {...register('confirmed', { required: true })}
+                {...register("confirmed", { required: true })}
                 type="checkbox"
                 className=""
               />
@@ -1077,13 +1086,13 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
           <CustomButton
             btnType="submit"
             isDisabled={saving}
-            title={saving ? 'Saving...' : 'Submit'}
+            title={saving ? "Saving..." : "Submit"}
             containerStyles="app__btn_green"
           />
         </div>
       </form>
     </>
-  )
-}
+  );
+};
 
-export default LeaveForm
+export default LeaveForm;
