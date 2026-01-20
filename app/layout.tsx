@@ -4,6 +4,7 @@ import "./globals.css";
 
 import ClientProviders from "@/components/ClientProviders";
 import Maintenance from "@/components/Maintenance";
+import Suspension from "@/components/Suspension";
 import type { Employee, Office, SchoolTypes, UserAccessTypes } from "@/types";
 import { logError } from "@/utils/fetchApi";
 import type { Metadata } from "next";
@@ -101,12 +102,23 @@ export default async function RootLayout({
   }
 
   const isMaintenance = false;
+  const isSuspended = true;
 
   if (isMaintenance) {
     return (
       <html lang="en">
         <body className="dark:bg-[#191919]" suppressHydrationWarning>
           <Maintenance />
+        </body>
+      </html>
+    );
+  }
+
+  if (isSuspended) {
+    return (
+      <html lang="en">
+        <body className="bg-gray-200" suppressHydrationWarning>
+          <Suspension />
         </body>
       </html>
     );
