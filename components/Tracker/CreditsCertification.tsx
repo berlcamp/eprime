@@ -1,67 +1,67 @@
 import {
   CustomButton,
   LeaveBalanceBoxes,
-  TwoColTableLoading
-} from '@/components/index'
-import { useFilter } from '@/context/FilterContext'
-import { useSupabase } from '@/context/SupabaseProvider'
-import type { CtoUserTypes, DocumentTypes, LeaveCreditTypes } from '@/types'
-import { logError } from '@/utils/fetchApi'
-import { format } from 'date-fns'
-import { useEffect, useState } from 'react'
-import { useFieldArray, useForm, useWatch } from 'react-hook-form'
+  TwoColTableLoading,
+} from "@/components/index";
+import { useFilter } from "@/context/FilterContext";
+import { useSupabase } from "@/context/SupabaseProvider";
+import type { CtoUserTypes, DocumentTypes, LeaveCreditTypes } from "@/types";
+import { logError } from "@/utils/fetchApi";
+import { format } from "date-fns";
+import { useEffect, useState } from "react";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 
 interface PropTypes {
-  requestData: DocumentTypes
+  requestData: DocumentTypes;
 }
 
 interface boxes {
-  type: string
-  balance: number
+  type: string;
+  balance: number;
 }
 
 interface CtosTypes {
-  id: string
-  cto_user_id: string
-  coc: number
-  use_coc: string
-  expiration: string
+  id: string;
+  cto_user_id: string;
+  coc: number;
+  use_coc: string;
+  expiration: string;
 }
 
 interface FormTypes {
-  vl: string
-  sl: string
-  sc: string
-  adoption: string
-  vawc: string
-  emergency: string
-  study: string
-  soloparent: string
-  slbw: string
-  spl: string
-  rehab: string
-  paternity: string
-  maternity: string
-  wellness: string
-  cocs: CtosTypes[]
+  vl: string;
+  sl: string;
+  sc: string;
+  adoption: string;
+  vawc: string;
+  emergency: string;
+  study: string;
+  soloparent: string;
+  slbw: string;
+  spl: string;
+  rehab: string;
+  paternity: string;
+  maternity: string;
+  wellness: string;
+  cocs: CtosTypes[];
 }
 
 export default function CreditsCertification({ requestData }: PropTypes) {
-  const { supabase, session } = useSupabase()
-  const { setToast, hasAccess } = useFilter()
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [documentData, setDocumentData] = useState<DocumentTypes>(requestData)
-  const [refresh, setRefresh] = useState(false)
+  const { supabase, session } = useSupabase();
+  const { setToast, hasAccess } = useFilter();
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [documentData, setDocumentData] = useState<DocumentTypes>(requestData);
+  const [refresh, setRefresh] = useState(false);
 
-  const [creditsUsed, setCreditsUsed] = useState<boxes[] | []>([])
+  const [creditsUsed, setCreditsUsed] = useState<boxes[] | []>([]);
   const [leaveCreditBalances, setLeaveCreditBalances] = useState<
     LeaveCreditTypes[] | []
-  >([])
+  >([]);
 
-  const [withPay, setWithPay] = useState(0)
-  const [certifiedWithPay, setCertifiedWithPay] = useState(0)
-  const [withoutPay, setWithoutPay] = useState(Number(documentData.leave_days))
+  const [withPay, setWithPay] = useState(0);
+  const [certifiedWithPay, setCertifiedWithPay] = useState(0);
+  const [withoutPay, setWithoutPay] = useState(Number(documentData.leave_days));
 
   const {
     register,
@@ -70,15 +70,15 @@ export default function CreditsCertification({ requestData }: PropTypes) {
     control,
     setValue,
     watch,
-    handleSubmit
+    handleSubmit,
   } = useForm<FormTypes>({
-    mode: 'onSubmit'
-  })
+    mode: "onSubmit",
+  });
 
   const { fields } = useFieldArray({
     control,
-    name: 'cocs'
-  })
+    name: "cocs",
+  });
 
   const [
     vl,
@@ -95,37 +95,37 @@ export default function CreditsCertification({ requestData }: PropTypes) {
     paternity,
     maternity,
     wellness,
-    cocs
+    cocs,
   ] = watch([
-    'vl',
-    'sl',
-    'sc',
-    'adoption',
-    'vawc',
-    'emergency',
-    'study',
-    'soloparent',
-    'slbw',
-    'spl',
-    'rehab',
-    'paternity',
-    'maternity',
-    'wellness',
-    'cocs'
-  ])
+    "vl",
+    "sl",
+    "sc",
+    "adoption",
+    "vawc",
+    "emergency",
+    "study",
+    "soloparent",
+    "slbw",
+    "spl",
+    "rehab",
+    "paternity",
+    "maternity",
+    "wellness",
+    "cocs",
+  ]);
 
   // Watch the `use_coc` values
   const watchedCocs = useWatch({
     control,
-    name: 'cocs' // Watches the `cocs` field array
-  })
+    name: "cocs", // Watches the `cocs` field array
+  });
 
   const onSubmit = async (formdata: FormTypes) => {
-    if (saving) return
+    if (saving) return;
 
-    setSaving(true)
-    void saveCertifications(formdata)
-  }
+    setSaving(true);
+    void saveCertifications(formdata);
+  };
 
   // update certifications of leave credits
   const saveCertifications = async (formdata: FormTypes) => {
@@ -173,29 +173,29 @@ export default function CreditsCertification({ requestData }: PropTypes) {
           : null,
       leave_days_with_pay: withPay,
       leave_days_without_pay: withoutPay,
-      certification_as_of: format(new Date(), 'MMMM d, yyyy'),
+      certification_as_of: format(new Date(), "MMMM d, yyyy"),
       certified_by: session?.user.id,
-      credits_used: creditsUsed
-    }
+      credits_used: creditsUsed,
+    };
 
     try {
       const { error } = await supabase
-        .from('hrm_request_trackers')
+        .from("hrm_request_trackers")
         .update(newData)
-        .eq('id', documentData.id)
+        .eq("id", documentData.id);
 
       if (error) {
         void logError(
-          'Update leave credit used on leave',
-          'hrm_request_trackers',
+          "Update leave credit used on leave",
+          "hrm_request_trackers",
           JSON.stringify(newData),
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       // Prepare data for table update Leave CTO
@@ -207,278 +207,288 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         .map((field: { id: string; use_coc: string }) => ({
           tracker_id: documentData.id,
           user_cto_id: field.id,
-          use_coc: field.use_coc
-        }))
+          use_coc: field.use_coc,
+        }));
 
       await supabase
-        .from('hrm_leave_coc')
+        .from("hrm_leave_coc")
         .delete()
-        .eq('tracker_id', documentData.id)
+        .eq("tracker_id", documentData.id);
 
       const { error: insertCtoError } = await supabase
-        .from('hrm_leave_coc')
-        .insert(updatedCtoData)
+        .from("hrm_leave_coc")
+        .insert(updatedCtoData);
 
       if (insertCtoError) {
         void logError(
-          'Update cto coc credit used on leave',
-          'hrm_request_trackers',
+          "Update cto coc credit used on leave",
+          "hrm_request_trackers",
           JSON.stringify(updatedCtoData),
           insertCtoError.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(insertCtoError.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(insertCtoError.message);
       }
 
       // Added log to latest tracker flow
       const { data } = await supabase
-        .from('hrm_tracker_flow')
+        .from("hrm_tracker_flow")
         .select()
-        .eq('tracker_id', documentData.id)
-        .order('id', { ascending: false })
+        .eq("tracker_id", documentData.id)
+        .order("id", { ascending: false })
         .limit(1)
-        .single()
+        .single();
 
       if (data) {
         const newData = {
-          message: 'Leave Credits Certified',
+          message: "Leave Credits Certified",
           tracker_flow_id: data.id,
-          user_id: session?.user.id
-        }
+          user_id: session?.user.id,
+        };
 
         const { error: error2 } = await supabase
-          .from('hrm_tracker_logs')
+          .from("hrm_tracker_logs")
           .insert(newData)
-          .eq('id', documentData.id)
+          .eq("id", documentData.id);
 
         if (error2) {
           void logError(
-            'Leave Credits Certified Flow Logs',
-            'hrm_tracker_flow',
-            '',
+            "Leave Credits Certified Flow Logs",
+            "hrm_tracker_flow",
+            "",
             error2.message
-          )
+          );
         }
       }
 
       // delete existing leave dates first
       const { error: deleteDatesError } = await supabase
-        .from('hrm_leave_dates')
+        .from("hrm_leave_dates")
         .delete()
-        .eq('tracker_id', documentData.id)
+        .eq("tracker_id", documentData.id);
 
       if (deleteDatesError) {
         void logError(
-          'delete Leave Days',
-          'hrm_leave_dates',
-          '',
+          "delete Leave Days",
+          "hrm_leave_dates",
+          "",
           deleteDatesError.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(deleteDatesError.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(deleteDatesError.message);
       }
 
-      console.log('documentData.leave_dates', documentData.leave_dates)
+      console.log("documentData.leave_dates", documentData.leave_dates);
       // Map the dates to the required format
       const insertArray = documentData.leave_dates.map((d, index) => ({
         tracker_id: documentData.id,
         date: d.date,
-        is_paid: index < withPay // Mark as paid if within the withPay limit
-      }))
+        is_paid: index < withPay, // Mark as paid if within the withPay limit
+      }));
 
       // Store each leave dates
       const { error: datesError } = await supabase
-        .from('hrm_leave_dates')
-        .insert(insertArray)
+        .from("hrm_leave_dates")
+        .insert(insertArray);
 
       if (datesError) {
-        void logError('Leave Days', 'hrm_leave_dates', '', datesError.message)
+        void logError("Leave Days", "hrm_leave_dates", "", datesError.message);
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(datesError.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(datesError.message);
       }
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
-      setRefresh(!refresh)
+      setRefresh(!refresh);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
+
+  // Helper function to get original balance
+  // Prioritizes saved credits_used data (for previous employees/already certified records)
+  // Falls back to current leaveCreditBalances lookup
+  const getOriginalBalance = (
+    creditType: string,
+    leaveTypeInBalances: string
+  ): number => {
+    // First, check if documentData.credits_used exists and has this credit type
+    // This handles cases where the record was already certified (especially for previous employees)
+    if (
+      documentData.credits_used &&
+      Array.isArray(documentData.credits_used) &&
+      documentData.credits_used.length > 0
+    ) {
+      const savedCredit = documentData.credits_used.find(
+        (c) => c.type === creditType
+      );
+      // If we found a saved credit, use its original_balance (even if it's 0)
+      // This preserves the historical balance at certification time
+      if (savedCredit !== undefined) {
+        return savedCredit.original_balance;
+      }
+    }
+    // Fall back to current leaveCreditBalances lookup (for new certifications)
+    return (
+      leaveCreditBalances.find((c) => c.type === leaveTypeInBalances)
+        ?.credits ?? 0
+    );
+  };
 
   useEffect(() => {
     if (
       [
-        '15 days Maternity Leave Extension for Solo Parent (with pay)',
-        '7 days Additional Paternity Leave (from wife-maternity leave)'
+        "15 days Maternity Leave Extension for Solo Parent (with pay)",
+        "7 days Additional Paternity Leave (from wife-maternity leave)",
       ].includes(requestData.leave_type)
     ) {
-      setWithPay(Number(requestData.leave_days))
-      setWithoutPay(0)
-      return
+      setWithPay(Number(requestData.leave_days));
+      setWithoutPay(0);
+      return;
     }
 
     const balances: Array<{
-      type: string
-      balance: number
-      original_balance: number
-    }> = []
+      type: string;
+      balance: number;
+      original_balance: number;
+    }> = [];
     if (Number(sl) > 0) {
       balances.push({
-        type: 'SL',
+        type: "SL",
         balance: Number(sl),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === 'Sick Leave')?.credits ?? 0
-      })
+        original_balance: getOriginalBalance("SL", "Sick Leave"),
+      });
     }
     if (Number(vl) > 0) {
       balances.push({
-        type: 'VL',
+        type: "VL",
         balance: Number(vl),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === 'Vacation Leave')
-            ?.credits ?? 0
-      })
+        original_balance: getOriginalBalance("VL", "Vacation Leave"),
+      });
     }
     if (Number(sc) > 0) {
       balances.push({
-        type: 'Service Credit',
+        type: "Service Credit",
         balance: Number(sc),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === 'Service Credit')
-            ?.credits ?? 0
-      })
+        original_balance: getOriginalBalance(
+          "Service Credit",
+          "Service Credit"
+        ),
+      });
     }
     if (Number(adoption) > 0) {
       balances.push({
-        type: 'adoption',
+        type: "adoption",
         balance: Number(adoption),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === 'Adoption Leave')
-            ?.credits ?? 0
-      })
+        original_balance: getOriginalBalance("adoption", "Adoption Leave"),
+      });
     }
     if (Number(vawc) > 0) {
       balances.push({
-        type: 'vawc',
+        type: "vawc",
         balance: Number(vawc),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === '10-Day VAWC Leave')
-            ?.credits ?? 0
-      })
+        original_balance: getOriginalBalance("vawc", "10-Day VAWC Leave"),
+      });
     }
     if (Number(emergency) > 0) {
       balances.push({
-        type: 'emergency',
+        type: "emergency",
         balance: Number(emergency),
-        original_balance:
-          leaveCreditBalances.find(
-            (c) => c.type === 'Special Emergency (Calamity) Leave'
-          )?.credits ?? 0
-      })
+        original_balance: getOriginalBalance(
+          "emergency",
+          "Special Emergency (Calamity) Leave"
+        ),
+      });
     }
     if (Number(study) > 0) {
       balances.push({
-        type: 'study',
+        type: "study",
         balance: Number(study),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === 'Study Leave')?.credits ??
-          0
-      })
+        original_balance: getOriginalBalance("study", "Study Leave"),
+      });
     }
     if (Number(soloparent) > 0) {
       balances.push({
-        type: 'soloparent',
+        type: "soloparent",
         balance: Number(soloparent),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === 'Solo Parent Leave')
-            ?.credits ?? 0
-      })
+        original_balance: getOriginalBalance("soloparent", "Solo Parent Leave"),
+      });
     }
     if (Number(slbw) > 0) {
       balances.push({
-        type: 'slbw',
+        type: "slbw",
         balance: Number(slbw),
-        original_balance:
-          leaveCreditBalances.find(
-            (c) => c.type === 'Special Leave Benefits For Women'
-          )?.credits ?? 0
-      })
+        original_balance: getOriginalBalance(
+          "slbw",
+          "Special Leave Benefits For Women"
+        ),
+      });
     }
     if (Number(spl) > 0) {
       balances.push({
-        type: 'spl',
+        type: "spl",
         balance: Number(spl),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === 'Special Privilege Leave')
-            ?.credits ?? 0
-      })
+        original_balance: getOriginalBalance("spl", "Special Privilege Leave"),
+      });
     }
     if (Number(rehab) > 0) {
       balances.push({
-        type: 'rehab',
+        type: "rehab",
         balance: Number(rehab),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === 'Rehabilitation Leave')
-            ?.credits ?? 0
-      })
+        original_balance: getOriginalBalance("rehab", "Rehabilitation Leave"),
+      });
     }
     if (Number(paternity) > 0) {
       balances.push({
-        type: 'paternity',
+        type: "paternity",
         balance: Number(paternity),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === 'Paternity Leave')
-            ?.credits ?? 0
-      })
+        original_balance: getOriginalBalance("paternity", "Paternity Leave"),
+      });
     }
     if (Number(maternity) > 0) {
       balances.push({
-        type: 'maternity',
+        type: "maternity",
         balance: Number(maternity),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === 'Maternity Leave')
-            ?.credits ?? 0
-      })
+        original_balance: getOriginalBalance("maternity", "Maternity Leave"),
+      });
     }
     if (Number(wellness) > 0) {
       balances.push({
-        type: 'wellness',
+        type: "wellness",
         balance: Number(wellness),
-        original_balance:
-          leaveCreditBalances.find((c) => c.type === 'Wellness Break')
-            ?.credits ?? 0
-      })
+        original_balance: getOriginalBalance("wellness", "Wellness Break"),
+      });
     }
 
-    setCreditsUsed(balances)
+    setCreditsUsed(balances);
 
-    let withpay = 0
+    let withpay = 0;
     balances.forEach((b) => {
-      withpay += Number(b.balance)
-    })
+      withpay += Number(b.balance);
+    });
 
     const total = cocs
       ? cocs.reduce((acc, curr) => acc + (parseFloat(curr.use_coc) || 0), 0)
-      : 0
+      : 0;
 
-    withpay += total
+    withpay += total;
 
-    const withoutpay = Number(documentData.leave_days) - withpay
+    const withoutpay = Number(documentData.leave_days) - withpay;
 
-    setWithPay(withpay)
-    setWithoutPay(withoutpay >= 0 ? withoutpay : 0)
+    setWithPay(withpay);
+    setWithoutPay(withoutpay >= 0 ? withoutpay : 0);
   }, [
     vl,
     sl,
@@ -495,127 +505,129 @@ export default function CreditsCertification({ requestData }: PropTypes) {
     maternity,
     wellness,
     watchedCocs,
-    cocs
-  ])
+    cocs,
+    documentData,
+    leaveCreditBalances,
+  ]);
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
   useEffect(() => {
     reset({
       vl: documentData.leave_credit_use_vl
         ? documentData.leave_credit_use_vl
-        : '',
+        : "",
       sl: documentData.leave_credit_use_sl
         ? documentData.leave_credit_use_sl
-        : '',
+        : "",
       sc: documentData.leave_credit_use_sc
         ? documentData.leave_credit_use_sc
-        : '',
+        : "",
       adoption: documentData.leave_credit_use_adoption
         ? documentData.leave_credit_use_adoption
-        : '',
+        : "",
       vawc: documentData.leave_credit_use_vawc
         ? documentData.leave_credit_use_vawc
-        : '',
+        : "",
       emergency: documentData.leave_credit_use_emergency
         ? documentData.leave_credit_use_emergency
-        : '',
+        : "",
       study: documentData.leave_credit_use_study
         ? documentData.leave_credit_use_study
-        : '',
+        : "",
       soloparent: documentData.leave_credit_use_soloparent
         ? documentData.leave_credit_use_soloparent
-        : '',
+        : "",
       slbw: documentData.leave_credit_use_slbw
         ? documentData.leave_credit_use_slbw
-        : '',
+        : "",
       spl: documentData.leave_credit_use_spl
         ? documentData.leave_credit_use_spl
-        : '',
+        : "",
       rehab: documentData.leave_credit_use_rehab
         ? documentData.leave_credit_use_rehab
-        : '',
+        : "",
       paternity: documentData.leave_credit_use_paternity
         ? documentData.leave_credit_use_paternity
-        : '',
+        : "",
       maternity: documentData.leave_credit_use_maternity
         ? documentData.leave_credit_use_maternity
-        : '',
+        : "",
       wellness: documentData.leave_credit_use_wellness
         ? documentData.leave_credit_use_wellness
-        : ''
-    })
-  }, [documentData])
+        : "",
+    });
+  }, [documentData]);
 
   useEffect(() => {
     const fetchBalances = async () => {
       const { data } = await supabase
-        .from('hrm_leave_credits')
+        .from("hrm_leave_credits")
         .select()
-        .eq('user_id', documentData.creator?.id)
-      setLeaveCreditBalances(data ?? [])
-    }
-    void fetchBalances()
-  }, [])
+        .eq("user_id", documentData.creator?.id);
+      setLeaveCreditBalances(data ?? []);
+    };
+    void fetchBalances();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
         const { data, error } = await supabase
-          .from('hrm_request_trackers')
+          .from("hrm_request_trackers")
           .select(
-            '*,leave_cocs:hrm_leave_coc(*), leave_dates:hrm_leave_dates(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,signature_path,hrm_offices:office_id(*),hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url,signature_path),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url,signature_path),certifier:certified_by(id,firstname,lastname,middlename,avatar_url,signature_path),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url,signature_path),hrm_remarks(*)',
-            { count: 'exact' }
+            "*,leave_cocs:hrm_leave_coc(*), leave_dates:hrm_leave_dates(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,signature_path,hrm_offices:office_id(*),hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url,signature_path),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url,signature_path),certifier:certified_by(id,firstname,lastname,middlename,avatar_url,signature_path),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url,signature_path),hrm_remarks(*)",
+            { count: "exact" }
           )
-          .eq('id', requestData.id)
-          .single()
+          .eq("id", requestData.id)
+          .single();
 
         if (error) {
-          throw new Error(error.message)
+          throw new Error(error.message);
         }
 
-        const d: DocumentTypes = data
-        let daysWithPay = 0
+        const d: DocumentTypes = data;
+        let daysWithPay = 0;
         if (d.certified_by) {
           d.leave_dates.forEach((d) => {
             if (d.is_paid) {
-              daysWithPay++
+              daysWithPay++;
             }
-          })
+          });
         }
-        setCertifiedWithPay(daysWithPay)
-        setDocumentData(data)
+        setCertifiedWithPay(daysWithPay);
+        setDocumentData(data);
       } catch (error) {
-        console.error('fetch error xx', error)
+        console.error("fetch error xx", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    void fetchData()
-  }, [refresh])
+    };
+    void fetchData();
+  }, [refresh]);
 
   useEffect(() => {
     void (async () => {
       const { data } = await supabase
-        .from('hrm_cto_users')
-        .select('*')
-        .eq('hrm_user_id', documentData.creator?.id)
-        .eq('is_approved', true)
-        .gte('expiration', new Date().toISOString())
-        .gt('coc', 0)
-      const bal: CtosTypes[] = []
+        .from("hrm_cto_users")
+        .select("*")
+        .eq("hrm_user_id", documentData.creator?.id)
+        .eq("is_approved", true)
+        .gte("expiration", new Date().toISOString())
+        .gt("coc", 0);
+      const bal: CtosTypes[] = [];
 
       if (data) {
-        const ctos: CtoUserTypes[] = data
+        const ctos: CtoUserTypes[] = data;
         ctos.forEach((cto) => {
           bal.push({
             id: cto.id,
             cto_user_id: cto.id,
             coc: cto.coc,
             expiration: cto.expiration,
-            use_coc: ''
-          })
-        })
+            use_coc: "",
+          });
+        });
       }
       // Populate dynamic fields in the form
       const cocsValues = bal.map((item) => ({
@@ -626,13 +638,13 @@ export default function CreditsCertification({ requestData }: PropTypes) {
           documentData.leave_cocs?.find(
             (lcoc) =>
               lcoc.user_cto_id.toString() === item.cto_user_id.toString()
-          )?.use_coc ?? '',
-        expiration: item.expiration
-      }))
+          )?.use_coc ?? "",
+        expiration: item.expiration,
+      }));
 
-      setValue('cocs', cocsValues)
-    })()
-  }, [documentData])
+      setValue("cocs", cocsValues);
+    })();
+  }, [documentData]);
 
   return (
     <div className="w-full px-4">
@@ -649,9 +661,9 @@ export default function CreditsCertification({ requestData }: PropTypes) {
           <div className="w-full">
             {
               // Only display if leave request is not yet approved, disapproved or cancelled
-              documentData.current_status !== 'Approved' &&
-                documentData.current_status !== 'Disapproved' &&
-                documentData.current_status !== 'Cancelled' && (
+              documentData.current_status !== "Approved" &&
+                documentData.current_status !== "Disapproved" &&
+                documentData.current_status !== "Cancelled" && (
                   <>
                     <div className="text-gray-600 text-xs">
                       Requester current balance:
@@ -662,17 +674,17 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                   </>
                 )
             }
-            {hasAccess('certify_leave_credits') &&
+            {hasAccess("certify_leave_credits") &&
               documentData.receiver_id === session?.user.id &&
-              documentData.current_status !== 'Disapproved' &&
-              documentData.current_status !== 'Approved' &&
-              documentData.current_status !== 'Cancelled' && (
+              documentData.current_status !== "Disapproved" &&
+              documentData.current_status !== "Approved" &&
+              documentData.current_status !== "Cancelled" && (
                 <form onSubmit={handleSubmit(onSubmit)}>
                   <div className="text-gray-600 text-xs mt-4 mb-2">
                     Use the following credits for this Leave:
                   </div>
                   <div className="text-gray-600 text-xs space-y-2">
-                    {documentData.creator?.position_type !== 'Teaching' && (
+                    {documentData.creator?.position_type !== "Teaching" && (
                       <>
                         {fields.map((field, index) => (
                           <div
@@ -680,10 +692,10 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                             className="flex space-x-2 items-center"
                           >
                             <span className="font-bold">
-                              COC (Balance: {field.coc}, Exp.{' '}
+                              COC (Balance: {field.coc}, Exp.{" "}
                               {format(
                                 new Date(field.expiration),
-                                'MMM d, yyyy'
+                                "MMM d, yyyy"
                               )}
                               ):
                             </span>
@@ -691,12 +703,12 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                               {...register(`cocs.${index}.use_coc`, {
                                 max: {
                                   value: field.coc,
-                                  message: `Cannot exceed ${field.coc}`
+                                  message: `Cannot exceed ${field.coc}`,
                                 },
                                 min: {
                                   value: 0,
-                                  message: 'Invalid Input'
-                                }
+                                  message: "Invalid Input",
+                                },
                               })}
                               type="number"
                               step="any"
@@ -717,22 +729,22 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                         <div className="flex space-x-2 items-center">
                           <span className="font-bold">Vacation Leave:</span>
                           <input
-                            {...register('vl', {
+                            {...register("vl", {
                               max: {
                                 value:
                                   leaveCreditBalances.find(
-                                    (b) => b.type === 'Vacation Leave'
+                                    (b) => b.type === "Vacation Leave"
                                   )?.credits ?? 0,
                                 message: `Cannot exceed ${
                                   leaveCreditBalances.find(
-                                    (b) => b.type === 'Vacation Leave'
-                                  )?.credits ?? '0'
-                                }`
+                                    (b) => b.type === "Vacation Leave"
+                                  )?.credits ?? "0"
+                                }`,
                               },
                               min: {
                                 value: 0,
-                                message: 'Invalid Input'
-                              }
+                                message: "Invalid Input",
+                              },
                             })}
                             type="number"
                             step="any"
@@ -747,22 +759,22 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                         <div className="flex space-x-2 items-center">
                           <span className="font-bold">Sick Leave:</span>
                           <input
-                            {...register('sl', {
+                            {...register("sl", {
                               max: {
                                 value:
                                   leaveCreditBalances.find(
-                                    (b) => b.type === 'Sick Leave'
+                                    (b) => b.type === "Sick Leave"
                                   )?.credits ?? 0,
                                 message: `Cannot exceed ${
                                   leaveCreditBalances.find(
-                                    (b) => b.type === 'Sick Leave'
-                                  )?.credits ?? '0'
-                                }`
+                                    (b) => b.type === "Sick Leave"
+                                  )?.credits ?? "0"
+                                }`,
                               },
                               min: {
                                 value: 0,
-                                message: 'Invalid Input'
-                              }
+                                message: "Invalid Input",
+                              },
                             })}
                             type="number"
                             step="any"
@@ -776,26 +788,26 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                         </div>
                       </>
                     )}
-                    {documentData.creator?.position_type === 'Teaching' && (
+                    {documentData.creator?.position_type === "Teaching" && (
                       <div className="flex space-x-2 items-center">
                         <span className="font-bold">Service Credit:</span>
                         <input
-                          {...register('sc', {
+                          {...register("sc", {
                             max: {
                               value:
                                 leaveCreditBalances.find(
-                                  (b) => b.type === 'Service Credit'
+                                  (b) => b.type === "Service Credit"
                                 )?.credits ?? 0,
                               message: `Cannot exceed ${
                                 leaveCreditBalances.find(
-                                  (b) => b.type === 'Service Credit'
-                                )?.credits ?? '0'
-                              }`
+                                  (b) => b.type === "Service Credit"
+                                )?.credits ?? "0"
+                              }`,
                             },
                             min: {
                               value: 0,
-                              message: 'Invalid Input'
-                            }
+                              message: "Invalid Input",
+                            },
                           })}
                           type="number"
                           step="any"
@@ -811,22 +823,22 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                     <div className="flex space-x-2 items-center">
                       <span className="font-bold">Adoption Leave:</span>
                       <input
-                        {...register('adoption', {
+                        {...register("adoption", {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Adoption Leave'
+                                (b) => b.type === "Adoption Leave"
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Adoption Leave'
-                              )?.credits ?? '0'
-                            }`
+                                (b) => b.type === "Adoption Leave"
+                              )?.credits ?? "0"
+                            }`,
                           },
                           min: {
                             value: 0,
-                            message: 'Invalid Input'
-                          }
+                            message: "Invalid Input",
+                          },
                         })}
                         type="number"
                         step="any"
@@ -841,22 +853,22 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                     <div className="flex space-x-2 items-center">
                       <span className="font-bold">Maternity Leave:</span>
                       <input
-                        {...register('maternity', {
+                        {...register("maternity", {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Maternity Leave'
+                                (b) => b.type === "Maternity Leave"
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Maternity Leave'
-                              )?.credits ?? '0'
-                            }`
+                                (b) => b.type === "Maternity Leave"
+                              )?.credits ?? "0"
+                            }`,
                           },
                           min: {
                             value: 0,
-                            message: 'Invalid Input'
-                          }
+                            message: "Invalid Input",
+                          },
                         })}
                         type="number"
                         step="any"
@@ -871,22 +883,22 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                     <div className="flex space-x-2 items-center">
                       <span className="font-bold">Wellness Break:</span>
                       <input
-                        {...register('wellness', {
+                        {...register("wellness", {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Wellness Break'
+                                (b) => b.type === "Wellness Break"
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Wellness Break'
-                              )?.credits ?? '0'
-                            }`
+                                (b) => b.type === "Wellness Break"
+                              )?.credits ?? "0"
+                            }`,
                           },
                           min: {
                             value: 0,
-                            message: 'Invalid Input'
-                          }
+                            message: "Invalid Input",
+                          },
                         })}
                         type="number"
                         step="any"
@@ -901,22 +913,22 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                     <div className="flex space-x-2 items-center">
                       <span className="font-bold">Paternity Leave:</span>
                       <input
-                        {...register('paternity', {
+                        {...register("paternity", {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Paternity Leave'
+                                (b) => b.type === "Paternity Leave"
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Paternity Leave'
-                              )?.credits ?? '0'
-                            }`
+                                (b) => b.type === "Paternity Leave"
+                              )?.credits ?? "0"
+                            }`,
                           },
                           min: {
                             value: 0,
-                            message: 'Invalid Input'
-                          }
+                            message: "Invalid Input",
+                          },
                         })}
                         type="number"
                         step="any"
@@ -931,27 +943,27 @@ export default function CreditsCertification({ requestData }: PropTypes) {
 
                     {/* Female */}
                     {documentData.creator?.gender.toLowerCase() ===
-                      'female' && (
+                      "female" && (
                       <>
                         <div className="flex space-x-2 items-center">
                           <span className="font-bold">VAWC Leave:</span>
                           <input
-                            {...register('vawc', {
+                            {...register("vawc", {
                               max: {
                                 value:
                                   leaveCreditBalances.find(
-                                    (b) => b.type === '10-Day VAWC Leave'
+                                    (b) => b.type === "10-Day VAWC Leave"
                                   )?.credits ?? 0,
                                 message: `Cannot exceed ${
                                   leaveCreditBalances.find(
-                                    (b) => b.type === '10-Day VAWC Leave'
-                                  )?.credits ?? '0'
-                                }`
+                                    (b) => b.type === "10-Day VAWC Leave"
+                                  )?.credits ?? "0"
+                                }`,
                               },
                               min: {
                                 value: 0,
-                                message: 'Invalid Input'
-                              }
+                                message: "Invalid Input",
+                              },
                             })}
                             type="number"
                             step="any"
@@ -969,26 +981,26 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                             Special Leave Benefits for Women Leave:
                           </span>
                           <input
-                            {...register('slbw', {
+                            {...register("slbw", {
                               max: {
                                 value:
                                   leaveCreditBalances.find(
                                     (b) =>
                                       b.type ===
-                                      'Special Leave Benefits For Women'
+                                      "Special Leave Benefits For Women"
                                   )?.credits ?? 0,
                                 message: `Cannot exceed ${
                                   leaveCreditBalances.find(
                                     (b) =>
                                       b.type ===
-                                      'Special Leave Benefits For Women'
-                                  )?.credits ?? '0'
-                                }`
+                                      "Special Leave Benefits For Women"
+                                  )?.credits ?? "0"
+                                }`,
                               },
                               min: {
                                 value: 0,
-                                message: 'Invalid Input'
-                              }
+                                message: "Invalid Input",
+                              },
                             })}
                             type="number"
                             step="any"
@@ -1008,26 +1020,26 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                         Special Emergency Leave:
                       </span>
                       <input
-                        {...register('emergency', {
+                        {...register("emergency", {
                           max: {
                             value:
                               leaveCreditBalances.find(
                                 (b) =>
                                   b.type ===
-                                  'Special Emergency (Calamity) Leave'
+                                  "Special Emergency (Calamity) Leave"
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
                                 (b) =>
                                   b.type ===
-                                  'Special Emergency (Calamity) Leave'
-                              )?.credits ?? '0'
-                            }`
+                                  "Special Emergency (Calamity) Leave"
+                              )?.credits ?? "0"
+                            }`,
                           },
                           min: {
                             value: 0,
-                            message: 'Invalid Input'
-                          }
+                            message: "Invalid Input",
+                          },
                         })}
                         type="number"
                         step="any"
@@ -1043,22 +1055,22 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                     <div className="flex space-x-2 items-center">
                       <span className="font-bold">Study Leave:</span>
                       <input
-                        {...register('study', {
+                        {...register("study", {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Study Leave'
+                                (b) => b.type === "Study Leave"
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Study Leave'
-                              )?.credits ?? '0'
-                            }`
+                                (b) => b.type === "Study Leave"
+                              )?.credits ?? "0"
+                            }`,
                           },
                           min: {
                             value: 0,
-                            message: 'Invalid Input'
-                          }
+                            message: "Invalid Input",
+                          },
                         })}
                         type="number"
                         step="any"
@@ -1073,22 +1085,22 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                     <div className="flex space-x-2 items-center">
                       <span className="font-bold">Solo Parent Leave:</span>
                       <input
-                        {...register('soloparent', {
+                        {...register("soloparent", {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Solo Parent Leave'
+                                (b) => b.type === "Solo Parent Leave"
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Solo Parent Leave'
-                              )?.credits ?? '0'
-                            }`
+                                (b) => b.type === "Solo Parent Leave"
+                              )?.credits ?? "0"
+                            }`,
                           },
                           min: {
                             value: 0,
-                            message: 'Invalid Input'
-                          }
+                            message: "Invalid Input",
+                          },
                         })}
                         type="number"
                         step="any"
@@ -1106,22 +1118,22 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                         Special Privilege Leave:
                       </span>
                       <input
-                        {...register('spl', {
+                        {...register("spl", {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Special Privilege Leave'
+                                (b) => b.type === "Special Privilege Leave"
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Special Privilege Leave'
-                              )?.credits ?? '0'
-                            }`
+                                (b) => b.type === "Special Privilege Leave"
+                              )?.credits ?? "0"
+                            }`,
                           },
                           min: {
                             value: 0,
-                            message: 'Invalid Input'
-                          }
+                            message: "Invalid Input",
+                          },
                         })}
                         type="number"
                         step="any"
@@ -1137,22 +1149,22 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                     <div className="flex space-x-2 items-center">
                       <span className="font-bold">Rehabilitation Leave:</span>
                       <input
-                        {...register('rehab', {
+                        {...register("rehab", {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Rehabilitation Leave'
+                                (b) => b.type === "Rehabilitation Leave"
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === 'Rehabilitation Leave'
-                              )?.credits ?? '0'
-                            }`
+                                (b) => b.type === "Rehabilitation Leave"
+                              )?.credits ?? "0"
+                            }`,
                           },
                           min: {
                             value: 0,
-                            message: 'Invalid Input'
-                          }
+                            message: "Invalid Input",
+                          },
                         })}
                         type="number"
                         step="any"
@@ -1199,11 +1211,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                 </div>
               ))}
             </div>
-            {documentData.leave_type === 'Terminal/Monetization Leave' ? (
+            {documentData.leave_type === "Terminal/Monetization Leave" ? (
               <>
                 <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-                  Absence with Pay:{' '}
-                  {documentData.leave_other_purpose === 'xTerminal Leave' ? (
+                  Absence with Pay:{" "}
+                  {documentData.leave_other_purpose === "xTerminal Leave" ? (
                     <span> {documentData.leave_days}</span>
                   ) : (
                     <span>0</span>
@@ -1212,7 +1224,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                 <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
                   Absence without Pay: 0
                 </div>
-                {documentData.leave_other_purpose !== 'Terminal Leave' && (
+                {documentData.leave_other_purpose !== "Terminal Leave" && (
                   <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
                     Monetization: {documentData.leave_days} days
                   </div>
@@ -1226,14 +1238,14 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                       Absence with Pay: {certifiedWithPay}
                     </div>
                     <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-                      Absence without Pay:{' '}
+                      Absence without Pay:{" "}
                       {Number(documentData.leave_days) - certifiedWithPay}
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-                      Absence with Pay:{' '}
+                      Absence with Pay:{" "}
                       {Number.isInteger(withPay) ? withPay : withPay.toFixed(2)}
                       {withPay > Number(documentData.leave_days) && (
                         <span className="text-red-500">
@@ -1242,7 +1254,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                       )}
                     </div>
                     <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-                      Absence without Pay:{' '}
+                      Absence without Pay:{" "}
                       {Number.isInteger(withoutPay)
                         ? withoutPay
                         : withoutPay.toFixed(2)}
@@ -1255,5 +1267,5 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         </div>
       )}
     </div>
-  )
+  );
 }
