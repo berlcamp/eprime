@@ -619,7 +619,12 @@ export default function ReportRequestsPage() {
               {leaveTypes.map((l) => (
                 <Card key={l} className="rounded-xl shadow">
                   <CardHeader>
-                    <CardTitle className="text-sm">{l}</CardTitle>
+                    <CardTitle className="text-sm">
+                      {l === "Mandatory/Force Leave" ||
+                      l === "Mandatory/Forced Leave"
+                        ? "Mandatory/Forced Leave"
+                        : l}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold text-center mb-3">

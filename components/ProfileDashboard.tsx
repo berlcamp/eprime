@@ -1,109 +1,109 @@
-'use client'
+"use client";
 
-import { useFilter } from '@/context/FilterContext'
-import { useSupabase } from '@/context/SupabaseProvider'
-import type { DocumentTypes, Employee } from '@/types'
-import { logError } from '@/utils/fetchApi'
-import { format, isValid, parseISO } from 'date-fns'
-import { nanoid } from 'nanoid'
-import { useEffect, useState } from 'react'
-import Title from './Title'
-import UserRequests from './Tracker/UserRequests'
+import { useFilter } from "@/context/FilterContext";
+import { useSupabase } from "@/context/SupabaseProvider";
+import type { DocumentTypes, Employee } from "@/types";
+import { logError } from "@/utils/fetchApi";
+import { format, isValid, parseISO } from "date-fns";
+import { nanoid } from "nanoid";
+import { useEffect, useState } from "react";
+import Title from "./Title";
+import UserRequests from "./Tracker/UserRequests";
 
 export default function ProfileDashboard({
   userId,
-  userData
+  userData,
 }: {
-  userId: string
-  userData: Employee
+  userId: string;
+  userData: Employee;
 }) {
-  const { supabase, session } = useSupabase()
-  const { setToast } = useFilter()
+  const { supabase, session } = useSupabase();
+  const { setToast } = useFilter();
 
   // counters state
-  const [leaveCounter, setLeaveCounter] = useState(0)
-  const [travelCounter, setTravelCounter] = useState(0)
-  const [passSlipCounter, setPassSlipCounter] = useState(0)
-  const [underTimeCounter, setUnderTimeCounter] = useState(0)
-  const [locatorSlipCounter, setLocatorSlipCounter] = useState(0)
-  const [srPrintCounter, setSrPrintCounter] = useState(0)
+  const [leaveCounter, setLeaveCounter] = useState(0);
+  const [travelCounter, setTravelCounter] = useState(0);
+  const [passSlipCounter, setPassSlipCounter] = useState(0);
+  const [underTimeCounter, setUnderTimeCounter] = useState(0);
+  const [locatorSlipCounter, setLocatorSlipCounter] = useState(0);
+  const [srPrintCounter, setSrPrintCounter] = useState(0);
 
-  const [approvedLeave, setApprovedLeave] = useState<DocumentTypes[] | []>([])
+  const [approvedLeave, setApprovedLeave] = useState<DocumentTypes[] | []>([]);
 
   const fetchRequests = async () => {
     try {
       const { data, error } = await supabase
-        .from('hrm_request_trackers')
+        .from("hrm_request_trackers")
         .select(
-          '*,leave_cocs:hrm_leave_coc(*), leave_dates:hrm_leave_dates(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url),certifier:certified_by(id,firstname,lastname,middlename,avatar_url),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)',
-          { count: 'exact' }
+          "*,leave_cocs:hrm_leave_coc(*), leave_dates:hrm_leave_dates(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url),certifier:certified_by(id,firstname,lastname,middlename,avatar_url),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url),hrm_remarks(*)",
+          { count: "exact" }
         )
-        .eq('created_by', userId)
-        .neq('current_status', 'Cancelled')
+        .eq("created_by", userId)
+        .neq("current_status", "Cancelled");
 
       if (error) {
         void logError(
-          'Fetch requests from profile dashboard',
-          'hrm_request_trackers',
-          '',
+          "Fetch requests from profile dashboard",
+          "hrm_request_trackers",
+          "",
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Fetching dashboard data failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Fetching dashboard data failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       if (data) {
-        void counter(data)
+        void counter(data);
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
-  }
+  };
 
   const counter = (requestData: DocumentTypes[]) => {
     // Count leave
-    const leave = requestData.filter((item) => item.type === 'Leave')
-    setLeaveCounter(leave.length)
+    const leave = requestData.filter((item) => item.type === "Leave");
+    setLeaveCounter(leave.length);
 
     // Count Travel
     const travel = requestData.filter(
-      (item) => item.type === 'Travel Authority'
-    )
-    setTravelCounter(travel.length)
+      (item) => item.type === "Travel Authority"
+    );
+    setTravelCounter(travel.length);
 
     // Count Pass Slip
-    const passSlip = requestData.filter((item) => item.type === 'Pass Slip')
-    setPassSlipCounter(passSlip.length)
+    const passSlip = requestData.filter((item) => item.type === "Pass Slip");
+    setPassSlipCounter(passSlip.length);
 
     // Count Locator Slip
-    const locator = requestData.filter((item) => item.type === 'Locator Slip')
-    setLocatorSlipCounter(locator.length)
+    const locator = requestData.filter((item) => item.type === "Locator Slip");
+    setLocatorSlipCounter(locator.length);
 
     // Count Undertime Permit
     const undertime = requestData.filter(
-      (item) => item.type === 'Undertime Permit'
-    )
-    setUnderTimeCounter(undertime.length)
+      (item) => item.type === "Undertime Permit"
+    );
+    setUnderTimeCounter(undertime.length);
 
     // Count SR Print
     const sr = requestData.filter(
-      (item) => item.type === 'Service Record Print Request'
-    )
-    setSrPrintCounter(sr.length)
+      (item) => item.type === "Service Record Print Request"
+    );
+    setSrPrintCounter(sr.length);
 
     // Approved leave
     const approved = requestData.filter(
-      (item) => item.type === 'Leave' && item.current_status === 'Approved'
-    )
-    setApprovedLeave(approved)
-  }
+      (item) => item.type === "Leave" && item.current_status === "Approved"
+    );
+    setApprovedLeave(approved);
+  };
 
   useEffect(() => {
-    void fetchRequests()
-  }, [])
+    void fetchRequests();
+  }, []);
 
   return (
     <>
@@ -137,13 +137,13 @@ export default function ProfileDashboard({
                     Date of next Step Increment
                   </div>
                   <div className="text-xs text-gray-700 font-bold">
-                    {userData.salary_step.toString() !== '8' &&
+                    {userData.salary_step.toString() !== "8" &&
                     isValid(parseISO(userData.date_of_next_step_increment))
                       ? format(
                           parseISO(userData.date_of_next_step_increment),
-                          'MMMM d, yyyy'
+                          "MMMM d, yyyy"
                         )
-                      : ''}
+                      : ""}
                   </div>
                 </div>
               </div>
@@ -216,20 +216,23 @@ export default function ProfileDashboard({
                       {approvedLeave.map((leave) => (
                         <tr key={nanoid()}>
                           <td className="text-xs text-gray-600 font-normal">
-                            {leave.leave_type}
+                            {leave.leave_type === "Mandatory/Force Leave" ||
+                            leave.leave_type === "Mandatory/Forced Leave"
+                              ? "Mandatory/Forced Leave"
+                              : leave.leave_type}
                           </td>
                           <td className="text-xs text-gray-600 font-normal">
                             <div className="text-xs">
                               {leave.leave_dates?.length > 10 ? (
                                 <span>
-                                  From{' '}
+                                  From{" "}
                                   <span className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2">
                                     {format(
                                       new Date(leave.leave_dates[0].date),
-                                      'MMM d, yyyy'
+                                      "MMM d, yyyy"
                                     )}
                                   </span>
-                                  to{' '}
+                                  to{" "}
                                   <span className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2">
                                     {format(
                                       new Date(
@@ -237,7 +240,7 @@ export default function ProfileDashboard({
                                           leave.leave_dates.length - 1
                                         ].date
                                       ),
-                                      'MMM d, yyyy'
+                                      "MMM d, yyyy"
                                     )}
                                   </span>
                                 </span>
@@ -247,7 +250,7 @@ export default function ProfileDashboard({
                                     className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2"
                                     key={day.id}
                                   >
-                                    {format(new Date(day.date), 'MMM d, yyyy')}
+                                    {format(new Date(day.date), "MMM d, yyyy")}
                                   </span>
                                 ))
                               )}
@@ -278,5 +281,5 @@ export default function ProfileDashboard({
         </div>
       </div>
     </>
-  )
+  );
 }

@@ -1,225 +1,225 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-'use client'
-import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
-import { useSupabase } from '@/context/SupabaseProvider'
-import { PaperClipIcon } from '@heroicons/react/24/solid'
-import { format } from 'date-fns'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { type FileWithPath, useDropzone } from 'react-dropzone'
-import Remarks from './Remarks/Remarks'
+"use client";
+import TwoColTableLoading from "@/components/Loading/TwoColTableLoading";
+import { useSupabase } from "@/context/SupabaseProvider";
+import { PaperClipIcon } from "@heroicons/react/24/solid";
+import { format } from "date-fns";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { type FileWithPath, useDropzone } from "react-dropzone";
+import Remarks from "./Remarks/Remarks";
 
-import { updateList } from '@/GlobalRedux/Features/listSlice'
-import { recount } from '@/GlobalRedux/Features/recountSlice'
+import { updateList } from "@/GlobalRedux/Features/listSlice";
+import { recount } from "@/GlobalRedux/Features/recountSlice";
 import {
   ConfirmModal,
   CustomButton,
   SearchUserInput,
   StatusFlow,
-  UserBlock
-} from '@/components/index'
-import { useFilter } from '@/context/FilterContext'
+  UserBlock,
+} from "@/components/index";
+import { useFilter } from "@/context/FilterContext";
 import type {
   AttachmentTypes,
   DocumentTypes,
   Employee,
   LeaveCreditTypes,
-  namesType
-} from '@/types'
-import { logError } from '@/utils/fetchApi'
+  namesType,
+} from "@/types";
+import { logError } from "@/utils/fetchApi";
 import {
   BellAlertIcon,
   BellSlashIcon,
   StarIcon,
-  XMarkIcon
-} from '@heroicons/react/20/solid'
-import { useDispatch, useSelector } from 'react-redux'
-import { Tooltip } from 'react-tooltip'
-import AddStickyModal from './AddStickyModal'
-import CreditsCertification from './CreditsCertification'
+  XMarkIcon,
+} from "@heroicons/react/20/solid";
+import { useDispatch, useSelector } from "react-redux";
+import { Tooltip } from "react-tooltip";
+import AddStickyModal from "./AddStickyModal";
+import CreditsCertification from "./CreditsCertification";
 
 interface ModalProps {
-  hideModal: () => void
-  refresh: () => void
-  documentData: DocumentTypes
+  hideModal: () => void;
+  refresh: () => void;
+  documentData: DocumentTypes;
 }
 
 function Attachment({ id, file }: { id: string; file: string }) {
-  const [downloading, setDownloading] = useState(false)
+  const [downloading, setDownloading] = useState(false);
 
-  const { supabase } = useSupabase()
+  const { supabase } = useSupabase();
 
   const handleDownloadFile = async (file: string) => {
-    if (downloading) return
+    if (downloading) return;
 
-    setDownloading(true)
+    setDownloading(true);
 
     try {
       const { data, error } = await supabase.storage
-        .from('hrm_documents')
-        .download(`requests/${id}/${file}`)
+        .from("hrm_documents")
+        .download(`requests/${id}/${file}`);
 
       if (error) {
-        console.error('File download error:', error.message)
-        return
+        console.error("File download error:", error.message);
+        return;
       }
 
       if (!data) {
-        console.error('Downloaded file data is null')
-        return
+        console.error("Downloaded file data is null");
+        return;
       }
 
-      const url = URL.createObjectURL(data)
+      const url = URL.createObjectURL(data);
 
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', file)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", file);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
       // Cleanup
-      URL.revokeObjectURL(url)
+      URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Unexpected error downloading file:', err)
+      console.error("Unexpected error downloading file:", err);
     } finally {
-      setDownloading(false)
+      setDownloading(false);
     }
-  }
+  };
 
   return (
     <div
       onClick={() => handleDownloadFile(file)}
       className={`flex space-x-2 items-center ${
-        downloading ? '' : 'cursor-pointer'
+        downloading ? "" : "cursor-pointer"
       }`}
     >
       <PaperClipIcon className="w-4 h-4 text-blue-700 " />
       <span className="text-blue-700 font-medium text-[10px]">
         {file}
-        {downloading ? ' downloading...' : ''}
+        {downloading ? " downloading..." : ""}
       </span>
     </div>
-  )
+  );
 }
 
 export default function DetailsModal({
   hideModal,
   documentData: originalData,
-  refresh
+  refresh,
 }: ModalProps) {
-  const [documentData, setDocumentData] = useState<DocumentTypes>(originalData)
-  const [attachments, setAttachments] = useState<AttachmentTypes[] | []>([])
-  const [loadingReplies, setLoadingReplies] = useState(false)
+  const [documentData, setDocumentData] = useState<DocumentTypes>(originalData);
+  const [attachments, setAttachments] = useState<AttachmentTypes[] | []>([]);
+  const [loadingReplies, setLoadingReplies] = useState(false);
 
-  const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [updateStatusFlow, setUpdateStatusFlow] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<DocumentTypes | null>(null)
-  const [showAddStickyModal, setShowAddStickyModal] = useState(false)
-  const [hideStickyButton, setHideStickyButton] = useState(false)
-  const [hideFollowButton, setHideFollowButton] = useState(false)
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [updateStatusFlow, setUpdateStatusFlow] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<DocumentTypes | null>(null);
+  const [showAddStickyModal, setShowAddStickyModal] = useState(false);
+  const [hideStickyButton, setHideStickyButton] = useState(false);
+  const [hideFollowButton, setHideFollowButton] = useState(false);
 
-  const [showConfirmModal, setShowConfirmModal] = useState('')
-  const [confirmMessage, setConfirmMessage] = useState('')
+  const [showConfirmModal, setShowConfirmModal] = useState("");
+  const [confirmMessage, setConfirmMessage] = useState("");
 
   // Forward to this user
-  const [selectedUser, setSelectedUser] = useState<namesType | null>(null)
+  const [selectedUser, setSelectedUser] = useState<namesType | null>(null);
 
-  const [selectedImages, setSelectedImages] = useState<any>([])
-  const { systemUsers, session, supabase } = useSupabase()
+  const [selectedImages, setSelectedImages] = useState<any>([]);
+  const { systemUsers, session, supabase } = useSupabase();
 
-  const { setToast, hasAccess } = useFilter()
+  const { setToast, hasAccess } = useFilter();
 
-  const wrapperRef = useRef<HTMLDivElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const user: Employee = systemUsers.find(
     (user: Employee) => user.id === session?.user.id
-  )
+  );
 
   // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
-  const dispatch = useDispatch()
+  const globallist = useSelector((state: any) => state.list.value);
+  const dispatch = useDispatch();
 
   const handleFollow = async () => {
     try {
-      const { error } = await supabase.from('hrm_tracker_followers').insert({
+      const { error } = await supabase.from("hrm_tracker_followers").insert({
         tracker_id: documentData.id,
-        user_id: user.id
-      })
-      if (error) throw new Error(error.message)
+        user_id: user.id,
+      });
+      if (error) throw new Error(error.message);
 
-      setToast('success', 'Successfully Followed.')
-      setHideFollowButton(true)
+      setToast("success", "Successfully Followed.");
+      setHideFollowButton(true);
 
-      dispatch(recount())
+      dispatch(recount());
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleUnfollow = async () => {
     try {
       const { error } = await supabase
-        .from('hrm_tracker_followers')
+        .from("hrm_tracker_followers")
         .delete()
-        .eq('tracker_id', documentData.id)
-        .eq('user_id', user.id)
+        .eq("tracker_id", documentData.id)
+        .eq("user_id", user.id);
 
-      if (error) throw new Error(error.message)
+      if (error) throw new Error(error.message);
 
-      setToast('success', 'Successfully Unfollowed.')
-      setHideFollowButton(false)
+      setToast("success", "Successfully Unfollowed.");
+      setHideFollowButton(false);
 
-      dispatch(recount())
+      dispatch(recount());
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleNotify = async (document: DocumentTypes, actionType: string) => {
     //
     try {
-      const userIds: string[] = []
+      const userIds: string[] = [];
 
       // Followers
       const { data: followers } = await supabase
-        .from('hrm_tracker_followers')
-        .select('user_id')
-        .eq('tracker_id', document.id)
+        .from("hrm_tracker_followers")
+        .select("user_id")
+        .eq("tracker_id", document.id);
 
       if (followers) {
         followers.forEach((user) => {
-          userIds.push(user.user_id.toString())
-        })
+          userIds.push(user.user_id.toString());
+        });
       }
 
       // Notify the origin
-      userIds.push(document.created_by)
+      userIds.push(document.created_by);
 
       // Notify the receiver if status is forwarded
-      if (actionType === 'Forwarded') {
-        userIds.push(document.receiver_id)
+      if (actionType === "Forwarded") {
+        userIds.push(document.receiver_id);
       }
 
       // Remove the duplicated IDs
       const uniqueIds = userIds.reduce(
         (accumulator: string[], currentValue: string) => {
           if (!accumulator.includes(currentValue)) {
-            accumulator.push(currentValue)
+            accumulator.push(currentValue);
           }
-          return accumulator
+          return accumulator;
         },
         []
-      )
+      );
 
-      const notificationData: any[] = []
+      const notificationData: any[] = [];
 
       const message =
-        actionType === 'Forwarded'
+        actionType === "Forwarded"
           ? `The ${document.type} Request #${document.reference_code} has been forwarded to you for verification/approval.`
-          : `The status of ${document.type} request #${document.reference_code} has been changed to ${actionType}.`
+          : `The status of ${document.type} request #${document.reference_code} has been changed to ${actionType}.`;
 
       uniqueIds.forEach((userId) => {
         notificationData.push({
@@ -228,421 +228,423 @@ export default function DetailsModal({
           type: actionType,
           user_id: userId,
           request_tracker_id: document.id,
-          reference_table: 'hrm_request_trackers'
-        })
-      })
+          reference_table: "hrm_request_trackers",
+        });
+      });
 
       if (notificationData.length > 0) {
         // insert to notifications
         const { error: error3 } = await supabase
-          .from('hrm_notifications')
-          .insert(notificationData)
+          .from("hrm_notifications")
+          .insert(notificationData);
 
         if (error3) {
-          throw new Error(error3.message)
+          throw new Error(error3.message);
         }
       }
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   // display confirm modal
   const HandleConfirm = (action: string) => {
-    if (saving) return
+    if (saving) return;
 
-    if (action === 'Recommend Approval') {
-      setConfirmMessage('Are you sure you want to recommend this for approval?')
+    if (action === "Recommend Approval") {
+      setConfirmMessage(
+        "Are you sure you want to recommend this for approval?"
+      );
     }
-    if (action === 'Approve') {
-      setConfirmMessage('Are you sure you want to Approve this?')
+    if (action === "Approve") {
+      setConfirmMessage("Are you sure you want to Approve this?");
     }
-    if (action === 'For Reverification') {
+    if (action === "For Reverification") {
       setConfirmMessage(
         'Are you sure you want to change this to "For Reverification?"'
-      )
+      );
     }
-    if (action === 'Disapprove') {
-      setConfirmMessage('Are you sure you want to Disapprove this?')
+    if (action === "Disapprove") {
+      setConfirmMessage("Are you sure you want to Disapprove this?");
     }
-    if (action === 'Cancel') {
-      setConfirmMessage('Are you sure you want to Cancel this request?')
+    if (action === "Cancel") {
+      setConfirmMessage("Are you sure you want to Cancel this request?");
     }
-    if (action === 'Forward') {
+    if (action === "Forward") {
       if (!selectedUser) {
-        return
+        return;
       }
-      setConfirmMessage('Are you sure you want to Forward this request?')
+      setConfirmMessage("Are you sure you want to Forward this request?");
     }
 
-    setShowConfirmModal(action)
-  }
+    setShowConfirmModal(action);
+  };
 
   // based from confirm modal
   const HandleOnConfirm = () => {
-    if (showConfirmModal === 'Forward') {
-      void handleConfirmedForward()
+    if (showConfirmModal === "Forward") {
+      void handleConfirmedForward();
     }
-    if (showConfirmModal === 'Approve') {
-      void handleConfirmedApprove()
+    if (showConfirmModal === "Approve") {
+      void handleConfirmedApprove();
     }
-    if (showConfirmModal === 'For Reverification') {
-      void handleConfirmedReverification()
+    if (showConfirmModal === "For Reverification") {
+      void handleConfirmedReverification();
     }
-    if (showConfirmModal === 'Disapprove') {
-      void handleConfirmedDisapprove()
+    if (showConfirmModal === "Disapprove") {
+      void handleConfirmedDisapprove();
     }
-    if (showConfirmModal === 'Recommend Approval') {
-      void handleConfirmedRecommend()
+    if (showConfirmModal === "Recommend Approval") {
+      void handleConfirmedRecommend();
     }
-    if (showConfirmModal === 'Cancel') {
-      void handleConfirmedCancel()
+    if (showConfirmModal === "Cancel") {
+      void handleConfirmedCancel();
     }
 
-    setShowConfirmModal('')
-    setConfirmMessage('')
-  }
+    setShowConfirmModal("");
+    setConfirmMessage("");
+  };
 
   // based from confirm modal
   const handleOnCancel = () => {
     // hide the modal
-    setShowConfirmModal('')
-    setConfirmMessage('')
-  }
+    setShowConfirmModal("");
+    setConfirmMessage("");
+  };
 
   const handleConfirmedForward = async () => {
-    if (!selectedUser) return
+    if (!selectedUser) return;
 
-    if (saving) return
+    if (saving) return;
 
-    setSaving(true)
+    setSaving(true);
 
     const newData = {
-      current_tracker: 'Forwarded',
-      receiver_id: selectedUser.id
-    }
+      current_tracker: "Forwarded",
+      receiver_id: selectedUser.id,
+    };
     try {
       const { error } = await supabase
-        .from('hrm_request_trackers')
+        .from("hrm_request_trackers")
         .update(newData)
-        .eq('id', documentData.id)
+        .eq("id", documentData.id);
 
       if (error) {
         void logError(
-          'Forward Request',
-          'hrm_request_trackers',
+          "Forward Request",
+          "hrm_request_trackers",
           JSON.stringify(newData),
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
-      const { error: error2 } = await supabase.from('hrm_tracker_flow').insert({
+      const { error: error2 } = await supabase.from("hrm_tracker_flow").insert({
         tracker_id: documentData.id,
         user_id: user.id,
         receiver_id: selectedUser.id,
-        status: 'Forwarded'
-      })
+        status: "Forwarded",
+      });
 
       if (error2) {
         void logError(
-          'Forward Request Flow',
-          'hrm_tracker_flow',
-          '',
+          "Forward Request Flow",
+          "hrm_tracker_flow",
+          "",
           error2.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error2.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error2.message);
       }
 
       // Update data in redux
-      const items: DocumentTypes[] = [...globallist]
-      const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
-      setDocumentData(items[foundIndex]) // update ui with new data
+      const items: DocumentTypes[] = [...globallist];
+      const updatedData = { ...newData, id: documentData.id };
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+      items[foundIndex] = { ...items[foundIndex], ...updatedData };
+      dispatch(updateList(items));
+      setDocumentData(items[foundIndex]); // update ui with new data
 
       // Notify requester and receiver
-      void handleNotify(items[foundIndex], 'Forwarded')
+      void handleNotify(items[foundIndex], "Forwarded");
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
       // Recount sidebar counter
-      dispatch(recount())
+      dispatch(recount());
 
-      setUpdateStatusFlow(!updateStatusFlow)
-      setSaving(false)
+      setUpdateStatusFlow(!updateStatusFlow);
+      setSaving(false);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleConfirmedApprove = async () => {
-    if (saving) return
+    if (saving) return;
 
-    setSaving(true)
+    setSaving(true);
 
     const newData = {
-      current_status: 'Approved',
+      current_status: "Approved",
       current_approver_id: session?.user.id,
       approved_by: session?.user.id,
-      date_approved: format(new Date(), 'yyyy-MM-dd')
-    }
+      date_approved: format(new Date(), "yyyy-MM-dd"),
+    };
     try {
       const { error } = await supabase
-        .from('hrm_request_trackers')
+        .from("hrm_request_trackers")
         .update(newData)
-        .eq('id', documentData.id)
+        .eq("id", documentData.id);
 
       if (error) {
         void logError(
-          'Approval',
-          'hrm_request_trackers',
+          "Approval",
+          "hrm_request_trackers",
           JSON.stringify(newData),
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       // Added log to latest tracker flow
       const { data } = await supabase
-        .from('hrm_tracker_flow')
+        .from("hrm_tracker_flow")
         .select()
-        .eq('tracker_id', documentData.id)
-        .order('id', { ascending: false })
+        .eq("tracker_id", documentData.id)
+        .order("id", { ascending: false })
         .limit(1)
-        .single()
+        .single();
 
       if (data) {
         const newData = {
-          message: 'Approved',
+          message: "Approved",
           tracker_flow_id: data.id,
-          user_id: session?.user.id
-        }
+          user_id: session?.user.id,
+        };
 
         const { error: error2 } = await supabase
-          .from('hrm_tracker_logs')
+          .from("hrm_tracker_logs")
           .insert(newData)
-          .eq('id', documentData.id)
+          .eq("id", documentData.id);
 
         if (error2) {
           void logError(
-            'Approval Flow Logs',
-            'hrm_tracker_flow',
-            '',
+            "Approval Flow Logs",
+            "hrm_tracker_flow",
+            "",
             error2.message
-          )
+          );
         }
       }
 
       // Add entry to employees leave card if type of request is Leave
-      if (documentData.type === 'Leave') {
+      if (documentData.type === "Leave") {
         // Current Balances
         const { data: balancesData } = await supabase
-          .from('hrm_leave_credits')
+          .from("hrm_leave_credits")
           .select()
-          .eq('user_id', documentData.creator.id)
+          .eq("user_id", documentData.creator.id);
 
         const balances: Array<{
-          type: string
-          balance: string
-        }> = []
+          type: string;
+          balance: string;
+        }> = [];
 
         if (balancesData && balancesData.length > 0) {
-          const creditsData: LeaveCreditTypes[] = balancesData
+          const creditsData: LeaveCreditTypes[] = balancesData;
           creditsData.forEach((credit) => {
             balances.push({
               type: credit.type,
-              balance: credit.credits.toString()
-            })
-          })
+              balance: credit.credits.toString(),
+            });
+          });
         }
 
         const creditsUsed = [
           {
-            type: 'Vacation Leave',
-            value: documentData.leave_credit_use_vl
+            type: "Vacation Leave",
+            value: documentData.leave_credit_use_vl,
           },
           {
-            type: 'Sick Leave',
-            value: documentData.leave_credit_use_sl
+            type: "Sick Leave",
+            value: documentData.leave_credit_use_sl,
           },
           {
-            type: 'Service Credit',
-            value: documentData.leave_credit_use_sc
+            type: "Service Credit",
+            value: documentData.leave_credit_use_sc,
           },
           {
-            type: 'Adoption Leave',
-            value: documentData.leave_credit_use_adoption
+            type: "Adoption Leave",
+            value: documentData.leave_credit_use_adoption,
           },
           {
-            type: '10-Day VAWC Leave',
-            value: documentData.leave_credit_use_vawc
+            type: "10-Day VAWC Leave",
+            value: documentData.leave_credit_use_vawc,
           },
           {
-            type: 'Special Emergency (Calamity) Leave',
-            value: documentData.leave_credit_use_emergency
+            type: "Special Emergency (Calamity) Leave",
+            value: documentData.leave_credit_use_emergency,
           },
           {
-            type: 'Study Leave',
-            value: documentData.leave_credit_use_study
+            type: "Study Leave",
+            value: documentData.leave_credit_use_study,
           },
           {
-            type: 'Solo Parent Leave',
-            value: documentData.leave_credit_use_soloparent
+            type: "Solo Parent Leave",
+            value: documentData.leave_credit_use_soloparent,
           },
           {
-            type: 'Special Leave Benefits For Women',
-            value: documentData.leave_credit_use_slbw
+            type: "Special Leave Benefits For Women",
+            value: documentData.leave_credit_use_slbw,
           },
           {
-            type: 'Special Privilege Leave',
-            value: documentData.leave_credit_use_spl
+            type: "Special Privilege Leave",
+            value: documentData.leave_credit_use_spl,
           },
           {
-            type: 'Rehabilitation Leave',
-            value: documentData.leave_credit_use_rehab
+            type: "Rehabilitation Leave",
+            value: documentData.leave_credit_use_rehab,
           },
           {
-            type: 'Paternity Leave',
-            value: documentData.leave_credit_use_paternity
+            type: "Paternity Leave",
+            value: documentData.leave_credit_use_paternity,
           },
           {
-            type: 'Maternity Leave',
-            value: documentData.leave_credit_use_maternity
+            type: "Maternity Leave",
+            value: documentData.leave_credit_use_maternity,
           },
           {
-            type: 'Wellness Break',
-            value: documentData.leave_credit_use_wellness
-          }
-        ]
+            type: "Wellness Break",
+            value: documentData.leave_credit_use_wellness,
+          },
+        ];
 
         // Foreach credits used
-        let totalCredits = 0
-        const usedCredits: string[] = []
+        let totalCredits = 0;
+        const usedCredits: string[] = [];
         creditsUsed.forEach((cu) => {
           if (cu.value) {
-            totalCredits += Number(cu.value)
-            usedCredits.push(`${cu.type} (${cu.value})`)
+            totalCredits += Number(cu.value);
+            usedCredits.push(`${cu.type} (${cu.value})`);
           }
-        })
+        });
 
         // Update leave credits balances to db
         const updateLeaveCreditsPromises = creditsUsed.map(async (c) => {
           if (c.value) {
-            const bal = balances.find((b) => b.type === c.type)
+            const bal = balances.find((b) => b.type === c.type);
 
             if (bal) {
               return await supabase
-                .from('hrm_leave_credits')
+                .from("hrm_leave_credits")
                 .update({
-                  credits: Number(bal.balance) - Number(c.value)
+                  credits: Number(bal.balance) - Number(c.value),
                 })
-                .eq('type', c.type)
-                .eq('user_id', documentData.creator.id)
+                .eq("type", c.type)
+                .eq("user_id", documentData.creator.id);
             }
           }
-        })
-        await Promise.all(updateLeaveCreditsPromises)
+        });
+        await Promise.all(updateLeaveCreditsPromises);
 
         // Update Cto balances to db
         // Update CTO balances in the database
         const { data: leaveCocRecords, error: leaveError } = await supabase
-          .from('hrm_leave_coc')
-          .select('use_coc, user_cto_id')
-          .eq('tracker_id', documentData.id)
+          .from("hrm_leave_coc")
+          .select("use_coc, user_cto_id")
+          .eq("tracker_id", documentData.id);
 
         if (leaveError) {
           void logError(
-            'Leave request - fetch leave coc records',
-            'hrm_leave_coc',
-            '',
+            "Leave request - fetch leave coc records",
+            "hrm_leave_coc",
+            "",
             leaveError.message
-          )
-          throw new Error(leaveError.message)
+          );
+          throw new Error(leaveError.message);
         }
 
         if (!leaveCocRecords || leaveCocRecords.length === 0) {
-          console.warn('No COC records found for this tracker ID.')
+          console.warn("No COC records found for this tracker ID.");
         }
 
         // Process and update each CTO balance
         for (const record of leaveCocRecords) {
-          const { use_coc, user_cto_id } = record
+          const { use_coc, user_cto_id } = record;
 
           const { data: userCto, error: fetchCtoError } = await supabase
-            .from('hrm_cto_users')
-            .select('coc, used_coc')
-            .eq('id', user_cto_id)
-            .maybeSingle()
+            .from("hrm_cto_users")
+            .select("coc, used_coc")
+            .eq("id", user_cto_id)
+            .maybeSingle();
 
           if (fetchCtoError || !userCto) {
             void logError(
-              'Leave request - fetch current CTO user',
-              'hrm_cto_users',
+              "Leave request - fetch current CTO user",
+              "hrm_cto_users",
               user_cto_id,
-              fetchCtoError?.message || 'CTO user not found'
-            )
-            throw new Error(fetchCtoError?.message || 'CTO user not found')
+              fetchCtoError?.message || "CTO user not found"
+            );
+            throw new Error(fetchCtoError?.message || "CTO user not found");
           }
 
-          const newCocValue = userCto.coc - use_coc
-          const newUsedCocValue = (userCto.used_coc ?? 0) - use_coc
+          const newCocValue = userCto.coc - use_coc;
+          const newUsedCocValue = (userCto.used_coc ?? 0) - use_coc;
 
-          totalCredits += Number(use_coc)
-          usedCredits.push(`COC (${use_coc})`)
+          totalCredits += Number(use_coc);
+          usedCredits.push(`COC (${use_coc})`);
 
           const { error: updateError } = await supabase
-            .from('hrm_cto_users')
+            .from("hrm_cto_users")
             .update({ coc: newCocValue, used_coc: newUsedCocValue })
-            .eq('id', user_cto_id)
+            .eq("id", user_cto_id);
 
           if (updateError) {
             void logError(
-              'Leave request - update CTO user balance',
-              'hrm_cto_users',
+              "Leave request - update CTO user balance",
+              "hrm_cto_users",
               user_cto_id,
               updateError.message
-            )
-            throw new Error(updateError.message)
+            );
+            throw new Error(updateError.message);
           }
         }
 
         // Insert to leave cards
-        const { error } = await supabase.from('hrm_leave_cards').insert({
+        const { error } = await supabase.from("hrm_leave_cards").insert({
           adjustment_date: new Date(),
-          particulars: 'Leave Request',
-          remarks: `Credit used:  ${usedCredits.join(', ')}`,
+          particulars: "Leave Request",
+          remarks: `Credit used:  ${usedCredits.join(", ")}`,
           credits_used: totalCredits,
-          balance: '',
+          balance: "",
           absence_with_pay: documentData.leave_days_with_pay,
           absence_without_pay: documentData.leave_days_without_pay,
           type: documentData.leave_type,
           tracker_id: documentData.id,
-          user_id: documentData.created_by
-        })
+          user_id: documentData.created_by,
+        });
 
         if (error) {
           void logError(
-            'Leave request - add to leave card',
-            'hrm_leave_cards',
-            '',
+            "Leave request - add to leave card",
+            "hrm_leave_cards",
+            "",
             error.message
-          )
-          throw new Error(error.message)
+          );
+          throw new Error(error.message);
         }
 
         // If leave days without pay > 0, add to Service Record and Update hrm_user 'step_increment_leave_days'
@@ -650,496 +652,496 @@ export default function DetailsModal({
           const newData = {
             user_id: documentData.created_by,
             org_id: process.env.NEXT_PUBLIC_ORG_ID,
-            from: documentData.leave_dates[0]?.date ?? '',
+            from: documentData.leave_dates[0]?.date ?? "",
             designation: documentData.creator.hrm_positions?.name,
             days_without_pay: documentData.leave_days_without_pay,
             remarks: documentData.leave_type,
-            created_by: session?.user.id
-          }
+            created_by: session?.user.id,
+          };
 
           const { error: insertSRError } = await supabase
-            .from('hrm_service_records')
+            .from("hrm_service_records")
             .insert(newData)
-            .select()
+            .select();
 
           if (insertSRError) {
             void logError(
-              'Create service record from Leave',
-              'hrm_service_records',
+              "Create service record from Leave",
+              "hrm_service_records",
               JSON.stringify(newData),
               insertSRError.message
-            )
+            );
           }
 
           const { error: updateUserError } = await supabase
-            .from('hrm_users')
+            .from("hrm_users")
             .update({
               step_increment_leave_days:
                 Number(documentData.creator.step_increment_leave_days) +
-                Number(documentData.leave_days_without_pay)
+                Number(documentData.leave_days_without_pay),
             })
-            .eq('id', documentData.created_by)
+            .eq("id", documentData.created_by);
 
           if (updateUserError) {
             void logError(
-              'Update step_increment_leave_days during leave',
-              'hrm_users',
-              '',
+              "Update step_increment_leave_days during leave",
+              "hrm_users",
+              "",
               updateUserError.message
-            )
+            );
           }
         }
       }
       // End: Add entry to employees leave card if type of request is Leave
 
       // Update data in redux
-      const items = [...globallist]
-      const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
-      setDocumentData(items[foundIndex]) // update ui with new data
+      const items = [...globallist];
+      const updatedData = { ...newData, id: documentData.id };
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+      items[foundIndex] = { ...items[foundIndex], ...updatedData };
+      dispatch(updateList(items));
+      setDocumentData(items[foundIndex]); // update ui with new data
 
       // Notify requester and follower
-      void handleNotify(items[foundIndex], 'Approved')
+      void handleNotify(items[foundIndex], "Approved");
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
       // Recount sidebar counter
-      dispatch(recount())
+      dispatch(recount());
 
-      refresh?.()
+      refresh?.();
 
-      setUpdateStatusFlow(!updateStatusFlow)
-      setSaving(false)
+      setUpdateStatusFlow(!updateStatusFlow);
+      setSaving(false);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleConfirmedReverification = async () => {
-    if (saving) return
+    if (saving) return;
 
-    setSaving(true)
+    setSaving(true);
 
     const newData = {
-      current_status: 'For Verification',
-      current_approver_id: session?.user.id
-    }
+      current_status: "For Verification",
+      current_approver_id: session?.user.id,
+    };
     try {
       const { error } = await supabase
-        .from('hrm_request_trackers')
+        .from("hrm_request_trackers")
         .update(newData)
-        .eq('id', documentData.id)
+        .eq("id", documentData.id);
 
       if (error) {
         void logError(
-          'For Reverification',
-          'hrm_request_trackers',
+          "For Reverification",
+          "hrm_request_trackers",
           JSON.stringify(newData),
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       // Added log to latest tracker flow
       const { data } = await supabase
-        .from('hrm_tracker_flow')
+        .from("hrm_tracker_flow")
         .select()
-        .eq('tracker_id', documentData.id)
-        .order('id', { ascending: false })
+        .eq("tracker_id", documentData.id)
+        .order("id", { ascending: false })
         .limit(1)
-        .single()
+        .single();
 
       if (data) {
         const newData = {
-          message: 'For Reverification',
+          message: "For Reverification",
           tracker_flow_id: data.id,
-          user_id: session?.user.id
-        }
+          user_id: session?.user.id,
+        };
 
         const { error: error2 } = await supabase
-          .from('hrm_tracker_logs')
+          .from("hrm_tracker_logs")
           .insert(newData)
-          .eq('id', documentData.id)
+          .eq("id", documentData.id);
 
         if (error2) {
           void logError(
-            'Approval Flow Logs',
-            'hrm_tracker_flow',
-            '',
+            "Approval Flow Logs",
+            "hrm_tracker_flow",
+            "",
             error2.message
-          )
+          );
         }
       }
 
       // Update data in redux
-      const items = [...globallist]
-      const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
-      setDocumentData(items[foundIndex]) // update ui with new data
+      const items = [...globallist];
+      const updatedData = { ...newData, id: documentData.id };
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+      items[foundIndex] = { ...items[foundIndex], ...updatedData };
+      dispatch(updateList(items));
+      setDocumentData(items[foundIndex]); // update ui with new data
 
       // Notify requester and follower
-      void handleNotify(items[foundIndex], 'For Reverification')
+      void handleNotify(items[foundIndex], "For Reverification");
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
       // Recount sidebar counter
-      dispatch(recount())
+      dispatch(recount());
 
-      setUpdateStatusFlow(!updateStatusFlow)
-      setSaving(false)
+      setUpdateStatusFlow(!updateStatusFlow);
+      setSaving(false);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleConfirmedRecommend = async () => {
-    if (saving) return
+    if (saving) return;
 
-    setSaving(true)
+    setSaving(true);
 
     const newData = {
-      current_status: 'Approval Recommended',
+      current_status: "Approval Recommended",
       current_approver_id: session?.user.id,
       recommended_by: session?.user.id,
-      date_recommeded: format(new Date(), 'yyyy-MM-dd')
-    }
+      date_recommeded: format(new Date(), "yyyy-MM-dd"),
+    };
     try {
       const { error } = await supabase
-        .from('hrm_request_trackers')
+        .from("hrm_request_trackers")
         .update(newData)
-        .eq('id', documentData.id)
+        .eq("id", documentData.id);
 
       if (error) {
         void logError(
-          'Approval Recommended',
-          'hrm_request_trackers',
+          "Approval Recommended",
+          "hrm_request_trackers",
           JSON.stringify(newData),
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       // Added log to latest tracker flow
       const { data } = await supabase
-        .from('hrm_tracker_flow')
+        .from("hrm_tracker_flow")
         .select()
-        .eq('tracker_id', documentData.id)
-        .order('id', { ascending: false })
+        .eq("tracker_id", documentData.id)
+        .order("id", { ascending: false })
         .limit(1)
-        .single()
+        .single();
 
       if (data) {
         const newData = {
-          message: 'Approval Recommended',
+          message: "Approval Recommended",
           tracker_flow_id: data.id,
-          user_id: session?.user.id
-        }
+          user_id: session?.user.id,
+        };
 
         const { error: error2 } = await supabase
-          .from('hrm_tracker_logs')
+          .from("hrm_tracker_logs")
           .insert(newData)
-          .eq('id', documentData.id)
+          .eq("id", documentData.id);
 
         if (error2) {
           void logError(
-            'Approval Recommended Flow Logs',
-            'hrm_tracker_flow',
-            '',
+            "Approval Recommended Flow Logs",
+            "hrm_tracker_flow",
+            "",
             error2.message
-          )
+          );
         }
       }
 
       // Update data in redux
-      const items = [...globallist]
-      const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
-      setDocumentData(items[foundIndex]) // update ui with new data
+      const items = [...globallist];
+      const updatedData = { ...newData, id: documentData.id };
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+      items[foundIndex] = { ...items[foundIndex], ...updatedData };
+      dispatch(updateList(items));
+      setDocumentData(items[foundIndex]); // update ui with new data
 
       // Notify requester and follower
-      void handleNotify(items[foundIndex], 'Approval Recommended')
+      void handleNotify(items[foundIndex], "Approval Recommended");
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
       // Recount sidebar counter
-      dispatch(recount())
+      dispatch(recount());
 
-      setUpdateStatusFlow(!updateStatusFlow)
-      setSaving(false)
+      setUpdateStatusFlow(!updateStatusFlow);
+      setSaving(false);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleConfirmedCancel = async () => {
-    if (saving) return
+    if (saving) return;
 
-    setSaving(true)
+    setSaving(true);
 
     const newData = {
-      current_status: 'Cancelled',
-      current_approver_id: session?.user.id
-    }
+      current_status: "Cancelled",
+      current_approver_id: session?.user.id,
+    };
     try {
       const { error } = await supabase
-        .from('hrm_request_trackers')
+        .from("hrm_request_trackers")
         .update(newData)
-        .eq('id', documentData.id)
+        .eq("id", documentData.id);
 
       if (error) {
         void logError(
-          'Cancel Request',
-          'hrm_request_trackers',
+          "Cancel Request",
+          "hrm_request_trackers",
           JSON.stringify(newData),
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       // Added log to latest tracker flow
       const { data } = await supabase
-        .from('hrm_tracker_flow')
+        .from("hrm_tracker_flow")
         .select()
-        .eq('tracker_id', documentData.id)
-        .order('id', { ascending: false })
+        .eq("tracker_id", documentData.id)
+        .order("id", { ascending: false })
         .limit(1)
-        .single()
+        .single();
 
       if (data) {
         const newData = {
-          message: 'Cancelled',
+          message: "Cancelled",
           tracker_flow_id: data.id,
-          user_id: session?.user.id
-        }
+          user_id: session?.user.id,
+        };
 
         const { error: error2 } = await supabase
-          .from('hrm_tracker_logs')
+          .from("hrm_tracker_logs")
           .insert(newData)
-          .eq('id', documentData.id)
+          .eq("id", documentData.id);
 
         if (error2) {
           void logError(
-            'Cancel Request Flow Logs',
-            'hrm_tracker_flow',
-            '',
+            "Cancel Request Flow Logs",
+            "hrm_tracker_flow",
+            "",
             error2.message
-          )
+          );
         }
       }
 
       // from leave days
-      await deleteleaveDays()
+      await deleteleaveDays();
 
       // Update data in redux
-      const items = [...globallist]
-      const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
-      setDocumentData(items[foundIndex]) // update ui with new data
+      const items = [...globallist];
+      const updatedData = { ...newData, id: documentData.id };
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+      items[foundIndex] = { ...items[foundIndex], ...updatedData };
+      dispatch(updateList(items));
+      setDocumentData(items[foundIndex]); // update ui with new data
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
-      setUpdateStatusFlow(!updateStatusFlow)
-      setSaving(false)
+      setUpdateStatusFlow(!updateStatusFlow);
+      setSaving(false);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleConfirmedDisapprove = async () => {
-    if (saving) return
+    if (saving) return;
 
-    setSaving(true)
+    setSaving(true);
 
     const newData = {
-      current_status: 'Disapproved',
-      current_approver_id: session?.user.id
-    }
+      current_status: "Disapproved",
+      current_approver_id: session?.user.id,
+    };
     try {
       const { error } = await supabase
-        .from('hrm_request_trackers')
+        .from("hrm_request_trackers")
         .update(newData)
-        .eq('id', documentData.id)
+        .eq("id", documentData.id);
 
       if (error) {
         void logError(
-          'Disapproved',
-          'hrm_request_trackers',
+          "Disapproved",
+          "hrm_request_trackers",
           JSON.stringify(newData),
           error.message
-        )
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error.message);
       }
 
       // add to tracker flow
-      const { error: error2 } = await supabase.from('hrm_tracker_flow').insert({
+      const { error: error2 } = await supabase.from("hrm_tracker_flow").insert({
         tracker_id: documentData.id,
         user_id: session?.user.id,
-        status: 'Disapproved'
-      })
+        status: "Disapproved",
+      });
 
       if (error2) {
-        void logError('Disapproved', 'hrm_tracker_flow', '', error2.message)
+        void logError("Disapproved", "hrm_tracker_flow", "", error2.message);
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error2.message)
+          "error",
+          "Saving failed, please reload the page and try again."
+        );
+        throw new Error(error2.message);
       }
 
       // from leave days
-      await deleteleaveDays()
+      await deleteleaveDays();
 
       // Update data in redux
-      const items = [...globallist]
-      const updatedData = { ...newData, id: documentData.id }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
-      setDocumentData(items[foundIndex]) // update ui with new data
+      const items = [...globallist];
+      const updatedData = { ...newData, id: documentData.id };
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+      items[foundIndex] = { ...items[foundIndex], ...updatedData };
+      dispatch(updateList(items));
+      setDocumentData(items[foundIndex]); // update ui with new data
 
       // Notify requester and follower
-      void handleNotify(items[foundIndex], 'Disapproved')
+      void handleNotify(items[foundIndex], "Disapproved");
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
       // Recount sidebar counter
-      dispatch(recount())
+      dispatch(recount());
 
-      setUpdateStatusFlow(!updateStatusFlow)
-      setSaving(false)
+      setUpdateStatusFlow(!updateStatusFlow);
+      setSaving(false);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const deleteleaveDays = async () => {
     // from leave days
     const { error: error3 } = await supabase
-      .from('hrm_leave_dates')
+      .from("hrm_leave_dates")
       .delete()
-      .eq('tracker_id', documentData.id)
+      .eq("tracker_id", documentData.id);
 
     if (error3) {
       void logError(
-        'Disapproved - delete leave dates',
-        'hrm_leave_days',
-        '',
+        "Disapproved - delete leave dates",
+        "hrm_leave_days",
+        "",
         error3.message
-      )
-      setToast('error', 'Saving failed, please reload the page and try again.')
+      );
+      setToast("error", "Saving failed, please reload the page and try again.");
     }
-  }
+  };
 
   const fetchAttachments = async () => {
-    setLoadingReplies(true)
+    setLoadingReplies(true);
 
     const { data, error } = await supabase.storage
-      .from('hrm_documents')
+      .from("hrm_documents")
       .list(`requests/${documentData.id}`, {
         limit: 100,
         offset: 0,
-        sortBy: { column: 'name', order: 'asc' }
-      })
+        sortBy: { column: "name", order: "asc" },
+      });
 
-    if (error) console.error(error)
-    setLoadingReplies(false)
+    if (error) console.error(error);
+    setLoadingReplies(false);
 
-    setAttachments(data ?? [])
-  }
+    setAttachments(data ?? []);
+  };
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
     setSelectedImages(
       acceptedFiles.map((file) =>
         Object.assign(file, {
-          filename: file.name
+          filename: file.name,
         })
       )
-    )
-  }, [])
+    );
+  }, []);
 
-  const maxSize = 5242880 // 5 MB in bytes
+  const maxSize = 5242880; // 5 MB in bytes
   const { getRootProps, getInputProps, fileRejections } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.png', '.jpg'],
-      'application/pdf': ['.pdf'],
-      'application/msword': ['.docx'],
-      'application/vnd.ms-excel': ['.xlsx']
+      "image/*": [".jpeg", ".png", ".jpg"],
+      "application/pdf": [".pdf"],
+      "application/msword": [".docx"],
+      "application/vnd.ms-excel": [".xlsx"],
     },
-    maxSize
-  })
+    maxSize,
+  });
 
   const handleUploadFiles = async () => {
-    const id = documentData.id.toString()
-    const newAttachments: any = []
+    const id = documentData.id.toString();
+    const newAttachments: any = [];
 
-    setUploading(true)
+    setUploading(true);
 
     // Upload attachments
     // Ensure selectedImages is an array of File objects
     const uploads = await Promise.all(
       selectedImages.map(async (file: File) => {
         const { error } = await supabase.storage
-          .from('hrm_documents')
-          .upload(`requests/${id}/${file.name}`, file)
+          .from("hrm_documents")
+          .upload(`requests/${id}/${file.name}`, file);
 
         if (error) {
-          console.error(`Failed to upload ${file.name}:`, error.message)
-          return null
+          console.error(`Failed to upload ${file.name}:`, error.message);
+          return null;
         }
 
-        return { name: file.name }
+        return { name: file.name };
       })
-    )
+    );
 
     // Filter out failed uploads and update attachments
     const successfulUploads = uploads.filter(
       (file): file is { name: string } => file !== null
-    )
-    newAttachments.push(...successfulUploads)
+    );
+    newAttachments.push(...successfulUploads);
 
-    setSelectedImages([])
-    setUploading(false)
-    setToast('success', 'Successfully uploaded.')
+    setSelectedImages([]);
+    setUploading(false);
+    setToast("success", "Successfully uploaded.");
 
-    setAttachments([...attachments, ...newAttachments])
-  }
+    setAttachments([...attachments, ...newAttachments]);
+  };
 
   const deleteFile = (file: FileWithPath) => {
     const files = selectedImages.filter(
       (f: FileWithPath) => f.path !== file.path
-    )
-    setSelectedImages(files)
-  }
+    );
+    setSelectedImages(files);
+  };
 
   const selectedFiles = selectedImages?.map((file: any, index: number) => (
     <div
@@ -1152,74 +1154,74 @@ export default function DetailsModal({
       />
       <span className="text-xs">{file.filename}</span>
     </div>
-  ))
+  ));
 
   const handleAddToStickies = async (item: DocumentTypes) => {
-    setShowAddStickyModal(true)
-    setSelectedItem(item)
-  }
+    setShowAddStickyModal(true);
+    setSelectedItem(item);
+  };
 
   const handleSelectedUsers = (selectedUsers: Employee[]) => {
     if (selectedUsers.length > 0) {
-      setSelectedUser(selectedUsers[0])
+      setSelectedUser(selectedUsers[0]);
     } else {
-      setSelectedUser(null)
+      setSelectedUser(null);
     }
-  }
+  };
 
   useEffect(() => {
     if (fileRejections.length > 0) {
-      setSelectedImages([])
+      setSelectedImages([]);
     }
-  }, [fileRejections])
+  }, [fileRejections]);
 
   useEffect(() => {
-    void fetchAttachments()
-  }, [])
+    void fetchAttachments();
+  }, []);
 
   useEffect(() => {
     const checkedFollowStatus = async () => {
       const { count } = await supabase
-        .from('hrm_tracker_followers')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id)
-        .eq('tracker_id', documentData.id)
+        .from("hrm_tracker_followers")
+        .select("*", { count: "exact" })
+        .eq("user_id", user.id)
+        .eq("tracker_id", documentData.id);
 
       if (count && count > 0) {
-        setHideFollowButton(true)
+        setHideFollowButton(true);
       }
-    }
+    };
 
     const checkedIfStickyStatus = async () => {
       const { count } = await supabase
-        .from('hrm_request_tracker_stickies')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id)
-        .eq('tracker_id', documentData.id)
+        .from("hrm_request_tracker_stickies")
+        .select("*", { count: "exact" })
+        .eq("user_id", user.id)
+        .eq("tracker_id", documentData.id);
 
       if (count && count > 0) {
-        setHideStickyButton(true)
+        setHideStickyButton(true);
       }
-    }
+    };
 
-    void checkedFollowStatus()
-    void checkedIfStickyStatus()
+    void checkedFollowStatus();
+    void checkedIfStickyStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      hideModal()
+    if (event.key === "Escape") {
+      hideModal();
     }
-  }
+  };
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-    }
+      document.removeEventListener("keydown", handleKeyDown);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wrapperRef])
+  }, [wrapperRef]);
 
   return (
     <div ref={wrapperRef} className="app__modal_wrapper">
@@ -1272,16 +1274,16 @@ export default function DetailsModal({
             <div className="w-full">
               {/* Cancel Request */}
               {documentData.created_by === session?.user.id &&
-                documentData.current_status !== 'Approved' &&
-                documentData.current_status !== 'Disapproved' &&
-                documentData.current_status !== 'Cancelled' && (
+                documentData.current_status !== "Approved" &&
+                documentData.current_status !== "Disapproved" &&
+                documentData.current_status !== "Cancelled" && (
                   <div className="mb-6">
                     <div className="space-x-2">
                       <CustomButton
                         containerStyles="app__btn_blue"
-                        title={saving ? 'Saving...' : 'Cancel This Request'}
+                        title={saving ? "Saving..." : "Cancel This Request"}
                         btnType="button"
-                        handleClick={() => HandleConfirm('Cancel')}
+                        handleClick={() => HandleConfirm("Cancel")}
                       />
                     </div>
                     <div className="text-[10px] mt-1 text-gray-600">
@@ -1295,26 +1297,26 @@ export default function DetailsModal({
               {
                 // documentData.current_approver_id !== session?.user.id &&
                 documentData.receiver_id === session?.user.id &&
-                  documentData.current_status !== 'Approval Recommended' &&
-                  documentData.current_status !== 'Approved' &&
-                  documentData.current_status !== 'Disapproved' &&
-                  documentData.current_status !== 'Cancelled' &&
-                  !hasAccess('sdsssss') && (
+                  documentData.current_status !== "Approval Recommended" &&
+                  documentData.current_status !== "Approved" &&
+                  documentData.current_status !== "Disapproved" &&
+                  documentData.current_status !== "Cancelled" &&
+                  !hasAccess("sdsssss") && (
                     <div className="mb-6">
                       <div className="space-x-2">
                         <CustomButton
                           containerStyles="app__btn_green"
-                          title={saving ? 'Saving...' : 'Recommend Approval'}
+                          title={saving ? "Saving..." : "Recommend Approval"}
                           btnType="button"
                           handleClick={() =>
-                            HandleConfirm('Recommend Approval')
+                            HandleConfirm("Recommend Approval")
                           }
                         />
                         <CustomButton
                           containerStyles="app__btn_red"
-                          title={saving ? 'Saving...' : 'Disapprove'}
+                          title={saving ? "Saving..." : "Disapprove"}
                           btnType="button"
-                          handleClick={() => HandleConfirm('Disapprove')}
+                          handleClick={() => HandleConfirm("Disapprove")}
                         />
                       </div>
                       <div className="text-[10px] mt-1 text-gray-600">
@@ -1327,30 +1329,30 @@ export default function DetailsModal({
               }
               {/* Final Approval */}
               {documentData.receiver_id === session?.user.id &&
-                documentData.current_status === 'Approval Recommended' &&
-                (hasAccess('temporary_approver') ||
-                  hasAccess('sds') ||
-                  hasAccess('asds') ||
-                  session?.user.email === 'berlcamp@gmail.com') && (
+                documentData.current_status === "Approval Recommended" &&
+                (hasAccess("temporary_approver") ||
+                  hasAccess("sds") ||
+                  hasAccess("asds") ||
+                  session?.user.email === "berlcamp@gmail.com") && (
                   <div className="mb-6">
                     <div className="space-x-2">
                       <CustomButton
                         containerStyles="app__btn_green"
-                        title={saving ? 'Saving...' : 'Approve'}
+                        title={saving ? "Saving..." : "Approve"}
                         btnType="button"
-                        handleClick={() => HandleConfirm('Approve')}
+                        handleClick={() => HandleConfirm("Approve")}
                       />
                       <CustomButton
                         containerStyles="app__btn_orange"
                         title="For Reverification"
                         btnType="button"
-                        handleClick={() => HandleConfirm('For Reverification')}
+                        handleClick={() => HandleConfirm("For Reverification")}
                       />
                       <CustomButton
                         containerStyles="app__btn_red"
-                        title={saving ? 'Saving...' : 'Disapprove'}
+                        title={saving ? "Saving..." : "Disapprove"}
                         btnType="button"
-                        handleClick={() => HandleConfirm('Disapprove')}
+                        handleClick={() => HandleConfirm("Disapprove")}
                       />
                     </div>
                     <div className="text-[10px] mt-1 text-gray-600">
@@ -1362,11 +1364,11 @@ export default function DetailsModal({
                 )}
               {/* Forward */}
               {((documentData.receiver_id === session?.user.id &&
-                documentData.current_status !== 'Disapproved' &&
-                documentData.current_status !== 'Cancelled' &&
-                documentData.current_status !== 'Approved') ||
-                hasAccess('settings') ||
-                hasAccess('tracker_manager')) && (
+                documentData.current_status !== "Disapproved" &&
+                documentData.current_status !== "Cancelled" &&
+                documentData.current_status !== "Approved") ||
+                hasAccess("settings") ||
+                hasAccess("tracker_manager")) && (
                 <div className="">
                   <div className="font-medium text-sm text-gray-700">
                     Forward this request to:
@@ -1380,9 +1382,9 @@ export default function DetailsModal({
                     />
                     <CustomButton
                       containerStyles="app__btn_green"
-                      title={saving ? 'Saving...' : 'Forward'}
+                      title={saving ? "Saving..." : "Forward"}
                       btnType="button"
-                      handleClick={() => HandleConfirm('Forward')}
+                      handleClick={() => HandleConfirm("Forward")}
                     />
                   </div>
                 </div>
@@ -1417,28 +1419,28 @@ export default function DetailsModal({
                         </td>
                         <td>
                           {documentData.current_status ===
-                            'For Verification' && (
+                            "For Verification" && (
                             <span className="app__status_orange">
                               {documentData.current_status}
                             </span>
                           )}
                           {documentData.current_status ===
-                            'Approval Recommended' && (
+                            "Approval Recommended" && (
                             <span className="app__status_green">
                               {documentData.current_status}
                             </span>
                           )}
-                          {documentData.current_status === 'Cancelled' && (
+                          {documentData.current_status === "Cancelled" && (
                             <span className="app__status_blue">
                               {documentData.current_status}
                             </span>
                           )}
-                          {documentData.current_status === 'Approved' && (
+                          {documentData.current_status === "Approved" && (
                             <span className="app__status_green">
                               {documentData.current_status}
                             </span>
                           )}
-                          {documentData.current_status === 'Disapproved' && (
+                          {documentData.current_status === "Disapproved" && (
                             <span className="app__status_red">
                               {documentData.current_status}
                             </span>
@@ -1453,26 +1455,31 @@ export default function DetailsModal({
                           <span className="font-medium text-sm">
                             {documentData.reference_code}
                             {session?.user.id ===
-                              '1a8173ad-f4c5-4869-a587-7466a1d6e951' &&
+                              "1a8173ad-f4c5-4869-a587-7466a1d6e951" &&
                               documentData.id}
                           </span>
                         </td>
                       </tr>
                       {/* Leave Requests Fields */}
-                      {documentData.type === 'Leave' && (
+                      {documentData.type === "Leave" && (
                         <>
                           <tr>
                             <td className="px-2 py-2 font-light text-right">
                               Leave Type:
                             </td>
                             <td className="text-sm font-medium">
-                              {documentData.leave_type}{' '}
-                              {documentData.leave_others_specify ?? ''}
-                              {documentData.leave_other_purpose ?? ''}
+                              {documentData.leave_type ===
+                                "Mandatory/Force Leave" ||
+                              documentData.leave_type ===
+                                "Mandatory/Forced Leave"
+                                ? "Mandatory/Forced Leave"
+                                : documentData.leave_type}{" "}
+                              {documentData.leave_others_specify ?? ""}
+                              {documentData.leave_other_purpose ?? ""}
                             </td>
                           </tr>
                           {documentData.leave_days &&
-                            documentData.leave_days.trim() !== '' && (
+                            documentData.leave_days.trim() !== "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Number of working days applied for:
@@ -1490,7 +1497,7 @@ export default function DetailsModal({
                               <div className="text-xs">
                                 {documentData.leave_dates?.length > 10 ? (
                                   <span>
-                                    From{' '}
+                                    From{" "}
                                     <span className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2">
                                       {format(
                                         new Date(
@@ -1502,10 +1509,10 @@ export default function DetailsModal({
                                                 new Date(b.date).getTime()
                                             )[0].date
                                         ),
-                                        'MMM d, yyyy'
+                                        "MMM d, yyyy"
                                       )}
                                     </span>
-                                    to{' '}
+                                    to{" "}
                                     <span className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2">
                                       {format(
                                         new Date(
@@ -1519,7 +1526,7 @@ export default function DetailsModal({
                                             documentData.leave_dates.length - 1
                                           ].date
                                         ),
-                                        'MMM d, yyyy'
+                                        "MMM d, yyyy"
                                       )}
                                     </span>
                                   </span>
@@ -1531,7 +1538,7 @@ export default function DetailsModal({
                                     >
                                       {format(
                                         new Date(day.date),
-                                        'MMM d, yyyy'
+                                        "MMM d, yyyy"
                                       )}
                                     </span>
                                   ))
@@ -1540,19 +1547,19 @@ export default function DetailsModal({
                             </td>
                           </tr>
                           {documentData.leave_location &&
-                            documentData.leave_location.trim() !== '' && (
+                            documentData.leave_location.trim() !== "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Location:
                                 </td>
                                 <td className="text-sm font-medium">
-                                  {documentData.leave_location}{' '}
+                                  {documentData.leave_location}{" "}
                                   {documentData.leave_specify_location}
                                 </td>
                               </tr>
                             )}
                           {documentData.leave_reason &&
-                            documentData.leave_reason.trim() !== '' && (
+                            documentData.leave_reason.trim() !== "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Reason:
@@ -1564,19 +1571,19 @@ export default function DetailsModal({
                             )}
                           {documentData.leave_hospitalization &&
                             documentData.leave_hospitalization.trim() !==
-                              '' && (
+                              "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Hospitalization:
                                 </td>
                                 <td className="text-sm font-medium">
-                                  {documentData.leave_hospitalization} -{' '}
+                                  {documentData.leave_hospitalization} -{" "}
                                   {documentData.leave_illness}
                                 </td>
                               </tr>
                             )}
                           {documentData.leave_women_illness &&
-                            documentData.leave_women_illness.trim() !== '' && (
+                            documentData.leave_women_illness.trim() !== "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Illness:
@@ -1587,7 +1594,7 @@ export default function DetailsModal({
                               </tr>
                             )}
                           {documentData.leave_study_purpose &&
-                            documentData.leave_study_purpose.trim() !== '' && (
+                            documentData.leave_study_purpose.trim() !== "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Study Purpose:
@@ -1598,7 +1605,7 @@ export default function DetailsModal({
                               </tr>
                             )}
                           {documentData.leave_other_purpose &&
-                            documentData.leave_other_purpose.trim() !== '' && (
+                            documentData.leave_other_purpose.trim() !== "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Other Purpose:
@@ -1609,7 +1616,7 @@ export default function DetailsModal({
                               </tr>
                             )}
                           {documentData.leave_commutation &&
-                            documentData.leave_commutation.trim() !== '' && (
+                            documentData.leave_commutation.trim() !== "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Commutation:
@@ -1624,7 +1631,7 @@ export default function DetailsModal({
                       {/* End - Leave Requests Fields */}
 
                       {/* Locator Slip Fields */}
-                      {documentData.type === 'Locator Slip' && (
+                      {documentData.type === "Locator Slip" && (
                         <>
                           <tr>
                             <td className="px-2 py-2 font-light text-right">
@@ -1649,9 +1656,9 @@ export default function DetailsModal({
                             <td className="text-sm font-medium">
                               {format(
                                 new Date(documentData.locator_slip_date),
-                                'MMMM dd, yyyy'
+                                "MMMM dd, yyyy"
                               )}
-                              {' - '}
+                              {" - "}
                               {documentData.locator_slip_time}
                             </td>
                           </tr>
@@ -1665,9 +1672,9 @@ export default function DetailsModal({
                                   new Date(
                                     documentData.locator_slip_return_date
                                   ),
-                                  'MMMM dd, yyyy'
+                                  "MMMM dd, yyyy"
                                 )}
-                              {' - '}
+                              {" - "}
                               {documentData.locator_slip_return_time}
                             </td>
                           </tr>
@@ -1684,7 +1691,7 @@ export default function DetailsModal({
                       {/* End - Locator Slip Fields */}
 
                       {/* Service Record Print Request Fields */}
-                      {documentData.type === 'Service Record Print Request' && (
+                      {documentData.type === "Service Record Print Request" && (
                         <>
                           <tr>
                             <td className="px-2 py-2 font-light text-right">
@@ -1701,7 +1708,7 @@ export default function DetailsModal({
                       {/* End - Locator Slip Fields */}
 
                       {/* Service Undertime Permit Fields */}
-                      {documentData.type === 'Undertime Permit' && (
+                      {documentData.type === "Undertime Permit" && (
                         <>
                           <tr>
                             <td className="px-2 py-2 font-light text-right">
@@ -1724,7 +1731,7 @@ export default function DetailsModal({
                       {/* End - Undertime Permit Fields */}
 
                       {/* Pass Slip Fields */}
-                      {documentData.type === 'Pass Slip' && (
+                      {documentData.type === "Pass Slip" && (
                         <>
                           <tr>
                             <td className="px-2 py-2 font-light text-right">
@@ -1735,7 +1742,7 @@ export default function DetailsModal({
                             </td>
                           </tr>
                           {documentData.pass_slip_date &&
-                            documentData.pass_slip_date.trim() !== '' && (
+                            documentData.pass_slip_date.trim() !== "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Date:
@@ -1743,14 +1750,14 @@ export default function DetailsModal({
                                 <td className="text-sm font-medium">
                                   {format(
                                     new Date(documentData.pass_slip_date),
-                                    'MMMM dd, yyyy'
+                                    "MMMM dd, yyyy"
                                   )}
                                 </td>
                               </tr>
                             )}
                           {documentData.pass_slip_intended_time_departure &&
                             documentData.pass_slip_intended_time_departure.trim() !==
-                              '' && (
+                              "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Intended Time of Departure:
@@ -1764,7 +1771,7 @@ export default function DetailsModal({
                             )}
                           {documentData.pass_slip_intended_time_arrival &&
                             documentData.pass_slip_intended_time_arrival.trim() !==
-                              '' && (
+                              "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   Intended Time of Arrival:
@@ -1776,7 +1783,7 @@ export default function DetailsModal({
                             )}
                           {documentData.pass_slip_fixed_time_from &&
                             documentData.pass_slip_fixed_time_from.trim() !==
-                              '' && (
+                              "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   From:
@@ -1788,7 +1795,7 @@ export default function DetailsModal({
                             )}
                           {documentData.pass_slip_fixed_time_to &&
                             documentData.pass_slip_fixed_time_to.trim() !==
-                              '' && (
+                              "" && (
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
                                   To:
@@ -1819,14 +1826,14 @@ export default function DetailsModal({
                       {/* End - Pass Slip Fields */}
 
                       {/* Travel Authority Fields */}
-                      {documentData.type === 'Travel Authority' && (
+                      {documentData.type === "Travel Authority" && (
                         <>
                           <tr>
                             <td className="px-2 py-2 font-light text-right">
                               Travel Type:
                             </td>
                             <td className="text-sm font-medium">
-                              {documentData.travel_type} /{' '}
+                              {documentData.travel_type} /{" "}
                               {documentData.travel_official_type}
                             </td>
                           </tr>
@@ -1845,7 +1852,7 @@ export default function DetailsModal({
                             <td className="text-sm font-medium">
                               {format(
                                 new Date(documentData.travel_from),
-                                'MMMM dd, yyyy'
+                                "MMMM dd, yyyy"
                               )}
                             </td>
                           </tr>
@@ -1856,7 +1863,7 @@ export default function DetailsModal({
                             <td className="text-sm font-medium">
                               {format(
                                 new Date(documentData.travel_to),
-                                'MMMM dd, yyyy'
+                                "MMMM dd, yyyy"
                               )}
                             </td>
                           </tr>
@@ -1868,7 +1875,7 @@ export default function DetailsModal({
                               {documentData.travel_destination}
                             </td>
                           </tr>
-                          {documentData.travel_type === 'Official Travel' && (
+                          {documentData.travel_type === "Official Travel" && (
                             <>
                               <tr>
                                 <td className="px-2 py-2 font-light text-right">
@@ -1920,7 +1927,7 @@ export default function DetailsModal({
                           <div className="text-gray-500 text-[10px]">
                             {format(
                               new Date(documentData.created_at),
-                              'dd MMM yyyy h:mm a'
+                              "dd MMM yyyy h:mm a"
                             )}
                           </div>
                           <UserBlock user={documentData.creator} />
@@ -1987,7 +1994,7 @@ export default function DetailsModal({
                               fileRejections.length === 0 && (
                                 <CustomButton
                                   containerStyles="app__btn_green"
-                                  title={uploading ? 'Uploading...' : 'Upload'}
+                                  title={uploading ? "Uploading..." : "Upload"}
                                   btnType="button"
                                   handleClick={handleUploadFiles}
                                 />
@@ -1998,9 +2005,9 @@ export default function DetailsModal({
                     </tbody>
                   </table>
                   {/* Certification of leave credits */}
-                  {documentData.type === 'Leave' &&
-                    documentData.current_status !== 'Cancelled' &&
-                    documentData.current_status !== 'Disapproved' && (
+                  {documentData.type === "Leave" &&
+                    documentData.current_status !== "Cancelled" &&
+                    documentData.current_status !== "Disapproved" && (
                       <CreditsCertification requestData={documentData} />
                     )}
                 </div>
@@ -2031,7 +2038,7 @@ export default function DetailsModal({
         </div>
       </div>
       {/* Action Confirmation Modal */}
-      {showConfirmModal !== '' && (
+      {showConfirmModal !== "" && (
         <ConfirmModal
           header="Confirmation"
           btnText="Confirm"
@@ -2049,5 +2056,5 @@ export default function DetailsModal({
         />
       )}
     </div>
-  )
+  );
 }

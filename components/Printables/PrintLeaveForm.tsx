@@ -154,7 +154,8 @@ export const PrintLeaveForm = React.forwardRef<
                     </span>
                   </div>
                   <div className="flex items-start justify-start space-x-1">
-                    {selectedItem.leave_type === "Mandatory/Forced Leave" ? (
+                    {selectedItem.leave_type === "Mandatory/Force Leave" ||
+                    selectedItem.leave_type === "Mandatory/Forced Leave" ? (
                       <SquareCheckIcon className="w-5 h-4" />
                     ) : (
                       <SquareIcon className="w-5 h-4" />
@@ -320,9 +321,7 @@ export const PrintLeaveForm = React.forwardRef<
                     ) : (
                       <SquareIcon className="w-5 h-4" />
                     )}
-                    <span>
-                      Wellness Break
-                    </span>
+                    <span>Wellness Break</span>
                   </div>
                   <div className="mt-1 italic">Others: </div>
                   <div className="mt-1">

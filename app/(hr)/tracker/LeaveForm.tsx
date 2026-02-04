@@ -605,6 +605,9 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                       <option key={index} value={item}>
                         {item === "Vacation Leave"
                           ? "Vacation/Personal Leave"
+                          : item === "Mandatory/Force Leave" ||
+                            item === "Mandatory/Forced Leave"
+                          ? "Mandatory/Forced Leave"
                           : item}
                       </option>
                     ))}
