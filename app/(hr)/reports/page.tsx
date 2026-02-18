@@ -23,9 +23,26 @@ import {
 import { fetchSubjects } from '@/utils/fetchApi'
 import Excel from 'exceljs'
 import { saveAs } from 'file-saver'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts'
 import Filters from './Filters'
 import NamesModal from './NamesModal'
+
+const POSITION_TYPE_COLORS = [
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))'
+]
 
 export default function Page() {
   //
@@ -162,6 +179,8 @@ export default function Page() {
           '*, grade_levels:hrm_personnel_grade_levels(*), coordinatorships:hrm_personnel_coordinatorships(*,coordinatorship:coordinatorship_id(*)),majors:hrm_personnel_majors(*,major:major_id(*)), subjects:hrm_personnel_subjects(*,subject:subject_id(*)), hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))',
           { count: 'exact' }
         )
+        .eq('status', 'Active')
+        .not('item_id', 'is', null)
 
       if (filterSchool !== '') {
         query = query.eq('school_id', filterSchool)
@@ -260,6 +279,30 @@ export default function Page() {
     setModalList(list)
   }
 
+  // Summary by position (for bar chart) - top positions by count
+  const positionSummaryData = useMemo(() => {
+    const counts: Record<string, number> = {}
+    list.forEach((emp) => {
+      const positionName = emp.hrm_positions?.name ?? 'Unknown'
+      counts[positionName] = (counts[positionName] ?? 0) + 1
+    })
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count, total: count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 15)
+  }, [list])
+
+  // Position type summary (for pie chart)
+  const positionTypeData = useMemo(() => {
+    const types = ['Teaching', 'Teaching-Related', 'Non-teaching'] as const
+    return types
+      .map((type) => ({
+        name: type,
+        value: list.filter((emp) => emp.position_type === type).length
+      }))
+      .filter((d) => d.value > 0)
+  }, [list])
+
   useEffect(() => {
     const fetchSubjectsData = async () => {
       const result = await fetchSubjects(999, 0)
@@ -335,6 +378,109 @@ export default function Page() {
             {loading && <TwoColTableLoading />}
             {!loading && (
               <div className="w-full px-2 pt-4 bg-gray-100">
+                {/* Summary by position & position type charts */}
+                <div className="container mx-auto p-2 mb-4 space-y-4">
+                  <div className="bg-white p-4 rounded-md shadow-md text-gray-600">
+                    <div className="text-sm font-semibold px-2 mb-4 text-gray-700">
+                      Summary: {list.length} Active Employees (with plantilla)
+                    </div>
+                    <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+                      {/* Summary by Position - Bar Chart */}
+                      <div>
+                        <div className="text-xs font-medium mb-2 text-gray-600">
+                          Summary by Position (top 15)
+                        </div>
+                        <div className="h-80">
+                          {positionSummaryData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart
+                                data={positionSummaryData}
+                                layout="vertical"
+                                margin={{
+                                  top: 5,
+                                  right: 20,
+                                  left: 10,
+                                  bottom: 5
+                                }}
+                              >
+                                <XAxis type="number" />
+                                <YAxis
+                                  type="category"
+                                  dataKey="name"
+                                  width={120}
+                                  tick={{ fontSize: 11 }}
+                                />
+                                <Tooltip />
+                                <Bar
+                                  dataKey="count"
+                                  fill="hsl(var(--chart-1))"
+                                  radius={[0, 4, 4, 0]}
+                                />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                              No position data
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {/* Position Type - Pie Chart */}
+                      <div>
+                        <div className="text-xs font-medium mb-2 text-gray-600">
+                          Position Type Summary
+                        </div>
+                        <div className="h-80">
+                          {positionTypeData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie
+                                  data={positionTypeData}
+                                  dataKey="value"
+                                  nameKey="name"
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius={100}
+                                  label={({
+                                    name,
+                                    percent
+                                  }: {
+                                    name: string
+                                    percent: number
+                                  }) =>
+                                    `${name} ${(percent * 100).toFixed(0)}%`
+                                  }
+                                >
+                                  {positionTypeData.map((_, index) => (
+                                    <Cell
+                                      key={index}
+                                      fill={
+                                        POSITION_TYPE_COLORS[
+                                          index % POSITION_TYPE_COLORS.length
+                                        ]
+                                      }
+                                    />
+                                  ))}
+                                </Pie>
+                                <Tooltip
+                                  formatter={(value: number) => [
+                                    value,
+                                    'Employees'
+                                  ]}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                              No position type data
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="container mx-auto p-2 lg:grid lg:grid-cols-2 lg:gap-2">
                   <div className="bg-white p-4 mb-4 rounded-md shadow-md text-gray-600">
                     <div className="text-sm font-semibold px-2 mb-2 text-gray-600">
