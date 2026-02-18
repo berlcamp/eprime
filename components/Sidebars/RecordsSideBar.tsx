@@ -263,6 +263,16 @@ const RecordsSideBar = () => {
                 <span className="flex-1 ml-3 whitespace-nowrap">NOSA</span>
               </Link>
             </li>
+            <li>
+              <Link
+                href="/bulknosa"
+                className={`app__menu_link ${
+                  currentRoute === '/bulknosa' ? 'app_menu_link_active' : ''
+                }`}
+              >
+                <span className="flex-1 ml-3 whitespace-nowrap">Bulk NOSA</span>
+              </Link>
+            </li>
           </ul>
         )
       }

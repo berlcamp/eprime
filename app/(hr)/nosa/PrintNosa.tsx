@@ -1,19 +1,19 @@
 /* eslint-disable @next/next/no-img-element */
-import { NosaTypes, SignatoriesTypes } from '@/types'
-import { formatToPesos } from '@/utils/text-helper'
-import { format } from 'date-fns'
-import * as React from 'react'
+import { NosaTypes, SignatoriesTypes } from "@/types";
+import { formatToPesos } from "@/utils/text-helper";
+import { format } from "date-fns";
+import * as React from "react";
 
 interface ComponentToPrintProps {
-  selectedItem: NosaTypes
-  signatories: SignatoriesTypes
+  selectedItem: NosaTypes;
+  signatories: SignatoriesTypes;
 }
 
 export const PrintNosa = React.forwardRef<
   HTMLDivElement | null,
   ComponentToPrintProps
 >((props, ref) => {
-  const { selectedItem, signatories } = props
+  const { selectedItem, signatories } = props;
 
   return (
     <div className="invisible">
@@ -48,19 +48,19 @@ export const PrintNosa = React.forwardRef<
             <tr>
               <td colSpan={2} className="text-xs">
                 <div className="text-right mt-10">
-                  {format(new Date(), 'MMMM dd, yyyy')}
+                  {format(new Date(), "MMMM dd, yyyy")}
                 </div>
                 <div className="mt-10">
                   <div className="font-bold uppercase">
-                    {selectedItem.hrm_user?.lastname},{' '}
-                    {selectedItem.hrm_user?.firstname}{' '}
+                    {selectedItem.hrm_user?.lastname},{" "}
+                    {selectedItem.hrm_user?.firstname}{" "}
                     {selectedItem.hrm_user?.middlename}
                   </div>
                   <div className="hrm_user">
                     {selectedItem.hrm_user?.hrm_positions?.name}
                   </div>
                   <div className="uppercase">
-                    {selectedItem.hrm_user?.hrm_schools?.name}{' '}
+                    {selectedItem.hrm_user?.hrm_schools?.name}{" "}
                     {selectedItem.hrm_user?.hrm_offices?.name}
                   </div>
                 </div>
@@ -68,11 +68,11 @@ export const PrintNosa = React.forwardRef<
                 <div className="mt-10">Sir/Ma'am:</div>
 
                 <div className="indent-10 mt-10">
-                  {signatories.first_paragraph}{' '}
+                  {signatories.first_paragraph}{" "}
                   <span className="font-bold underline">
                     {format(
                       new Date(selectedItem.effective_date),
-                      'MMMM dd, yyyy'
+                      "MMMM dd, yyyy",
                     )}
                   </span>
                   , as follows:
@@ -86,17 +86,17 @@ export const PrintNosa = React.forwardRef<
                     <tr>
                       <td className="px-1 py-1">
                         <div>
-                          1. Adjusted monthly basic salary effective{' '}
+                          1. Adjusted monthly basic salary effective{" "}
                           <span className="font-bold">
                             {format(
                               new Date(selectedItem.effective_date),
-                              'MMMM dd, yyyy'
+                              "MMMM dd, yyyy",
                             )}
                           </span>
                           ,
                         </div>
                         <div>
-                          under the new Salary Schedule; (SG{' '}
+                          under the new Salary Schedule; (SG{" "}
                           <span className="font-bold underline">
                             {selectedItem.new_grade}
                           </span>
@@ -114,17 +114,17 @@ export const PrintNosa = React.forwardRef<
                           <span className="font-bold">
                             {format(
                               new Date(selectedItem.as_of_date),
-                              'MMMM dd, yyyy'
+                              "MMMM dd, yyyy",
                             )}
                           </span>
                           ;
                         </div>
                         <div>
-                          SG{' '}
+                          SG{" "}
                           <span className="font-bold underline">
                             {selectedItem.previous_grade}
                           </span>
-                          Step{' '}
+                          Step{" "}
                           <span className="font-bold underline">
                             {selectedItem.previous_step}
                           </span>
@@ -141,7 +141,7 @@ export const PrintNosa = React.forwardRef<
                           <span className="font-bold">
                             {format(
                               new Date(selectedItem.effective_date),
-                              'MMMM dd, yyyy'
+                              "MMMM dd, yyyy",
                             )}
                           </span>
                         </div>
@@ -150,7 +150,7 @@ export const PrintNosa = React.forwardRef<
                         <div className="underline underline-offset-2">
                           {formatToPesos(
                             Number(selectedItem.new_amount) -
-                              Number(selectedItem.previous_amount)
+                              Number(selectedItem.previous_amount),
                           )}
                         </div>
                       </td>
@@ -224,7 +224,7 @@ export const PrintNosa = React.forwardRef<
                   Item No./Unique No., FY 2023 personal Services Itemization
                 </div>
                 <div>
-                  And/or Plantilla of Personnel:{' '}
+                  And/or Plantilla of Personnel:{" "}
                   {selectedItem.hrm_user?.hrm_item?.item_number}
                 </div>
                 <div>Copy Furnished: GSIS, DPSU</div>
@@ -244,5 +244,5 @@ export const PrintNosa = React.forwardRef<
         </div>
       </div>
     </div>
-  )
-})
+  );
+});
