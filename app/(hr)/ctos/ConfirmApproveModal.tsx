@@ -64,10 +64,12 @@ export default function ConfirmApproveModal({
                   {message}
                 </div>
               </div>
-              <div className="w-full">
-                <div className="app__label_standard">
+              <div className="w-full rounded-md border-2 border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/40 px-4 py-3">
+                <div className="text-sm text-gray-700 dark:text-gray-300">
                   Total COC (Current Year):{' '}
-                  <span className="font-semibold">{totalCocCurrentYear}</span>
+                  <span className="inline-flex min-w-[2rem] items-center justify-center rounded bg-emerald-500 px-2 py-0.5 text-base font-bold text-white">
+                    {totalCocCurrentYear}
+                  </span>
                 </div>
               </div>
               <div className="w-full">
