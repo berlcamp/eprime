@@ -12,7 +12,7 @@ import { useFilter } from "@/context/FilterContext";
 import { useSupabase } from "@/context/SupabaseProvider";
 import type { Employee, NosaTypes, SignatoriesTypes } from "@/types";
 import {
-  fetchSalaryGrades,
+  fetchSalaryGradesForNosa,
   fetchUsersByLastnameLetter,
 } from "@/utils/fetchApi";
 import { subDays } from "date-fns";
@@ -124,7 +124,7 @@ const Page: React.FC = () => {
     try {
       const [usersResult, salaryResult] = await Promise.all([
         fetchUsersByLastnameLetter(data.lastnameLetter, 99999, 0),
-        fetchSalaryGrades(9999, 0, { activeOnly: false }),
+        fetchSalaryGradesForNosa(9999),
       ]);
 
       if (!usersResult.data?.length) {

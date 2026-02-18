@@ -1091,26 +1091,17 @@ export async function fetchNosa(
 export async function fetchSalaryGrades(
   perPageCount: number,
   rangeFrom: number,
-  options?: { activeOnly?: boolean },
 ) {
   try {
-    let query = supabase.from("hrm_salaries").select("*", { count: "exact" });
-
-    // Only active salaries by default (is_active = 'yes')
-    const activeOnly = options?.activeOnly ?? true;
-    if (activeOnly) {
-      query = query.eq("is_active", "yes");
-    }
+    let query = supabase
+      .from("hrm_salaries")
+      .select("*", { count: "exact" })
+      .eq("is_active", "yes");
 
     // Per Page from context
     const from = rangeFrom;
     const to = from + (perPageCount - 1);
-
-    // Per Page from context
-    query = query.range(from, to);
-
-    // Order By
-    query = query.order("id", { ascending: false });
+    query = query.range(from, to).order("id", { ascending: false });
 
     const { data, error, count } = await query;
 
@@ -1121,6 +1112,26 @@ export async function fetchSalaryGrades(
     return { data, count };
   } catch (error) {
     console.error("fetch salaries error", error);
+    return { data: [], count: 0 };
+  }
+}
+
+/** Fetches all salary rows (all tranches) for NOSA/NOSI features that need previous tranche resolution (e.g. Bulk NOSA). */
+export async function fetchSalaryGradesForNosa(limit = 9999) {
+  try {
+    const { data, error } = await supabase
+      .from("hrm_salaries")
+      .select("*")
+      .order("id", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { data: data ?? [], count: data?.length ?? 0 };
+  } catch (error) {
+    console.error("fetch salary grades for nosa error", error);
     return { data: [], count: 0 };
   }
 }
