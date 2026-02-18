@@ -11,6 +11,7 @@ interface ModalProps {
   header: string
   btnText: string
   coc: string
+  totalCocCurrentYear?: number
 }
 
 export default function ConfirmApproveModal({
@@ -19,7 +20,8 @@ export default function ConfirmApproveModal({
   btnText,
   message,
   onCancel,
-  coc
+  coc,
+  totalCocCurrentYear = 0
 }: ModalProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -60,6 +62,12 @@ export default function ConfirmApproveModal({
               <div className="w-full">
                 <div className="text-gray-600 text-sm mb-1 dark:text-gray-300">
                   {message}
+                </div>
+              </div>
+              <div className="w-full">
+                <div className="app__label_standard">
+                  Total COC (Current Year):{' '}
+                  <span className="font-semibold">{totalCocCurrentYear}</span>
                 </div>
               </div>
               <div className="w-full">

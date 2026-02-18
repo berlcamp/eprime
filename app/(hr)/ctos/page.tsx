@@ -57,8 +57,12 @@ const Page: React.FC = () => {
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
-  const { session } = useSupabase()
+  const { session, supabase } = useSupabase()
   const { hasAccess } = useFilter()
+
+  const [employeesWithHighCoc, setEmployeesWithHighCoc] = useState<
+    Array<{ name: string; totalCoc: number }>
+  >([])
 
   const searchParams = useSearchParams()
   const filterUrl = searchParams.get('ref')
@@ -160,6 +164,76 @@ const Page: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKeyword, filterUrl, perPageCount, filterStatus])
 
+  // Fetch employees with COC > 15 in current year (only when viewing all CTOs)
+  useEffect(() => {
+    if (filterUrl) return
+
+    void (async () => {
+      try {
+        const currentYear = new Date().getFullYear()
+        const orgId = process.env.NEXT_PUBLIC_ORG_ID
+        const { data, error } = await supabase
+          .from('hrm_cto_users')
+          .select(
+            'coc, hrm_user_id, hrm_ctos:cto_id(date_issued, org_id), hrm_users:hrm_user_id(firstname, middlename, lastname)'
+          )
+
+        if (error) throw new Error(error.message)
+
+        const getUserName = (item: {
+          hrm_users?:
+            | { firstname?: string; middlename?: string; lastname?: string }
+            | Array<{ firstname?: string; middlename?: string; lastname?: string }>
+        }) => {
+          const u = item.hrm_users
+          const user = Array.isArray(u) ? u[0] : u
+          if (!user) return ''
+          const parts = [
+            user.firstname,
+            user.middlename,
+            user.lastname
+          ].filter(Boolean)
+          return parts.join(' ').trim()
+        }
+
+        const byUser = new Map<
+          string,
+          { name: string; totalCoc: number }
+        >()
+
+        for (const item of data ?? []) {
+          const ctos = item.hrm_ctos as
+            | { date_issued?: string; org_id?: string }
+            | Array<{ date_issued?: string; org_id?: string }>
+            | null
+          const cto = Array.isArray(ctos) ? ctos[0] : ctos
+          if (!cto?.date_issued || cto.org_id !== orgId) continue
+          if (new Date(cto.date_issued).getFullYear() !== currentYear) continue
+
+          const userId = item.hrm_user_id
+          const coc = Number(item.coc) || 0
+          const name = getUserName(item as Parameters<typeof getUserName>[0])
+
+          const existing = byUser.get(userId)
+          if (existing) {
+            existing.totalCoc += coc
+          } else {
+            byUser.set(userId, { name, totalCoc: coc })
+          }
+        }
+
+        const highCoc = Array.from(byUser.values())
+          .filter((e) => e.totalCoc > 15)
+          .sort((a, b) => b.totalCoc - a.totalCoc)
+
+        setEmployeesWithHighCoc(highCoc)
+      } catch (e) {
+        console.error('fetch employees with COC > 15', e)
+        setEmployeesWithHighCoc([])
+      }
+    })()
+  }, [filterUrl, supabase])
+
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
   // Check access from permission settings or Super Admins
@@ -206,6 +280,15 @@ const Page: React.FC = () => {
                 <span className="app__warning_title">Note:</span> CTO with
                 employee/s cannot be deleted.
               </div>
+
+              {employeesWithHighCoc.length > 0 && (
+                <div className="app__warning_text">
+                  <span className="app__warning_title">
+                    Employees with COC &gt; 15 (current year):
+                  </span>{' '}
+                  {employeesWithHighCoc.map((e) => `${e.name} (${e.totalCoc})`).join(', ')}
+                </div>
+              )}
 
               {/* Per Page */}
               <PerPage

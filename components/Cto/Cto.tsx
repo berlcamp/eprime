@@ -1,126 +1,126 @@
-'use client'
+"use client";
 
 import {
   CustomButton,
   PerPage,
   ShowMore,
   TableRowLoading,
-  Title
-} from '@/components/index'
-import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchMyCtos } from '@/utils/fetchApi'
-import { format } from 'date-fns'
-import { useEffect, useState } from 'react'
-import UploadModal from './UploadModal'
+  Title,
+} from "@/components/index";
+import { useSupabase } from "@/context/SupabaseProvider";
+import { fetchMyCtos } from "@/utils/fetchApi";
+import { format } from "date-fns";
+import { useEffect, useState } from "react";
+import UploadModal from "./UploadModal";
 
 // Types
-import type { CtoUserTypes } from '@/types'
+import type { CtoUserTypes } from "@/types";
 
 // Redux imports
-import { updateList } from '@/GlobalRedux/Features/listSlice'
-import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { useDispatch, useSelector } from 'react-redux'
+import { updateList } from "@/GlobalRedux/Features/listSlice";
+import { updateResultCounter } from "@/GlobalRedux/Features/resultsCounterSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function Cto({ userId }: { userId: string }) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
-  const [list, setList] = useState<CtoUserTypes[]>([])
-  const [editData, setEditData] = useState<CtoUserTypes | null>(null)
+  const [list, setList] = useState<CtoUserTypes[]>([]);
+  const [editData, setEditData] = useState<CtoUserTypes | null>(null);
 
-  const [balance, setBalance] = useState(0)
-  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [balance, setBalance] = useState(0);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
-  const [perPageCount, setPerPageCount] = useState<number>(10)
+  const [perPageCount, setPerPageCount] = useState<number>(10);
 
   // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
-  const resultsCounter = useSelector((state: any) => state.results.value)
-  const dispatch = useDispatch()
+  const globallist = useSelector((state: any) => state.list.value);
+  const resultsCounter = useSelector((state: any) => state.results.value);
+  const dispatch = useDispatch();
 
-  const { session } = useSupabase()
+  const { session } = useSupabase();
 
   const fetchData = async () => {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const result = await fetchMyCtos({ userId }, perPageCount, 0)
+      const result = await fetchMyCtos({ userId }, perPageCount, 0);
       // update the list in redux
-      dispatch(updateList(result.data))
+      dispatch(updateList(result.data));
 
       // Updating showing text in redux
       dispatch(
         updateResultCounter({
           showing: result.data.length,
-          results: result.count ? result.count : 0
-        })
-      )
+          results: result.count ? result.count : 0,
+        }),
+      );
     } catch (e) {
-      console.error(e)
+      console.error(e);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Append data to existing list whenever 'show more' button is clicked
   const handleShowMore = async () => {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const result = await fetchMyCtos({ userId }, perPageCount, list.length)
+      const result = await fetchMyCtos({ userId }, perPageCount, list.length);
 
       // update the list in redux
-      const newList = [...list, ...result.data]
-      dispatch(updateList(newList))
+      const newList = [...list, ...result.data];
+      dispatch(updateList(newList));
 
       // Updating showing text in redux
       dispatch(
         updateResultCounter({
           showing: newList.length,
-          results: result.count ? result.count : 0
-        })
-      )
+          results: result.count ? result.count : 0,
+        }),
+      );
     } catch (e) {
-      console.error(e)
+      console.error(e);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEdit = (item: CtoUserTypes) => {
-    setShowUploadModal(true)
-    setEditData(item)
-  }
+    setShowUploadModal(true);
+    setEditData(item);
+  };
 
   // Update list whenever list in redux updates
   useEffect(() => {
-    setList(globallist)
-  }, [globallist])
+    setList(globallist);
+  }, [globallist]);
 
   // Featch data
   useEffect(() => {
-    setList([])
-    void fetchData()
+    setList([]);
+    void fetchData();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPageCount])
+  }, [perPageCount]);
 
   useEffect(() => {
     void (async () => {
-      const result = await fetchMyCtos({ userId }, 999, 0)
-      let bal = 0
+      const result = await fetchMyCtos({ userId }, 999, 0);
+      let bal = 0;
       if (result.data) {
-        const ctos: CtoUserTypes[] = result.data
+        const ctos: CtoUserTypes[] = result.data;
         ctos.forEach((cto) => {
-          if (cto.status !== 'Expired' && cto.is_approved) {
-            bal += cto.coc
+          if (cto.status !== "Expired" && cto.is_approved) {
+            bal += cto.coc;
           }
-        })
+        });
       }
-      setBalance(bal)
-    })()
-  }, [])
+      setBalance(bal);
+    })();
+  }, []);
 
-  const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
+  const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list;
 
   return (
     <>
@@ -184,47 +184,47 @@ export default function Cto({ userId }: { userId: string }) {
                           <div>
                             <span className="app_td_mobile_label">
                               Reference Code:
-                            </span>{' '}
+                            </span>{" "}
                             {item.hrm_ctos?.reference_code}
                           </div>
                           <div>
                             <span className="app_td_mobile_label">
                               Particulars:
-                            </span>{' '}
+                            </span>{" "}
                             {item.hrm_ctos?.particulars}
                           </div>
                           <div>
-                            <span className="app_td_mobile_label">COC:</span>{' '}
+                            <span className="app_td_mobile_label">COC:</span>{" "}
                             {item.coc}
                           </div>
                           <div>
                             <span className="app_td_mobile_label">
-                              Duration:{' '}
+                              Duration:{" "}
                             </span>
                             {item.hrm_ctos
                               ? format(
                                   new Date(item.hrm_ctos.from),
-                                  'MMM d, yyyy'
+                                  "MMM d, yyyy",
                                 ) +
-                                ' - ' +
+                                " - " +
                                 format(
                                   new Date(item.hrm_ctos.to),
-                                  'MMM d, yyyy'
+                                  "MMM d, yyyy",
                                 )
-                              : ''}
+                              : ""}
                           </div>
                           <div>
                             <span className="app_td_mobile_label">
-                              Expiration:{' '}
+                              Expiration:{" "}
                             </span>
                             {item.expiration &&
-                              format(new Date(item.expiration), 'MMM d, yyyy')}
+                              format(new Date(item.expiration), "MMM d, yyyy")}
                           </div>
                           <div>
                             <span className="app_td_mobile_label">
-                              Expiration Status:{' '}
+                              Expiration Status:{" "}
                             </span>
-                            {item.hrm_ctos?.status === 'Expired' ? (
+                            {item.hrm_ctos?.status === "Expired" ? (
                               <span className="app__status_container_red">
                                 Expired
                               </span>
@@ -242,7 +242,7 @@ export default function Cto({ userId }: { userId: string }) {
                       <div className="font-semibold">{item.coc}</div>
                     </td>
                     <td className="hidden md:table-cell app__td">
-                      {item.hrm_ctos?.status === 'Expired' ? (
+                      {item.hrm_ctos?.status === "Expired" ? (
                         <span className="app__status_container_red">
                           Expired
                         </span>
@@ -268,21 +268,21 @@ export default function Cto({ userId }: { userId: string }) {
                         {item.hrm_ctos
                           ? format(
                               new Date(item.hrm_ctos?.from),
-                              'MMM d, yyyy'
+                              "MMM d, yyyy",
                             ) +
-                            ' - ' +
-                            format(new Date(item.hrm_ctos?.to), 'MMM d, yyyy')
-                          : ''}
+                            " - " +
+                            format(new Date(item.hrm_ctos?.to), "MMM d, yyyy")
+                          : ""}
                       </div>
                     </td>
                     <td className="hidden md:table-cell app__td">
                       <div>
                         {item.expiration &&
-                          format(new Date(item.expiration), 'MMM d, yyyy')}
+                          format(new Date(item.expiration), "MMM d, yyyy")}
                       </div>
                     </td>
                     <td className="hidden md:table-cell app__td">
-                      {item.hrm_ctos?.status !== 'Expired' &&
+                      {item.hrm_ctos?.status !== "Expired" &&
                         userId === session?.user.id && (
                           <CustomButton
                             btnType="button"
@@ -293,7 +293,7 @@ export default function Cto({ userId }: { userId: string }) {
                         )}
                     </td>
                     <td className="hidden md:table-cell app__td">
-                      {item.hrm_ctos?.status === 'Expired' ? (
+                      {item.hrm_ctos?.status === "Expired" ? (
                         <span className="app__status_container_red">
                           Expired
                         </span>
@@ -329,5 +329,5 @@ export default function Cto({ userId }: { userId: string }) {
         />
       )}
     </>
-  )
+  );
 }

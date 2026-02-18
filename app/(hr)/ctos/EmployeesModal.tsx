@@ -49,6 +49,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showAttachmentsModal, setShowAttachmentsModal] = useState(false)
   const [showApproveModal, setShowApproveModal] = useState(false)
+  const [totalCocCurrentYear, setTotalCocCurrentYear] = useState<number>(0)
   const [errorMessage, setErrorMessage] = useState<string | ''>('')
 
   const [list, setList] = useState<CtoUserTypes[]>([])
@@ -315,6 +316,44 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
     void fetchData()
   }, [])
 
+  useEffect(() => {
+    if (!showApproveModal || !selectedRow?.hrm_user_id) return
+    void (async () => {
+      try {
+        const currentYear = new Date().getFullYear()
+        const { data, error } = await supabase
+          .from('hrm_cto_users')
+          .select('coc, hrm_ctos!cto_id(date_issued)')
+          .eq('hrm_user_id', selectedRow.hrm_user_id)
+
+        if (error) throw new Error(error.message)
+
+        const getDateIssued = (item: {
+          hrm_ctos?: { date_issued: string } | { date_issued: string }[]
+          coc?: number | null
+        }) => {
+          const ctos = item.hrm_ctos
+          return Array.isArray(ctos)
+            ? ctos[0]?.date_issued
+            : ctos?.date_issued
+        }
+        const total =
+          data
+            ?.filter(
+              (item) =>
+                getDateIssued(item) &&
+                new Date(getDateIssued(item) as string).getFullYear() ===
+                  currentYear
+            )
+            .reduce((sum, item) => sum + (Number(item.coc) || 0), 0) ?? 0
+        setTotalCocCurrentYear(total)
+      } catch (e) {
+        console.error('fetch total COC current year', e)
+        setTotalCocCurrentYear(0)
+      }
+    })()
+  }, [showApproveModal, selectedRow?.hrm_user_id, supabase])
+
   if (!ctoData) {
     return
   }
@@ -556,6 +595,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       {showApproveModal && (
         <ConfirmApproveModal
           coc={ctoData.coc}
+          totalCocCurrentYear={totalCocCurrentYear}
           header="Confirm Approve"
           btnText="Confirm"
           message="This action cannot be undone. Are you sure you want to approve this employee?"
