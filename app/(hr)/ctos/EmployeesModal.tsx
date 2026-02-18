@@ -329,7 +329,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
         if (error) throw new Error(error.message)
 
         const getDateIssued = (item: {
-          hrm_ctos?: { date_issued: string } | { date_issued: string }[]
+          hrm_ctos?: { date_issued: string } | Array<{ date_issued: string }>
           coc?: number | null
         }) => {
           const ctos = item.hrm_ctos
