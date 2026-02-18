@@ -1,103 +1,103 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-'use client'
+"use client";
 
-import { useFilter } from '@/context/FilterContext'
-import { useSupabase } from '@/context/SupabaseProvider'
-import { TableCellsIcon } from '@heroicons/react/20/solid'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useFilter } from "@/context/FilterContext";
+import { useSupabase } from "@/context/SupabaseProvider";
+import { TableCellsIcon } from "@heroicons/react/20/solid";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 const RecordsSideBar = () => {
-  const currentRoute = usePathname()
-  const [ctoCount, setCtoCount] = useState('')
-  const [scCount, setScCount] = useState('')
-  const [registrationCount, setRegistrationCount] = useState('')
-  const [promotionsCount, setPromotionsCount] = useState('')
+  const currentRoute = usePathname();
+  const [ctoCount, setCtoCount] = useState("");
+  const [scCount, setScCount] = useState("");
+  const [registrationCount, setRegistrationCount] = useState("");
+  const [promotionsCount, setPromotionsCount] = useState("");
 
-  const { hasAccess } = useFilter()
-  const { supabase } = useSupabase()
+  const { hasAccess } = useFilter();
+  const { supabase } = useSupabase();
 
   // Redux staff
-  const recountStatus = useSelector((state: any) => state.recount.value)
+  const recountStatus = useSelector((state: any) => state.recount.value);
 
   const counter = async () => {
-    if (hasAccess('sds')) {
+    if (hasAccess("sds")) {
       const { count: promotionCount } = await supabase
-        .from('hrm_promotions')
-        .select('id', { count: 'exact' })
-        .eq('status', 'For Final Approval')
+        .from("hrm_promotions")
+        .select("id", { count: "exact" })
+        .eq("status", "For Final Approval");
 
       if (promotionCount && promotionCount > 0)
-        setPromotionsCount(`For Approval (${promotionCount})`)
-    } else if (hasAccess('verify_promotions')) {
+        setPromotionsCount(`For Approval (${promotionCount})`);
+    } else if (hasAccess("verify_promotions")) {
       const { count: promotionCount } = await supabase
-        .from('hrm_promotions')
-        .select('id', { count: 'exact' })
-        .eq('status', 'For Verification')
+        .from("hrm_promotions")
+        .select("id", { count: "exact" })
+        .eq("status", "For Verification");
 
       if (promotionCount && promotionCount > 0)
-        setPromotionsCount(`For Verification (${promotionCount})`)
+        setPromotionsCount(`For Verification (${promotionCount})`);
     }
 
-    if (hasAccess('cto_sc_approver')) {
+    if (hasAccess("cto_sc_approver")) {
       // CTO Counter
       const { data } = await supabase
-        .from('hrm_ctos')
-        .select('status, hrm_cto_users(is_approved)')
-        .is('status', null)
-        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+        .from("hrm_ctos")
+        .select("status, hrm_cto_users(is_approved)")
+        .is("status", null)
+        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
 
       if (data) {
-        let count = 0
+        let count = 0;
 
         data.forEach((item) => {
-          const users = item.hrm_cto_users?.filter((user) => !user.is_approved)
-          count += users ? users.length : 0
-        })
+          const users = item.hrm_cto_users?.filter((user) => !user.is_approved);
+          count += users ? users.length : 0;
+        });
         if (count > 0) {
-          setCtoCount(`For Approval (${count})`)
+          setCtoCount(`For Approval (${count})`);
         }
       }
 
       // SC Counter
       const { data: scData } = await supabase
-        .from('hrm_service_credits')
-        .select('status, hrm_service_credit_users(is_approved)')
-        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+        .from("hrm_service_credits")
+        .select("status, hrm_service_credit_users(is_approved)")
+        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
 
       if (scData) {
-        let count = 0
+        let count = 0;
         scData.forEach((item) => {
           const users = item.hrm_service_credit_users?.filter(
-            (user) => !user.is_approved
-          )
-          count += users ? users.length : 0
-        })
+            (user) => !user.is_approved,
+          );
+          count += users ? users.length : 0;
+        });
         if (count > 0) {
-          setScCount(`For Approval (${count})`)
+          setScCount(`For Approval (${count})`);
         }
       }
 
       // Registrations counter
       const { count: registrationsCount } = await supabase
-        .from('hrm_registrations')
-        .select('id', { count: 'exact' })
+        .from("hrm_registrations")
+        .select("id", { count: "exact" });
 
       if (registrationsCount && registrationsCount > 0)
-        setRegistrationCount(registrationsCount.toString())
+        setRegistrationCount(registrationsCount.toString());
     }
-  }
+  };
   useEffect(() => {
-    void counter()
-  }, [recountStatus])
+    void counter();
+  }, [recountStatus]);
 
   return (
     <>
       {
         // Check access from permission settings or Super Admins
-        hasAccess('records') && (
+        hasAccess("records") && (
           <ul className="pt-8 mt-4 space-y-2 border-gray-700">
             <li>
               <div className="flex items-center text-gray-500 items-centers space-x-1 px-2">
@@ -109,7 +109,7 @@ const RecordsSideBar = () => {
               <Link
                 href="/employees"
                 className={`app__menu_link ${
-                  currentRoute === '/employees' ? 'app_menu_link_active' : ''
+                  currentRoute === "/employees" ? "app_menu_link_active" : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">Employees</span>
@@ -119,15 +119,15 @@ const RecordsSideBar = () => {
               <Link
                 href="/registrations"
                 className={`app__menu_link ${
-                  currentRoute === '/registrations'
-                    ? 'app_menu_link_active'
-                    : ''
+                  currentRoute === "/registrations"
+                    ? "app_menu_link_active"
+                    : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
                   Registrations
                 </span>
-                {registrationCount !== '' && (
+                {registrationCount !== "" && (
                   <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-500">
                     <span className="text-white text-[10px]">
                       {registrationCount}
@@ -140,9 +140,9 @@ const RecordsSideBar = () => {
               <Link
                 href="/servicerecords"
                 className={`app__menu_link ${
-                  currentRoute === '/servicerecords'
-                    ? 'app_menu_link_active'
-                    : ''
+                  currentRoute === "/servicerecords"
+                    ? "app_menu_link_active"
+                    : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
@@ -154,7 +154,7 @@ const RecordsSideBar = () => {
               <Link
                 href="/assignments"
                 className={`app__menu_link ${
-                  currentRoute === '/assignments' ? 'app_menu_link_active' : ''
+                  currentRoute === "/assignments" ? "app_menu_link_active" : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
@@ -166,7 +166,7 @@ const RecordsSideBar = () => {
               <Link
                 href="/designations"
                 className={`app__menu_link ${
-                  currentRoute === '/designations' ? 'app_menu_link_active' : ''
+                  currentRoute === "/designations" ? "app_menu_link_active" : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
@@ -178,11 +178,11 @@ const RecordsSideBar = () => {
               <Link
                 href="/ctos"
                 className={`app__menu_link ${
-                  currentRoute === '/ctos' ? 'app_menu_link_active' : ''
+                  currentRoute === "/ctos" ? "app_menu_link_active" : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">CTO</span>
-                {ctoCount !== '' && (
+                {ctoCount !== "" && (
                   <span className="inline-flex items-center justify-center rounded-lg bg-red-500">
                     <span className="px-1 text-white text-[10px]">
                       {ctoCount}
@@ -195,15 +195,15 @@ const RecordsSideBar = () => {
               <Link
                 href="/servicecredits"
                 className={`app__menu_link ${
-                  currentRoute === '/servicecredits'
-                    ? 'app_menu_link_active'
-                    : ''
+                  currentRoute === "/servicecredits"
+                    ? "app_menu_link_active"
+                    : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
                   Service Credits
                 </span>
-                {scCount !== '' && (
+                {scCount !== "" && (
                   <span className="inline-flex items-center justify-center rounded-lg bg-red-500">
                     <span className="px-1 text-white text-[10px]">
                       {scCount}
@@ -216,13 +216,13 @@ const RecordsSideBar = () => {
               <Link
                 href="/promotions"
                 className={`app__menu_link ${
-                  currentRoute === '/promotions' ? 'app_menu_link_active' : ''
+                  currentRoute === "/promotions" ? "app_menu_link_active" : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
                   Promotions
                 </span>
-                {promotionsCount !== '' && (
+                {promotionsCount !== "" && (
                   <span className="inline-flex items-center justify-center rounded-lg bg-red-500">
                     <span className="px-1 text-white text-[10px]">
                       {promotionsCount}
@@ -235,7 +235,7 @@ const RecordsSideBar = () => {
               <Link
                 href="/items"
                 className={`app__menu_link ${
-                  currentRoute === '/items' ? 'app_menu_link_active' : ''
+                  currentRoute === "/items" ? "app_menu_link_active" : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
@@ -247,7 +247,7 @@ const RecordsSideBar = () => {
               <Link
                 href="/nosi"
                 className={`app__menu_link ${
-                  currentRoute === '/nosi' ? 'app_menu_link_active' : ''
+                  currentRoute === "/nosi" ? "app_menu_link_active" : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">NOSI</span>
@@ -257,27 +257,31 @@ const RecordsSideBar = () => {
               <Link
                 href="/nosa"
                 className={`app__menu_link ${
-                  currentRoute === '/nosa' ? 'app_menu_link_active' : ''
+                  currentRoute === "/nosa" ? "app_menu_link_active" : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">NOSA</span>
               </Link>
             </li>
-            <li>
-              <Link
-                href="/bulknosa"
-                className={`app__menu_link ${
-                  currentRoute === '/bulknosa' ? 'app_menu_link_active' : ''
-                }`}
-              >
-                <span className="flex-1 ml-3 whitespace-nowrap">Bulk NOSA</span>
-              </Link>
-            </li>
+            {hasAccess("bulk_nosa") && (
+              <li>
+                <Link
+                  href="/bulknosa"
+                  className={`app__menu_link ${
+                    currentRoute === "/bulknosa" ? "app_menu_link_active" : ""
+                  }`}
+                >
+                  <span className="flex-1 ml-3 whitespace-nowrap">
+                    Bulk NOSA
+                  </span>
+                </Link>
+              </li>
+            )}
           </ul>
         )
       }
     </>
-  )
-}
+  );
+};
 
-export default RecordsSideBar
+export default RecordsSideBar;

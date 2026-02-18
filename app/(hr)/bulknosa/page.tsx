@@ -164,7 +164,10 @@ const Page: React.FC = () => {
     }
   };
 
-  if (!hasAccess("records") && !superAdmins.includes(session?.user.email ?? ""))
+  if (
+    !hasAccess("bulk_nosa") &&
+    !superAdmins.includes(session?.user.email ?? "")
+  )
     return <Unauthorized />;
 
   return (
@@ -200,7 +203,10 @@ const Page: React.FC = () => {
 
               <div className="px-6 py-5 space-y-4">
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  Select an effective date and a lastname letter to generate NOSA documents for all employees whose lastname starts with that letter. Signatory details will be configured in the next step.
+                  Select an effective date and a lastname letter to generate
+                  NOSA documents for all employees whose lastname starts with
+                  that letter. Signatory details will be configured in the next
+                  step.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -233,7 +239,8 @@ const Page: React.FC = () => {
 
             {/* Quick tip */}
             <p className="mt-4 text-xs text-gray-500">
-              Tip: Employees must have a matching salary grade and step in the active salary schedule to be included.
+              Tip: Employees must have a matching salary grade and step in the
+              active salary schedule to be included.
             </p>
           </div>
         </div>

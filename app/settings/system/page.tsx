@@ -1,42 +1,42 @@
-'use client'
-import { SettingsSideBar, Sidebar, Title } from '@/components/index'
-import TopBar from '@/components/TopBar'
-import { useSupabase } from '@/context/SupabaseProvider'
-import React, { useEffect, useState } from 'react'
+"use client";
+import { SettingsSideBar, Sidebar, Title } from "@/components/index";
+import TopBar from "@/components/TopBar";
+import { useSupabase } from "@/context/SupabaseProvider";
+import React, { useEffect, useState } from "react";
 
-import type { UserAccessTypes } from '@/types'
-import { logError } from '@/utils/fetchApi'
-import ChooseUsers from './ChooseUsers'
+import type { UserAccessTypes } from "@/types";
+import { logError } from "@/utils/fetchApi";
+import ChooseUsers from "./ChooseUsers";
 
 const Page: React.FC = () => {
-  const [users, setUsers] = useState<UserAccessTypes[] | []>([])
-  const [loadedSettings, setLoadedSettings] = useState(false)
-  const { supabase } = useSupabase()
+  const [users, setUsers] = useState<UserAccessTypes[] | []>([]);
+  const [loadedSettings, setLoadedSettings] = useState(false);
+  const { supabase } = useSupabase();
 
   const fetchData = async () => {
     try {
       const { data, error } = await supabase
-        .from('hrm_system_access')
-        .select('*, hrm_user:user_id(id,firstname,lastname,middlename)')
-        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+        .from("hrm_system_access")
+        .select("*, hrm_user:user_id(id,firstname,lastname,middlename)")
+        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
 
       if (error) {
-        void logError('system access', 'system_access', '', error.message)
-        throw new Error(error.message)
+        void logError("system access", "system_access", "", error.message);
+        throw new Error(error.message);
       }
 
-      setUsers(data)
+      setUsers(data);
 
-      setLoadedSettings(true)
+      setLoadedSettings(true);
     } catch (err) {
-      console.error(err)
+      console.error(err);
     }
-  }
+  };
 
   useEffect(() => {
-    void fetchData()
+    void fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   return (
     <>
@@ -122,6 +122,12 @@ const Page: React.FC = () => {
                 />
                 <ChooseUsers
                   multiple={true}
+                  type="bulk_nosa"
+                  users={users}
+                  title="Who access Bulk NOSA"
+                />
+                <ChooseUsers
+                  multiple={true}
                   type="tracker_manager"
                   users={users}
                   title="Request Tracker Manager - Person who can forward request to other."
@@ -163,6 +169,6 @@ const Page: React.FC = () => {
         </div>
       </div>
     </>
-  )
-}
-export default Page
+  );
+};
+export default Page;
