@@ -97,12 +97,16 @@ export interface SignatoriesTypes {
   prepared_by_position?: string;
   truly_yours?: string;
   truly_yours_position?: string;
+  truly_yours_user?: Employee;
   recommending_1?: string;
   recommending_1_position?: string;
+  recommending_1_user?: Employee;
   recommending_2?: string;
   recommending_2_position?: string;
+  recommending_2_user?: Employee;
   approval?: string;
   approval_position?: string;
+  approval_user?: Employee;
 }
 
 export interface NotificationTypes {

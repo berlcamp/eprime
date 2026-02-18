@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { NosaTypes, SignatoriesTypes } from "@/types";
+import type { Employee } from "@/types";
 import { formatToPesos } from "@/utils/text-helper";
 import { format } from "date-fns";
 import * as React from "react";
@@ -7,6 +8,42 @@ import * as React from "react";
 interface ComponentToPrintProps {
   selectedItem: NosaTypes;
   signatories: SignatoriesTypes;
+}
+
+function SignatoryBlock({
+  user,
+  name,
+  position,
+}: {
+  user?: Employee | null;
+  name: string;
+  position: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <div>
+        {user?.signature_path ? (
+          <img
+            src={user.signature_path}
+            alt=""
+            width={40}
+            height={40}
+            className="object-contain"
+          />
+        ) : (
+          <span>SGD</span>
+        )}
+      </div>
+      <div className="font-bold border-t border-t-black mt-1">
+        {user
+          ? [user.lastname, user.firstname, user.middlename]
+              .filter(Boolean)
+              .join(", ")
+          : name}
+      </div>
+      <div className="text-[10px]">{position}</div>
+    </div>
+  );
 }
 
 export const PrintNosa = React.forwardRef<
@@ -17,7 +54,7 @@ export const PrintNosa = React.forwardRef<
 
   return (
     <div className="invisible">
-      <div ref={ref} className="w-[816px] bg-white py-2 px-1">
+      <div ref={ref} className="w-[816px] bg-white py-2 px-2">
         <table className="w-full">
           <tbody>
             <tr>
@@ -170,16 +207,19 @@ export const PrintNosa = React.forwardRef<
             </tr>
             <tr>
               <td colSpan={2} className="text-xs">
-                <div className="mt-14 pb-4 flex items-start justify-evenly space-x-1">
+                <div className="mt-10 pb-4 flex items-start justify-evenly space-x-1">
                   <div className="text-center">
                     <div className="font-bold w-32">&nbsp;</div>
                   </div>
                   <div className="text-center">
                     <div>Very truly yours,</div>
-                    <div className="mt-10 font-bold">
-                      {signatories.truly_yours}
+                    <div className="mt-6">
+                      <SignatoryBlock
+                        user={signatories.truly_yours_user}
+                        name={signatories.truly_yours ?? ""}
+                        position={signatories.truly_yours_position ?? ""}
+                      />
                     </div>
-                    <div>{signatories.truly_yours_position}</div>
                   </div>
                 </div>
               </td>
@@ -193,16 +233,22 @@ export const PrintNosa = React.forwardRef<
               <td colSpan={2} className="text-xs">
                 <div className="pb-4 flex items-start justify-evenly space-x-1">
                   <div className="text-center">
-                    <div className="mt-10 font-bold">
-                      {signatories.recommending_1}
+                    <div className="mt-6">
+                      <SignatoryBlock
+                        user={signatories.recommending_1_user}
+                        name={signatories.recommending_1 ?? ""}
+                        position={signatories.recommending_1_position ?? ""}
+                      />
                     </div>
-                    <div>{signatories.recommending_1_position}</div>
                   </div>
                   <div className="text-center">
-                    <div className="mt-10 font-bold">
-                      {signatories.recommending_2}
+                    <div className="mt-6">
+                      <SignatoryBlock
+                        user={signatories.recommending_2_user}
+                        name={signatories.recommending_2 ?? ""}
+                        position={signatories.recommending_2_position ?? ""}
+                      />
                     </div>
-                    <div>{signatories.recommending_2_position}</div>
                   </div>
                 </div>
               </td>
@@ -210,8 +256,13 @@ export const PrintNosa = React.forwardRef<
             <tr>
               <td colSpan={2} className="text-xs text-center">
                 <div>Approved by:</div>
-                <div className="mt-10 font-bold">{signatories.approval}</div>
-                <div>{signatories.approval_position}</div>
+                <div className="mt-6">
+                  <SignatoryBlock
+                    user={signatories.approval_user}
+                    name={signatories.approval ?? ""}
+                    position={signatories.approval_position ?? ""}
+                  />
+                </div>
               </td>
             </tr>
             <tr>

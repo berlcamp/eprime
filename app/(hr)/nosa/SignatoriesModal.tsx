@@ -1,40 +1,67 @@
-import { CustomButton } from '@/components/index'
-import { SignatoriesTypes } from '@/types'
+'use client'
+
+import { CustomButton, SearchUserInput } from '@/components/index'
+import type { Employee, SignatoriesTypes } from '@/types'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-
-// Types
-
-// Redux imports
 
 interface ModalProps {
   hideModal: () => void
   modalData: (signatories: SignatoriesTypes) => void
 }
 
+function formatSignatoryName(emp: Employee) {
+  return [emp.lastname, emp.firstname, emp.middlename].filter(Boolean).join(', ')
+}
+
 const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
+  const [trulyYoursUser, setTrulyYoursUser] = useState<Employee | null>(null)
+  const [recommending1User, setRecommending1User] = useState<Employee | null>(
+    null
+  )
+  const [recommending2User, setRecommending2User] = useState<Employee | null>(
+    null
+  )
+  const [approvalUser, setApprovalUser] = useState<Employee | null>(null)
+
   const {
     register,
     formState: { errors },
     handleSubmit
-  } = useForm<SignatoriesTypes>({
+  } = useForm<Pick<SignatoriesTypes, 'first_paragraph'>>({
     mode: 'onSubmit'
   })
 
-  const onSubmit = async (formdata: SignatoriesTypes) => {
-    const signatories = {
-      first_paragraph: formdata.first_paragraph,
-      truly_yours: formdata.truly_yours,
-      truly_yours_position: formdata.truly_yours_position,
-      recommending_1: formdata.recommending_1,
-      recommending_1_position: formdata.recommending_1_position,
-      recommending_2: formdata.recommending_2,
-      recommending_2_position: formdata.recommending_2_position,
-      approval: formdata.approval,
-      approval_position: formdata.approval_position
+  const onSubmit = async (
+    formdata: Pick<SignatoriesTypes, 'first_paragraph'>
+  ) => {
+    if (
+      !trulyYoursUser ||
+      !recommending1User ||
+      !recommending2User ||
+      !approvalUser
+    ) {
+      return
+    }
+    const signatories: SignatoriesTypes = {
+      first_paragraph: formdata.first_paragraph ?? '',
+      truly_yours: formatSignatoryName(trulyYoursUser),
+      truly_yours_position: trulyYoursUser.hrm_positions?.name ?? '',
+      truly_yours_user: trulyYoursUser,
+      recommending_1: formatSignatoryName(recommending1User),
+      recommending_1_position: recommending1User.hrm_positions?.name ?? '',
+      recommending_1_user: recommending1User,
+      recommending_2: formatSignatoryName(recommending2User),
+      recommending_2_position: recommending2User.hrm_positions?.name ?? '',
+      recommending_2_user: recommending2User,
+      approval: formatSignatoryName(approvalUser),
+      approval_position: approvalUser.hrm_positions?.name ?? '',
+      approval_user: approvalUser
     }
     hideModal()
     modalData(signatories)
   }
+
   return (
     <>
       <div className="app__modal_wrapper">
@@ -52,7 +79,7 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
             <form onSubmit={handleSubmit(onSubmit)} className="app__modal_body">
               <div className="app__form_field_container">
                 <div className="w-full">
-                  <div className="app__label_standard">First paragramph:</div>
+                  <div className="app__label_standard">First paragraph:</div>
                   <div className="flex space-x-1">
                     <textarea
                       {...register('first_paragraph', { required: true })}
@@ -68,24 +95,16 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Very truly yours:</div>
-                  <div className="flex space-x-1">
-                    <input
-                      {...register('truly_yours', { required: true })}
-                      placeholder="Name"
-                      className="app__input_standard"
-                    />
-                    <input
-                      {...register('truly_yours_position', { required: true })}
-                      placeholder="Position"
-                      className="app__input_standard"
-                    />
-                  </div>
-                  {errors.truly_yours && (
-                    <div className="app__error_message">Name is required</div>
-                  )}
-                  {errors.truly_yours_position && (
-                    <div className="app__error_message">
-                      Position is required
+                  <SearchUserInput
+                    isMultiple={false}
+                    handleSelectedUsers={(users) =>
+                      setTrulyYoursUser(users[0] ?? null)
+                    }
+                    selectedUsers={trulyYoursUser ? [trulyYoursUser] : []}
+                  />
+                  {!trulyYoursUser && (
+                    <div className="app__error_message mt-1">
+                      Select a signatory
                     </div>
                   )}
                 </div>
@@ -95,26 +114,16 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
                   <div className="app__label_standard">
                     Recommending Approval (1):
                   </div>
-                  <div className="flex space-x-1">
-                    <input
-                      {...register('recommending_1', { required: true })}
-                      placeholder="Name"
-                      className="app__input_standard"
-                    />
-                    <input
-                      {...register('recommending_1_position', {
-                        required: true
-                      })}
-                      placeholder="Position"
-                      className="app__input_standard"
-                    />
-                  </div>
-                  {errors.recommending_1 && (
-                    <div className="app__error_message">Name is required</div>
-                  )}
-                  {errors.recommending_1_position && (
-                    <div className="app__error_message">
-                      Position is required
+                  <SearchUserInput
+                    isMultiple={false}
+                    handleSelectedUsers={(users) =>
+                      setRecommending1User(users[0] ?? null)
+                    }
+                    selectedUsers={recommending1User ? [recommending1User] : []}
+                  />
+                  {!recommending1User && (
+                    <div className="app__error_message mt-1">
+                      Select a signatory
                     </div>
                   )}
                 </div>
@@ -124,26 +133,16 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
                   <div className="app__label_standard">
                     Recommending Approval (2):
                   </div>
-                  <div className="flex space-x-1">
-                    <input
-                      {...register('recommending_2', { required: true })}
-                      placeholder="Name"
-                      className="app__input_standard"
-                    />
-                    <input
-                      {...register('recommending_2_position', {
-                        required: true
-                      })}
-                      placeholder="Position"
-                      className="app__input_standard"
-                    />
-                  </div>
-                  {errors.recommending_2 && (
-                    <div className="app__error_message">Name is required</div>
-                  )}
-                  {errors.recommending_2_position && (
-                    <div className="app__error_message">
-                      Position is required
+                  <SearchUserInput
+                    isMultiple={false}
+                    handleSelectedUsers={(users) =>
+                      setRecommending2User(users[0] ?? null)
+                    }
+                    selectedUsers={recommending2User ? [recommending2User] : []}
+                  />
+                  {!recommending2User && (
+                    <div className="app__error_message mt-1">
+                      Select a signatory
                     </div>
                   )}
                 </div>
@@ -151,32 +150,31 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">Approved By:</div>
-                  <div className="flex space-x-1">
-                    <input
-                      {...register('approval', { required: true })}
-                      placeholder="Name"
-                      className="app__input_standard"
-                    />
-                    <input
-                      {...register('approval_position', {
-                        required: true
-                      })}
-                      placeholder="Position"
-                      className="app__input_standard"
-                    />
-                  </div>
-                  {errors.approval && (
-                    <div className="app__error_message">Name is required</div>
-                  )}
-                  {errors.approval_position && (
-                    <div className="app__error_message">
-                      Position is required
+                  <SearchUserInput
+                    isMultiple={false}
+                    handleSelectedUsers={(users) =>
+                      setApprovalUser(users[0] ?? null)
+                    }
+                    selectedUsers={approvalUser ? [approvalUser] : []}
+                  />
+                  {!approvalUser && (
+                    <div className="app__error_message mt-1">
+                      Select a signatory
                     </div>
                   )}
                 </div>
               </div>
               <div className="app__modal_footer">
-                <button type="submit" className="app__btn_green_sm">
+                <button
+                  type="submit"
+                  className="app__btn_green_sm"
+                  disabled={
+                    !trulyYoursUser ||
+                    !recommending1User ||
+                    !recommending2User ||
+                    !approvalUser
+                  }
+                >
                   Print
                 </button>
               </div>

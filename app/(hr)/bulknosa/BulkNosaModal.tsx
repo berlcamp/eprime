@@ -1,10 +1,12 @@
 'use client'
 
-import { CustomButton } from '@/components/index'
-import type { SignatoriesTypes } from '@/types'
+import { CustomButton, SearchUserInput } from '@/components/index'
+import type { Employee, SignatoriesTypes } from '@/types'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
-interface BulkNosaFormData extends SignatoriesTypes {
+interface BulkNosaFormData {
+  first_paragraph: string
   effective_date: string
   lastname_letter: string
 }
@@ -20,57 +22,20 @@ interface BulkNosaModalProps {
 
 const LASTNAME_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 
-function SignatoryField({
-  label,
-  nameKey,
-  positionKey,
-  register,
-  errors
-}: {
-  label: string
-  nameKey: 'truly_yours' | 'recommending_1' | 'recommending_2' | 'approval'
-  positionKey:
-    | 'truly_yours_position'
-    | 'recommending_1_position'
-    | 'recommending_2_position'
-    | 'approval_position'
-  register: any
-  errors: any
-}) {
-  return (
-    <div className="app__form_field_container">
-      <div className="w-full">
-        <div className="app__label_standard">{label}</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <input
-              {...register(nameKey, { required: true })}
-              placeholder="Name"
-              className="app__input_standard"
-              aria-invalid={!!errors[nameKey]}
-            />
-            {errors[nameKey] && (
-              <div className="app__error_message">Name is required</div>
-            )}
-          </div>
-          <div>
-            <input
-              {...register(positionKey, { required: true })}
-              placeholder="Position"
-              className="app__input_standard"
-              aria-invalid={!!errors[positionKey]}
-            />
-            {errors[positionKey] && (
-              <div className="app__error_message">Position is required</div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+function formatSignatoryName(emp: Employee) {
+  return [emp.lastname, emp.firstname, emp.middlename].filter(Boolean).join(', ')
 }
 
 const BulkNosaModal = ({ hideModal, modalData }: BulkNosaModalProps) => {
+  const [trulyYoursUser, setTrulyYoursUser] = useState<Employee | null>(null)
+  const [recommending1User, setRecommending1User] = useState<Employee | null>(
+    null
+  )
+  const [recommending2User, setRecommending2User] = useState<Employee | null>(
+    null
+  )
+  const [approvalUser, setApprovalUser] = useState<Employee | null>(null)
+
   const {
     register,
     formState: { errors },
@@ -80,16 +45,28 @@ const BulkNosaModal = ({ hideModal, modalData }: BulkNosaModalProps) => {
   })
 
   const onSubmit = async (formdata: BulkNosaFormData) => {
+    if (
+      !trulyYoursUser ||
+      !recommending1User ||
+      !recommending2User ||
+      !approvalUser
+    ) {
+      return
+    }
     const signatories: SignatoriesTypes = {
       first_paragraph: formdata.first_paragraph,
-      truly_yours: formdata.truly_yours,
-      truly_yours_position: formdata.truly_yours_position,
-      recommending_1: formdata.recommending_1,
-      recommending_1_position: formdata.recommending_1_position,
-      recommending_2: formdata.recommending_2,
-      recommending_2_position: formdata.recommending_2_position,
-      approval: formdata.approval,
-      approval_position: formdata.approval_position
+      truly_yours: formatSignatoryName(trulyYoursUser),
+      truly_yours_position: trulyYoursUser.hrm_positions?.name ?? '',
+      truly_yours_user: trulyYoursUser,
+      recommending_1: formatSignatoryName(recommending1User),
+      recommending_1_position: recommending1User.hrm_positions?.name ?? '',
+      recommending_1_user: recommending1User,
+      recommending_2: formatSignatoryName(recommending2User),
+      recommending_2_position: recommending2User.hrm_positions?.name ?? '',
+      recommending_2_user: recommending2User,
+      approval: formatSignatoryName(approvalUser),
+      approval_position: approvalUser.hrm_positions?.name ?? '',
+      approval_user: approvalUser
     }
     const letter = formdata.lastname_letter.trim().toUpperCase().charAt(0)
     hideModal()
@@ -183,39 +160,96 @@ const BulkNosaModal = ({ hideModal, modalData }: BulkNosaModalProps) => {
                   </div>
                 </div>
 
-                <SignatoryField
-                  label="Very truly yours"
-                  nameKey="truly_yours"
-                  positionKey="truly_yours_position"
-                  register={register}
-                  errors={errors}
-                />
-                <SignatoryField
-                  label="Recommending approval (1)"
-                  nameKey="recommending_1"
-                  positionKey="recommending_1_position"
-                  register={register}
-                  errors={errors}
-                />
-                <SignatoryField
-                  label="Recommending approval (2)"
-                  nameKey="recommending_2"
-                  positionKey="recommending_2_position"
-                  register={register}
-                  errors={errors}
-                />
-                <SignatoryField
-                  label="Approved by"
-                  nameKey="approval"
-                  positionKey="approval_position"
-                  register={register}
-                  errors={errors}
-                />
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">Very truly yours</div>
+                    <SearchUserInput
+                      isMultiple={false}
+                      handleSelectedUsers={(users) =>
+                        setTrulyYoursUser(users[0] ?? null)
+                      }
+                      selectedUsers={trulyYoursUser ? [trulyYoursUser] : []}
+                    />
+                    {!trulyYoursUser && (
+                      <div className="app__error_message mt-1">
+                        Select a signatory
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">
+                      Recommending approval (1)
+                    </div>
+                    <SearchUserInput
+                      isMultiple={false}
+                      handleSelectedUsers={(users) =>
+                        setRecommending1User(users[0] ?? null)
+                      }
+                      selectedUsers={
+                        recommending1User ? [recommending1User] : []
+                      }
+                    />
+                    {!recommending1User && (
+                      <div className="app__error_message mt-1">
+                        Select a signatory
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">
+                      Recommending approval (2)
+                    </div>
+                    <SearchUserInput
+                      isMultiple={false}
+                      handleSelectedUsers={(users) =>
+                        setRecommending2User(users[0] ?? null)
+                      }
+                      selectedUsers={
+                        recommending2User ? [recommending2User] : []
+                      }
+                    />
+                    {!recommending2User && (
+                      <div className="app__error_message mt-1">
+                        Select a signatory
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">Approved by</div>
+                    <SearchUserInput
+                      isMultiple={false}
+                      handleSelectedUsers={(users) =>
+                        setApprovalUser(users[0] ?? null)
+                      }
+                      selectedUsers={approvalUser ? [approvalUser] : []}
+                    />
+                    {!approvalUser && (
+                      <div className="app__error_message mt-1">
+                        Select a signatory
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
             <div className="app__modal_footer mt-6 pt-4 border-t border-gray-200">
-              <button type="submit" className="app__btn_green_sm">
+              <button
+                type="submit"
+                className="app__btn_green_sm"
+                disabled={
+                  !trulyYoursUser ||
+                  !recommending1User ||
+                  !recommending2User ||
+                  !approvalUser
+                }
+              >
                 Print
               </button>
             </div>

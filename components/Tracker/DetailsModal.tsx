@@ -604,6 +604,32 @@ export default function DetailsModal({
           const newCocValue = userCto.coc - use_coc;
           const newUsedCocValue = (userCto.used_coc ?? 0) - use_coc;
 
+          // #region agent log
+          fetch("http://127.0.0.1:7243/ingest/eb278b9e-6990-45a4-b4e9-87fdbf9babdd", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Debug-Session-Id": "0a91b8",
+            },
+            body: JSON.stringify({
+              sessionId: "0a91b8",
+              location: "DetailsModal.tsx:605",
+              message: "CTO used_coc update",
+              data: {
+                user_cto_id,
+                userCto_coc: userCto.coc,
+                userCto_used_coc: userCto.used_coc,
+                use_coc,
+                newCocValue,
+                newUsedCocValue,
+                formula: "(used_coc??0)-use_coc",
+              },
+              timestamp: Date.now(),
+              hypothesisId: "A",
+            }),
+          }).catch(() => {});
+          // #endregion
+
           totalCredits += Number(use_coc);
           usedCredits.push(`COC (${use_coc})`);
 

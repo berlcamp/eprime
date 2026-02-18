@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import type { NosaTypes, SignatoriesTypes } from "@/types";
+import type { Employee, NosaTypes, SignatoriesTypes } from "@/types";
 import { formatToPesos } from "@/utils/text-helper";
 import { format } from "date-fns";
 import * as React from "react";
@@ -12,7 +12,44 @@ interface BulkPrintNosaProps {
 }
 
 const A4_WIDTH_PX = 794; // 210mm at 96dpi
-const CONTENT_WIDTH = 734; // A4 minus 30mm margins (15mm each side)
+const CONTENT_WIDTH = 754; // A4 minus 20mm margins (10mm each side)
+const PRINT_MARGIN = "10mm";
+
+function SignatoryBlock({
+  user,
+  name,
+  position,
+}: {
+  user?: Employee | null;
+  name: string;
+  position: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <div>
+        {user?.signature_path ? (
+          <img
+            src={user.signature_path}
+            alt=""
+            width={40}
+            height={40}
+            className="object-contain"
+          />
+        ) : (
+          <span>SGD</span>
+        )}
+      </div>
+      <div className="font-bold border-t border-t-black mt-1">
+        {user
+          ? [user.lastname, user.firstname, user.middlename]
+              .filter(Boolean)
+              .join(", ")
+          : name}
+      </div>
+      <div className="text-[10px]">{position}</div>
+    </div>
+  );
+}
 
 function SinglePrintNosa({
   selectedItem,
@@ -53,7 +90,7 @@ function SinglePrintNosa({
 
   return (
     <div
-      className="print-nosa-container w-full max-w-full bg-white py-4 px-[15mm] min-h-0"
+      className="print-nosa-container w-full max-w-full bg-white py-2 px-[10mm] min-h-0"
       style={{ width: CONTENT_WIDTH }}
     >
       {/* Header */}
@@ -180,12 +217,17 @@ function SinglePrintNosa({
       </div>
 
       {/* Signatories - Very truly yours */}
-      <div className="flex justify-evenly mt-8 text-[11px] gap-4">
+      <div className="flex justify-evenly mt-6 text-[11px] gap-4">
         <div className="text-center flex-1" />
         <div className="text-center flex-1">
           <div>Very truly yours,</div>
-          <div className="mt-4 font-bold">{signatories.truly_yours}</div>
-          <div>{signatories.truly_yours_position}</div>
+          <div className="mt-4">
+            <SignatoryBlock
+              user={signatories.truly_yours_user}
+              name={signatories.truly_yours ?? ""}
+              position={signatories.truly_yours_position ?? ""}
+            />
+          </div>
         </div>
       </div>
 
@@ -193,20 +235,31 @@ function SinglePrintNosa({
       <div className="text-center mt-4 text-[11px]">Recommending Approval:</div>
       <div className="flex justify-evenly mt-2 text-[11px] gap-4">
         <div className="text-center flex-1">
-          <div className="mt-2 font-bold">{signatories.recommending_1}</div>
-          <div>{signatories.recommending_1_position}</div>
+          <SignatoryBlock
+            user={signatories.recommending_1_user}
+            name={signatories.recommending_1 ?? ""}
+            position={signatories.recommending_1_position ?? ""}
+          />
         </div>
         <div className="text-center flex-1">
-          <div className="mt-2 font-bold">{signatories.recommending_2}</div>
-          <div>{signatories.recommending_2_position}</div>
+          <SignatoryBlock
+            user={signatories.recommending_2_user}
+            name={signatories.recommending_2 ?? ""}
+            position={signatories.recommending_2_position ?? ""}
+          />
         </div>
       </div>
 
       {/* Approved by */}
       <div className="text-center mt-4 text-[11px]">
         <div>Approved by:</div>
-        <div className="mt-2 font-bold">{signatories.approval}</div>
-        <div>{signatories.approval_position}</div>
+        <div className="mt-2">
+          <SignatoryBlock
+            user={signatories.approval_user}
+            name={signatories.approval ?? ""}
+            position={signatories.approval_position ?? ""}
+          />
+        </div>
       </div>
 
       {/* Footer info */}
@@ -258,7 +311,7 @@ export const BulkPrintNosa = React.forwardRef<
           @media print {
             @page {
               size: A4;
-              margin: 15mm;
+              margin: ${PRINT_MARGIN};
             }
             .bulk-print-nosa .invisible {
               visibility: visible !important;

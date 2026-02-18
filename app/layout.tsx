@@ -52,7 +52,7 @@ export default async function RootLayout({
 
       const { data: systemUsers, error: error2 } = await supabase
         .from('hrm_users')
-        .select()
+        .select('*, hrm_positions:position_id(name)')
       // .eq('status', 'Active')
 
       if (error2) {
