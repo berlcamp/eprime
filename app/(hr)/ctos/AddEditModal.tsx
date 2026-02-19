@@ -1,66 +1,66 @@
-import { CustomButton } from '@/components/index'
-import { useFilter } from '@/context/FilterContext'
-import { useSupabase } from '@/context/SupabaseProvider'
-import { generateReferenceCode } from '@/utils/text-helper'
-import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { CustomButton } from "@/components/index";
+import { useFilter } from "@/context/FilterContext";
+import { useSupabase } from "@/context/SupabaseProvider";
+import { generateReferenceCode } from "@/utils/text-helper";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 
 // Types
-import type { CtoTypes } from '@/types'
+import type { CtoTypes } from "@/types";
 
 // Redux imports
-import { updateList } from '@/GlobalRedux/Features/listSlice'
-import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { logError } from '@/utils/fetchApi'
-import { useDispatch, useSelector } from 'react-redux'
+import { updateList } from "@/GlobalRedux/Features/listSlice";
+import { updateResultCounter } from "@/GlobalRedux/Features/resultsCounterSlice";
+import { logError } from "@/utils/fetchApi";
+import { useDispatch, useSelector } from "react-redux";
 
 interface ModalProps {
-  hideModal: () => void
-  editData: CtoTypes | null
+  hideModal: () => void;
+  editData: CtoTypes | null;
 }
 
 const AddEditModal = ({ hideModal, editData }: ModalProps) => {
-  const { setToast } = useFilter()
-  const { supabase } = useSupabase()
-  const [saving, setSaving] = useState(false)
+  const { setToast } = useFilter();
+  const { supabase } = useSupabase();
+  const [saving, setSaving] = useState(false);
 
-  const [totalHours, setTotalHours] = useState('')
-  const [cocEquivalent, setCocEquivalent] = useState('')
-  const [isHolidayChecked, setIsHolidayChecked] = useState(false)
+  const [totalHours, setTotalHours] = useState("");
+  const [cocEquivalent, setCocEquivalent] = useState("");
+  const [isHolidayChecked, setIsHolidayChecked] = useState(false);
 
   // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
-  const resultsCounter = useSelector((state: any) => state.results.value)
-  const dispatch = useDispatch()
+  const globallist = useSelector((state: any) => state.list.value);
+  const resultsCounter = useSelector((state: any) => state.results.value);
+  const dispatch = useDispatch();
 
   const {
     register,
     formState: { errors },
     reset,
-    handleSubmit
+    handleSubmit,
   } = useForm<CtoTypes>({
-    mode: 'onSubmit'
-  })
+    mode: "onSubmit",
+  });
 
   const onSubmit = async (formdata: CtoTypes) => {
-    if (saving) return
+    if (saving) return;
 
-    setSaving(true)
+    setSaving(true);
 
     if (editData) {
-      void handleUpdate(formdata)
+      void handleUpdate(formdata);
     } else {
-      void handleCreate(formdata)
+      void handleCreate(formdata);
     }
-  }
+  };
 
   const handleCreate = async (formdata: CtoTypes) => {
     const coc = isHolidayChecked
       ? Number(formdata.total_hours) * 0.1875
-      : Number(formdata.total_hours) * 0.125
+      : Number(formdata.total_hours) * 0.125;
 
-    const expireDate = new Date(formdata.date_issued)
-    expireDate.setFullYear(expireDate.getFullYear() + 1)
+    const expireDate = new Date(formdata.date_issued);
+    expireDate.setFullYear(expireDate.getFullYear() + 1);
 
     const newData = {
       reference_code: generateReferenceCode(),
@@ -73,32 +73,32 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       is_holiday: isHolidayChecked,
       expiration: expireDate,
       coc,
-      org_id: process.env.NEXT_PUBLIC_ORG_ID
-    }
+      org_id: process.env.NEXT_PUBLIC_ORG_ID,
+    };
 
-    let newId
+    let newId;
 
     try {
       const { data, error } = await supabase
-        .from('hrm_ctos')
+        .from("hrm_ctos")
         .insert(newData)
-        .select()
+        .select();
 
       if (error) {
         void logError(
-          'Create CTO',
-          'hrm_ctos',
+          "Create CTO",
+          "hrm_ctos",
           JSON.stringify(newData),
-          error.message
-        )
+          error.message,
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again.",
+        );
+        throw new Error(error.message);
       }
 
-      newId = data[0].id // newly created ID
+      newId = data[0].id; // newly created ID
 
       // Append new data in redux
       const updatedData = {
@@ -107,42 +107,42 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         to: formdata.to,
         date_issued: formdata.date_issued,
         hrm_cto_users: [],
-        id: newId
-      }
-      dispatch(updateList([updatedData, ...globallist]))
+        id: newId,
+      };
+      dispatch(updateList([updatedData, ...globallist]));
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
       // Updating showing text in redux
       dispatch(
         updateResultCounter({
           showing: Number(resultsCounter.showing) + 1,
-          results: Number(resultsCounter.results) + 1
-        })
-      )
+          results: Number(resultsCounter.results) + 1,
+        }),
+      );
 
-      setSaving(false)
+      setSaving(false);
 
       // hide the modal
-      hideModal()
+      hideModal();
 
       // reset all form fields
-      reset()
+      reset();
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleUpdate = async (formdata: CtoTypes) => {
-    if (!editData) return
+    if (!editData) return;
 
     const coc = isHolidayChecked
       ? Number(formdata.total_hours) * 0.1875
-      : Number(formdata.total_hours) * 0.125
+      : Number(formdata.total_hours) * 0.125;
 
-    const expireDate = new Date(formdata.date_issued)
-    expireDate.setFullYear(expireDate.getFullYear() + 1)
+    const expireDate = new Date(formdata.date_issued);
+    expireDate.setFullYear(expireDate.getFullYear() + 1);
 
     const newData = {
       from: new Date(formdata.from), // use the string data before storing the redux to avoid error
@@ -153,118 +153,118 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       so_number: formdata.so_number,
       is_holiday: isHolidayChecked,
       expiration: expireDate,
-      coc
-    }
+      coc,
+    };
 
     try {
       const { error } = await supabase
-        .from('hrm_ctos')
+        .from("hrm_ctos")
         .update(newData)
-        .eq('id', editData.id)
+        .eq("id", editData.id);
 
       if (error) {
         void logError(
-          'Update CTO',
-          'hrm_ctos',
+          "Update CTO",
+          "hrm_ctos",
           JSON.stringify(newData),
-          error.message
-        )
+          error.message,
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the `page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the `page and try again.",
+        );
+        throw new Error(error.message);
       }
 
       // update coc  of user ctos
       const { error: error2 } = await supabase
-        .from('hrm_cto_users')
+        .from("hrm_cto_users")
         .update({
-          coc
+          coc,
         })
-        .eq('cto_id', editData.id)
+        .eq("cto_id", editData.id);
 
       if (error2) {
         void logError(
-          'Update CTO Users',
-          'hrm_cto_users',
+          "Update CTO Users",
+          "hrm_cto_users",
           JSON.stringify({ coc }),
-          error2.message
-        )
+          error2.message,
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error2.message)
+          "error",
+          "Saving failed, please reload the page and try again.",
+        );
+        throw new Error(error2.message);
       }
 
       // Update data in redux
-      const items = [...globallist]
+      const items = [...globallist];
       const updatedData = {
         ...newData,
         from: formdata.from,
         to: formdata.to,
         date_issued: formdata.date_issued,
-        id: editData.id
-      }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
+        id: editData.id,
+      };
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+      items[foundIndex] = { ...items[foundIndex], ...updatedData };
+      dispatch(updateList(items));
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
-      setSaving(false)
+      setSaving(false);
 
       // hide the modal
-      hideModal()
+      hideModal();
 
       // reset all form fields
-      reset()
+      reset();
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleHoursChange = (hours: string) => {
-    const perHour = isHolidayChecked ? 0.1875 : 0.125
-    const coc = Number(hours) * perHour
-    setCocEquivalent(`(Equivalent COC: ${coc})`)
-    setTotalHours(hours)
-  }
+    const perHour = isHolidayChecked ? 0.1875 : 0.125;
+    const coc = Number(hours) * perHour;
+    setCocEquivalent(`(Equivalent COC: ${coc})`);
+    setTotalHours(hours);
+  };
 
   const handleHolidyCheckboxChange = () => {
-    const perHour = !isHolidayChecked ? 0.1875 : 0.125
-    const coc = Number(totalHours) * perHour
-    setCocEquivalent(`(Equivalent COC: ${coc})`)
+    const perHour = !isHolidayChecked ? 0.1875 : 0.125;
+    const coc = Number(totalHours) * perHour;
+    setCocEquivalent(`(Equivalent COC: ${coc})`);
 
-    setIsHolidayChecked(!isHolidayChecked)
-  }
+    setIsHolidayChecked(!isHolidayChecked);
+  };
 
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
   useEffect(() => {
     if (editData) {
-      setTotalHours(editData.total_hours)
-      setIsHolidayChecked(editData.is_holiday)
+      setTotalHours(editData.total_hours);
+      setIsHolidayChecked(editData.is_holiday);
 
-      const perHour = editData.is_holiday ? 0.1875 : 0.125
-      const coc = Number(editData.total_hours) * perHour
-      setCocEquivalent(`(Equivalent COC: ${coc})`)
+      const perHour = editData.is_holiday ? 0.1875 : 0.125;
+      const coc = Number(editData.total_hours) * perHour;
+      setCocEquivalent(`(Equivalent COC: ${coc})`);
     }
 
     reset({
-      from: editData ? editData.from : '',
-      so_number: editData ? editData.so_number : '',
-      to: editData ? editData.to : '',
-      date_issued: editData ? editData.date_issued : '',
-      expiration: editData ? editData.expiration : '',
-      hours: editData ? editData.hours : '',
-      days: editData ? editData.days : '',
-      total_hours: editData ? editData.total_hours : '',
-      particulars: editData ? editData.particulars : '',
-      coc: editData ? editData.coc : ''
-    })
-  }, [editData, reset])
+      from: editData ? editData.from : "",
+      so_number: editData ? editData.so_number : "",
+      to: editData ? editData.to : "",
+      date_issued: editData ? editData.date_issued : "",
+      expiration: editData ? editData.expiration : "",
+      hours: editData ? editData.hours : "",
+      days: editData ? editData.days : "",
+      total_hours: editData ? editData.total_hours : "",
+      particulars: editData ? editData.particulars : "",
+      coc: editData ? editData.coc : "",
+    });
+  }, [editData, reset]);
 
   return (
     <>
@@ -288,7 +288,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                   <div className="app__label_standard">SO Number</div>
                   <div>
                     <input
-                      {...register('so_number', { required: true })}
+                      {...register("so_number", { required: true })}
                       className="app__input_standard"
                     />
                     {errors.from && (
@@ -304,7 +304,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                   <div className="app__label_standard">Date Issued</div>
                   <div>
                     <input
-                      {...register('date_issued', { required: true })}
+                      {...register("date_issued", { required: true })}
                       type="date"
                       className="app__select_standard"
                     />
@@ -321,7 +321,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                   <div className="app__label_standard">Work Date (From) </div>
                   <div>
                     <input
-                      {...register('from', { required: true })}
+                      {...register("from", { required: true })}
                       type="date"
                       className="app__select_standard"
                     />
@@ -338,7 +338,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                   <div className="app__label_standard">Work Date (To) </div>
                   <div>
                     <input
-                      {...register('to', { required: true })}
+                      {...register("to", { required: true })}
                       type="date"
                       className="app__select_standard"
                     />
@@ -368,12 +368,12 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">
-                    Total Hours of work rendered{' '}
+                    Total Hours of work rendered{" "}
                     <span className="text-green-600">{cocEquivalent}</span>
                   </div>
                   <div>
                     <input
-                      {...register('total_hours', { required: true })}
+                      {...register("total_hours", { required: true })}
                       type="number"
                       value={totalHours}
                       onChange={(e) => handleHoursChange(e.target.value)}
@@ -392,7 +392,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                   <div className="app__label_standard">Particulars</div>
                   <div>
                     <textarea
-                      {...register('particulars', { required: true })}
+                      {...register("particulars", { required: true })}
                       rows={5}
                       className="app__select_standard"
                     />
@@ -409,7 +409,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                 <div className="app__label_standard">
                   <label className="flex items-center space-x-1">
                     <input
-                      {...register('confirmed', { required: true })}
+                      {...register("confirmed", { required: true })}
                       type="checkbox"
                       className=""
                     />
@@ -430,7 +430,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                 <CustomButton
                   btnType="submit"
                   isDisabled={saving}
-                  title={saving ? 'Saving...' : 'Save'}
+                  title={saving ? "Saving..." : "Save"}
                   containerStyles="app__btn_green"
                 />
               </div>
@@ -439,7 +439,7 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default AddEditModal
+export default AddEditModal;

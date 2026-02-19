@@ -84,8 +84,13 @@ export default function ConfirmApproveModal({
               <div className="w-full">
                 <div className="app__label_standard">COC:</div>
                 <input
+                  type="number"
+                  min={0}
                   value={cocBal}
-                  onChange={(e) => setCocBal(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    if (val === '' || !val.startsWith('-')) setCocBal(val)
+                  }}
                   className="app__select_standard"
                 />
               </div>
