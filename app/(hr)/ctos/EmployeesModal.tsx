@@ -26,6 +26,7 @@ import { useDispatch, useSelector } from 'react-redux'
 // Types
 import type { CtoTypes, CtoUserTypes, Employee } from '@/types'
 import { logError } from '@/utils/fetchApi'
+import { isCtoExpired } from '@/lib/utils'
 import { format } from 'date-fns'
 import ConfirmApproveModal from './ConfirmApproveModal'
 import Remarks from './Remarks'
@@ -85,8 +86,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
       reference_code: refCode,
       is_approved: false,
       coc: Number(ctoData.coc),
-      expiration: ctoData.expiration,
-      status: ctoData.status
+      expiration: ctoData.expiration
     }
 
     try {
@@ -97,7 +97,10 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
 
       if (error) throw new Error(error.message)
 
-      const updatedData = { ...newData, hrm_users: user, id: data[0].id }
+      const updatedData = {
+        ...data[0],
+        hrm_users: user
+      } as CtoUserTypes
 
       // add to list
       setList([updatedData, ...list])
@@ -376,7 +379,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
               />
             </div>
 
-            {ctoData.status !== 'Expired' && (
+            {!isCtoExpired(ctoData.expiration) && (
               <div className="mx-4 my-4">
                 <div className="w-full">
                   <div className="app__form_field_container">
@@ -551,7 +554,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                             </div>
                           </td>
                           <td className="hidden md:table-cell app__td">
-                            {ctoData.status !== 'Expired' &&
+                            {!isCtoExpired(ctoData.expiration) &&
                               !item.is_approved &&
                               hasAccess('cto_sc_approver') && (
                                 <CustomButton
@@ -563,7 +566,7 @@ const EmployeesModal = ({ hideModal, ctoData }: ModalProps) => {
                               )}
                           </td>
                           <td className="hidden md:table-cell app__td">
-                            {ctoData.status !== 'Expired' &&
+                            {!isCtoExpired(ctoData.expiration) &&
                               hasAccess('cto_sc_approver') && (
                                 <Remarks cto={item} />
                               )}

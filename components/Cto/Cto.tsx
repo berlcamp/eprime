@@ -8,9 +8,11 @@ import {
   Title,
 } from "@/components/index";
 import { useSupabase } from "@/context/SupabaseProvider";
+import { isCtoExpired } from "@/lib/utils";
 import { fetchMyCtos } from "@/utils/fetchApi";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
+
 import UploadModal from "./UploadModal";
 
 // Types
@@ -111,7 +113,7 @@ export default function Cto({ userId }: { userId: string }) {
       if (result.data) {
         const ctos: CtoUserTypes[] = result.data;
         ctos.forEach((cto) => {
-          if (cto.status !== "Expired" && cto.is_approved) {
+          if (!isCtoExpired(cto.expiration) && cto.is_approved) {
             bal += cto.coc;
           }
         });
@@ -224,7 +226,7 @@ export default function Cto({ userId }: { userId: string }) {
                             <span className="app_td_mobile_label">
                               Expiration Status:{" "}
                             </span>
-                            {item.hrm_ctos?.status === "Expired" ? (
+                            {isCtoExpired(item.expiration) ? (
                               <span className="app__status_container_red">
                                 Expired
                               </span>
@@ -242,22 +244,14 @@ export default function Cto({ userId }: { userId: string }) {
                       <div className="font-semibold">{item.coc}</div>
                     </td>
                     <td className="hidden md:table-cell app__td">
-                      {item.hrm_ctos?.status === "Expired" ? (
-                        <span className="app__status_container_red">
-                          Expired
+                      {item.is_approved ? (
+                        <span className="app__status_container_green">
+                          Approved
                         </span>
                       ) : (
-                        <>
-                          {item.is_approved ? (
-                            <span className="app__status_container_green">
-                              Approved
-                            </span>
-                          ) : (
-                            <span className="app__status_container_orange">
-                              Pending&nbsp;Approval
-                            </span>
-                          )}
-                        </>
+                        <span className="app__status_container_orange">
+                          Pending&nbsp;Approval
+                        </span>
                       )}
                     </td>
                     <td className="hidden md:table-cell app__td">
@@ -282,7 +276,7 @@ export default function Cto({ userId }: { userId: string }) {
                       </div>
                     </td>
                     <td className="hidden md:table-cell app__td">
-                      {item.hrm_ctos?.status !== "Expired" &&
+                      {!isCtoExpired(item.expiration) &&
                         userId === session?.user.id && (
                           <CustomButton
                             btnType="button"
@@ -293,7 +287,7 @@ export default function Cto({ userId }: { userId: string }) {
                         )}
                     </td>
                     <td className="hidden md:table-cell app__td">
-                      {item.hrm_ctos?.status === "Expired" ? (
+                      {isCtoExpired(item.expiration) ? (
                         <span className="app__status_container_red">
                           Expired
                         </span>

@@ -23,6 +23,7 @@ import {
   PencilSquareIcon,
   TrashIcon
 } from '@heroicons/react/20/solid'
+import { isCtoExpired } from '@/lib/utils'
 import { format } from 'date-fns'
 import React, { Fragment, useEffect, useState } from 'react'
 import AddEditModal from './AddEditModal'
@@ -421,7 +422,7 @@ const Page: React.FC = () => {
                           btnType="button"
                           handleClick={() => handleManageEmployees(item)}
                         />
-                        {item.status !== 'Expired' &&
+                        {!isCtoExpired(item.expiration) &&
                           countPending(item.hrm_cto_users ?? null) > 0 && (
                             <div className="text-red-500 font-semibold text-[10px]">
                               For Approval(
@@ -439,7 +440,7 @@ const Page: React.FC = () => {
                         </div>
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        {item.status !== 'Expired' ? (
+                        {!isCtoExpired(item.expiration) ? (
                           <span className="app__status_green">Active</span>
                         ) : (
                           <span className="app__status_orange">Expired</span>

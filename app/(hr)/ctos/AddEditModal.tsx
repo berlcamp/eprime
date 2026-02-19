@@ -72,7 +72,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       so_number: formdata.so_number,
       is_holiday: isHolidayChecked,
       expiration: expireDate,
-      status: expireDate <= new Date() ? 'Expired' : null,
       coc,
       org_id: process.env.NEXT_PUBLIC_ORG_ID
     }
@@ -154,7 +153,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       so_number: formdata.so_number,
       is_holiday: isHolidayChecked,
       expiration: expireDate,
-      status: expireDate <= new Date() ? 'Expired' : null,
       coc
     }
 

@@ -70,13 +70,12 @@ export default function LeaveBalanceBoxes({ user, refresh }: ModalProps) {
           .gt("coc", 0);
 
         if (ctos) {
+          // Query already filters by .gte("expiration", today) - rely on expiration, not status
           ctos.forEach((cto: CtoUserTypes) => {
-            if (cto.status !== "Expired") {
-              balances.push({
-                type: `COC (Exp. ${cto.expiration})`,
-                balance: cto.coc.toString(),
-              });
-            }
+            balances.push({
+              type: `COC (Exp. ${cto.expiration})`,
+              balance: cto.coc.toString(),
+            });
           });
         }
 

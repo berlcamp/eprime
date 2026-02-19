@@ -1,0 +1,1 @@
+{"sessionId":"0a91b8","runId":"post-fix","location":"DetailsModal.tsx:605","message":"CTO used_coc update","data":{"user_cto_id":476,"userCto_coc":1.3,"userCto_used_coc":0,"use_coc":"1","newCocValue":0.30000000000000004,"newUsedCocValue":"01","formula":"(used_coc??0)+use_coc"},"timestamp":1771464177267,"hypothesisId":"A"}

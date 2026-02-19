@@ -135,7 +135,7 @@ export default function DetailsModal({
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const user: Employee = systemUsers.find(
-    (user: Employee) => user.id === session?.user.id
+    (user: Employee) => user.id === session?.user.id,
   );
 
   // Redux staff
@@ -211,7 +211,7 @@ export default function DetailsModal({
           }
           return accumulator;
         },
-        []
+        [],
       );
 
       const notificationData: any[] = [];
@@ -253,7 +253,7 @@ export default function DetailsModal({
 
     if (action === "Recommend Approval") {
       setConfirmMessage(
-        "Are you sure you want to recommend this for approval?"
+        "Are you sure you want to recommend this for approval?",
       );
     }
     if (action === "Approve") {
@@ -261,7 +261,7 @@ export default function DetailsModal({
     }
     if (action === "For Reverification") {
       setConfirmMessage(
-        'Are you sure you want to change this to "For Reverification?"'
+        'Are you sure you want to change this to "For Reverification?"',
       );
     }
     if (action === "Disapprove") {
@@ -334,11 +334,11 @@ export default function DetailsModal({
           "Forward Request",
           "hrm_request_trackers",
           JSON.stringify(newData),
-          error.message
+          error.message,
         );
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
       }
@@ -355,11 +355,11 @@ export default function DetailsModal({
           "Forward Request Flow",
           "hrm_tracker_flow",
           "",
-          error2.message
+          error2.message,
         );
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(error2.message);
       }
@@ -410,11 +410,11 @@ export default function DetailsModal({
           "Approval",
           "hrm_request_trackers",
           JSON.stringify(newData),
-          error.message
+          error.message,
         );
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
       }
@@ -445,7 +445,7 @@ export default function DetailsModal({
             "Approval Flow Logs",
             "hrm_tracker_flow",
             "",
-            error2.message
+            error2.message,
           );
         }
       }
@@ -572,7 +572,7 @@ export default function DetailsModal({
             "Leave request - fetch leave coc records",
             "hrm_leave_coc",
             "",
-            leaveError.message
+            leaveError.message,
           );
           throw new Error(leaveError.message);
         }
@@ -596,39 +596,14 @@ export default function DetailsModal({
               "Leave request - fetch current CTO user",
               "hrm_cto_users",
               user_cto_id,
-              fetchCtoError?.message || "CTO user not found"
+              fetchCtoError?.message || "CTO user not found",
             );
             throw new Error(fetchCtoError?.message || "CTO user not found");
           }
 
           const newCocValue = userCto.coc - use_coc;
-          const newUsedCocValue = (userCto.used_coc ?? 0) - use_coc;
-
-          // #region agent log
-          fetch("http://127.0.0.1:7243/ingest/eb278b9e-6990-45a4-b4e9-87fdbf9babdd", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Debug-Session-Id": "0a91b8",
-            },
-            body: JSON.stringify({
-              sessionId: "0a91b8",
-              location: "DetailsModal.tsx:605",
-              message: "CTO used_coc update",
-              data: {
-                user_cto_id,
-                userCto_coc: userCto.coc,
-                userCto_used_coc: userCto.used_coc,
-                use_coc,
-                newCocValue,
-                newUsedCocValue,
-                formula: "(used_coc??0)-use_coc",
-              },
-              timestamp: Date.now(),
-              hypothesisId: "A",
-            }),
-          }).catch(() => {});
-          // #endregion
+          const newUsedCocValue =
+            (Number(userCto.used_coc) || 0) + Number(use_coc);
 
           totalCredits += Number(use_coc);
           usedCredits.push(`COC (${use_coc})`);
@@ -643,7 +618,7 @@ export default function DetailsModal({
               "Leave request - update CTO user balance",
               "hrm_cto_users",
               user_cto_id,
-              updateError.message
+              updateError.message,
             );
             throw new Error(updateError.message);
           }
@@ -668,7 +643,7 @@ export default function DetailsModal({
             "Leave request - add to leave card",
             "hrm_leave_cards",
             "",
-            error.message
+            error.message,
           );
           throw new Error(error.message);
         }
@@ -695,7 +670,7 @@ export default function DetailsModal({
               "Create service record from Leave",
               "hrm_service_records",
               JSON.stringify(newData),
-              insertSRError.message
+              insertSRError.message,
             );
           }
 
@@ -713,7 +688,7 @@ export default function DetailsModal({
               "Update step_increment_leave_days during leave",
               "hrm_users",
               "",
-              updateUserError.message
+              updateUserError.message,
             );
           }
         }
@@ -766,11 +741,11 @@ export default function DetailsModal({
           "For Reverification",
           "hrm_request_trackers",
           JSON.stringify(newData),
-          error.message
+          error.message,
         );
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
       }
@@ -801,7 +776,7 @@ export default function DetailsModal({
             "Approval Flow Logs",
             "hrm_tracker_flow",
             "",
-            error2.message
+            error2.message,
           );
         }
       }
@@ -852,11 +827,11 @@ export default function DetailsModal({
           "Approval Recommended",
           "hrm_request_trackers",
           JSON.stringify(newData),
-          error.message
+          error.message,
         );
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
       }
@@ -887,7 +862,7 @@ export default function DetailsModal({
             "Approval Recommended Flow Logs",
             "hrm_tracker_flow",
             "",
-            error2.message
+            error2.message,
           );
         }
       }
@@ -936,11 +911,11 @@ export default function DetailsModal({
           "Cancel Request",
           "hrm_request_trackers",
           JSON.stringify(newData),
-          error.message
+          error.message,
         );
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
       }
@@ -971,7 +946,7 @@ export default function DetailsModal({
             "Cancel Request Flow Logs",
             "hrm_tracker_flow",
             "",
-            error2.message
+            error2.message,
           );
         }
       }
@@ -1017,11 +992,11 @@ export default function DetailsModal({
           "Disapproved",
           "hrm_request_trackers",
           JSON.stringify(newData),
-          error.message
+          error.message,
         );
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
       }
@@ -1037,7 +1012,7 @@ export default function DetailsModal({
         void logError("Disapproved", "hrm_tracker_flow", "", error2.message);
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(error2.message);
       }
@@ -1081,7 +1056,7 @@ export default function DetailsModal({
         "Disapproved - delete leave dates",
         "hrm_leave_days",
         "",
-        error3.message
+        error3.message,
       );
       setToast("error", "Saving failed, please reload the page and try again.");
     }
@@ -1109,8 +1084,8 @@ export default function DetailsModal({
       acceptedFiles.map((file) =>
         Object.assign(file, {
           filename: file.name,
-        })
-      )
+        }),
+      ),
     );
   }, []);
 
@@ -1146,12 +1121,12 @@ export default function DetailsModal({
         }
 
         return { name: file.name };
-      })
+      }),
     );
 
     // Filter out failed uploads and update attachments
     const successfulUploads = uploads.filter(
-      (file): file is { name: string } => file !== null
+      (file): file is { name: string } => file !== null,
     );
     newAttachments.push(...successfulUploads);
 
@@ -1164,7 +1139,7 @@ export default function DetailsModal({
 
   const deleteFile = (file: FileWithPath) => {
     const files = selectedImages.filter(
-      (f: FileWithPath) => f.path !== file.path
+      (f: FileWithPath) => f.path !== file.path,
     );
     setSelectedImages(files);
   };
@@ -1480,9 +1455,8 @@ export default function DetailsModal({
                         <td>
                           <span className="font-medium text-sm">
                             {documentData.reference_code}
-                            {session?.user.id ===
-                              "1a8173ad-f4c5-4869-a587-7466a1d6e951" &&
-                              documentData.id}
+                            {session?.user.email === "berlcamp@gmail.com" &&
+                              ` - ${documentData.id}`}
                           </span>
                         </td>
                       </tr>
@@ -1532,10 +1506,10 @@ export default function DetailsModal({
                                             .sort(
                                               (a, b) =>
                                                 new Date(a.date).getTime() -
-                                                new Date(b.date).getTime()
-                                            )[0].date
+                                                new Date(b.date).getTime(),
+                                            )[0].date,
                                         ),
-                                        "MMM d, yyyy"
+                                        "MMM d, yyyy",
                                       )}
                                     </span>
                                     to{" "}
@@ -1547,12 +1521,12 @@ export default function DetailsModal({
                                             .sort(
                                               (a, b) =>
                                                 new Date(a.date).getTime() -
-                                                new Date(b.date).getTime()
+                                                new Date(b.date).getTime(),
                                             )[
                                             documentData.leave_dates.length - 1
-                                          ].date
+                                          ].date,
                                         ),
-                                        "MMM d, yyyy"
+                                        "MMM d, yyyy",
                                       )}
                                     </span>
                                   </span>
@@ -1564,7 +1538,7 @@ export default function DetailsModal({
                                     >
                                       {format(
                                         new Date(day.date),
-                                        "MMM d, yyyy"
+                                        "MMM d, yyyy",
                                       )}
                                     </span>
                                   ))
@@ -1682,7 +1656,7 @@ export default function DetailsModal({
                             <td className="text-sm font-medium">
                               {format(
                                 new Date(documentData.locator_slip_date),
-                                "MMMM dd, yyyy"
+                                "MMMM dd, yyyy",
                               )}
                               {" - "}
                               {documentData.locator_slip_time}
@@ -1696,9 +1670,9 @@ export default function DetailsModal({
                               {documentData.locator_slip_return_date &&
                                 format(
                                   new Date(
-                                    documentData.locator_slip_return_date
+                                    documentData.locator_slip_return_date,
                                   ),
-                                  "MMMM dd, yyyy"
+                                  "MMMM dd, yyyy",
                                 )}
                               {" - "}
                               {documentData.locator_slip_return_time}
@@ -1776,7 +1750,7 @@ export default function DetailsModal({
                                 <td className="text-sm font-medium">
                                   {format(
                                     new Date(documentData.pass_slip_date),
-                                    "MMMM dd, yyyy"
+                                    "MMMM dd, yyyy",
                                   )}
                                 </td>
                               </tr>
@@ -1878,7 +1852,7 @@ export default function DetailsModal({
                             <td className="text-sm font-medium">
                               {format(
                                 new Date(documentData.travel_from),
-                                "MMMM dd, yyyy"
+                                "MMMM dd, yyyy",
                               )}
                             </td>
                           </tr>
@@ -1889,7 +1863,7 @@ export default function DetailsModal({
                             <td className="text-sm font-medium">
                               {format(
                                 new Date(documentData.travel_to),
-                                "MMMM dd, yyyy"
+                                "MMMM dd, yyyy",
                               )}
                             </td>
                           </tr>
@@ -1953,7 +1927,7 @@ export default function DetailsModal({
                           <div className="text-gray-500 text-[10px]">
                             {format(
                               new Date(documentData.created_at),
-                              "dd MMM yyyy h:mm a"
+                              "dd MMM yyyy h:mm a",
                             )}
                           </div>
                           <UserBlock user={documentData.creator} />
