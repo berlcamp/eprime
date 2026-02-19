@@ -311,15 +311,16 @@ export default function Trainings({ userId }: { userId: string }) {
                             <div>
                               <input
                                 type="number"
-                                step="any"
+                                min={0.01}
+                                step="0.01"
                                 value={item.hours}
-                                onChange={(e) =>
-                                  handleInlineEdit(
-                                    index,
-                                    e.target.value,
-                                    'hours'
-                                  )
-                                }
+                                onChange={(e) => {
+                                  const val = e.target.value
+                                  const num = Number(val)
+                                  if (val !== '' && (isNaN(num) || num <= 0))
+                                    return
+                                  handleInlineEdit(index, val, 'hours')
+                                }}
                                 className="utline-none focus:outline-none focus:ring-0 inline-flex"
                               />
                             </div>
@@ -333,15 +334,16 @@ export default function Trainings({ userId }: { userId: string }) {
                             <div>
                               <input
                                 type="number"
-                                step="any"
+                                min={0.01}
+                                step="0.01"
                                 value={item.cpd_units}
-                                onChange={(e) =>
-                                  handleInlineEdit(
-                                    index,
-                                    e.target.value,
-                                    'cpd_units'
-                                  )
-                                }
+                                onChange={(e) => {
+                                  const val = e.target.value
+                                  const num = Number(val)
+                                  if (val !== '' && (isNaN(num) || num <= 0))
+                                    return
+                                  handleInlineEdit(index, val, 'cpd_units')
+                                }}
                                 className="utline-none focus:outline-none focus:ring-0 inline-flex"
                               />
                             </div>
@@ -474,21 +476,36 @@ export default function Trainings({ userId }: { userId: string }) {
                           Number of Hours:
                         </div>
                         <input
-                          {...register('hours', { required: true })}
+                          {...register('hours', {
+                            required: true,
+                            min: {
+                              value: 0.01,
+                              message: 'Must be greater than 0',
+                            },
+                          })}
                           type="number"
+                          min={0.01}
+                          step="0.01"
                           className="app__input_standard"
                         />
                         {errors.hours && (
                           <div className="app__error_message">
-                            Number of Hours is required
+                            {errors.hours.message ?? 'Number of Hours is required'}
                           </div>
                         )}
                       </div>
                       <div className="mb-2 w-full">
                         <div className="app__label_standard">CPD Units:</div>
                         <input
-                          {...register('cpd_units')}
+                          {...register('cpd_units', {
+                            min: {
+                              value: 0.01,
+                              message: 'Must be greater than 0',
+                            },
+                          })}
                           type="number"
+                          min={0.01}
+                          step="0.01"
                           className="app__input_standard"
                         />
                       </div>

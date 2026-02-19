@@ -279,9 +279,15 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       </div>
                       <div>
                         <input
-                          {...register('total_applicants')}
+                          {...register('total_applicants', {
+                            min: {
+                              value: 1,
+                              message: 'Must be at least 1',
+                            },
+                          })}
                           type="number"
-                          step="any"
+                          min={1}
+                          step="1"
                           className="app__input_standard"
                         />
                       </div>
@@ -294,8 +300,14 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       </div>
                       <div>
                         <input
-                          {...register('unit_cost')}
+                          {...register('unit_cost', {
+                            min: {
+                              value: 0.01,
+                              message: 'Must be greater than 0',
+                            },
+                          })}
                           type="number"
+                          min={0.01}
                           step="any"
                           className="app__input_standard"
                         />
@@ -309,8 +321,14 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       </div>
                       <div>
                         <input
-                          {...register('time_spent_per_applicant')}
+                          {...register('time_spent_per_applicant', {
+                            min: {
+                              value: 0.01,
+                              message: 'Must be greater than 0',
+                            },
+                          })}
                           type="number"
+                          min={0.01}
                           step="any"
                           className="app__input_standard"
                         />

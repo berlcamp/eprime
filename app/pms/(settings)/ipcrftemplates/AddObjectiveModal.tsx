@@ -409,6 +409,7 @@ export const AddObjectiveModal = ({
                               className="app__input_standard"
                               placeholder="Weight"
                               type="number"
+                              min={1}
                               step="any"
                               {...field}
                             />

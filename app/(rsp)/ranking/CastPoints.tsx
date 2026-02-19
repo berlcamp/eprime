@@ -149,15 +149,20 @@ const CastPoints = ({
                         />
                         <input
                           type="number"
-                          step="any"
+                          min={1}
+                          step="1"
                           defaultValue={criteria.points}
                           placeholder="Points"
                           {...register(`cast.${idx}.points`, {
                             required: 'Points are required',
+                            min: {
+                              value: 1,
+                              message: 'Must be at least 1',
+                            },
                             max: {
                               value: criteria.max_points,
-                              message: `Points cannot exceed ${criteria.max_points}`
-                            }
+                              message: `Points cannot exceed ${criteria.max_points}`,
+                            },
                           })}
                           className="app__input_standard"
                         />

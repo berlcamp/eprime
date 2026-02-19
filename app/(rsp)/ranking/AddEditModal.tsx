@@ -758,13 +758,21 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
                       <div className="app__label_standard">Passing Score</div>
                       <div>
                         <input
-                          {...register('passing_score', { required: true })}
+                          {...register('passing_score', {
+                            required: true,
+                            min: {
+                              value: 0,
+                              message: 'Cannot be negative',
+                            },
+                          })}
                           type="number"
+                          min={0}
                           className="app__input_standard"
                         />
                         {errors.passing_score && (
                           <div className="app__error_message">
-                            Passing Score is required
+                            {errors.passing_score.message ??
+                              'Passing Score is required'}
                           </div>
                         )}
                       </div>

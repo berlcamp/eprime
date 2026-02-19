@@ -109,9 +109,14 @@ export default function EquivalentUnits({ documentData }: PropTypes) {
                   <>
                     <input
                       {...register('professional_study_units', {
-                        required: true
+                        required: true,
+                        min: {
+                          value: 0,
+                          message: 'Cannot be negative',
+                        },
                       })}
                       type="number"
+                      min={0}
                       step="any"
                       className="app__input_standard"
                     />
@@ -144,9 +149,14 @@ export default function EquivalentUnits({ documentData }: PropTypes) {
                   <>
                     <input
                       {...register('teaching_public_school_units', {
-                        required: true
+                        required: true,
+                        min: {
+                          value: 0,
+                          message: 'Cannot be negative',
+                        },
                       })}
                       type="number"
+                      min={0}
                       step="any"
                       className="app__input_standard"
                     />
@@ -179,9 +189,14 @@ export default function EquivalentUnits({ documentData }: PropTypes) {
                   <>
                     <input
                       {...register('teaching_private_school_units', {
-                        required: true
+                        required: true,
+                        min: {
+                          value: 0,
+                          message: 'Cannot be negative',
+                        },
                       })}
                       type="number"
+                      min={0}
                       step="any"
                       className="app__input_standard"
                     />
@@ -216,9 +231,14 @@ export default function EquivalentUnits({ documentData }: PropTypes) {
                   <>
                     <input
                       {...register('supervisory_public_school_units', {
-                        required: true
+                        required: true,
+                        min: {
+                          value: 0,
+                          message: 'Cannot be negative',
+                        },
                       })}
                       type="number"
+                      min={0}
                       step="any"
                       className="app__input_standard"
                     />
@@ -255,9 +275,14 @@ export default function EquivalentUnits({ documentData }: PropTypes) {
                   <>
                     <input
                       {...register('supervisory_private_school_units', {
-                        required: true
+                        required: true,
+                        min: {
+                          value: 0,
+                          message: 'Cannot be negative',
+                        },
                       })}
                       type="number"
+                      min={0}
                       step="any"
                       className="app__input_standard"
                     />
@@ -290,9 +315,14 @@ export default function EquivalentUnits({ documentData }: PropTypes) {
                   <>
                     <input
                       {...register('seminars_units', {
-                        required: true
+                        required: true,
+                        min: {
+                          value: 0,
+                          message: 'Cannot be negative',
+                        },
                       })}
                       type="number"
+                      min={0}
                       step="any"
                       className="app__input_standard"
                     />

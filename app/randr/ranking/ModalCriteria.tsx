@@ -228,7 +228,7 @@ export const ModalCriteria = ({ isOpen, onClose, editData }: ModalProps) => {
                             <Input
                               className="app__input_standard"
                               placeholder="Title"
-                              min={0}
+                              min={1}
                               max={100}
                               type="number"
                               {...field}

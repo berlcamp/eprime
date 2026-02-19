@@ -255,14 +255,21 @@ export default function LeaveCard({ userId, userData }: PageProps) {
                 <div className="mb-2 w-full">
                   <div className="app__label_standard">Updated Balance:</div>
                   <input
-                    {...register('balance', { required: true })}
+                    {...register('balance', {
+                      required: true,
+                      min: {
+                        value: 0,
+                        message: 'Cannot be negative',
+                      },
+                    })}
                     type="number"
+                    min={0}
                     step="any"
                     className="app__input_standard"
                   />
                   {errors.balance && (
                     <div className="app__error_message">
-                      Update Balance is required
+                      {errors.balance.message ?? 'Update Balance is required'}
                     </div>
                   )}
                 </div>

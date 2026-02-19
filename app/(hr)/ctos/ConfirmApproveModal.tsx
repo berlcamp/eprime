@@ -31,6 +31,8 @@ export default function ConfirmApproveModal({
   const [cocBal, setCocBal] = useState(coc)
 
   const handleConfirm = () => {
+    const num = Number(cocBal)
+    if (cocBal === '' || isNaN(num) || num <= 0) return
     onConfirm(expDate, cocBal)
   }
 
@@ -39,7 +41,10 @@ export default function ConfirmApproveModal({
       onCancel()
     }
     if (event.key === 'Enter') {
-      onConfirm(expDate, cocBal)
+      const num = Number(cocBal)
+      if (cocBal !== '' && !isNaN(num) && num > 0) {
+        onConfirm(expDate, cocBal)
+      }
     }
   }
 
@@ -85,11 +90,17 @@ export default function ConfirmApproveModal({
                 <div className="app__label_standard">COC:</div>
                 <input
                   type="number"
-                  min={0}
+                  min={0.01}
+                  step="0.01"
                   value={cocBal}
                   onChange={(e) => {
                     const val = e.target.value
-                    if (val === '' || !val.startsWith('-')) setCocBal(val)
+                    if (val === '') {
+                      setCocBal(val)
+                      return
+                    }
+                    const num = Number(val)
+                    if (!isNaN(num) && num > 0) setCocBal(val)
                   }}
                   className="app__select_standard"
                 />

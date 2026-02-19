@@ -192,9 +192,14 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
                       <div className="app__label_standard">Points:</div>
                       <input
                         {...register('points', {
-                          required: 'Points is required'
+                          required: 'Points is required',
+                          min: {
+                            value: 1,
+                            message: 'Must be at least 1',
+                          },
                         })}
                         type="number"
+                        min={1}
                         placeholder="Points"
                         className="app__input_standard"
                       />

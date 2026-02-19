@@ -356,13 +356,21 @@ export default function VoluntaryWork({ userId }: { userId: string }) {
                           Number of Hours:
                         </div>
                         <input
-                          {...register('hours', { required: true })}
+                          {...register('hours', {
+                            required: true,
+                            min: {
+                              value: 0.01,
+                              message: 'Must be greater than 0',
+                            },
+                          })}
                           type="number"
+                          min={0.01}
+                          step="0.01"
                           className="app__input_standard"
                         />
                         {errors.hours && (
                           <div className="app__error_message">
-                            Number of Hours is required
+                            {errors.hours.message ?? 'Number of Hours is required'}
                           </div>
                         )}
                       </div>

@@ -292,9 +292,15 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
                       </div>
                       <div>
                         <input
-                          {...register('days_without_pay')}
+                          {...register('days_without_pay', {
+                            min: {
+                              value: 0,
+                              message: 'Cannot be negative',
+                            },
+                          })}
                           type="number"
-                          step="any"
+                          min={0}
+                          step="1"
                           placeholder="No of Days Without Pay"
                           className="app__input_standard"
                         />

@@ -187,8 +187,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   }
 
   const handleHoursChange = (hours: string) => {
+    const num = Number(hours)
+    if (hours !== '' && (isNaN(num) || num <= 0)) return
     const perHour = !isHolidayChecked ? 0.15625 : 0.1875
-    const sc = Number(hours) * perHour
+    const sc = num * perHour
     setServiceCreditEquivalent(`(Equivalent Service Credit: ${sc})`)
     setTotalHours(hours)
   }
@@ -312,15 +314,23 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                   </div>
                   <div>
                     <input
-                      {...register('total_hours', { required: true })}
+                      {...register('total_hours', {
+                        required: true,
+                        min: {
+                          value: 0.01,
+                          message: 'Must be greater than 0',
+                        },
+                      })}
                       type="number"
+                      min={0.01}
+                      step="0.01"
                       value={totalHours}
                       onChange={(e) => handleHoursChange(e.target.value)}
                       className="app__select_standard"
                     />
                     {errors.total_hours && (
                       <div className="app__error_message">
-                        Total Hours is required
+                        {errors.total_hours.message ?? 'Total Hours is required'}
                       </div>
                     )}
                   </div>

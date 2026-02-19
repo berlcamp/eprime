@@ -225,8 +225,14 @@ const Page: React.FC = () => {
                 <input
                   value={filterPassingScore}
                   type="number"
+                  min={0}
                   step="any"
-                  onChange={(e) => setFilterPassingScore(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    const num = Number(val)
+                    if (val !== '' && (isNaN(num) || num < 0)) return
+                    setFilterPassingScore(val)
+                  }}
                   className="app__filter_input !w-20"
                 />
               </div>
