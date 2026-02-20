@@ -11,8 +11,8 @@ interface BulkPrintNosaProps {
   signatories: SignatoriesTypes;
 }
 
-const A4_WIDTH_PX = 794; // 210mm at 96dpi
-const CONTENT_WIDTH = 754; // A4 minus 20mm margins (10mm each side)
+const FOLIO_WIDTH_PX = 816; // 8.5in at 96dpi (folio: 8.5" x 13")
+const CONTENT_WIDTH = 740; // folio minus 20mm margins (10mm each side)
 const PRINT_MARGIN = "10mm";
 
 function SignatoryBlock({
@@ -31,22 +31,22 @@ function SignatoryBlock({
           <img
             src={user.signature_path}
             alt=""
-            width={40}
-            height={40}
+            width={48}
+            height={48}
             className="object-contain"
           />
         ) : (
           <span>SGD</span>
         )}
       </div>
-      <div className="font-bold border-t border-t-black mt-1">
+      <div className="font-bold border-t border-t-black mt-1 text-sm">
         {user
           ? [user.lastname, user.firstname, user.middlename]
               .filter(Boolean)
               .join(", ")
           : name}
       </div>
-      <div className="text-[10px]">{position}</div>
+      <div className="text-xs">{position}</div>
     </div>
   );
 }
@@ -99,12 +99,12 @@ function SinglePrintNosa({
           <img
             src="/deped_header.png"
             alt="DepEd Logo"
-            width={120}
-            height={120}
+            width={140}
+            height={140}
             className="object-contain"
           />
         </div>
-        <div className="text-[11px] mt-1">
+        <div className="text-sm mt-1">
           SCHOOLS DIVISION OFFICE OF BAYUGAN CITY
         </div>
         <hr className="border-black mt-1" />
@@ -112,13 +112,13 @@ function SinglePrintNosa({
 
       {/* Title */}
       <div className="text-center mt-2 mb-3">
-        <h1 className="text-lg font-bold leading-tight">
+        <h1 className="text-xl font-bold leading-tight">
           Notice of Salary Adjustment
         </h1>
       </div>
 
       {/* Body */}
-      <div className="text-[11px] space-y-2">
+      <div className="text-sm space-y-2">
         <div className="text-right">{format(new Date(), "MMMM dd, yyyy")}</div>
 
         <div className="mt-4">
@@ -142,7 +142,7 @@ function SinglePrintNosa({
       </div>
 
       {/* Salary table */}
-      <table className="w-full mt-4 text-[11px] table-fixed">
+      <table className="w-full mt-4 text-sm table-fixed">
         <tbody>
           <tr>
             <td className="py-0.5 align-top">
@@ -210,14 +210,14 @@ function SinglePrintNosa({
       </table>
 
       {/* Disclaimer */}
-      <div className="indent-8 mt-4 text-[11px] text-justify">
+      <div className="indent-8 mt-4 text-sm text-justify">
         It is understood that this salary adjustment is subject to review and
         post-audit, and to appropriate re-adjustment and refund if found not in
         order.
       </div>
 
       {/* Signatories - Very truly yours */}
-      <div className="flex justify-evenly mt-6 text-[11px] gap-4">
+      <div className="flex justify-evenly mt-6 text-sm gap-4">
         <div className="text-center flex-1" />
         <div className="text-center flex-1">
           <div>Very truly yours,</div>
@@ -232,8 +232,8 @@ function SinglePrintNosa({
       </div>
 
       {/* Recommending Approval */}
-      <div className="text-center mt-4 text-[11px]">Recommending Approval:</div>
-      <div className="flex justify-evenly mt-2 text-[11px] gap-4">
+      <div className="text-center mt-4 text-sm">Recommending Approval:</div>
+      <div className="flex justify-evenly mt-2 text-sm gap-4">
         <div className="text-center flex-1">
           <SignatoryBlock
             user={signatories.recommending_1_user}
@@ -251,7 +251,7 @@ function SinglePrintNosa({
       </div>
 
       {/* Approved by */}
-      <div className="text-center mt-4 text-[11px]">
+      <div className="text-center mt-4 text-sm">
         <div>Approved by:</div>
         <div className="mt-2">
           <SignatoryBlock
@@ -263,7 +263,7 @@ function SinglePrintNosa({
       </div>
 
       {/* Footer info */}
-      <div className="mt-4 text-[10px] space-y-0.5">
+      <div className="mt-4 text-xs space-y-0.5">
         <div>
           Position Title: {selectedItem.hrm_user?.hrm_positions?.name ?? "—"}
         </div>
@@ -280,12 +280,12 @@ function SinglePrintNosa({
       </div>
 
       {/* Footer branding - in document flow for print */}
-      <div className="mt-6 pt-3 border-t-2 border-black flex items-start gap-4 text-[10px]">
+      <div className="mt-6 pt-3 border-t-2 border-black flex items-start gap-4 text-xs">
         <img
           src="/logo3.png"
           alt=""
-          width={80}
-          height={80}
+          width={96}
+          height={96}
           className="object-contain flex-shrink-0"
         />
         <div>
@@ -310,7 +310,7 @@ export const BulkPrintNosa = React.forwardRef<
       <style>{`
           @media print {
             @page {
-              size: A4;
+              size: 8.5in 13in;
               margin: ${PRINT_MARGIN};
             }
             .bulk-print-nosa .invisible {
@@ -318,7 +318,7 @@ export const BulkPrintNosa = React.forwardRef<
             }
             .bulk-print-nosa .print-nosa-container {
               width: 100% !important;
-              max-width: ${A4_WIDTH_PX}px;
+              max-width: ${FOLIO_WIDTH_PX}px;
               box-sizing: border-box;
             }
           }

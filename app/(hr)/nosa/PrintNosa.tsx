@@ -10,6 +10,8 @@ interface ComponentToPrintProps {
   signatories: SignatoriesTypes;
 }
 
+const PRINT_MARGIN = "10mm";
+
 function SignatoryBlock({
   user,
   name,
@@ -26,22 +28,22 @@ function SignatoryBlock({
           <img
             src={user.signature_path}
             alt=""
-            width={40}
-            height={40}
+            width={48}
+            height={48}
             className="object-contain"
           />
         ) : (
           <span>SGD</span>
         )}
       </div>
-      <div className="font-bold border-t border-t-black mt-1">
+      <div className="font-bold border-t border-t-black mt-1 text-sm">
         {user
           ? [user.lastname, user.firstname, user.middlename]
               .filter(Boolean)
               .join(", ")
           : name}
       </div>
-      <div className="text-[10px]">{position}</div>
+      <div className="text-xs">{position}</div>
     </div>
   );
 }
@@ -53,8 +55,16 @@ export const PrintNosa = React.forwardRef<
   const { selectedItem, signatories } = props;
 
   return (
-    <div className="invisible">
-      <div ref={ref} className="w-[816px] bg-white py-2 px-2">
+    <div className="invisible print:visible">
+      <style>{`
+        @media print {
+          @page {
+            size: 8.5in 13in;
+            margin: ${PRINT_MARGIN};
+          }
+        }
+      `}</style>
+      <div ref={ref} className="w-[816px] max-w-full bg-white py-2 px-[10mm]">
         <table className="w-full">
           <tbody>
             <tr>
@@ -64,12 +74,13 @@ export const PrintNosa = React.forwardRef<
                     <img
                       src="/deped_header.png"
                       alt=""
-                      width={200}
-                      height={200}
+                      width={160}
+                      height={160}
+                      className="object-contain"
                     />
                   </div>
                 </div>
-                <div className="text-xs">
+                <div className="text-sm">
                   SCHOOLS DIVISION OFFICE OF BAYUGAN CITY
                 </div>
                 <hr className="border-black mt-2" />
@@ -77,13 +88,13 @@ export const PrintNosa = React.forwardRef<
             </tr>
             <tr>
               <td colSpan={2} className="text-center">
-                <div className="mt-4 text-2xl mb-4 font-bold">
+                <div className="mt-4 text-3xl mb-4 font-bold">
                   Notice of Salary Adjustment
                 </div>
               </td>
             </tr>
             <tr>
-              <td colSpan={2} className="text-xs">
+              <td colSpan={2} className="text-sm">
                 <div className="text-right mt-10">
                   {format(new Date(), "MMMM dd, yyyy")}
                 </div>
@@ -117,7 +128,7 @@ export const PrintNosa = React.forwardRef<
               </td>
             </tr>
             <tr>
-              <td colSpan={2} className="text-xs">
+              <td colSpan={2} className="text-sm">
                 <table className="w-full mt-10 mx-8">
                   <tbody>
                     <tr>
@@ -197,7 +208,7 @@ export const PrintNosa = React.forwardRef<
               </td>
             </tr>
             <tr>
-              <td colSpan={2} className="text-xs">
+              <td colSpan={2} className="text-sm">
                 <div className="indent-10 mt-10">
                   It is understood that this salary adjustment is subject to
                   review and post-audit, and to appropriate re-adjustment and
@@ -206,7 +217,7 @@ export const PrintNosa = React.forwardRef<
               </td>
             </tr>
             <tr>
-              <td colSpan={2} className="text-xs">
+              <td colSpan={2} className="text-sm">
                 <div className="mt-10 pb-4 flex items-start justify-evenly space-x-1">
                   <div className="text-center">
                     <div className="font-bold w-32">&nbsp;</div>
@@ -225,12 +236,12 @@ export const PrintNosa = React.forwardRef<
               </td>
             </tr>
             <tr>
-              <td colSpan={2} className="text-xs text-center">
+              <td colSpan={2} className="text-sm text-center">
                 <div>Recommending Approval:</div>
               </td>
             </tr>
             <tr>
-              <td colSpan={2} className="text-xs">
+              <td colSpan={2} className="text-sm">
                 <div className="pb-4 flex items-start justify-evenly space-x-1">
                   <div className="text-center">
                     <div className="mt-6">
@@ -254,7 +265,7 @@ export const PrintNosa = React.forwardRef<
               </td>
             </tr>
             <tr>
-              <td colSpan={2} className="text-xs text-center">
+              <td colSpan={2} className="text-sm text-center">
                 <div>Approved by:</div>
                 <div className="mt-6">
                   <SignatoryBlock
@@ -266,7 +277,7 @@ export const PrintNosa = React.forwardRef<
               </td>
             </tr>
             <tr>
-              <td colSpan={2} className="text-xs">
+              <td colSpan={2} className="text-sm">
                 <div className="mt-4">
                   Position Title: {selectedItem.hrm_user?.hrm_positions?.name}
                 </div>
@@ -283,9 +294,9 @@ export const PrintNosa = React.forwardRef<
             </tr>
           </tbody>
         </table>
-        <div className="absolute bottom-0 w-full text-xs">
+        <div className="absolute bottom-0 w-full text-sm">
           <div className="border-t-2 border-black flex items-start justify-start space-x-1">
-            <img src="/deped_bayugan.png" alt="" width={100} height={100} />
+            <img src="/deped_bayugan.png" alt="" width={120} height={120} className="object-contain" />
             <div className="mt-3">
               <div>Lanzones Street, Poblacion, Bayugan City</div>
               <div className="text-blue-500">deped.bayugan@gmail.com</div>
