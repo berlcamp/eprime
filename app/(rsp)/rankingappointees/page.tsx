@@ -16,10 +16,17 @@ import Filters from './Filters'
 // Types
 import type { ApplicantTypes } from '@/types'
 
+import { PrintAdviseOrder } from '@/components/Printables/PrintAdviseOrder'
+import { PrintAssumption } from '@/components/Printables/PrintAssumption'
+import { PrintOathOfOffice } from '@/components/Printables/PrintOathOfOffice'
+import { PrintableActionsMenu } from '@/components/Rsp/PrintableActionsMenu'
+import OathOfOfficeModal from '@/components/Rsp/OathOfOfficeModal'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
+import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
-import { PrinterIcon } from 'lucide-react'
+import { useReactToPrint } from 'react-to-print'
+import AssumptionModal from '../rankingresults/AssumptionModal'
 
 interface ListTypes {
   applicant: ApplicantTypes
@@ -29,7 +36,13 @@ interface ListTypes {
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
-  // const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
+  const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedLocation, setSelectedLocation] = useState('')
+  const [selectedType, setSelectedType] = useState<string>('')
+  const [isAdviseOrderOpen, setIsAdviseOrderOpen] = useState(false)
+  const [isAssumptionOpen, setIsAssumptionOpen] = useState(false)
+  const [isOathOpen, setIsOathOpen] = useState(false)
 
   const [list, setList] = useState<ListTypes[]>([])
   const [rankList, setRankList] = useState<ListTypes[]>([])
@@ -39,6 +52,92 @@ const Page: React.FC = () => {
   const { hasAccess } = useFilter()
   const { supabase } = useSupabase()
 
+  const componentRef = React.useRef(null)
+  const printFn = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: 'request-form'
+  })
+
+  const preloadImages = (urls: string[]) => {
+    return Promise.all(
+      urls.map(
+        (url) =>
+          new Promise<void>((resolve) => {
+            const img = new window.Image()
+            img.onload = () => resolve()
+            img.onerror = () => resolve()
+            img.src = url
+          })
+      )
+    )
+  }
+
+  const preloadPrintImages = () =>
+    preloadImages([
+      '/logos/deped_logo_1.png',
+      '/logos/deped_logo_2.png',
+      '/deped_header.svg',
+      '/logos/matatag.png',
+      '/logos/matatag.svg',
+      '/logos/bagong.png',
+      '/logos/bagong.svg',
+      '/logos/bayugan.png',
+      '/logos/bayugan.svg'
+    ])
+
+  const handlePrintAdviseOrder = async (item: ApplicantTypes, type: string) => {
+    await preloadPrintImages()
+    setSelectedType(type)
+    setTimeout(() => {
+      setSelectedItem({
+        ...item,
+        date: selectedDate,
+        assignment: selectedLocation
+      })
+      setTimeout(() => printFn(), 100)
+    }, 100)
+  }
+
+  const handlePrintAssumption = async (
+    item: ApplicantTypes,
+    date: string,
+    location: string,
+    signatory: string,
+    position: string
+  ) => {
+    await preloadPrintImages()
+    setSelectedType('assumption')
+    setTimeout(() => {
+      setSelectedItem({
+        ...item,
+        date,
+        assignment: location,
+        signatory,
+        position
+      })
+      setTimeout(() => printFn(), 100)
+    }, 100)
+  }
+
+  const handlePrintOathOfOffice = async (
+    item: ApplicantTypes,
+    date: string,
+    signatory: string,
+    position: string
+  ) => {
+    await preloadPrintImages()
+    setSelectedType('oath-of-office')
+    setTimeout(() => {
+      setSelectedItem({
+        ...item,
+        date,
+        signatory,
+        position
+      })
+      setTimeout(() => printFn(), 100)
+    }, 100)
+  }
+
   const fetchData = async () => {
     setLoading(true)
 
@@ -46,7 +145,7 @@ const Page: React.FC = () => {
       let query = supabase
         .from('hrm_ranking_applicants')
         .select(
-          '*, ranking:ranking_id(type,passing_score,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          '*, hrm_item:item_id(implementing_unit:implementing_unit_id(*),hrm_position:position_id(*)), ranking:ranking_id(type,passing_score,position:position_id(name),committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
           {
             count: 'exact'
           }
@@ -190,26 +289,20 @@ const Page: React.FC = () => {
                               leaveTo="transform opacity-0 scale-95"
                             >
                               <Menu.Items className="app__dropdown_items">
-                                <div className="py-1">
-                                  <Menu.Item>
-                                    <div className="app__dropdown_item">
-                                      <PrinterIcon className="w-4 h-4" />
-                                      <span>Print Advice Order</span>
-                                    </div>
-                                  </Menu.Item>
-                                  <Menu.Item>
-                                    <div className="app__dropdown_item">
-                                      <PrinterIcon className="w-4 h-4" />
-                                      <span>Print CSC Appointment Form</span>
-                                    </div>
-                                  </Menu.Item>
-                                  <Menu.Item>
-                                    <div className="app__dropdown_item">
-                                      <PrinterIcon className="w-4 h-4" />
-                                      <span>Print Oath of Office</span>
-                                    </div>
-                                  </Menu.Item>
-                                </div>
+                                <PrintableActionsMenu
+                                  onPrintAdviseOrder={() => {
+                                    setIsAdviseOrderOpen(true)
+                                    setSelectedItem(item.applicant)
+                                  }}
+                                  onPrintAssumption={() => {
+                                    setIsAssumptionOpen(true)
+                                    setSelectedItem(item.applicant)
+                                  }}
+                                  onPrintOathOfOffice={() => {
+                                    setIsOathOpen(true)
+                                    setSelectedItem(item.applicant)
+                                  }}
+                                />
                               </Menu.Items>
                             </Transition>
                           </Menu>
@@ -268,6 +361,101 @@ const Page: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Advise Order Print Modal */}
+      {isAdviseOrderOpen && selectedItem && (
+        <div className="z-50 fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg w-xl">
+            <div className="app__form_field_container">
+              <div className="w-full">
+                <div className="app__label_standard">
+                  Select Date & Assignment:
+                </div>
+                <div className="flex space-x-1">
+                  <Input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                  />
+                  <Input
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    placeholder="Assignment"
+                    className="app__input_standard"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setIsAdviseOrderOpen(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!selectedDate || !selectedLocation) {
+                    alert('Please select a date and assignment')
+                    return
+                  }
+                  setIsAdviseOrderOpen(false)
+                  void handlePrintAdviseOrder(selectedItem, 'advise-order')
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Print
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assumption to Duty Print Modal */}
+      {isAssumptionOpen && selectedItem && (
+        <AssumptionModal
+          onConfirm={(date, location, signatory, position) => {
+            setIsAssumptionOpen(false)
+            void handlePrintAssumption(
+              selectedItem,
+              date,
+              location,
+              signatory,
+              position
+            )
+          }}
+          onCancel={() => setIsAssumptionOpen(false)}
+        />
+      )}
+
+      {/* Oath of Office Print Modal */}
+      {isOathOpen && selectedItem && (
+        <OathOfOfficeModal
+          onConfirm={(date, signatory, position) => {
+            setIsOathOpen(false)
+            void handlePrintOathOfOffice(
+              selectedItem,
+              date,
+              signatory,
+              position
+            )
+          }}
+          onCancel={() => setIsOathOpen(false)}
+        />
+      )}
+
+      {/* Print Advise Order */}
+      {selectedItem && selectedType === 'advise-order' && (
+        <PrintAdviseOrder selectedItem={selectedItem} ref={componentRef} />
+      )}
+      {/* Print Assumption */}
+      {selectedItem && selectedType === 'assumption' && (
+        <PrintAssumption selectedItem={selectedItem} ref={componentRef} />
+      )}
+      {/* Print Oath of Office */}
+      {selectedItem && selectedType === 'oath-of-office' && (
+        <PrintOathOfOffice selectedItem={selectedItem} ref={componentRef} />
+      )}
     </>
   )
 }

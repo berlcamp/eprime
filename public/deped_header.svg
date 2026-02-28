@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 80" width="400" height="80">
+  <rect width="400" height="80" fill="#fff" stroke="#c0c0c0" stroke-width="1"/>
+  <text x="200" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#003366">Republic of the Philippines</text>
+  <text x="200" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#003366">Department of Education</text>
+  <text x="200" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666">Schools Division Office</text>
+</svg>

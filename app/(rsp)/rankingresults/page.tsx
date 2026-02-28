@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import {
   ConfirmModal,
   CustomButton,
@@ -6,112 +6,116 @@ import {
   TableRowLoading,
   Title,
   TopBar,
-  Unauthorized
-} from '@/components/index'
-import { useFilter } from '@/context/FilterContext'
-import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import Excel from 'exceljs'
-import { saveAs } from 'file-saver'
-import React, { Fragment, useEffect, useState } from 'react'
-import Filters from './Filters'
+  Unauthorized,
+} from "@/components/index";
+import { useFilter } from "@/context/FilterContext";
+import { Menu, Transition } from "@headlessui/react";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import Excel from "exceljs";
+import { saveAs } from "file-saver";
+import React, { Fragment, useEffect, useState } from "react";
+import Filters from "./Filters";
 
 // Types
-import type { ApplicantTypes, RankingTypes } from '@/types'
+import type { ApplicantTypes, RankingTypes } from "@/types";
 
-import { PrintAdviseOrder } from '@/components/Printables/PrintAdviseOrder'
-import { PrintAssumption } from '@/components/Printables/PrintAssumption'
-import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
-import RspSidebar from '@/components/Sidebars/RspSidebar'
-import { Input } from '@/components/ui/input'
-import { useSupabase } from '@/context/SupabaseProvider'
-import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
-import { logError } from '@/utils/fetchApi'
-import axios from 'axios'
-import { CheckIcon, EyeIcon } from 'lucide-react'
-import Image from 'next/image'
-import { useReactToPrint } from 'react-to-print'
-import AssumptionModal from './AssumptionModal'
+import { PrintAdviseOrder } from "@/components/Printables/PrintAdviseOrder";
+import { PrintAssumption } from "@/components/Printables/PrintAssumption";
+import { PrintOathOfOffice } from "@/components/Printables/PrintOathOfOffice";
+import { PrintableActionsMenu } from "@/components/Rsp/PrintableActionsMenu";
+import OathOfOfficeModal from "@/components/Rsp/OathOfOfficeModal";
+import CommitteePointsModal from "@/components/Rsp/CommitteePointsModal";
+import RspSidebar from "@/components/Sidebars/RspSidebar";
+import { Input } from "@/components/ui/input";
+import { useSupabase } from "@/context/SupabaseProvider";
+import { CommitteeAccumulatedPoints } from "@/utils/data-helpers";
+import { logError } from "@/utils/fetchApi";
+import axios from "axios";
+import { CheckIcon } from "lucide-react";
+import Image from "next/image";
+import { useReactToPrint } from "react-to-print";
+import AssumptionModal from "./AssumptionModal";
 
 interface ListTypes {
-  no?: number
-  no2?: number
-  applicant: ApplicantTypes
-  accumulated_points: Record<string, number> | null
-  overall_score: string
+  no?: number;
+  no2?: number;
+  applicant: ApplicantTypes;
+  accumulated_points: Record<string, number> | null;
+  overall_score: string;
 }
 
 const Page: React.FC = () => {
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [refetch, setRefetch] = useState(false)
-  const [downloading, setDownloading] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [refetch, setRefetch] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [showCommitteePointsModal, setShowCommitteePointsModal] =
-    useState(false)
-  const [showConfirmAppointModal, setShowConfirmAppointModal] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
+    useState(false);
+  const [showConfirmAppointModal, setShowConfirmAppointModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null);
 
-  const [list, setList] = useState<ListTypes[]>([])
-  const [rankList, setRankList] = useState<ListTypes[]>([])
-  const [originalList, setOriginalList] = useState<ListTypes[] | []>([])
-  const [filterRanking, setFilterRanking] = useState<string>('')
-  const [filterDisplay, setFilterDisplay] = useState<string>('')
+  const [list, setList] = useState<ListTypes[]>([]);
+  const [rankList, setRankList] = useState<ListTypes[]>([]);
+  const [originalList, setOriginalList] = useState<ListTypes[] | []>([]);
+  const [filterRanking, setFilterRanking] = useState<string>("");
+  const [filterDisplay, setFilterDisplay] = useState<string>("");
 
-  const [selectedType, setSelectedType] = useState<string>('')
-  const [selectedDate, setSelectedDate] = useState<string>('')
-  const [selectedLocation, setSelectedLocation] = useState<string>('')
-  const [isAdviseOrderOpen, setIsAdviseOrderOpen] = useState(false)
-  const [isAssumptionOpen, setIsAssumptionOpen] = useState(false)
+  const [selectedType, setSelectedType] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
+  const [isAdviseOrderOpen, setIsAdviseOrderOpen] = useState(false);
+  const [isAssumptionOpen, setIsAssumptionOpen] = useState(false);
+  const [isOathOpen, setIsOathOpen] = useState(false);
 
   const [rankingDetails, setRankingDetails] = useState<RankingTypes | null>(
-    null
-  )
+    null,
+  );
 
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [searchMajor, setSearchMajor] = useState('')
-  const [majors, setMajors] = useState<string[] | []>([])
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchMajor, setSearchMajor] = useState("");
+  const [majors, setMajors] = useState<string[] | []>([]);
 
-  const { hasAccess, setToast } = useFilter()
-  const { supabase } = useSupabase()
+  const { hasAccess, setToast } = useFilter();
+  const { supabase } = useSupabase();
 
-  const componentRef = React.useRef(null)
+  const componentRef = React.useRef(null);
   const printFn = useReactToPrint({
     contentRef: componentRef,
-    documentTitle: 'request-form'
-  })
+    documentTitle: "request-form",
+  });
 
   const fetchData = async () => {
-    if (filterRanking === '') {
-      return
+    if (filterRanking === "") {
+      return;
     }
-    setLoading(true)
+    setLoading(true);
 
     try {
       const query = supabase
-        .from('hrm_ranking_applicants')
+        .from("hrm_ranking_applicants")
         .select(
-          '*, hrm_item:item_id(implementing_unit:implementing_unit_id(*),hrm_position:position_id(*)),ranking:ranking_id(type,year,passing_score,position:position_id(name),committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, signature_path, hrm_positions:position_id(name)), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          "*, hrm_item:item_id(implementing_unit:implementing_unit_id(*),hrm_position:position_id(*)),ranking:ranking_id(type,year,passing_score,position:position_id(name),committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, signature_path, hrm_positions:position_id(name)), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))",
           {
-            count: 'exact'
-          }
+            count: "exact",
+          },
         )
-        .eq('evaluation_status', 'Qualified')
-        .eq('ranking_id', filterRanking)
+        .eq("evaluation_status", "Qualified")
+        .eq("ranking_id", filterRanking);
 
-      const { data, error } = await query
+      const { data, error } = await query;
 
-      console.log('data', data)
+      console.log("data", data);
 
       if (error) {
-        throw new Error(error.message)
+        throw new Error(error.message);
       }
 
-      if (filterRanking !== '') {
+      if (filterRanking !== "") {
         if (data.length > 0) {
-          const structguredData: ListTypes[] = []
+          const structguredData: ListTypes[] = [];
           data.forEach((d: ApplicantTypes) => {
             const accumulatedPoints: Record<string, number> | null =
-              CommitteeAccumulatedPoints(d.id, d.ranking.committees)
+              CommitteeAccumulatedPoints(d.id, d.ranking.committees);
 
             structguredData.push({
               applicant: d,
@@ -120,311 +124,315 @@ const Page: React.FC = () => {
                 ? Object.values(accumulatedPoints)
                     .reduce((sum: number, points) => sum + points, 0)
                     .toFixed(2)
-                : ''
-            })
-          })
+                : "",
+            });
+          });
 
           // Sort structguredData by overall_score in descending order
           structguredData.sort((a, b) => {
-            const scoreA = parseFloat(a.overall_score || '0')
-            const scoreB = parseFloat(b.overall_score || '0')
-            return scoreB - scoreA // Sort in descending order
-          })
+            const scoreA = parseFloat(a.overall_score || "0");
+            const scoreB = parseFloat(b.overall_score || "0");
+            return scoreB - scoreA; // Sort in descending order
+          });
 
           // Add index "no" starting from 1
           structguredData.forEach((item, index) => {
-            item.no = index + 1
-            item.no2 = undefined
-          })
+            item.no = index + 1;
+            item.no2 = undefined;
+          });
 
           // Extract unique majors using Array.from() to avoid spread operator issues
           const uniqueMajors = Array.from(
             new Set(
-              structguredData.map((item) => item.applicant.specific_major)
-            )
-          )
+              structguredData.map((item) => item.applicant.specific_major),
+            ),
+          );
 
-          setMajors(uniqueMajors)
+          setMajors(uniqueMajors);
 
-          setList(structguredData)
-          setOriginalList(structguredData)
+          setList(structguredData);
+          setOriginalList(structguredData);
 
-          setRankList(structguredData)
+          setRankList(structguredData);
 
           // get the ranking details so we can use the passing score
-          setRankingDetails(structguredData[0].applicant.ranking)
+          setRankingDetails(structguredData[0].applicant.ranking);
         }
       }
     } catch (e) {
-      console.error(e)
+      console.error(e);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSearchApplicant = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const searchTerm = e.target.value
-    setSearchKeyword(searchTerm)
+    const searchTerm = e.target.value;
+    setSearchKeyword(searchTerm);
 
     if (searchTerm.trim().length < 3) {
-      setList(originalList)
-      return
+      setList(originalList);
+      return;
     }
 
     // Search user
-    const searchWords = e.target.value.split(' ')
+    const searchWords = e.target.value.split(" ");
     const results = list.filter((user) => {
       const fullName =
-        `${user.applicant.firstname} ${user.applicant.middlename} ${user.applicant.lastname}`.toLowerCase()
-      return searchWords.every((word) => fullName.includes(word.toLowerCase()))
-    })
+        `${user.applicant.firstname} ${user.applicant.middlename} ${user.applicant.lastname}`.toLowerCase();
+      return searchWords.every((word) => fullName.includes(word.toLowerCase()));
+    });
 
-    setList(results)
-  }
+    setList(results);
+  };
   const handleSearchMajor = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const searchTerm = e.target.value
-    setSearchMajor(searchTerm)
+    const searchTerm = e.target.value;
+    setSearchMajor(searchTerm);
 
-    if (searchTerm.trim() !== '') {
+    if (searchTerm.trim() !== "") {
       const filteredArr = originalList.filter(
-        (item) => item.applicant.specific_major === searchTerm
-      )
+        (item) => item.applicant.specific_major === searchTerm,
+      );
       // Add index "no" starting from 1
       filteredArr.forEach((item, index) => {
-        item.no2 = index + 1
-      })
-      setList(filteredArr)
+        item.no2 = index + 1;
+      });
+      setList(filteredArr);
     } else {
-      setList(originalList)
+      setList(originalList);
     }
-  }
+  };
 
   const handleViewCommitteePoints = (item: ApplicantTypes) => {
-    setShowCommitteePointsModal(true)
-    setSelectedItem(item)
-  }
+    setShowCommitteePointsModal(true);
+    setSelectedItem(item);
+  };
 
   const handleAppoint = (item: ApplicantTypes) => {
-    setShowConfirmAppointModal(true)
-    setSelectedItem(item)
-  }
+    setShowConfirmAppointModal(true);
+    setSelectedItem(item);
+  };
 
   const handleConfirmedAppoint = async () => {
-    if (saving || !selectedItem) return
+    if (saving || !selectedItem) return;
 
-    setSaving(true)
+    setSaving(true);
 
     try {
       const { error } = await supabase
-        .from('hrm_ranking_applicants')
+        .from("hrm_ranking_applicants")
         .update({
-          status: 'Appointed'
+          status: "Appointed",
         })
-        .eq('id', selectedItem.id)
+        .eq("id", selectedItem.id);
 
       if (error) {
         void logError(
-          'Appoint applicant',
-          'hrm_ranking_applicants',
-          '',
-          error.message
-        )
+          "Appoint applicant",
+          "hrm_ranking_applicants",
+          "",
+          error.message,
+        );
         setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+          "error",
+          "Saving failed, please reload the page and try again.",
+        );
+        throw new Error(error.message);
       }
 
       // Email the applicant on the server side
       axios
-        .post('/api/appointemail', {
+        .post("/api/appointemail", {
           position: selectedItem?.ranking?.position?.name,
           type: selectedItem?.ranking?.type,
           code: selectedItem.code,
           email: selectedItem.email,
           firstname: selectedItem.firstname,
           middlename: selectedItem.middlename,
-          lastname: selectedItem.lastname
+          lastname: selectedItem.lastname,
         })
         .then(function () {
           //
         })
         .catch(function (error) {
           void logError(
-            'Approving registration',
-            'hrm_registrations',
+            "Approving registration",
+            "hrm_registrations",
             JSON.stringify({
               position: selectedItem?.ranking?.position?.name,
               type: selectedItem?.ranking?.type,
               code: selectedItem.code,
               firstname: selectedItem.firstname,
               middlename: selectedItem.middlename,
-              lastname: selectedItem.lastname
+              lastname: selectedItem.lastname,
             }),
-            JSON.stringify(error)
-          )
-          console.error(error)
-        })
+            JSON.stringify(error),
+          );
+          console.error(error);
+        });
 
       // pop up the success message
-      setToast('success', 'Successfully saved.')
+      setToast("success", "Successfully saved.");
 
-      setSaving(false)
-      setShowConfirmAppointModal(false)
-      setRefetch(!refetch)
+      setSaving(false);
+      setShowConfirmAppointModal(false);
+      setRefetch(!refetch);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const handleDownloadExcel = async (type: string) => {
-    setDownloading(true)
+    setDownloading(true);
 
-    const passingScore = rankingDetails?.passing_score ?? 50
+    const passingScore = rankingDetails?.passing_score ?? 50;
 
-    let list = rankList
-    if (type === 'RQA') {
+    let list = rankList;
+    if (type === "RQA") {
       const filteredList = rankList.filter(
-        (item) => Number(item.overall_score) > Number(passingScore)
-      )
-      list = filteredList
+        (item) => Number(item.overall_score) > Number(passingScore),
+      );
+      list = filteredList;
     }
 
     // Create a new workbook and add a worksheet
-    const workbook = new Excel.Workbook()
-    const worksheet = workbook.addWorksheet('Sheet 1')
+    const workbook = new Excel.Workbook();
+    const worksheet = workbook.addWorksheet("Sheet 1");
 
     // Extract unique keys from accumulated_points dynamically
     const allKeys = Array.from(
       new Set(
-        list.flatMap((item) => Object.keys(item.accumulated_points ?? {}))
-      )
-    )
+        list.flatMap((item) => Object.keys(item.accumulated_points ?? {})),
+      ),
+    );
 
     // Define worksheet columns dynamically
     worksheet.columns = [
-      { header: 'No.', key: 'number', width: 10 },
-      { header: 'Names of Applicant', key: 'name', width: 25 },
-      { header: 'Position', key: 'position', width: 25 },
-      { header: 'Implementing Unit', key: 'ius', width: 25 },
-      { header: 'Applicant Code', key: 'code', width: 25 },
+      { header: "No.", key: "number", width: 10 },
+      { header: "Names of Applicant", key: "name", width: 25 },
+      { header: "Position", key: "position", width: 25 },
+      { header: "Implementing Unit", key: "ius", width: 25 },
+      { header: "Applicant Code", key: "code", width: 25 },
       ...allKeys.map((key) => ({ header: key, key, width: 15 })), // Dynamic columns
-      { header: 'Total', key: 'overall_score', width: 15 },
-      { header: 'remarks', key: 'remarks', width: 15 },
-      { header: 'For Background Investigation (Yes)', key: 'yes', width: 15 },
-      { header: 'For Background Investigation (No)', key: 'no', width: 15 },
+      { header: "Total", key: "overall_score", width: 15 },
+      { header: "remarks", key: "remarks", width: 15 },
+      { header: "For Background Investigation (Yes)", key: "yes", width: 15 },
+      { header: "For Background Investigation (No)", key: "no", width: 15 },
       {
         header:
-          'For Appointment (To be filled out by the appointing Officer/Authority, Please sign opposite the name of the applicant)',
-        key: 'status1',
-        width: 15
+          "For Appointment (To be filled out by the appointing Officer/Authority, Please sign opposite the name of the applicant)",
+        key: "status1",
+        width: 15,
       },
       {
         header:
-          'Status of Appointment (Based on availability of PBET/LET/LEPT)',
-        key: 'status2',
-        width: 15
-      }
-    ]
+          "Status of Appointment (Based on availability of PBET/LET/LEPT)",
+        key: "status2",
+        width: 15,
+      },
+    ];
 
     // Data for the Excel file
     const data: any[] = list.map((item, index) => ({
       number: index + 1,
       name: `${item.applicant.lastname}, ${item.applicant.firstname} ${item.applicant.middlename}`,
-      position: `${item.applicant.hrm_item?.hrm_position?.name ?? 'N/A'}`,
-      ius: `${item.applicant.hrm_item?.implementing_unit?.name ?? 'N/A'}`,
+      position: `${item.applicant.hrm_item?.hrm_position?.name ?? "N/A"}`,
+      ius: `${item.applicant.hrm_item?.implementing_unit?.name ?? "N/A"}`,
       code: `${item.applicant.code}`,
       ...allKeys.reduce<Record<string, any>>((acc, key) => {
-        acc[key] = item.accumulated_points?.[key] ?? '-' // Use "-" if value is missing
-        return acc
+        acc[key] = item.accumulated_points?.[key] ?? "-"; // Use "-" if value is missing
+        return acc;
       }, {}),
       overall_score: item.overall_score,
-      remarks: '',
-      yes: '',
-      no: '',
-      status1: '',
-      status2: ''
-    }))
+      remarks: "",
+      yes: "",
+      no: "",
+      status1: "",
+      status2: "",
+    }));
 
-    data.push({ name: '' })
-    data.push({ name: 'Confirmed Committee Members:' })
+    data.push({ name: "" });
+    data.push({ name: "Confirmed Committee Members:" });
     rankingDetails?.committees.forEach((c) => {
-      if (c.type === 'Original Member' && c.status === 'Confirmed') {
+      if (c.type === "Original Member" && c.status === "Confirmed") {
         data.push({
-          name: `${c.hrm_user.firstname} ${c.hrm_user.middlename ?? ''} ${
+          name: `${c.hrm_user.firstname} ${c.hrm_user.middlename ?? ""} ${
             c.hrm_user.lastname
-          } / ${c.hrm_user.hrm_positions?.name}`
-        })
+          } / ${c.hrm_user.hrm_positions?.name}`,
+        });
       }
-    })
+    });
 
     // Add data to the worksheet
-    data.forEach((item) => worksheet.addRow(item))
+    data.forEach((item) => worksheet.addRow(item));
 
     // Generate the Excel file
     await workbook.xlsx.writeBuffer().then((buffer) => {
       const blob = new Blob([buffer], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      })
-      saveAs(blob, 'Ranking-Results.xlsx')
-    })
-    setDownloading(false)
-  }
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(blob, "Ranking-Results.xlsx");
+    });
+    setDownloading(false);
+  };
 
-  // Preload all images before printing
+  // Preload all images before printing (resolve on load or error so we don't block)
   const preloadImages = (urls: string[]) => {
     return Promise.all(
       urls.map(
         (url) =>
           new Promise<void>((resolve) => {
-            const img = new window.Image() // ✅ explicitly use DOM Image
-            img.onload = () => resolve()
-            img.src = url
-          })
-      )
-    )
-  }
+            const img = new window.Image();
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // Resolve on error so PNG fallback to SVG doesn't block
+            img.src = url;
+          }),
+      ),
+    );
+  };
+
+  const preloadPrintImages = () =>
+    preloadImages([
+      "/logos/deped_logo_1.png",
+      "/logos/deped_logo_2.png",
+      "/deped_header.svg",
+      "/logos/matatag.png",
+      "/logos/matatag.svg",
+      "/logos/bagong.png",
+      "/logos/bagong.svg",
+      "/logos/bayugan.png",
+      "/logos/bayugan.svg",
+    ]);
 
   const handlePrintAdviseOrder = async (item: ApplicantTypes, type: string) => {
-    await preloadImages([
-      '/deped_header.png',
-      '/logos/matatag.png',
-      '/logos/bagong.png',
-      '/logos/bayugan.png'
-    ])
+    await preloadPrintImages();
 
-    setSelectedType(type)
+    setSelectedType(type);
 
     setTimeout(() => {
       setSelectedItem({
         ...item,
         date: selectedDate,
-        assignment: selectedLocation
-      }) // Set the new item after a short delay
+        assignment: selectedLocation,
+      }); // Set the new item after a short delay
       setTimeout(() => {
-        printFn() // Trigger the print function after re-rendering the new content
-      }, 100) // Adjust this delay if needed
-    }, 100) // This delay ensures the unmounting and re-rendering are separated
-  }
+        printFn(); // Trigger the print function after re-rendering the new content
+      }, 100); // Adjust this delay if needed
+    }, 100); // This delay ensures the unmounting and re-rendering are separated
+  };
 
   const handlePrintAssumption = async (
     item: ApplicantTypes,
     date: string,
     location: string,
     signatory: string,
-    position: string
+    position: string,
   ) => {
-    await preloadImages([
-      '/deped_header.png',
-      '/logos/matatag.png',
-      '/logos/bagong.png',
-      '/logos/bayugan.png'
-    ])
+    await preloadPrintImages();
 
-    setSelectedType('assumption')
+    setSelectedType("assumption");
 
     setTimeout(() => {
       setSelectedItem({
@@ -432,44 +440,63 @@ const Page: React.FC = () => {
         date,
         assignment: location,
         signatory,
-        position
-      }) // Set the new item after a short delay
+        position,
+      }); // Set the new item after a short delay
       setTimeout(() => {
-        printFn() // Trigger the print function after re-rendering the new content
-      }, 100) // Adjust this delay if needed
-    }, 100) // This delay ensures the unmounting and re-rendering are separated
-  }
+        printFn(); // Trigger the print function after re-rendering the new content
+      }, 100); // Adjust this delay if needed
+    }, 100); // This delay ensures the unmounting and re-rendering are separated
+  };
+
+  const handlePrintOathOfOffice = async (
+    item: ApplicantTypes,
+    date: string,
+    signatory: string,
+    position: string,
+  ) => {
+    await preloadPrintImages();
+    setSelectedType("oath-of-office");
+    setTimeout(() => {
+      setSelectedItem({
+        ...item,
+        date,
+        signatory,
+        position,
+      });
+      setTimeout(() => printFn(), 100);
+    }, 100);
+  };
 
   // Filter data by Display
   useEffect(() => {
-    setLoading(true)
-    const passingScore = rankingDetails?.passing_score ?? 50
+    setLoading(true);
+    const passingScore = rankingDetails?.passing_score ?? 50;
 
-    if (filterDisplay === 'RQA') {
+    if (filterDisplay === "RQA") {
       const filteredList = rankList.filter(
-        (item) => Number(item.overall_score) > Number(passingScore)
-      )
-      setList(filteredList)
+        (item) => Number(item.overall_score) > Number(passingScore),
+      );
+      setList(filteredList);
     } else {
-      setList(rankList)
+      setList(rankList);
     }
 
-    setLoading(false)
-  }, [filterDisplay, rankingDetails])
+    setLoading(false);
+  }, [filterDisplay, rankingDetails]);
 
   // Fetch data
   useEffect(() => {
-    setList([])
-    setRankList([])
-    void fetchData()
+    setList([]);
+    setRankList([]);
+    void fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterRanking, refetch])
+  }, [filterRanking, refetch]);
 
-  const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
+  const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list;
 
   // Check access from permission settings or Super Admins
-  if (!hasAccess('rsp_manager') && !hasAccess('hr') && !hasAccess('sds'))
-    return <Unauthorized />
+  if (!hasAccess("rsp_manager") && !hasAccess("hr") && !hasAccess("sds"))
+    return <Unauthorized />;
 
   return (
     <>
@@ -516,40 +543,40 @@ const Page: React.FC = () => {
               <div className="space-x-2">
                 <CustomButton
                   containerStyles="app__btn_green"
-                  title={downloading ? 'Downloading...' : 'Download Rank List'}
+                  title={downloading ? "Downloading..." : "Download Rank List"}
                   btnType="button"
-                  handleClick={() => handleDownloadExcel('Rank List')}
+                  handleClick={() => handleDownloadExcel("Rank List")}
                 />
                 <CustomButton
                   containerStyles="app__btn_green"
                   title={`Download ${rankingDetails?.type}`}
                   btnType="button"
-                  handleClick={() => handleDownloadExcel('RQA')}
+                  handleClick={() => handleDownloadExcel("RQA")}
                 />
                 <CustomButton
                   containerStyles="app__btn_blue"
                   title="Display Rank List"
                   btnType="button"
-                  handleClick={() => setFilterDisplay('Rank List')}
+                  handleClick={() => setFilterDisplay("Rank List")}
                 />
                 <CustomButton
                   containerStyles="app__btn_blue"
                   title={`Display ${rankingDetails?.type}`}
                   btnType="button"
-                  handleClick={() => setFilterDisplay('RQA')}
+                  handleClick={() => setFilterDisplay("RQA")}
                 />
               </div>
               <div className="app__filter_container">
                 <CheckIcon className="w-4 h-4 mr-1" />
                 <div className="text-xs">
-                  {rankingDetails?.type.includes('RQA') ? 'RQA' : 'CAR'} Passing
+                  {rankingDetails?.type.includes("RQA") ? "RQA" : "CAR"} Passing
                   Score: {rankingDetails?.passing_score}
                 </div>
               </div>
             </div>
           )}
 
-          {filterRanking === '' && (
+          {filterRanking === "" && (
             <div className="mt-10 text-center text-xl font-light text-gray-600">
               Choose ranking from filters above.
             </div>
@@ -595,45 +622,24 @@ const Page: React.FC = () => {
                               leaveTo="transform opacity-0 scale-95"
                             >
                               <Menu.Items className="app__dropdown_items">
-                                <div className="py-1">
-                                  <Menu.Item>
-                                    <div
-                                      onClick={() =>
-                                        handleViewCommitteePoints(
-                                          item.applicant
-                                        )
-                                      }
-                                      className="app__dropdown_item"
-                                    >
-                                      <EyeIcon className="w-4 h-4" />
-                                      <span>View Committee Points</span>
-                                    </div>
-                                  </Menu.Item>
-                                  <Menu.Item>
-                                    <div
-                                      onClick={() => {
-                                        setIsAdviseOrderOpen(true)
-                                        setSelectedItem(item.applicant)
-                                      }}
-                                      className="app__dropdown_item space-x-2"
-                                    >
-                                      <span>🖨️</span>{' '}
-                                      <span>Print Advise Order</span>
-                                    </div>
-                                  </Menu.Item>
-                                  <Menu.Item>
-                                    <div
-                                      onClick={() => {
-                                        setIsAssumptionOpen(true)
-                                        setSelectedItem(item.applicant)
-                                      }}
-                                      className="app__dropdown_item space-x-2"
-                                    >
-                                      <span>🖨️</span>{' '}
-                                      <span>Print Assumptional to Duty</span>
-                                    </div>
-                                  </Menu.Item>
-                                </div>
+                                <PrintableActionsMenu
+                                  onPrintAdviseOrder={() => {
+                                    setIsAdviseOrderOpen(true);
+                                    setSelectedItem(item.applicant);
+                                  }}
+                                  onPrintAssumption={() => {
+                                    setIsAssumptionOpen(true);
+                                    setSelectedItem(item.applicant);
+                                  }}
+                                  onPrintOathOfOffice={() => {
+                                    setIsOathOpen(true);
+                                    setSelectedItem(item.applicant);
+                                  }}
+                                  onViewCommitteePoints={() =>
+                                    handleViewCommitteePoints(item.applicant)
+                                  }
+                                  showViewCommitteePoints
+                                />
                               </Menu.Items>
                             </Transition>
                           </Menu>
@@ -642,8 +648,8 @@ const Page: React.FC = () => {
                         <td className="w-6 pl-4 app__td text-lg">{item.no2}</td>
                         <th className="app__th_firstcol">
                           <div className="font-medium">
-                            {item.applicant.lastname},{' '}
-                            {item.applicant.firstname}{' '}
+                            {item.applicant.lastname},{" "}
+                            {item.applicant.firstname}{" "}
                             {item.applicant.middlename}
                           </div>
                           <div className="font-light">
@@ -677,32 +683,32 @@ const Page: React.FC = () => {
                             Solo Parent: {item.applicant.solo_parent}
                           </div>
                           <div className="font-light">
-                            Member of Ethnic Group: {item.applicant.ethnicity}{' '}
+                            Member of Ethnic Group: {item.applicant.ethnicity}{" "}
                             {item.applicant.ethnicity_detail}
                           </div>
                           <div className="font-light">
-                            Latin Honor: {item.applicant.latin_honor_yesno}{' '}
+                            Latin Honor: {item.applicant.latin_honor_yesno}{" "}
                             {item.applicant.latin_honor}
                           </div>
                           <div className="font-light">
-                            Special Program Beneficiary?:{' '}
-                            {item.applicant.special_program_beneficiary_yesno}{' '}
+                            Special Program Beneficiary?:{" "}
+                            {item.applicant.special_program_beneficiary_yesno}{" "}
                             {item.applicant.special_program_beneficiary}
                           </div>
                           <div className="font-light">
                             Major: {item.applicant.specific_major}
                           </div>
-                          {item.applicant.current_employee === 'Yes' && (
+                          {item.applicant.current_employee === "Yes" && (
                             <>
                               <div className="font-bold mt-2">
                                 (Current DepEd Employee)
                               </div>
                               <div className="">
-                                Position:{' '}
+                                Position:{" "}
                                 {item.applicant.hrm_item?.hrm_position?.name}
                               </div>
                               <div className="">
-                                Implementing Unit:{' '}
+                                Implementing Unit:{" "}
                                 {
                                   item.applicant.hrm_item?.implementing_unit
                                     ?.name
@@ -710,15 +716,15 @@ const Page: React.FC = () => {
                               </div>
                             </>
                           )}
-                          {item.applicant.previous_applicant === 'Yes' && (
+                          {item.applicant.previous_applicant === "Yes" && (
                             <div className="font-bold">
                               (Previous Applicant)
                             </div>
                           )}
                         </th>
                         <td className="app__td">
-                          {(hasAccess('sds') || hasAccess('settings')) &&
-                            item.applicant.status !== 'Appointed' && (
+                          {(hasAccess("sds") || hasAccess("settings")) &&
+                            item.applicant.status !== "Appointed" && (
                               <CustomButton
                                 containerStyles="app__btn_blue"
                                 title="Appoint"
@@ -728,7 +734,7 @@ const Page: React.FC = () => {
                                 }
                               />
                             )}
-                          {item.applicant.status === 'Appointed' && (
+                          {item.applicant.status === "Appointed" && (
                             <span className="font-bold text-lg">Appointed</span>
                           )}
                         </td>
@@ -740,12 +746,12 @@ const Page: React.FC = () => {
                                   <div key={criteriaName}>
                                     <span>{criteriaName}:</span>
                                     <span className="font-bold">
-                                      {' '}
-                                      {avgPoints.toFixed(3)}{' '}
+                                      {" "}
+                                      {avgPoints.toFixed(3)}{" "}
                                     </span>
                                     {/* Display with 2 decimal places */}
                                   </div>
-                                )
+                                ),
                               )}
                             </div>
                           )}
@@ -770,7 +776,7 @@ const Page: React.FC = () => {
                     {rankingDetails?.committees.map((committee) => (
                       <div key={committee.id} className="inline-flex">
                         <div>
-                          {committee.status === 'Confirmed' ? (
+                          {committee.status === "Confirmed" ? (
                             <div>
                               {committee.hrm_user?.signature_path ? (
                                 <Image
@@ -792,8 +798,8 @@ const Page: React.FC = () => {
                             <div className="h-[75px]">&nbsp;</div>
                           )}
                           <div className="text-sm underline underline-offset-4">
-                            {committee.hrm_user.firstname}{' '}
-                            {committee.hrm_user.middlename ?? ''}{' '}
+                            {committee.hrm_user.firstname}{" "}
+                            {committee.hrm_user.middlename ?? ""}{" "}
                             {committee.hrm_user.lastname}
                           </div>
                           <div className="text-xs">
@@ -844,11 +850,11 @@ const Page: React.FC = () => {
               <button
                 onClick={() => {
                   if (!selectedDate || !selectedLocation) {
-                    alert('Please select a date and assignment')
-                    return
+                    alert("Please select a date and assignment");
+                    return;
                   }
-                  setIsAdviseOrderOpen(false)
-                  void handlePrintAdviseOrder(selectedItem, 'advise-order')
+                  setIsAdviseOrderOpen(false);
+                  void handlePrintAdviseOrder(selectedItem, "advise-order");
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded"
               >
@@ -859,29 +865,50 @@ const Page: React.FC = () => {
         </div>
       )}
 
-      {/* Advise Order Print Modal */}
+      {/* Assumption to Duty Print Modal */}
       {isAssumptionOpen && selectedItem && (
         <AssumptionModal
-          onConfirm={(date, location, signatory, position) =>
-            handlePrintAssumption(
+          onConfirm={(date, location, signatory, position) => {
+            setIsAssumptionOpen(false);
+            void handlePrintAssumption(
               selectedItem,
               date,
               location,
               signatory,
-              position
-            )
-          }
+              position,
+            );
+          }}
           onCancel={() => setIsAssumptionOpen(false)}
         />
       )}
 
+      {/* Oath of Office Print Modal */}
+      {isOathOpen && selectedItem && (
+        <OathOfOfficeModal
+          onConfirm={(date, signatory, position) => {
+            setIsOathOpen(false);
+            void handlePrintOathOfOffice(
+              selectedItem,
+              date,
+              signatory,
+              position,
+            );
+          }}
+          onCancel={() => setIsOathOpen(false)}
+        />
+      )}
+
       {/* Print Advisd Order */}
-      {selectedItem && selectedType === 'advise-order' && (
+      {selectedItem && selectedType === "advise-order" && (
         <PrintAdviseOrder selectedItem={selectedItem} ref={componentRef} />
       )}
       {/* Print Assumption */}
-      {selectedItem && selectedType === 'assumption' && (
+      {selectedItem && selectedType === "assumption" && (
         <PrintAssumption selectedItem={selectedItem} ref={componentRef} />
+      )}
+      {/* Print Oath of Office */}
+      {selectedItem && selectedType === "oath-of-office" && (
+        <PrintOathOfOffice selectedItem={selectedItem} ref={componentRef} />
       )}
 
       {/* Show Casted Points Modal */}
@@ -903,6 +930,6 @@ const Page: React.FC = () => {
         />
       )}
     </>
-  )
-}
-export default Page
+  );
+};
+export default Page;

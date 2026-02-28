@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <circle cx="40" cy="40" r="38" fill="#fff" stroke="#c41e3a" stroke-width="2"/>
+  <text x="40" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#c41e3a">BAGONG</text>
+  <text x="40" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#c41e3a">PILIPINAS</text>
+</svg>
