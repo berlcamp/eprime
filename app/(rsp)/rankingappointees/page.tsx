@@ -302,6 +302,7 @@ const Page: React.FC = () => {
                                     setIsOathOpen(true)
                                     setSelectedItem(item.applicant)
                                   }}
+                                  isAppointed={true}
                                 />
                               </Menu.Items>
                             </Transition>

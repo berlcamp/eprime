@@ -9,6 +9,8 @@ interface PrintableActionsMenuProps {
   onPrintOathOfOffice: () => void
   onViewCommitteePoints?: () => void
   showViewCommitteePoints?: boolean
+  /** Only show print actions when applicant is appointed */
+  isAppointed?: boolean
 }
 
 /**
@@ -21,6 +23,7 @@ export function PrintableActionsMenu({
   onPrintOathOfOffice,
   onViewCommitteePoints,
   showViewCommitteePoints = false,
+  isAppointed = true,
 }: PrintableActionsMenuProps) {
   return (
     <div className="py-1">
@@ -35,33 +38,37 @@ export function PrintableActionsMenu({
           </div>
         </Menu.Item>
       )}
-      <Menu.Item>
-        <div
-          onClick={onPrintAdviseOrder}
-          className="app__dropdown_item space-x-2"
-        >
-          <PrinterIcon className="w-4 h-4" />
-          <span>Print Advise Order</span>
-        </div>
-      </Menu.Item>
-      <Menu.Item>
-        <div
-          onClick={onPrintAssumption}
-          className="app__dropdown_item space-x-2"
-        >
-          <PrinterIcon className="w-4 h-4" />
-          <span>Print Assumption to Duty</span>
-        </div>
-      </Menu.Item>
-      <Menu.Item>
-        <div
-          onClick={onPrintOathOfOffice}
-          className="app__dropdown_item space-x-2"
-        >
-          <PrinterIcon className="w-4 h-4" />
-          <span>Print Oath of Office</span>
-        </div>
-      </Menu.Item>
+      {isAppointed && (
+        <>
+          <Menu.Item>
+            <div
+              onClick={onPrintAdviseOrder}
+              className="app__dropdown_item space-x-2"
+            >
+              <PrinterIcon className="w-4 h-4" />
+              <span>Print Advise Order</span>
+            </div>
+          </Menu.Item>
+          <Menu.Item>
+            <div
+              onClick={onPrintAssumption}
+              className="app__dropdown_item space-x-2"
+            >
+              <PrinterIcon className="w-4 h-4" />
+              <span>Print Assumption to Duty</span>
+            </div>
+          </Menu.Item>
+          <Menu.Item>
+            <div
+              onClick={onPrintOathOfOffice}
+              className="app__dropdown_item space-x-2"
+            >
+              <PrinterIcon className="w-4 h-4" />
+              <span>Print Oath of Office</span>
+            </div>
+          </Menu.Item>
+        </>
+      )}
     </div>
   )
 }

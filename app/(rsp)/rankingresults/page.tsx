@@ -639,6 +639,7 @@ const Page: React.FC = () => {
                                     handleViewCommitteePoints(item.applicant)
                                   }
                                   showViewCommitteePoints
+                                  isAppointed={item.applicant.status === "Appointed"}
                                 />
                               </Menu.Items>
                             </Transition>
