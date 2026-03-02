@@ -41,9 +41,9 @@ function SignatoryBlock({
       </div>
       <div className="font-bold border-t border-t-black mt-1 text-sm">
         {user
-          ? [user.lastname, user.firstname, user.middlename]
+          ? [user.firstname, user.middlename, user.lastname]
               .filter(Boolean)
-              .join(", ")
+              .join(" ")
           : name}
       </div>
       <div className="text-xs">{position}</div>
@@ -71,8 +71,9 @@ function SinglePrintNosa({
     const fyYear = effectiveDate.getFullYear();
     const userName = [
       selectedItem.hrm_user?.lastname,
-      selectedItem.hrm_user?.firstname,
-      selectedItem.hrm_user?.middlename,
+      [selectedItem.hrm_user?.firstname, selectedItem.hrm_user?.middlename]
+        .filter(Boolean)
+        .join(" "),
     ]
       .filter(Boolean)
       .join(", ");

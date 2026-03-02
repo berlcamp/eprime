@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
-import { NosaTypes, SignatoriesTypes } from "@/types";
 import type { Employee } from "@/types";
+import { NosaTypes, SignatoriesTypes } from "@/types";
 import { formatToPesos } from "@/utils/text-helper";
 import { format } from "date-fns";
 import * as React from "react";
@@ -296,7 +296,13 @@ export const PrintNosa = React.forwardRef<
         </table>
         <div className="absolute bottom-0 w-full text-sm">
           <div className="border-t-2 border-black flex items-start justify-start space-x-1">
-            <img src="/deped_bayugan.png" alt="" width={120} height={120} className="object-contain" />
+            <img
+              src="/deped_bayugan.png"
+              alt=""
+              width={120}
+              height={120}
+              className="object-contain"
+            />
             <div className="mt-3">
               <div>Lanzones Street, Poblacion, Bayugan City</div>
               <div className="text-blue-500">deped.bayugan@gmail.com</div>

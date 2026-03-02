@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { NosiTypes, SignatoriesTypes } from "@/types";
 import type { Employee } from "@/types";
+import { NosiTypes, SignatoriesTypes } from "@/types";
 import { formatToPesos } from "@/utils/text-helper";
 import { format } from "date-fns";
 import * as React from "react";
@@ -42,9 +42,9 @@ function SignatoryBlock({
       </div>
       <div className="font-bold border-t border-t-black mt-1 text-sm">
         {user
-          ? [user.lastname, user.firstname, user.middlename]
+          ? [user.firstname, user.middlename, user.lastname]
               .filter(Boolean)
-              .join(", ")
+              .join(" ")
           : name}
       </div>
       <div className="text-xs">{position}</div>
@@ -72,13 +72,14 @@ export const PrintNosi = React.forwardRef<
       (Number(selectedItem.previous_step) || 0);
     const amountDiff = newAmount - prevAmount;
     const fyYear = effectiveDate.getFullYear();
-    const userName = [
-      selectedItem.hrm_user?.lastname,
+    const lastname = selectedItem.hrm_user?.lastname;
+    const firstAndMiddle = [
       selectedItem.hrm_user?.firstname,
       selectedItem.hrm_user?.middlename,
     ]
       .filter(Boolean)
-      .join(", ");
+      .join(" ");
+    const userName = [lastname, firstAndMiddle].filter(Boolean).join(", ");
 
     return {
       effectiveDate,
@@ -238,9 +239,7 @@ export const PrintNosi = React.forwardRef<
         </div>
 
         {/* Recommending Approval */}
-        <div className="text-center mt-4 text-sm">
-          Recommending Approval:
-        </div>
+        <div className="text-center mt-4 text-sm">Recommending Approval:</div>
         <div className="flex justify-evenly mt-2 text-sm gap-4">
           <div className="text-center flex-1">
             <SignatoryBlock
