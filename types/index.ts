@@ -916,6 +916,8 @@ export interface ApplicantTypes {
   assignment?: string;
   signatory?: string;
   position?: string;
+  attested_by?: string;
+  attested_by_position?: string;
   employment_status?: string;
   nature_of_appointment?: string;
   vice?: string;

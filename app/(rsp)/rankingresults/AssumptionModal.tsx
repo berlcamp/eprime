@@ -1,19 +1,21 @@
-'use client'
+"use client";
 
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { PrintModal } from '@/components/Rsp/PrintModal'
-import { useState } from 'react'
+import { PrintModal } from "@/components/Rsp/PrintModal";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 interface AssumptionModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onConfirm: (
     date: string,
     location: string,
     signatory: string,
-    position: string
-  ) => void
+    position: string,
+    attestedBy: string,
+    attestedByPosition: string,
+  ) => void;
 }
 
 export default function AssumptionModal({
@@ -21,21 +23,25 @@ export default function AssumptionModal({
   onOpenChange,
   onConfirm,
 }: AssumptionModalProps) {
-  const [selectedDate, setSelectedDate] = useState('')
-  const [selectedLocation, setSelectedLocation] = useState('')
-  const [selectedSignatory, setSelectedSignatory] = useState('')
-  const [selectedPosition, setSelectedPosition] = useState('')
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedSignatory, setSelectedSignatory] = useState("");
+  const [selectedPosition, setSelectedPosition] = useState("");
+  const [attestedBy, setAttestedBy] = useState("");
+  const [attestedByPosition, setAttestedByPosition] = useState("");
 
   const handleConfirm = () => {
-    if (!selectedDate || !selectedLocation) return
+    if (!selectedDate || !selectedLocation) return;
     onConfirm(
       selectedDate,
       selectedLocation,
       selectedSignatory,
-      selectedPosition
-    )
-    onOpenChange(false)
-  }
+      selectedPosition,
+      attestedBy,
+      attestedByPosition,
+    );
+    onOpenChange(false);
+  };
 
   return (
     <PrintModal
@@ -90,7 +96,32 @@ export default function AssumptionModal({
             </div>
           </div>
         </div>
+        <div className="border-t border-slate-200 pt-4">
+          <p className="mb-3 text-sm font-medium text-slate-600">
+            Attested by (optional)
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="assumption-attested-by">Name</Label>
+              <Input
+                id="assumption-attested-by"
+                value={attestedBy}
+                onChange={(e) => setAttestedBy(e.target.value)}
+                placeholder="e.g., JASMINE B. NEPA"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="assumption-attested-by-position">Position</Label>
+              <Input
+                id="assumption-attested-by-position"
+                value={attestedByPosition}
+                onChange={(e) => setAttestedByPosition(e.target.value)}
+                placeholder="e.g., Administrative Officer IV - HRMO"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </PrintModal>
-  )
+  );
 }

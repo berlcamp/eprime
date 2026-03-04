@@ -123,10 +123,10 @@ export const PrintAssumption = React.forwardRef<
                 <div className="mt-4 flex justify-end">
                   <div className="text-center">
                     <div className="font-bold underline underline-offset-2">
-                      JASMINE B. NEPA
+                      {selectedItem.attested_by || "_______________________"}
                     </div>
                     <div className="text-base">
-                      Administrative Officer IV - HRMO
+                      {selectedItem.attested_by_position || "Administrative Officer IV - HRMO"}
                     </div>
                   </div>
                 </div>

@@ -23,9 +23,10 @@ import { PrintAdviseOrder } from "@/components/Printables/PrintAdviseOrder";
 import { PrintAppointmentForm } from "@/components/Printables/PrintAppointmentForm";
 import { PrintAssumption } from "@/components/Printables/PrintAssumption";
 import { PrintOathOfOffice } from "@/components/Printables/PrintOathOfOffice";
-import { PrintableActionsMenu } from "@/components/Rsp/PrintableActionsMenu";
-import OathOfOfficeModal from "@/components/Rsp/OathOfOfficeModal";
+import { AdviseOrderModal } from "@/components/Rsp/AdviseOrderModal";
 import CommitteePointsModal from "@/components/Rsp/CommitteePointsModal";
+import OathOfOfficeModal from "@/components/Rsp/OathOfOfficeModal";
+import { PrintableActionsMenu } from "@/components/Rsp/PrintableActionsMenu";
 import RspSidebar from "@/components/Sidebars/RspSidebar";
 import { useSupabase } from "@/context/SupabaseProvider";
 import { CommitteeAccumulatedPoints } from "@/utils/data-helpers";
@@ -35,7 +36,6 @@ import axios from "axios";
 import { CheckIcon } from "lucide-react";
 import Image from "next/image";
 import { useReactToPrint } from "react-to-print";
-import { AdviseOrderModal } from "@/components/Rsp/AdviseOrderModal";
 import AppointmentFormModal from "./AppointmentFormModal";
 import AssumptionModal from "./AssumptionModal";
 
@@ -412,7 +412,7 @@ const Page: React.FC = () => {
     item: ApplicantTypes,
     type: string,
     date: string,
-    location: string
+    location: string,
   ) => {
     await preloadPrintImages();
 
@@ -436,6 +436,8 @@ const Page: React.FC = () => {
     location: string,
     signatory: string,
     position: string,
+    attestedBy: string,
+    attestedByPosition: string,
   ) => {
     await preloadPrintImages();
 
@@ -448,6 +450,8 @@ const Page: React.FC = () => {
         assignment: location,
         signatory,
         position,
+        attested_by: attestedBy,
+        attested_by_position: attestedByPosition,
       }); // Set the new item after a short delay
       setTimeout(() => {
         printFn(); // Trigger the print function after re-rendering the new content
@@ -485,14 +489,14 @@ const Page: React.FC = () => {
     plantillaNumber: string,
     plantillaType?: string,
     publicationPosting?: {
-      publishedAt: string
-      publishedFrom: string
-      publishedTo: string
-      postedIn: string
-      postedFrom: string
-      postedTo: string
-      hrmpsbAssessmentStartedOn: string
-    }
+      publishedAt: string;
+      publishedFrom: string;
+      publishedTo: string;
+      postedIn: string;
+      postedFrom: string;
+      postedTo: string;
+      hrmpsbAssessmentStartedOn: string;
+    },
   ) => {
     await preloadPrintImages();
 
@@ -723,7 +727,9 @@ const Page: React.FC = () => {
                                     handleViewCommitteePoints(item.applicant)
                                   }
                                   showViewCommitteePoints
-                                  isAppointed={item.applicant.status === "Appointed"}
+                                  isAppointed={
+                                    item.applicant.status === "Appointed"
+                                  }
                                 />
                               </Menu.Items>
                             </Transition>
@@ -911,7 +917,7 @@ const Page: React.FC = () => {
               selectedItem,
               "advise-order",
               date,
-              location
+              location,
             );
           }}
         />
@@ -922,13 +928,15 @@ const Page: React.FC = () => {
         <AssumptionModal
           open={isAssumptionOpen}
           onOpenChange={setIsAssumptionOpen}
-          onConfirm={(date, location, signatory, position) => {
+          onConfirm={(date, location, signatory, position, attestedBy, attestedByPosition) => {
             void handlePrintAssumption(
               selectedItem,
               date,
               location,
               signatory,
-              position
+              position,
+              attestedBy,
+              attestedByPosition,
             );
           }}
         />
@@ -952,7 +960,17 @@ const Page: React.FC = () => {
           onOpenChange={setIsAppointmentFormOpen}
           defaultVice={selectedItem.hrm_item?.vice ?? ""}
           defaultPlantillaNumber={selectedItem.hrm_item?.item_number ?? ""}
-          onConfirm={(date, employmentStatus, natureOfAppointment, assignment, vice, reasonOfVacancy, plantillaNumber, plantillaType, publicationPosting) => {
+          onConfirm={(
+            date,
+            employmentStatus,
+            natureOfAppointment,
+            assignment,
+            vice,
+            reasonOfVacancy,
+            plantillaNumber,
+            plantillaType,
+            publicationPosting,
+          ) => {
             void handlePrintAppointmentForm(
               selectedItem,
               date,
@@ -963,7 +981,7 @@ const Page: React.FC = () => {
               reasonOfVacancy,
               plantillaNumber,
               plantillaType,
-              publicationPosting
+              publicationPosting,
             );
           }}
         />
