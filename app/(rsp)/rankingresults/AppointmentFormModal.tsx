@@ -23,7 +23,16 @@ interface AppointmentFormModalProps {
     vice: string,
     reasonOfVacancy: string,
     plantillaNumber: string,
-    plantillaType?: string
+    plantillaType?: string,
+    publicationPosting?: {
+      publishedAt: string
+      publishedFrom: string
+      publishedTo: string
+      postedIn: string
+      postedFrom: string
+      postedTo: string
+      hrmpsbAssessmentStartedOn: string
+    }
   ) => void
   defaultVice?: string
   defaultPlantillaNumber?: string
@@ -46,6 +55,13 @@ export default function AppointmentFormModal({
   const [reasonOfVacancy, setReasonOfVacancy] = useState('')
   const [plantillaNumber, setPlantillaNumber] = useState(defaultPlantillaNumber)
   const [plantillaType, setPlantillaType] = useState('')
+  const [publishedAt, setPublishedAt] = useState('')
+  const [publishedFrom, setPublishedFrom] = useState('')
+  const [publishedTo, setPublishedTo] = useState('')
+  const [postedIn, setPostedIn] = useState('')
+  const [postedFrom, setPostedFrom] = useState('')
+  const [postedTo, setPostedTo] = useState('')
+  const [hrmpsbAssessmentStartedOn, setHrmpsbAssessmentStartedOn] = useState('')
 
   useEffect(() => {
     setVice(defaultVice)
@@ -62,7 +78,16 @@ export default function AppointmentFormModal({
       vice,
       reasonOfVacancy,
       plantillaNumber,
-      plantillaType
+      plantillaType,
+      {
+        publishedAt,
+        publishedFrom,
+        publishedTo,
+        postedIn,
+        postedFrom,
+        postedTo,
+        hrmpsbAssessmentStartedOn,
+      }
     )
     onOpenChange(false)
   }
@@ -178,6 +203,83 @@ export default function AppointmentFormModal({
                 value={plantillaType}
                 onChange={(e) => setPlantillaType(e.target.value)}
                 placeholder="e.g., Elementary, Secondary"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200 pt-4">
+          <p className="mb-3 text-sm font-medium text-slate-600">
+            Publication & Posting (RA 7041)
+          </p>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="appt-published-at">Published at (location)</Label>
+              <Input
+                id="appt-published-at"
+                type="text"
+                value={publishedAt}
+                onChange={(e) => setPublishedAt(e.target.value)}
+                placeholder="e.g., DepEd website, newspaper"
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="appt-published-from">Published from</Label>
+                <Input
+                  id="appt-published-from"
+                  type="date"
+                  value={publishedFrom}
+                  onChange={(e) => setPublishedFrom(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="appt-published-to">Published to</Label>
+                <Input
+                  id="appt-published-to"
+                  type="date"
+                  value={publishedTo}
+                  onChange={(e) => setPublishedTo(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="appt-posted-in">Posted in (location)</Label>
+              <Input
+                id="appt-posted-in"
+                type="text"
+                value={postedIn}
+                onChange={(e) => setPostedIn(e.target.value)}
+                placeholder="e.g., division bulletin board"
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="appt-posted-from">Posted from</Label>
+                <Input
+                  id="appt-posted-from"
+                  type="date"
+                  value={postedFrom}
+                  onChange={(e) => setPostedFrom(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="appt-posted-to">Posted to</Label>
+                <Input
+                  id="appt-posted-to"
+                  type="date"
+                  value={postedTo}
+                  onChange={(e) => setPostedTo(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="appt-hrmpsb-started">HRMPSB assessment started on</Label>
+              <Input
+                id="appt-hrmpsb-started"
+                type="date"
+                value={hrmpsbAssessmentStartedOn}
+                onChange={(e) => setHrmpsbAssessmentStartedOn(e.target.value)}
               />
             </div>
           </div>

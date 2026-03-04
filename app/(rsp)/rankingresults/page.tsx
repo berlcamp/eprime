@@ -483,7 +483,16 @@ const Page: React.FC = () => {
     vice: string,
     reasonOfVacancy: string,
     plantillaNumber: string,
-    plantillaType?: string
+    plantillaType?: string,
+    publicationPosting?: {
+      publishedAt: string
+      publishedFrom: string
+      publishedTo: string
+      postedIn: string
+      postedFrom: string
+      postedTo: string
+      hrmpsbAssessmentStartedOn: string
+    }
   ) => {
     await preloadPrintImages();
 
@@ -523,6 +532,16 @@ const Page: React.FC = () => {
         salary_amount: salaryAmount,
         salary_in_words: salaryInWords,
         plantilla_type: plantillaType,
+        ...(publicationPosting && {
+          published_at: publicationPosting.publishedAt,
+          published_from: publicationPosting.publishedFrom,
+          published_to: publicationPosting.publishedTo,
+          posted_in: publicationPosting.postedIn,
+          posted_from: publicationPosting.postedFrom,
+          posted_to: publicationPosting.postedTo,
+          hrmpsb_assessment_started_on:
+            publicationPosting.hrmpsbAssessmentStartedOn,
+        }),
       } as ApplicantTypes);
       setTimeout(() => printFn(), 100);
     }, 100);
@@ -933,7 +952,7 @@ const Page: React.FC = () => {
           onOpenChange={setIsAppointmentFormOpen}
           defaultVice={selectedItem.hrm_item?.vice ?? ""}
           defaultPlantillaNumber={selectedItem.hrm_item?.item_number ?? ""}
-          onConfirm={(date, employmentStatus, natureOfAppointment, assignment, vice, reasonOfVacancy, plantillaNumber, plantillaType) => {
+          onConfirm={(date, employmentStatus, natureOfAppointment, assignment, vice, reasonOfVacancy, plantillaNumber, plantillaType, publicationPosting) => {
             void handlePrintAppointmentForm(
               selectedItem,
               date,
@@ -943,7 +962,8 @@ const Page: React.FC = () => {
               vice,
               reasonOfVacancy,
               plantillaNumber,
-              plantillaType
+              plantillaType,
+              publicationPosting
             );
           }}
         />

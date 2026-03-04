@@ -5,7 +5,7 @@
  * Shared header for printable documents.
  * Matches the PrintNosi header style.
  */
-export function PrintHeader() {
+export function PrintHeader({ hrLine = false }: { hrLine?: boolean }) {
   return (
     <div className="text-center mb-2">
       <div className="flex justify-center">
@@ -17,10 +17,10 @@ export function PrintHeader() {
           className="object-contain"
         />
       </div>
-      <div className="text-base mt-1">
+      <div className="text-base mt-1 font-semibold">
         SCHOOLS DIVISION OFFICE OF BAYUGAN CITY
       </div>
-      <hr className="border-black mt-1" />
+      {hrLine && <hr className="border-black mt-1" />}
     </div>
   );
 }
