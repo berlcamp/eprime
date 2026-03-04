@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
+import { useSupabase } from "@/context/SupabaseProvider";
 import { ApplicantTypes } from "@/types";
 import { format } from "date-fns";
 import * as React from "react";
-import { PrintFooter } from "./PrintFooter";
 import { PrintHeader } from "./PrintHeader";
 
 interface ComponentToPrintProps {
@@ -10,15 +10,25 @@ interface ComponentToPrintProps {
 }
 
 /**
- * CS Form No. 33-A (Revised 2018): Appointment Form - Regulated
- * Civil Service Commission standard format for government appointments.
- * Two-page layout per CSC requirements.
+ * CS Form No. 33-B (Revised 2018): Appointment Form - For Accredited/Deregulated Agencies
+ * Matches the exact CSC official format as per the reference PDF.
  */
 export const PrintAppointmentForm = React.forwardRef<
   HTMLDivElement | null,
   ComponentToPrintProps
 >((props, ref) => {
   const { selectedItem } = props;
+  const { systemAccess, systemUsers } = useSupabase();
+
+  const sdsAccess = systemAccess?.find(
+    (a: { type: string }) => a.type === "sds",
+  );
+  const sdsUser = systemUsers?.find(
+    (u: { id: string }) => u.id === sdsAccess?.user_id,
+  );
+  const sdsName = sdsUser
+    ? `${sdsUser.firstname} ${sdsUser.middlename ?? ""} ${sdsUser.lastname}`.trim()
+    : null;
 
   const positionName =
     selectedItem?.ranking?.position?.name ||
@@ -29,16 +39,40 @@ export const PrintAppointmentForm = React.forwardRef<
     selectedItem?.hrm_item?.salary_grade ||
     selectedItem?.hrm_item?.hrm_position?.salary_grade ||
     "______";
-  const fullName = `${selectedItem.firstname} ${selectedItem.middlename} ${selectedItem.lastname}`;
-  const address = selectedItem?.address || "________________";
+  const fullName = `${selectedItem.firstname} ${selectedItem.middlename ?? ""} ${selectedItem.lastname}`;
   const assignment =
     selectedItem?.assignment || "Schools Division Office of Bayugan City";
-  const employmentStatus = selectedItem?.employment_status || "Permanent";
-  const natureOfAppointment =
-    selectedItem?.nature_of_appointment || "Original";
+  const employmentStatus = (
+    selectedItem?.employment_status || "Permanent"
+  ).toUpperCase();
+  const natureOfAppointment = (
+    selectedItem?.nature_of_appointment || "Original"
+  ).toUpperCase();
+  const vice = selectedItem?.vice ?? "________________";
+  const reasonOfVacancy = (
+    selectedItem?.reason_of_vacancy ?? "________________"
+  ).toUpperCase();
+  const plantillaNumber = selectedItem?.plantilla_number ?? "________________";
+  const salaryAmount = selectedItem?.salary_amount ?? "________________";
+  const salaryInWords = (
+    selectedItem?.salary_in_words ?? "________________"
+  ).toUpperCase();
+  const plantillaType =
+    (selectedItem as ApplicantTypes & { plantilla_type?: string })
+      ?.plantilla_type ?? "";
   const effectiveDate = selectedItem?.date
     ? format(new Date(selectedItem.date), "MMMM d, yyyy")
     : "________________";
+
+  const salutation =
+    selectedItem?.sex?.toLowerCase() === "male"
+      ? "Mr."
+      : selectedItem?.sex?.toLowerCase() === "female"
+        ? "Ms."
+        : "Mr./Mrs./Ms.";
+
+  const isPromotion =
+    (selectedItem?.nature_of_appointment || "").toLowerCase() === "promotion";
 
   return (
     <div
@@ -51,219 +85,385 @@ export const PrintAppointmentForm = React.forwardRef<
         style={{ fontFamily: "Times New Roman, serif" }}
       >
         {/* ==================== PAGE 1 ==================== */}
-        <div className="print:break-after-page">
-          {/* Form identifier - upper left */}
-          <div className="text-[11px] leading-tight mb-1">
-            <div>CS Form No. 33-A (Revised 2018)</div>
-            <div>Appointment Form - Regulated</div>
-          </div>
-
-          <PrintHeader />
-
-          {/* Appointment clause */}
-          <div className="mt-6 text-justify leading-relaxed space-y-4">
-            <p className="indent-8">
-              In accordance with the provisions of Section 8 (g), Article IX-B of
-              the 1987 Philippine Constitution, pertinent civil service laws,
-              rules and regulations, and the provisions of the Local Government
-              Code of 1991 (Republic Act No. 7160), I/We hereby appoint:
-            </p>
-          </div>
-
-          {/* Appointee details table */}
-          <table className="mt-4 w-full text-[14px] border-collapse">
-            <tbody>
-              <tr>
-                <td className="py-1.5 align-top w-40 font-medium">
-                  Name:
-                </td>
-                <td className="py-1.5 border-b border-black">
-                  <span className="font-bold">
-                    {selectedItem.lastname}, {selectedItem.firstname}{" "}
-                    {selectedItem.middlename}
-                  </span>
-                </td>
-              </tr>
-              <tr>
-                <td className="py-1.5 align-top font-medium">Address:</td>
-                <td className="py-1.5 border-b border-black">{address}</td>
-              </tr>
-              <tr>
-                <td className="py-1.5 align-top font-medium">
-                  Position Title:
-                </td>
-                <td className="py-1.5 border-b border-black">{positionName}</td>
-              </tr>
-              <tr>
-                <td className="py-1.5 align-top font-medium">
-                  Salary Grade:
-                </td>
-                <td className="py-1.5 border-b border-black">{salaryGrade}</td>
-              </tr>
-              <tr>
-                <td className="py-1.5 align-top font-medium">
-                  Employment Status:
-                </td>
-                <td className="py-1.5 border-b border-black">
-                  {employmentStatus}
-                </td>
-              </tr>
-              <tr>
-                <td className="py-1.5 align-top font-medium">
-                  Nature of Appointment:
-                </td>
-                <td className="py-1.5 border-b border-black">
-                  {natureOfAppointment}
-                </td>
-              </tr>
-              <tr>
-                <td className="py-1.5 align-top font-medium">
-                  Place of Assignment:
-                </td>
-                <td className="py-1.5 border-b border-black">
-                  {assignment}
-                </td>
-              </tr>
-              <tr>
-                <td className="py-1.5 align-top font-medium">
-                  Effective Date:
-                </td>
-                <td className="py-1.5 border-b border-black">
-                  {effectiveDate}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Authority clause */}
-          <div className="mt-6 text-justify leading-relaxed">
-            <p className="indent-8">
-              This appointment is issued pursuant to existing civil service
-              rules and regulations, subject to the conditions prescribed
-              thereof.
-            </p>
-          </div>
-
-          {/* Signatory - Appointing Authority */}
-          <div className="mt-12 flex justify-end">
-            <div className="text-center min-w-[220px]">
-              <div className="font-bold border-b-2 border-black pb-1">
-                MA. TERESA M. REAL
+        <div className="print:break-after-page border-2 border-black p-4 mb-1 bg-gray-200">
+          <div className="border-2 border-black p-4 mb-4 bg-white">
+            {/* Top section: Form number left, Accredited box right, Stamp right */}
+            <div className="flex justify-between items-start mb-1">
+              <div className="text-[11px] leading-tight">
+                <div className="font-bold">CS Form No. 33-B</div>
+                <div>Revised 2018</div>
               </div>
-              <div className="text-[12px] mt-1">Schools Division Superintendent</div>
-              <div className="text-[11px] italic mt-0.5">
-                Appointing Authority
-              </div>
-              <div className="text-[12px] mt-3">
-                Date: {effectiveDate}
+              <div className="flex items-start gap-4">
+                <div className="text-[10px] text-slate-500">
+                  (Stamp of Date of Receipt)
+                </div>
+                <div className="border border-black px-3 py-1 text-[10px] font-medium">
+                  For Accredited/Deregulated Agencies
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="mt-6 text-[11px] text-justify">
-            <strong>Note:</strong> This appointment shall remain in force and
-            in effect until revoked or otherwise terminated in accordance with
-            law. The appointee is required to take an Oath of Office (CS Form
-            No. 32) and file a Certificate of Assumption to Duty (CS Form No. 4)
-            within fifteen (15) days from receipt of appointment.
+            <PrintHeader />
+
+            {/* Appointment clause - exact format per CSC Form 33-B */}
+            <div className="mt-4 text-justify leading-relaxed space-y-3">
+              <p>
+                {salutation}:{" "}
+                <span className="font-bold underline underline-offset-1">
+                  {fullName}
+                </span>
+              </p>
+              <p>
+                You are hereby appointed as{" "}
+                <span className="font-bold underline underline-offset-1">
+                  {positionName}
+                </span>{" "}
+                <span className="text-[12px]">(Position Title)</span>
+                <span className="ml-2">(SG {salaryGrade}, Step 1)</span>
+              </p>
+              <p>
+                under{" "}
+                <span className="font-bold underline underline-offset-1">
+                  {employmentStatus}
+                </span>{" "}
+                <span className="text-[12px]">
+                  (Permanent, Temporary, etc.)
+                </span>
+                <br />
+                status at the{" "}
+                <span className="font-bold underline underline-offset-1">
+                  {assignment.toUpperCase()}
+                </span>
+                .
+              </p>
+              <p className="text-[12px]">(Office/Department/Unit)</p>
+              <p>
+                with a compensation rate of{" "}
+                <span className="font-bold underline underline-offset-1">
+                  {salaryInWords}
+                </span>{" "}
+                pesos per month.
+                <span className="ml-2">
+                  (P{" "}
+                  <span className="font-bold underline underline-offset-1">
+                    {salaryAmount}
+                  </span>
+                  )
+                </span>
+              </p>
+              <p>
+                The nature of this appointment is{" "}
+                <span className="font-bold underline underline-offset-1">
+                  {natureOfAppointment}
+                </span>{" "}
+                <span className="text-[12px]">(Original, Promotion, etc.)</span>{" "}
+                vice{" "}
+                <span className="font-bold underline underline-offset-1">
+                  {vice}
+                </span>{" "}
+                who{" "}
+                <span className="font-bold underline underline-offset-1">
+                  {reasonOfVacancy}
+                </span>
+              </p>
+              <p className="text-[12px]">
+                (Transferred, Retired, Promoted, etc.)
+              </p>
+              <p>
+                with Plantilla Item No.{" "}
+                <span className="font-bold underline underline-offset-1">
+                  {plantillaNumber}
+                </span>
+              </p>
+            </div>
+
+            {/* Effective date clause */}
+            <div className="mt-6 text-justify leading-relaxed">
+              <p className="indent-8">
+                This appointment shall take effect on the date of signing by the
+                appointing officer/authority.
+              </p>
+            </div>
+
+            {/* Plantilla type - italic */}
+            {plantillaType && (
+              <div className="mt-3 italic">
+                <span className="underline underline-offset-1">
+                  Plantilla: {plantillaType}
+                </span>
+              </div>
+            )}
+
+            {/* Reversion clause - for Promotion only */}
+            {isPromotion && (
+              <div className="mt-2 text-[12px] italic">
+                *the appointee shall be reverted to his/her former position in
+                case the promotional appointment of the previous position holder
+                is disapproved or invalidated.
+              </div>
+            )}
+
+            {/* Signatory section - right aligned */}
+            <div className="mt-10 flex justify-between items-end">
+              <div className="text-[12px]">
+                <div>Accredited/Deregulated Pursuant to</div>
+                <div className="underline underline-offset-1">
+                  CSC Resolution No. 2100140, s. 2021
+                </div>
+                <div>
+                  dated{" "}
+                  <span className="underline underline-offset-1">
+                    February 16, 2021
+                  </span>
+                </div>
+                <div className="mt-6 text-slate-400 font-medium">DRY SEAL</div>
+              </div>
+              <div className="text-right">
+                <div className="mb-4">Very truly yours,</div>
+                {sdsUser?.signature_path && (
+                  <div className="mb-1">
+                    <img
+                      src={sdsUser.signature_path}
+                      alt=""
+                      width={80}
+                      height={50}
+                      className="object-contain ml-auto mr-0"
+                    />
+                  </div>
+                )}
+                <div className="font-bold border-b-2 border-black pb-1">
+                  {sdsName ?? "________________"}
+                </div>
+                <div className="text-[12px] mt-1">
+                  OIC-Schools Division Superintendent
+                </div>
+                <div className="text-[12px]">Appointing Officer/Authority</div>
+                <div className="text-[12px] mt-3 font-bold">
+                  {effectiveDate}
+                </div>
+                <div className="text-[12px]">Date of Signing</div>
+                <div className="mt-8 text-[10px] text-slate-500">
+                  (Stamp of Date of Release)
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* ==================== PAGE 2 ==================== */}
-        <div className="mt-8">
-          {/* Form identifier */}
-          <div className="text-[11px] leading-tight mb-2">
-            <div>CS Form No. 33-A (Revised 2018)</div>
-            <div>Appointment Form - Regulated (Page 2)</div>
-          </div>
-
-          <div className="text-center font-bold text-base mb-4">
-            CERTIFICATIONS
-          </div>
-
-          {/* Certification 1: Availability of Funds */}
-          <div className="space-y-2 mb-6">
-            <div className="text-justify leading-relaxed">
-              <p className="indent-8">
-                This is to certify that the amount necessary to cover the
-                salary and authorized allowances of{" "}
-                <span className="font-bold">{fullName}</span> as{" "}
-                <span className="font-bold">{positionName}</span> (SG{" "}
-                {salaryGrade}) is available in the annual budget for the
-                current year under the corresponding expense account.
-              </p>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <div className="text-center min-w-[200px]">
-                <div className="border-b-2 border-black h-6" />
-                <div className="text-[12px] mt-1">
-                  Authorized Official (Accountant)
+        <div className="mt-8 print:break-before-page">
+          {/* Certification 1 */}
+          <div className="border-2 border-black p-4 mb-1 bg-gray-200">
+            <div className="border-2 border-black p-4 mb-4 bg-white">
+              <div className="text-center font-bold mb-3">Certification</div>
+              <div className="text-justify leading-relaxed text-[13px] space-y-2">
+                <p className="indent-8">
+                  This is to certify that all requirements and supporting papers
+                  pursuant to CSC MC No. 24, s. 2017,{" "}
+                  <strong>as amended</strong>, have been complied with, reviewed
+                  and found to be in order.
+                </p>
+                <p className="indent-8">
+                  The position was published at{" "}
+                  <span className="underline">________________</span> from{" "}
+                  <span className="underline">________________</span> to{" "}
+                  <span className="underline">________________</span> and posted
+                  in <span className="underline">________________</span> from{" "}
+                  <span className="underline">________________</span> to{" "}
+                  <span className="underline">________________</span> in
+                  consonance with RA No. 7041. The assessment by the Human
+                  Resource Merit Promotion and Selection Board (HRMPSB) started
+                  on <span className="underline">________________</span>.
+                </p>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <div className="text-right min-w-[200px]">
+                  <div className="font-bold border-b-2 border-black pb-1">
+                    JASMINE B. NEPA
+                  </div>
+                  <div className="text-[12px]">
+                    Administrative Officer IV - HRMO
+                  </div>
                 </div>
-                <div className="text-[11px]">Date: _______________</div>
               </div>
             </div>
           </div>
 
-          {/* Certification 2: HRMO Attestation */}
-          <div className="space-y-2 mb-6">
-            <div className="text-justify leading-relaxed">
-              <p className="indent-8">
-                This is to certify that the above-named appointee meets all the
-                minimum qualification requirements and appropriate eligibility
-                prescribed for the position; that the position is included in
-                the approved Plantilla of Personnel; and that the supporting
-                papers are complete and properly accomplished.
-              </p>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <div className="text-center min-w-[200px]">
-                <div className="font-bold border-b-2 border-black pb-1">
-                  JASMINE B. NEPA
+          {/* Certification 2 */}
+
+          <div className="border-2 border-black p-4 mb-1 bg-gray-200">
+            <div className="border-2 border-black p-4 mb-4 bg-white">
+              <div className="text-center font-bold mb-3">Certification</div>
+              <div className="text-justify leading-relaxed text-[13px]">
+                <p className="indent-8">
+                  This is to certify that the appointee has been screened and
+                  found qualified by the majority of the HRMPSB during the
+                  deliberation held on{" "}
+                  <span className="underline">________________</span>.
+                </p>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <div className="text-right min-w-[200px]">
+                  <div className="font-bold border-b-2 border-black pb-1">
+                    CORAZON P. ROA
+                  </div>
+                  <div className="text-[12px]">
+                    Assistant Schools Division Superintendent
+                  </div>
+                  <div className="text-[12px]">Chairperson, HRMPSB</div>
                 </div>
-                <div className="text-[12px] mt-1">
-                  Administrative Officer IV - HRMO
-                </div>
-                <div className="text-[11px] italic mt-0.5">
-                  Human Resource Management Officer
-                </div>
-                <div className="text-[12px] mt-3">Date: _______________</div>
               </div>
             </div>
           </div>
 
-          {/* Certification 3: CSC Submission */}
-          <div className="space-y-2 mb-4">
-            <div className="text-justify leading-relaxed text-[13px]">
-              <p className="indent-8">
-                <strong>Distribution:</strong> Appointee / 201 File / Admin /
-                COA / CSC Field Office (within thirty (30) days from date of
-                assumption)
-              </p>
+          {/* CSC/HRMO Notation */}
+          <div className="border-2 border-black p-4 mb-1 bg-gray-200">
+            <div className="border-2 border-black p-4 mb-4 bg-white">
+              <div className="text-center font-bold mb-3">
+                CSC/HRMO Notation
+              </div>
+              <table className="w-full text-[12px] border-collapse">
+                <tbody>
+                  <tr>
+                    <td className="border border-black p-2 font-bold">
+                      <div className="text-center">ACTION ON APPOINTMENTS</div>
+                    </td>
+                    <td className="border border-black p-2 w-32 font-bold text-center">
+                      Recorded by
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-black p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-4 h-4 border-2 border-black" />
+                        Validated per RAI for the month of{" "}
+                        <span className="underline flex-1">
+                          _______________
+                        </span>
+                      </div>
+                    </td>
+                    <td className="border border-black p-2"></td>
+                  </tr>
+                  <tr>
+                    <td className="border border-black p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-4 h-4 border-2 border-black" />
+                        Invalidated per CSCRO/FO letter dated{" "}
+                        <span className="underline flex-1">
+                          _______________
+                        </span>
+                      </div>
+                    </td>
+                    <td className="border border-black p-2"></td>
+                  </tr>
+                  <tr>
+                    <td className="border border-black p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-4 h-4 border-2 border-black" />
+                        Appeal
+                      </div>
+                    </td>
+                    <td className="border border-black p-2">
+                      <div className="grid grid-cols-2 gap-2 text-center font-bold">
+                        <span>DATE FILED</span>
+                        <span>STATUS</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-black p-2 pl-8">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-4 h-4 border-2 border-black" />
+                        CSCRO/CSC-Commission
+                      </div>
+                    </td>
+                    <td className="border border-black p-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="border-b border-black min-h-[20px]"></div>
+                        <div className="border-b border-black min-h-[20px]"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-black p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-4 h-4 border-2 border-black" />
+                        Petition for Review
+                      </div>
+                    </td>
+                    <td className="border border-black p-2"></td>
+                  </tr>
+                  <tr>
+                    <td className="border border-black p-2 pl-8">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-4 h-4 border-2 border-black" />
+                        CSC-Commission
+                      </div>
+                    </td>
+                    <td className="border border-black p-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="border-b border-black min-h-[20px]"></div>
+                        <div className="border-b border-black min-h-[20px]"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-black p-2 pl-8">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-4 h-4 border-2 border-black" />
+                        Court of Appeals
+                      </div>
+                    </td>
+                    <td className="border border-black p-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="border-b border-black min-h-[20px]"></div>
+                        <div className="border-b border-black min-h-[20px]"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-black p-2 pl-8">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-4 h-4 border-2 border-black" />
+                        Supreme Court
+                      </div>
+                    </td>
+                    <td className="border border-black p-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="border-b border-black min-h-[20px]"></div>
+                        <div className="border-b border-black min-h-[20px]"></div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* Appointee conforme */}
-          <div className="mt-8 pt-4 border-t border-gray-400">
-            <div className="text-[13px]">
-              <strong>Acknowledgment of Receipt:</strong>
-            </div>
-            <div className="mt-4 flex justify-between items-end">
-              <div className="flex-1">
-                <div className="border-b-2 border-black w-48 h-6" />
-                <div className="text-[11px] mt-1">Signature of Appointee</div>
+          {/* Acknowledgement */}
+          <div className="border-2 border-black p-4 mb-1 bg-gray-200">
+            <div className="border-2 border-black p-4 mb-4 bg-white">
+              <div className="text-center font-bold mb-3">Acknowledgement</div>
+              <div className="flex gap-8">
+                <div className="flex-1 text-[13px] space-y-1">
+                  <div>Original Copy - for the Appointee</div>
+                  <div>Original Copy - for the Civil Service Commission</div>
+                  <div>Original Copy - for the Agency</div>
+                </div>
+                <div className="flex-1">
+                  <div className="text-[13px] mb-4">
+                    Received original/photocopy of appointment on{" "}
+                    <span className="underline">________________</span>
+                  </div>
+                  <div className="font-bold border-b-2 border-black pb-1">
+                    {fullName}
+                  </div>
+                  <div className="text-[12px]">Appointee</div>
+                </div>
               </div>
-              <div>
-                <div className="border-b-2 border-black w-32 h-6" />
-                <div className="text-[11px] mt-1">Date</div>
-              </div>
-            </div>
-            <div className="mt-2 text-[11px] italic">
-              I acknowledge receipt of a copy of this appointment.
             </div>
           </div>
         </div>
-
-        <PrintFooter />
       </div>
     </div>
   );

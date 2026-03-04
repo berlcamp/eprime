@@ -21,11 +21,13 @@ import { PrintAppointmentForm } from '@/components/Printables/PrintAppointmentFo
 import { PrintAssumption } from '@/components/Printables/PrintAssumption'
 import { PrintOathOfOffice } from '@/components/Printables/PrintOathOfOffice'
 import { PrintableActionsMenu } from '@/components/Rsp/PrintableActionsMenu'
+import { AdviseOrderModal } from '@/components/Rsp/AdviseOrderModal'
 import OathOfOfficeModal from '@/components/Rsp/OathOfOfficeModal'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
-import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
+import { fetchSalaryGrades } from '@/utils/fetchApi'
+import { numberToWords } from '@/utils/text-helper'
 import { useReactToPrint } from 'react-to-print'
 import AppointmentFormModal from '../rankingresults/AppointmentFormModal'
 import AssumptionModal from '../rankingresults/AssumptionModal'
@@ -39,8 +41,6 @@ interface ListTypes {
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
-  const [selectedDate, setSelectedDate] = useState('')
-  const [selectedLocation, setSelectedLocation] = useState('')
   const [selectedType, setSelectedType] = useState<string>('')
   const [isAdviseOrderOpen, setIsAdviseOrderOpen] = useState(false)
   const [isAssumptionOpen, setIsAssumptionOpen] = useState(false)
@@ -88,14 +88,19 @@ const Page: React.FC = () => {
       '/logos/bayugan.svg'
     ])
 
-  const handlePrintAdviseOrder = async (item: ApplicantTypes, type: string) => {
+  const handlePrintAdviseOrder = async (
+    item: ApplicantTypes,
+    type: string,
+    date: string,
+    location: string
+  ) => {
     await preloadPrintImages()
     setSelectedType(type)
     setTimeout(() => {
       setSelectedItem({
         ...item,
-        date: selectedDate,
-        assignment: selectedLocation
+        date,
+        assignment: location
       })
       setTimeout(() => printFn(), 100)
     }, 100)
@@ -142,9 +147,36 @@ const Page: React.FC = () => {
     date: string,
     employmentStatus: string,
     natureOfAppointment: string,
-    assignment: string
+    assignment: string,
+    vice: string,
+    reasonOfVacancy: string,
+    plantillaNumber: string,
+    plantillaType?: string
   ) => {
     await preloadPrintImages()
+
+    const salaryGrade =
+      item?.ranking?.position?.salary_grade ||
+      item?.hrm_item?.salary_grade ||
+      item?.hrm_item?.hrm_position?.salary_grade
+    let salaryAmount = ''
+    let salaryInWords = ''
+    if (salaryGrade) {
+      const { data: salaryGrades } = await fetchSalaryGrades(999, 0)
+      const matching = salaryGrades?.find(
+        (sg: { grade: string; step: string }) =>
+          String(sg.grade) === String(salaryGrade) && String(sg.step) === '1'
+      )
+      if (matching?.salary) {
+        const amt = Number(matching.salary)
+        salaryAmount = amt.toLocaleString('en-PH', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })
+        salaryInWords = numberToWords(amt)
+      }
+    }
+
     setSelectedType('appointment-form')
     setTimeout(() => {
       setSelectedItem({
@@ -152,9 +184,15 @@ const Page: React.FC = () => {
         date,
         assignment,
         employment_status: employmentStatus,
-        nature_of_appointment: natureOfAppointment
-      })
-      setTimeout(() => printFn(), 100)
+        nature_of_appointment: natureOfAppointment,
+        vice,
+        reason_of_vacancy: reasonOfVacancy,
+        plantilla_number: plantillaNumber,
+        salary_amount: salaryAmount,
+        salary_in_words: salaryInWords,
+        plantilla_type: plantillaType
+      } as ApplicantTypes);
+      setTimeout(() => printFn(), 100);
     }, 100)
   }
 
@@ -388,59 +426,27 @@ const Page: React.FC = () => {
       </div>
 
       {/* Advise Order Print Modal */}
-      {isAdviseOrderOpen && selectedItem && (
-        <div className="z-50 fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-lg w-xl">
-            <div className="app__form_field_container">
-              <div className="w-full">
-                <div className="app__label_standard">
-                  Select Date & Assignment:
-                </div>
-                <div className="flex space-x-1">
-                  <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                  />
-                  <Input
-                    value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
-                    placeholder="Assignment"
-                    className="app__input_standard"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsAdviseOrderOpen(false)}
-                className="px-4 py-2 border rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (!selectedDate || !selectedLocation) {
-                    alert('Please select a date and assignment')
-                    return
-                  }
-                  setIsAdviseOrderOpen(false)
-                  void handlePrintAdviseOrder(selectedItem, 'advise-order')
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
-              >
-                Print
-              </button>
-            </div>
-          </div>
-        </div>
+      {selectedItem && (
+        <AdviseOrderModal
+          open={isAdviseOrderOpen}
+          onOpenChange={setIsAdviseOrderOpen}
+          onConfirm={(date, location) => {
+            void handlePrintAdviseOrder(
+              selectedItem,
+              'advise-order',
+              date,
+              location
+            )
+          }}
+        />
       )}
 
       {/* Assumption to Duty Print Modal */}
-      {isAssumptionOpen && selectedItem && (
+      {selectedItem && (
         <AssumptionModal
+          open={isAssumptionOpen}
+          onOpenChange={setIsAssumptionOpen}
           onConfirm={(date, location, signatory, position) => {
-            setIsAssumptionOpen(false)
             void handlePrintAssumption(
               selectedItem,
               date,
@@ -449,35 +455,40 @@ const Page: React.FC = () => {
               position
             )
           }}
-          onCancel={() => setIsAssumptionOpen(false)}
         />
       )}
 
       {/* Oath of Office Print Modal */}
-      {isOathOpen && selectedItem && (
+      {selectedItem && (
         <OathOfOfficeModal
+          open={isOathOpen}
+          onOpenChange={setIsOathOpen}
           onConfirm={(date) => {
-            setIsOathOpen(false)
             void handlePrintOathOfOffice(selectedItem, date)
           }}
-          onCancel={() => setIsOathOpen(false)}
         />
       )}
 
       {/* Appointment Form Print Modal */}
-      {isAppointmentFormOpen && selectedItem && (
+      {selectedItem && (
         <AppointmentFormModal
-          onConfirm={(date, employmentStatus, natureOfAppointment, assignment) => {
-            setIsAppointmentFormOpen(false)
+          open={isAppointmentFormOpen}
+          onOpenChange={setIsAppointmentFormOpen}
+          defaultVice={selectedItem.hrm_item?.vice ?? ''}
+          defaultPlantillaNumber={selectedItem.hrm_item?.item_number ?? ''}
+          onConfirm={(date, employmentStatus, natureOfAppointment, assignment, vice, reasonOfVacancy, plantillaNumber, plantillaType) => {
             void handlePrintAppointmentForm(
               selectedItem,
               date,
               employmentStatus,
               natureOfAppointment,
-              assignment
+              assignment,
+              vice,
+              reasonOfVacancy,
+              plantillaNumber,
+              plantillaType
             )
           }}
-          onCancel={() => setIsAppointmentFormOpen(false)}
         />
       )}
 

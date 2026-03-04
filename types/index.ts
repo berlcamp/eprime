@@ -918,6 +918,11 @@ export interface ApplicantTypes {
   position?: string;
   employment_status?: string;
   nature_of_appointment?: string;
+  vice?: string;
+  reason_of_vacancy?: string;
+  plantilla_number?: string;
+  salary_amount?: string;
+  salary_in_words?: string;
 
   // for reclass
   professional_study: string;
