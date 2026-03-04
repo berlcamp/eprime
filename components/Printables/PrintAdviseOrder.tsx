@@ -2,40 +2,8 @@
 import { ApplicantTypes } from '@/types'
 import { format } from 'date-fns'
 import * as React from 'react'
-
-// DepEd official logos and footer logos
-const LOGOS = {
-  deped1: '/logos/deped_logo_1.png',
-  deped2: '/logos/deped_logo_2.png',
-  matatag: { primary: '/logos/matatag.png', fallback: '/logos/matatag.svg' },
-  bagong: { primary: '/logos/bagong.png', fallback: '/logos/bagong.svg' },
-  bayugan: { primary: '/logos/bayugan.png', fallback: '/logos/bayugan.svg' },
-}
-
-const LogoImg = ({
-  src,
-  fallback,
-  alt,
-  width,
-  ...props
-}: {
-  src: string
-  fallback: string
-  alt: string
-  width: number
-  [key: string]: unknown
-}) => {
-  const [imgSrc, setImgSrc] = React.useState(src)
-  return (
-    <img
-      src={imgSrc}
-      alt={alt}
-      width={width}
-      onError={() => setImgSrc(fallback)}
-      {...props}
-    />
-  )
-}
+import { PrintFooter } from './PrintFooter'
+import { PrintHeader } from './PrintHeader'
 
 interface ComponentToPrintProps {
   selectedItem: ApplicantTypes
@@ -56,55 +24,25 @@ export const PrintAdviseOrder = React.forwardRef<
     selectedItem?.sex === 'Female' ? 'Ms.' : selectedItem?.sex === 'Male' ? 'Mr.' : ''
 
   return (
-    <div className="fixed left-[-9999px] top-0 w-[816px] print:left-0 print:relative print:m-16">
-      <div ref={ref} className="w-[816px] bg-white py-2 px-4 m-12 print:m-0 print:p-12">
-        {/* CSC/DepEd Standard Header with Logos */}
-        <table className="w-full">
-          <tbody>
-            <tr>
-              <td colSpan={2} className="relative">
-                <div className="flex items-center justify-center gap-4">
-                  <LogoImg
-                    src={LOGOS.deped1}
-                    fallback="/deped_header.svg"
-                    alt="DepEd Seal"
-                    width={80}
-                  />
-                  <div className="text-center">
-                    <div className="text-sm font-bold text-[#003366]">
-                      Republic of the Philippines
-                    </div>
-                    <div className="text-sm font-bold text-[#003366]">
-                      Department of Education
-                    </div>
-                    <div className="text-base font-bold">
-                      Schools Division Office of Bayugan City
-                    </div>
-                  </div>
-                  <LogoImg
-                    src={LOGOS.deped2}
-                    fallback="/deped_header.svg"
-                    alt="DepEd"
-                    width={80}
-                  />
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <div className="fixed left-[-9999px] top-0 w-[816px] print:left-0 print:relative print:m-0">
+      <div
+        ref={ref}
+        className="w-[816px] bg-white py-2 px-4 m-12 print:m-0 print:p-0 print:pb-36 text-base"
+      >
+        <PrintHeader />
 
-        <table className="border-t-2 border-black mt-2 w-full">
+        <table className="mt-2 w-full text-base">
           <tbody>
             <tr>
               <td colSpan={2} className="pt-2">
-                <div className="font-bold text-sm">
+                <div className="font-bold text-base">
                   Office of the Schools Division Superintendent
                 </div>
               </td>
             </tr>
             <tr>
               <td colSpan={2} className="pt-1">
-                <div className="font-bold text-base">MEMORANDUM</div>
+                <div className="font-bold text-lg">MEMORANDUM</div>
               </td>
             </tr>
             <tr>
@@ -118,7 +56,7 @@ export const PrintAdviseOrder = React.forwardRef<
               <td className="py-2 align-top">From</td>
               <td className="font-bold">
                 <div>: MA. TERESA M. REAL</div>
-                <div className="font-normal pl-2 text-sm">
+                <div className="font-normal pl-2 text-base">
                   OIC-Schools Division Superintendent
                 </div>
               </td>
@@ -158,51 +96,24 @@ export const PrintAdviseOrder = React.forwardRef<
 
                   <div className="mt-10 flex justify-end">
                     <div className="text-center min-w-[200px]">
-                      <div className="text-sm mb-3">Conforme:</div>
+                      <div className="text-base mb-3">Conforme:</div>
                       <div className="border-b-2 border-black h-5 w-full" />
-                      <div className="text-xs mt-1">Name &amp; Signature</div>
+                      <div className="text-sm mt-1">Name &amp; Signature</div>
                       <div className="border-b-2 border-black h-5 w-full mt-4" />
-                      <div className="text-xs mt-1">Date</div>
+                      <div className="text-sm mt-1">Date</div>
                     </div>
                   </div>
-                  <div className="text-xs mt-6">
+                  <div className="text-sm mt-6">
                     <strong>CC:</strong> School Head / District In-Charge / Division
                     Planning Officer / 201 File
                   </div>
                 </div>
               </td>
             </tr>
-            <tr>
-              <td colSpan={2} className="text-xs pt-4">
-                <div className="border-t-2 border-black pt-2 flex items-center gap-2">
-                  <LogoImg
-                    src={LOGOS.matatag.primary}
-                    fallback={LOGOS.matatag.fallback}
-                    alt="Matatag"
-                    width={40}
-                  />
-                  <LogoImg
-                    src={LOGOS.bagong.primary}
-                    fallback={LOGOS.bagong.fallback}
-                    alt="Bagong Pilipinas"
-                    width={40}
-                  />
-                  <LogoImg
-                    src={LOGOS.bayugan.primary}
-                    fallback={LOGOS.bayugan.fallback}
-                    alt="Bayugan City"
-                    width={40}
-                  />
-                  <div>
-                    <div>Lanzones Street, Poblacion, Bayugan City</div>
-                    <div className="text-blue-600">deped.bayugan@gmail.com</div>
-                    <div>Tel: (085) 303-0664</div>
-                  </div>
-                </div>
-              </td>
-            </tr>
           </tbody>
         </table>
+
+        <PrintFooter />
       </div>
     </div>
   )

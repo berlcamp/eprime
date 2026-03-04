@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 interface OathOfOfficeModalProps {
   onCancel: () => void
-  onConfirm: (date: string, signatory: string, position: string) => void
+  onConfirm: (date: string) => void
 }
 
 export default function OathOfOfficeModal({
@@ -11,8 +11,6 @@ export default function OathOfOfficeModal({
   onCancel,
 }: OathOfOfficeModalProps) {
   const [selectedDate, setSelectedDate] = useState('')
-  const [selectedSignatory, setSelectedSignatory] = useState('')
-  const [selectedPosition, setSelectedPosition] = useState('')
 
   return (
     <div className="z-50 fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
@@ -26,21 +24,6 @@ export default function OathOfOfficeModal({
               onChange={(e) => setSelectedDate(e.target.value)}
               className="mb-4"
             />
-            <div className="app__label_standard mt-4">Administering Officer:</div>
-            <div className="flex space-x-1">
-              <Input
-                value={selectedSignatory}
-                onChange={(e) => setSelectedSignatory(e.target.value)}
-                placeholder="Signatory Name"
-                className="app__input_standard"
-              />
-              <Input
-                value={selectedPosition}
-                onChange={(e) => setSelectedPosition(e.target.value)}
-                placeholder="Position"
-                className="app__input_standard"
-              />
-            </div>
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-4">
@@ -53,7 +36,7 @@ export default function OathOfOfficeModal({
                 alert('Please select a date')
                 return
               }
-              onConfirm(selectedDate, selectedSignatory, selectedPosition)
+              onConfirm(selectedDate)
             }}
             className="px-4 py-2 bg-blue-600 text-white rounded"
           >

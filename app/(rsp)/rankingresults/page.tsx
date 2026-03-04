@@ -886,13 +886,13 @@ const Page: React.FC = () => {
       {/* Oath of Office Print Modal */}
       {isOathOpen && selectedItem && (
         <OathOfOfficeModal
-          onConfirm={(date, signatory, position) => {
+          onConfirm={(date) => {
             setIsOathOpen(false);
             void handlePrintOathOfOffice(
               selectedItem,
               date,
-              signatory,
-              position,
+              "",
+              "",
             );
           }}
           onCancel={() => setIsOathOpen(false)}

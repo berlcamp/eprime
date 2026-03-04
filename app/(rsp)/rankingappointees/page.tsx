@@ -121,18 +121,14 @@ const Page: React.FC = () => {
 
   const handlePrintOathOfOffice = async (
     item: ApplicantTypes,
-    date: string,
-    signatory: string,
-    position: string
+    date: string
   ) => {
     await preloadPrintImages()
     setSelectedType('oath-of-office')
     setTimeout(() => {
       setSelectedItem({
         ...item,
-        date,
-        signatory,
-        position
+        date
       })
       setTimeout(() => printFn(), 100)
     }, 100)
@@ -432,14 +428,9 @@ const Page: React.FC = () => {
       {/* Oath of Office Print Modal */}
       {isOathOpen && selectedItem && (
         <OathOfOfficeModal
-          onConfirm={(date, signatory, position) => {
+          onConfirm={(date) => {
             setIsOathOpen(false)
-            void handlePrintOathOfOffice(
-              selectedItem,
-              date,
-              signatory,
-              position
-            )
+            void handlePrintOathOfOffice(selectedItem, date)
           }}
           onCancel={() => setIsOathOpen(false)}
         />
