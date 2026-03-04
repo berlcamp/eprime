@@ -7,6 +7,7 @@ interface PrintableActionsMenuProps {
   onPrintAdviseOrder: () => void
   onPrintAssumption: () => void
   onPrintOathOfOffice: () => void
+  onPrintAppointmentForm: () => void
   onViewCommitteePoints?: () => void
   showViewCommitteePoints?: boolean
   /** Only show print actions when applicant is appointed */
@@ -21,6 +22,7 @@ export function PrintableActionsMenu({
   onPrintAdviseOrder,
   onPrintAssumption,
   onPrintOathOfOffice,
+  onPrintAppointmentForm,
   onViewCommitteePoints,
   showViewCommitteePoints = false,
   isAppointed = true,
@@ -65,6 +67,15 @@ export function PrintableActionsMenu({
             >
               <PrinterIcon className="w-4 h-4" />
               <span>Print Oath of Office</span>
+            </div>
+          </Menu.Item>
+          <Menu.Item>
+            <div
+              onClick={onPrintAppointmentForm}
+              className="app__dropdown_item space-x-2"
+            >
+              <PrinterIcon className="w-4 h-4" />
+              <span>Print Appointment Form</span>
             </div>
           </Menu.Item>
         </>

@@ -20,6 +20,7 @@ import Filters from "./Filters";
 import type { ApplicantTypes, RankingTypes } from "@/types";
 
 import { PrintAdviseOrder } from "@/components/Printables/PrintAdviseOrder";
+import { PrintAppointmentForm } from "@/components/Printables/PrintAppointmentForm";
 import { PrintAssumption } from "@/components/Printables/PrintAssumption";
 import { PrintOathOfOffice } from "@/components/Printables/PrintOathOfOffice";
 import { PrintableActionsMenu } from "@/components/Rsp/PrintableActionsMenu";
@@ -34,6 +35,7 @@ import axios from "axios";
 import { CheckIcon } from "lucide-react";
 import Image from "next/image";
 import { useReactToPrint } from "react-to-print";
+import AppointmentFormModal from "./AppointmentFormModal";
 import AssumptionModal from "./AssumptionModal";
 
 interface ListTypes {
@@ -66,6 +68,7 @@ const Page: React.FC = () => {
   const [isAdviseOrderOpen, setIsAdviseOrderOpen] = useState(false);
   const [isAssumptionOpen, setIsAssumptionOpen] = useState(false);
   const [isOathOpen, setIsOathOpen] = useState(false);
+  const [isAppointmentFormOpen, setIsAppointmentFormOpen] = useState(false);
 
   const [rankingDetails, setRankingDetails] = useState<RankingTypes | null>(
     null,
@@ -467,6 +470,27 @@ const Page: React.FC = () => {
     }, 100);
   };
 
+  const handlePrintAppointmentForm = async (
+    item: ApplicantTypes,
+    date: string,
+    employmentStatus: string,
+    natureOfAppointment: string,
+    assignment: string,
+  ) => {
+    await preloadPrintImages();
+    setSelectedType("appointment-form");
+    setTimeout(() => {
+      setSelectedItem({
+        ...item,
+        date,
+        assignment,
+        employment_status: employmentStatus,
+        nature_of_appointment: natureOfAppointment,
+      });
+      setTimeout(() => printFn(), 100);
+    }, 100);
+  };
+
   // Filter data by Display
   useEffect(() => {
     setLoading(true);
@@ -633,6 +657,10 @@ const Page: React.FC = () => {
                                   }}
                                   onPrintOathOfOffice={() => {
                                     setIsOathOpen(true);
+                                    setSelectedItem(item.applicant);
+                                  }}
+                                  onPrintAppointmentForm={() => {
+                                    setIsAppointmentFormOpen(true);
                                     setSelectedItem(item.applicant);
                                   }}
                                   onViewCommitteePoints={() =>
@@ -899,6 +927,23 @@ const Page: React.FC = () => {
         />
       )}
 
+      {/* Appointment Form Print Modal */}
+      {isAppointmentFormOpen && selectedItem && (
+        <AppointmentFormModal
+          onConfirm={(date, employmentStatus, natureOfAppointment, assignment) => {
+            setIsAppointmentFormOpen(false);
+            void handlePrintAppointmentForm(
+              selectedItem,
+              date,
+              employmentStatus,
+              natureOfAppointment,
+              assignment,
+            );
+          }}
+          onCancel={() => setIsAppointmentFormOpen(false)}
+        />
+      )}
+
       {/* Print Advisd Order */}
       {selectedItem && selectedType === "advise-order" && (
         <PrintAdviseOrder selectedItem={selectedItem} ref={componentRef} />
@@ -910,6 +955,10 @@ const Page: React.FC = () => {
       {/* Print Oath of Office */}
       {selectedItem && selectedType === "oath-of-office" && (
         <PrintOathOfOffice selectedItem={selectedItem} ref={componentRef} />
+      )}
+      {/* Print Appointment Form */}
+      {selectedItem && selectedType === "appointment-form" && (
+        <PrintAppointmentForm selectedItem={selectedItem} ref={componentRef} />
       )}
 
       {/* Show Casted Points Modal */}

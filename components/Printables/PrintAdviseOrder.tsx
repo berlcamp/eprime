@@ -1,4 +1,6 @@
+'use client'
 /* eslint-disable @next/next/no-img-element */
+import { useSupabase } from '@/context/SupabaseProvider'
 import { ApplicantTypes } from '@/types'
 import { format } from 'date-fns'
 import * as React from 'react'
@@ -14,6 +16,15 @@ export const PrintAdviseOrder = React.forwardRef<
   ComponentToPrintProps
 >((props, ref) => {
   const { selectedItem } = props
+  const { systemAccess, systemUsers } = useSupabase()
+
+  const sdsAccess = systemAccess?.find((a: { type: string }) => a.type === 'sds')
+  const sdsUser = systemUsers?.find(
+    (u: { id: string }) => u.id === sdsAccess?.user_id
+  )
+  const sdsName = sdsUser
+    ? `${sdsUser.firstname} ${sdsUser.middlename ?? ''} ${sdsUser.lastname}`.trim()
+    : null
 
   const positionName =
     selectedItem?.ranking?.position?.name ||
@@ -55,9 +66,25 @@ export const PrintAdviseOrder = React.forwardRef<
             <tr>
               <td className="py-2 align-top">From</td>
               <td className="font-bold">
-                <div>: MA. TERESA M. REAL</div>
-                <div className="font-normal pl-2 text-base">
-                  OIC-Schools Division Superintendent
+                <div className="flex items-start gap-2">
+                  <span className="shrink-0">:</span>
+                  <div>
+                    {sdsUser?.signature_path && (
+                      <div className="mb-1">
+                        <img
+                          src={sdsUser.signature_path}
+                          alt=""
+                          width={60}
+                          height={40}
+                          className="object-contain"
+                        />
+                      </div>
+                    )}
+                    <div>{sdsName ?? '________________'}</div>
+                    <div className="font-normal pl-0 text-base">
+                      OIC-Schools Division Superintendent
+                    </div>
+                  </div>
                 </div>
               </td>
             </tr>

@@ -17,6 +17,7 @@ import Filters from './Filters'
 import type { ApplicantTypes } from '@/types'
 
 import { PrintAdviseOrder } from '@/components/Printables/PrintAdviseOrder'
+import { PrintAppointmentForm } from '@/components/Printables/PrintAppointmentForm'
 import { PrintAssumption } from '@/components/Printables/PrintAssumption'
 import { PrintOathOfOffice } from '@/components/Printables/PrintOathOfOffice'
 import { PrintableActionsMenu } from '@/components/Rsp/PrintableActionsMenu'
@@ -26,6 +27,7 @@ import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
 import { useReactToPrint } from 'react-to-print'
+import AppointmentFormModal from '../rankingresults/AppointmentFormModal'
 import AssumptionModal from '../rankingresults/AssumptionModal'
 
 interface ListTypes {
@@ -43,6 +45,7 @@ const Page: React.FC = () => {
   const [isAdviseOrderOpen, setIsAdviseOrderOpen] = useState(false)
   const [isAssumptionOpen, setIsAssumptionOpen] = useState(false)
   const [isOathOpen, setIsOathOpen] = useState(false)
+  const [isAppointmentFormOpen, setIsAppointmentFormOpen] = useState(false)
 
   const [list, setList] = useState<ListTypes[]>([])
   const [rankList, setRankList] = useState<ListTypes[]>([])
@@ -129,6 +132,27 @@ const Page: React.FC = () => {
       setSelectedItem({
         ...item,
         date
+      })
+      setTimeout(() => printFn(), 100)
+    }, 100)
+  }
+
+  const handlePrintAppointmentForm = async (
+    item: ApplicantTypes,
+    date: string,
+    employmentStatus: string,
+    natureOfAppointment: string,
+    assignment: string
+  ) => {
+    await preloadPrintImages()
+    setSelectedType('appointment-form')
+    setTimeout(() => {
+      setSelectedItem({
+        ...item,
+        date,
+        assignment,
+        employment_status: employmentStatus,
+        nature_of_appointment: natureOfAppointment
       })
       setTimeout(() => printFn(), 100)
     }, 100)
@@ -298,6 +322,10 @@ const Page: React.FC = () => {
                                     setIsOathOpen(true)
                                     setSelectedItem(item.applicant)
                                   }}
+                                  onPrintAppointmentForm={() => {
+                                    setIsAppointmentFormOpen(true)
+                                    setSelectedItem(item.applicant)
+                                  }}
                                   isAppointed={true}
                                 />
                               </Menu.Items>
@@ -436,6 +464,23 @@ const Page: React.FC = () => {
         />
       )}
 
+      {/* Appointment Form Print Modal */}
+      {isAppointmentFormOpen && selectedItem && (
+        <AppointmentFormModal
+          onConfirm={(date, employmentStatus, natureOfAppointment, assignment) => {
+            setIsAppointmentFormOpen(false)
+            void handlePrintAppointmentForm(
+              selectedItem,
+              date,
+              employmentStatus,
+              natureOfAppointment,
+              assignment
+            )
+          }}
+          onCancel={() => setIsAppointmentFormOpen(false)}
+        />
+      )}
+
       {/* Print Advise Order */}
       {selectedItem && selectedType === 'advise-order' && (
         <PrintAdviseOrder selectedItem={selectedItem} ref={componentRef} />
@@ -447,6 +492,10 @@ const Page: React.FC = () => {
       {/* Print Oath of Office */}
       {selectedItem && selectedType === 'oath-of-office' && (
         <PrintOathOfOffice selectedItem={selectedItem} ref={componentRef} />
+      )}
+      {/* Print Appointment Form */}
+      {selectedItem && selectedType === 'appointment-form' && (
+        <PrintAppointmentForm selectedItem={selectedItem} ref={componentRef} />
       )}
     </>
   )

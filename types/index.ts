@@ -916,6 +916,8 @@ export interface ApplicantTypes {
   assignment?: string;
   signatory?: string;
   position?: string;
+  employment_status?: string;
+  nature_of_appointment?: string;
 
   // for reclass
   professional_study: string;
