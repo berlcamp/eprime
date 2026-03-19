@@ -542,7 +542,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
 
     const origBal =
       leaveCreditBalances.find((c) => c.type === type)?.credits ?? 0;
-    const balance = origBal >= Number(watchedDays) ? watchedDays : origBal;
+    const balance = origBal >= Number(watchedDays) ? watchedDays : Math.max(0, origBal);
 
     setBalances({
       type,
@@ -553,7 +553,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     const withpayAmount =
       origBal >= Number(watchedDays)
         ? Number(watchedDays)
-        : Math.floor(origBal);
+        : Math.max(0, Math.floor(origBal));
     const withoutpayAmount = Number(watchedDays) - withpayAmount;
 
     setWithPay(withpayAmount);

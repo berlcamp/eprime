@@ -13,6 +13,7 @@ import { useFieldArray, useForm, useWatch } from "react-hook-form";
 
 interface PropTypes {
   requestData: DocumentTypes;
+  onCertified?: (updatedData: DocumentTypes) => void;
 }
 
 interface boxes {
@@ -46,7 +47,10 @@ interface FormTypes {
   cocs: CtosTypes[];
 }
 
-export default function CreditsCertification({ requestData }: PropTypes) {
+export default function CreditsCertification({
+  requestData,
+  onCertified,
+}: PropTypes) {
   const { supabase, session } = useSupabase();
   const { setToast, hasAccess } = useFilter();
   const [loading, setLoading] = useState(false);
@@ -189,11 +193,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
           "Update leave credit used on leave",
           "hrm_request_trackers",
           JSON.stringify(newData),
-          error.message
+          error.message,
         );
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
       }
@@ -202,7 +206,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
       const updatedCtoData = formdata.cocs
         .filter(
           (field: { use_coc: string }) =>
-            field.use_coc && parseFloat(field.use_coc) > 0
+            field.use_coc && parseFloat(field.use_coc) > 0,
         )
         .map((field: { id: string; use_coc: string }) => ({
           tracker_id: documentData.id,
@@ -224,11 +228,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
           "Update cto coc credit used on leave",
           "hrm_request_trackers",
           JSON.stringify(updatedCtoData),
-          insertCtoError.message
+          insertCtoError.message,
         );
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(insertCtoError.message);
       }
@@ -259,7 +263,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
             "Leave Credits Certified Flow Logs",
             "hrm_tracker_flow",
             "",
-            error2.message
+            error2.message,
           );
         }
       }
@@ -275,11 +279,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
           "delete Leave Days",
           "hrm_leave_dates",
           "",
-          deleteDatesError.message
+          deleteDatesError.message,
         );
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(deleteDatesError.message);
       }
@@ -301,13 +305,21 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         void logError("Leave Days", "hrm_leave_dates", "", datesError.message);
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          "Saving failed, please reload the page and try again.",
         );
         throw new Error(datesError.message);
       }
 
       // pop up the success message
       setToast("success", "Successfully saved.");
+
+      // Notify parent with certified data so approval uses correct values
+      onCertified?.({
+        ...documentData,
+        ...newData,
+        leave_days_with_pay: String(withPay),
+        leave_days_without_pay: String(withoutPay),
+      } as DocumentTypes);
 
       setRefresh(!refresh);
     } catch (e) {
@@ -322,7 +334,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
   // Falls back to current leaveCreditBalances lookup
   const getOriginalBalance = (
     creditType: string,
-    leaveTypeInBalances: string
+    leaveTypeInBalances: string,
   ): number => {
     // First, check if documentData.credits_used exists and has this credit type
     // This handles cases where the record was already certified (especially for previous employees)
@@ -332,7 +344,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
       documentData.credits_used.length > 0
     ) {
       const savedCredit = documentData.credits_used.find(
-        (c) => c.type === creditType
+        (c) => c.type === creditType,
       );
       // If we found a saved credit, use its original_balance (even if it's 0)
       // This preserves the historical balance at certification time
@@ -384,7 +396,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         balance: Number(sc),
         original_balance: getOriginalBalance(
           "Service Credit",
-          "Service Credit"
+          "Service Credit",
         ),
       });
     }
@@ -408,7 +420,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         balance: Number(emergency),
         original_balance: getOriginalBalance(
           "emergency",
-          "Special Emergency (Calamity) Leave"
+          "Special Emergency (Calamity) Leave",
         ),
       });
     }
@@ -432,7 +444,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         balance: Number(slbw),
         original_balance: getOriginalBalance(
           "slbw",
-          "Special Leave Benefits For Women"
+          "Special Leave Benefits For Women",
         ),
       });
     }
@@ -577,7 +589,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
           .from("hrm_request_trackers")
           .select(
             "*,leave_cocs:hrm_leave_coc(*), leave_dates:hrm_leave_dates(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,step_increment_leave_days,avatar_url,signature_path,hrm_offices:office_id(*),hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url,signature_path),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url,signature_path),certifier:certified_by(id,firstname,lastname,middlename,avatar_url,signature_path),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url,signature_path),hrm_remarks(*)",
-            { count: "exact" }
+            { count: "exact" },
           )
           .eq("id", requestData.id)
           .single();
@@ -637,7 +649,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
         use_coc:
           documentData.leave_cocs?.find(
             (lcoc) =>
-              lcoc.user_cto_id.toString() === item.cto_user_id.toString()
+              lcoc.user_cto_id.toString() === item.cto_user_id.toString(),
           )?.use_coc ?? "",
         expiration: item.expiration,
       }));
@@ -695,7 +707,7 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                               COC (Balance: {field.coc}, Exp.{" "}
                               {format(
                                 new Date(field.expiration),
-                                "MMM d, yyyy"
+                                "MMM d, yyyy",
                               )}
                               ):
                             </span>
@@ -733,11 +745,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                               max: {
                                 value:
                                   leaveCreditBalances.find(
-                                    (b) => b.type === "Vacation Leave"
+                                    (b) => b.type === "Vacation Leave",
                                   )?.credits ?? 0,
                                 message: `Cannot exceed ${
                                   leaveCreditBalances.find(
-                                    (b) => b.type === "Vacation Leave"
+                                    (b) => b.type === "Vacation Leave",
                                   )?.credits ?? "0"
                                 }`,
                               },
@@ -763,11 +775,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                               max: {
                                 value:
                                   leaveCreditBalances.find(
-                                    (b) => b.type === "Sick Leave"
+                                    (b) => b.type === "Sick Leave",
                                   )?.credits ?? 0,
                                 message: `Cannot exceed ${
                                   leaveCreditBalances.find(
-                                    (b) => b.type === "Sick Leave"
+                                    (b) => b.type === "Sick Leave",
                                   )?.credits ?? "0"
                                 }`,
                               },
@@ -796,11 +808,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                             max: {
                               value:
                                 leaveCreditBalances.find(
-                                  (b) => b.type === "Service Credit"
+                                  (b) => b.type === "Service Credit",
                                 )?.credits ?? 0,
                               message: `Cannot exceed ${
                                 leaveCreditBalances.find(
-                                  (b) => b.type === "Service Credit"
+                                  (b) => b.type === "Service Credit",
                                 )?.credits ?? "0"
                               }`,
                             },
@@ -827,11 +839,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === "Adoption Leave"
+                                (b) => b.type === "Adoption Leave",
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === "Adoption Leave"
+                                (b) => b.type === "Adoption Leave",
                               )?.credits ?? "0"
                             }`,
                           },
@@ -857,11 +869,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === "Maternity Leave"
+                                (b) => b.type === "Maternity Leave",
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === "Maternity Leave"
+                                (b) => b.type === "Maternity Leave",
                               )?.credits ?? "0"
                             }`,
                           },
@@ -887,11 +899,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === "Wellness Break"
+                                (b) => b.type === "Wellness Break",
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === "Wellness Break"
+                                (b) => b.type === "Wellness Break",
                               )?.credits ?? "0"
                             }`,
                           },
@@ -917,11 +929,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === "Paternity Leave"
+                                (b) => b.type === "Paternity Leave",
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === "Paternity Leave"
+                                (b) => b.type === "Paternity Leave",
                               )?.credits ?? "0"
                             }`,
                           },
@@ -952,11 +964,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                               max: {
                                 value:
                                   leaveCreditBalances.find(
-                                    (b) => b.type === "10-Day VAWC Leave"
+                                    (b) => b.type === "10-Day VAWC Leave",
                                   )?.credits ?? 0,
                                 message: `Cannot exceed ${
                                   leaveCreditBalances.find(
-                                    (b) => b.type === "10-Day VAWC Leave"
+                                    (b) => b.type === "10-Day VAWC Leave",
                                   )?.credits ?? "0"
                                 }`,
                               },
@@ -987,13 +999,13 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                                   leaveCreditBalances.find(
                                     (b) =>
                                       b.type ===
-                                      "Special Leave Benefits For Women"
+                                      "Special Leave Benefits For Women",
                                   )?.credits ?? 0,
                                 message: `Cannot exceed ${
                                   leaveCreditBalances.find(
                                     (b) =>
                                       b.type ===
-                                      "Special Leave Benefits For Women"
+                                      "Special Leave Benefits For Women",
                                   )?.credits ?? "0"
                                 }`,
                               },
@@ -1026,13 +1038,13 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                               leaveCreditBalances.find(
                                 (b) =>
                                   b.type ===
-                                  "Special Emergency (Calamity) Leave"
+                                  "Special Emergency (Calamity) Leave",
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
                                 (b) =>
                                   b.type ===
-                                  "Special Emergency (Calamity) Leave"
+                                  "Special Emergency (Calamity) Leave",
                               )?.credits ?? "0"
                             }`,
                           },
@@ -1059,11 +1071,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === "Study Leave"
+                                (b) => b.type === "Study Leave",
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === "Study Leave"
+                                (b) => b.type === "Study Leave",
                               )?.credits ?? "0"
                             }`,
                           },
@@ -1089,11 +1101,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === "Solo Parent Leave"
+                                (b) => b.type === "Solo Parent Leave",
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === "Solo Parent Leave"
+                                (b) => b.type === "Solo Parent Leave",
                               )?.credits ?? "0"
                             }`,
                           },
@@ -1122,11 +1134,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === "Special Privilege Leave"
+                                (b) => b.type === "Special Privilege Leave",
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === "Special Privilege Leave"
+                                (b) => b.type === "Special Privilege Leave",
                               )?.credits ?? "0"
                             }`,
                           },
@@ -1153,11 +1165,11 @@ export default function CreditsCertification({ requestData }: PropTypes) {
                           max: {
                             value:
                               leaveCreditBalances.find(
-                                (b) => b.type === "Rehabilitation Leave"
+                                (b) => b.type === "Rehabilitation Leave",
                               )?.credits ?? 0,
                             message: `Cannot exceed ${
                               leaveCreditBalances.find(
-                                (b) => b.type === "Rehabilitation Leave"
+                                (b) => b.type === "Rehabilitation Leave",
                               )?.credits ?? "0"
                             }`,
                           },

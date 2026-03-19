@@ -5,7 +5,7 @@
 import TwoColTableLoading from "@/components/Loading/TwoColTableLoading";
 import { useSupabase } from "@/context/SupabaseProvider";
 import { PaperClipIcon } from "@heroicons/react/24/solid";
-import { format } from "date-fns";
+import { eachDayOfInterval, format } from "date-fns";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type FileWithPath, useDropzone } from "react-dropzone";
 import Remarks from "./Remarks/Remarks";
@@ -36,6 +36,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { useDispatch, useSelector } from "react-redux";
 import { Tooltip } from "react-tooltip";
+import { superAdmins } from "@/constants";
 import AddStickyModal from "./AddStickyModal";
 import CreditsCertification from "./CreditsCertification";
 
@@ -132,6 +133,14 @@ export default function DetailsModal({
 
   const { setToast, hasAccess } = useFilter();
 
+  // superAdmin: edit leave date range
+  const [showEditLeaveDates, setShowEditLeaveDates] = useState(false);
+  const [leaveFrom, setLeaveFrom] = useState("");
+  const [leaveTo, setLeaveTo] = useState("");
+  const [includeWeekend, setIncludeWeekend] = useState(false);
+  const [savingLeaveDates, setSavingLeaveDates] = useState(false);
+  const isSuperAdmin = superAdmins.includes(session?.user.email ?? "");
+
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const user: Employee = systemUsers.find(
@@ -141,6 +150,10 @@ export default function DetailsModal({
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value);
   const dispatch = useDispatch();
+
+  const handleCertified = useCallback((updatedData: DocumentTypes) => {
+    setDocumentData(updatedData);
+  }, []);
 
   const handleFollow = async () => {
     try {
@@ -452,6 +465,20 @@ export default function DetailsModal({
 
       // Add entry to employees leave card if type of request is Leave
       if (documentData.type === "Leave") {
+        // Refetch tracker from DB to get latest certified values (handles modal
+        // reopened after certification or stale list data)
+        const { data: freshTracker } = await supabase
+          .from("hrm_request_trackers")
+          .select(
+            "leave_credit_use_vl, leave_credit_use_sl, leave_credit_use_sc, leave_credit_use_adoption, leave_credit_use_vawc, leave_credit_use_emergency, leave_credit_use_study, leave_credit_use_soloparent, leave_credit_use_slbw, leave_credit_use_spl, leave_credit_use_rehab, leave_credit_use_paternity, leave_credit_use_maternity, leave_credit_use_wellness, leave_days_with_pay, leave_days_without_pay"
+          )
+          .eq("id", documentData.id)
+          .single();
+
+        const leaveData = freshTracker
+          ? { ...documentData, ...freshTracker }
+          : documentData;
+
         // Current Balances
         const { data: balancesData } = await supabase
           .from("hrm_leave_credits")
@@ -476,59 +503,59 @@ export default function DetailsModal({
         const creditsUsed = [
           {
             type: "Vacation Leave",
-            value: documentData.leave_credit_use_vl,
+            value: leaveData.leave_credit_use_vl,
           },
           {
             type: "Sick Leave",
-            value: documentData.leave_credit_use_sl,
+            value: leaveData.leave_credit_use_sl,
           },
           {
             type: "Service Credit",
-            value: documentData.leave_credit_use_sc,
+            value: leaveData.leave_credit_use_sc,
           },
           {
             type: "Adoption Leave",
-            value: documentData.leave_credit_use_adoption,
+            value: leaveData.leave_credit_use_adoption,
           },
           {
             type: "10-Day VAWC Leave",
-            value: documentData.leave_credit_use_vawc,
+            value: leaveData.leave_credit_use_vawc,
           },
           {
             type: "Special Emergency (Calamity) Leave",
-            value: documentData.leave_credit_use_emergency,
+            value: leaveData.leave_credit_use_emergency,
           },
           {
             type: "Study Leave",
-            value: documentData.leave_credit_use_study,
+            value: leaveData.leave_credit_use_study,
           },
           {
             type: "Solo Parent Leave",
-            value: documentData.leave_credit_use_soloparent,
+            value: leaveData.leave_credit_use_soloparent,
           },
           {
             type: "Special Leave Benefits For Women",
-            value: documentData.leave_credit_use_slbw,
+            value: leaveData.leave_credit_use_slbw,
           },
           {
             type: "Special Privilege Leave",
-            value: documentData.leave_credit_use_spl,
+            value: leaveData.leave_credit_use_spl,
           },
           {
             type: "Rehabilitation Leave",
-            value: documentData.leave_credit_use_rehab,
+            value: leaveData.leave_credit_use_rehab,
           },
           {
             type: "Paternity Leave",
-            value: documentData.leave_credit_use_paternity,
+            value: leaveData.leave_credit_use_paternity,
           },
           {
             type: "Maternity Leave",
-            value: documentData.leave_credit_use_maternity,
+            value: leaveData.leave_credit_use_maternity,
           },
           {
             type: "Wellness Break",
-            value: documentData.leave_credit_use_wellness,
+            value: leaveData.leave_credit_use_wellness,
           },
         ];
 
@@ -536,7 +563,7 @@ export default function DetailsModal({
         let totalCredits = 0;
         const usedCredits: string[] = [];
         creditsUsed.forEach((cu) => {
-          if (cu.value) {
+          if (cu.value && Number(cu.value) > 0) {
             totalCredits += Number(cu.value);
             usedCredits.push(`${cu.type} (${cu.value})`);
           }
@@ -544,7 +571,7 @@ export default function DetailsModal({
 
         // Update leave credits balances to db
         const updateLeaveCreditsPromises = creditsUsed.map(async (c) => {
-          if (c.value) {
+          if (c.value && Number(c.value) > 0) {
             const bal = balances.find((b) => b.type === c.type);
 
             if (bal) {
@@ -631,11 +658,11 @@ export default function DetailsModal({
           remarks: `Credit used:  ${usedCredits.join(", ")}`,
           credits_used: totalCredits,
           balance: "",
-          absence_with_pay: documentData.leave_days_with_pay,
-          absence_without_pay: documentData.leave_days_without_pay,
-          type: documentData.leave_type,
-          tracker_id: documentData.id,
-          user_id: documentData.created_by,
+          absence_with_pay: Math.max(0, Number(leaveData.leave_days_with_pay)),
+          absence_without_pay: leaveData.leave_days_without_pay,
+          type: leaveData.leave_type,
+          tracker_id: leaveData.id,
+          user_id: leaveData.created_by,
         });
 
         if (error) {
@@ -649,14 +676,14 @@ export default function DetailsModal({
         }
 
         // If leave days without pay > 0, add to Service Record and Update hrm_user 'step_increment_leave_days'
-        if (Number(documentData.leave_days_without_pay) > 0) {
+        if (Number(leaveData.leave_days_without_pay) > 0) {
           const newData = {
-            user_id: documentData.created_by,
+            user_id: leaveData.created_by,
             org_id: process.env.NEXT_PUBLIC_ORG_ID,
-            from: documentData.leave_dates[0]?.date ?? "",
-            designation: documentData.creator.hrm_positions?.name,
-            days_without_pay: documentData.leave_days_without_pay,
-            remarks: documentData.leave_type,
+            from: leaveData.leave_dates[0]?.date ?? "",
+            designation: leaveData.creator.hrm_positions?.name,
+            days_without_pay: leaveData.leave_days_without_pay,
+            remarks: leaveData.leave_type,
             created_by: session?.user.id,
           };
 
@@ -678,10 +705,10 @@ export default function DetailsModal({
             .from("hrm_users")
             .update({
               step_increment_leave_days:
-                Number(documentData.creator.step_increment_leave_days) +
-                Number(documentData.leave_days_without_pay),
+                Number(leaveData.creator.step_increment_leave_days) +
+                Number(leaveData.leave_days_without_pay),
             })
-            .eq("id", documentData.created_by);
+            .eq("id", leaveData.created_by);
 
           if (updateUserError) {
             void logError(
@@ -1059,6 +1086,107 @@ export default function DetailsModal({
         error3.message,
       );
       setToast("error", "Saving failed, please reload the page and try again.");
+    }
+  };
+
+  const handleSaveLeaveDates = async () => {
+    if (!leaveFrom || !leaveTo || savingLeaveDates) return;
+    const start = new Date(leaveFrom);
+    const end = new Date(leaveTo);
+    if (start > end) {
+      setToast("error", "Leave From must be before Leave To.");
+      return;
+    }
+
+    setSavingLeaveDates(true);
+    try {
+      const dateRange = eachDayOfInterval({ start, end }).filter(
+        (date) => includeWeekend || (date.getDay() !== 0 && date.getDay() !== 6),
+      );
+
+      const paidCount =
+        documentData.leave_dates?.filter((d) => d.is_paid).length ?? 0;
+      const insertArray = dateRange.map((date, index) => ({
+        tracker_id: documentData.id,
+        date: format(date, "yyyy-MM-dd"),
+        is_paid: index < paidCount,
+      }));
+
+      const { error: deleteErr } = await supabase
+        .from("hrm_leave_dates")
+        .delete()
+        .eq("tracker_id", documentData.id);
+
+      if (deleteErr) {
+        void logError(
+          "Edit Leave Dates - Delete",
+          "hrm_leave_dates",
+          "",
+          deleteErr.message,
+        );
+        setToast("error", "Failed to update leave dates.");
+        return;
+      }
+
+      const { error: insertErr } = await supabase
+        .from("hrm_leave_dates")
+        .insert(insertArray);
+
+      if (insertErr) {
+        void logError(
+          "Edit Leave Dates - Insert",
+          "hrm_leave_dates",
+          "",
+          insertErr.message,
+        );
+        setToast("error", "Failed to update leave dates.");
+        return;
+      }
+
+      const { error: updateErr } = await supabase
+        .from("hrm_request_trackers")
+        .update({ leave_from: leaveFrom, leave_to: leaveTo })
+        .eq("id", documentData.id);
+
+      if (updateErr) {
+        void logError(
+          "Edit Leave Dates - Update Tracker",
+          "hrm_request_trackers",
+          "",
+          updateErr.message,
+        );
+      }
+
+      const updatedLeaveDates = insertArray.map((d) => ({
+        ...d,
+        id: undefined,
+      }));
+      setDocumentData((prev) => ({
+        ...prev,
+        leave_from: leaveFrom,
+        leave_to: leaveTo,
+        leave_dates: updatedLeaveDates,
+      }));
+
+      const items = [...globallist];
+      const foundIndex = items.findIndex((x) => x.id === documentData.id);
+      if (foundIndex >= 0) {
+        items[foundIndex] = {
+          ...items[foundIndex],
+          leave_from: leaveFrom,
+          leave_to: leaveTo,
+          leave_dates: updatedLeaveDates,
+        };
+        dispatch(updateList(items));
+      }
+
+      setToast("success", "Leave dates updated successfully.");
+      setShowEditLeaveDates(false);
+    } catch (e) {
+      console.error(e);
+      setToast("error", "Failed to update leave dates.");
+    } finally {
+      setSavingLeaveDates(false);
     }
   };
 
@@ -1546,6 +1674,91 @@ export default function DetailsModal({
                               </div>
                             </td>
                           </tr>
+                          {isSuperAdmin && documentData.leave_dates?.length > 0 && (
+                            <tr>
+                              <td className="px-2 py-2 font-light text-right">
+                                Edit dates:
+                              </td>
+                              <td className="text-sm">
+                                {!showEditLeaveDates ? (
+                                  <CustomButton
+                                    containerStyles="app__btn_blue_xs"
+                                    title="Edit Date Range"
+                                    btnType="button"
+                                    handleClick={() => {
+                                      const sorted = [
+                                        ...(documentData.leave_dates ?? []),
+                                      ].sort(
+                                        (a, b) =>
+                                          new Date(a.date).getTime() -
+                                          new Date(b.date).getTime(),
+                                      );
+                                      setLeaveFrom(
+                                        sorted[0]?.date?.slice(0, 10) ?? "",
+                                      );
+                                      setLeaveTo(
+                                        sorted[sorted.length - 1]?.date?.slice(
+                                          0,
+                                          10,
+                                        ) ?? "",
+                                      );
+                                      setShowEditLeaveDates(true);
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="space-y-2">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <input
+                                        type="date"
+                                        value={leaveFrom}
+                                        onChange={(e) =>
+                                          setLeaveFrom(e.target.value)
+                                        }
+                                        className="app__input_standard max-w-[140px]"
+                                      />
+                                      <span className="text-gray-500">to</span>
+                                      <input
+                                        type="date"
+                                        value={leaveTo}
+                                        onChange={(e) =>
+                                          setLeaveTo(e.target.value)
+                                        }
+                                        className="app__input_standard max-w-[140px]"
+                                      />
+                                    </div>
+                                    <label className="flex items-center gap-1 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={includeWeekend}
+                                        onChange={(e) =>
+                                          setIncludeWeekend(e.target.checked)
+                                        }
+                                      />
+                                      Include weekend
+                                    </label>
+                                    <div className="flex gap-2">
+                                      <CustomButton
+                                        containerStyles="app__btn_green"
+                                        title={
+                                          savingLeaveDates ? "Saving..." : "Save"
+                                        }
+                                        btnType="button"
+                                        handleClick={handleSaveLeaveDates}
+                                      />
+                                      <CustomButton
+                                        containerStyles="app__btn_gray"
+                                        title="Cancel"
+                                        btnType="button"
+                                        handleClick={() =>
+                                          setShowEditLeaveDates(false)
+                                        }
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
                           {documentData.leave_location &&
                             documentData.leave_location.trim() !== "" && (
                               <tr>
@@ -2008,7 +2221,10 @@ export default function DetailsModal({
                   {documentData.type === "Leave" &&
                     documentData.current_status !== "Cancelled" &&
                     documentData.current_status !== "Disapproved" && (
-                      <CreditsCertification requestData={documentData} />
+                      <CreditsCertification
+                        requestData={documentData}
+                        onCertified={handleCertified}
+                      />
                     )}
                 </div>
               </div>
