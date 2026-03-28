@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-'use client'
+"use client";
 
-import { useFilter } from '@/context/FilterContext'
-import { TableCellsIcon } from '@heroicons/react/20/solid'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useFilter } from "@/context/FilterContext";
+import { TableCellsIcon } from "@heroicons/react/20/solid";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const RspSidebar = () => {
-  const currentRoute = usePathname()
+  const currentRoute = usePathname();
 
-  const { hasAccess } = useFilter()
+  const { hasAccess } = useFilter();
 
   return (
     <>
       {
         // Check access from permission settings
-        hasAccess('rsp_manager') && (
+        hasAccess("rsp_manager") && (
           <ul className="pt-8 mt-4 space-y-2 border-gray-700">
             <li>
               <div className="flex items-center text-gray-500 items-centers space-x-1 px-2">
@@ -27,7 +27,7 @@ const RspSidebar = () => {
               <Link
                 href="/applicants"
                 className={`app__menu_link ${
-                  currentRoute === '/applicants' ? 'app_menu_link_active' : ''
+                  currentRoute === "/applicants" ? "app_menu_link_active" : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
@@ -50,19 +50,19 @@ const RspSidebar = () => {
           <Link
             href="/ranking"
             className={`app__menu_link ${
-              currentRoute === '/ranking' ? 'app_menu_link_active' : ''
+              currentRoute === "/ranking" ? "app_menu_link_active" : ""
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">Ranking</span>
           </Link>
         </li>
 
-        {(hasAccess('rsp_manager') || hasAccess('hr')) && (
+        {(hasAccess("rsp_manager") || hasAccess("hr")) && (
           <li>
             <Link
               href="/erfscreening"
               className={`app__menu_link ${
-                currentRoute === '/erfscreening' ? 'app_menu_link_active' : ''
+                currentRoute === "/erfscreening" ? "app_menu_link_active" : ""
               }`}
             >
               <span className="flex-1 ml-3 whitespace-nowrap">
@@ -74,7 +74,7 @@ const RspSidebar = () => {
       </ul>
       {
         // Check access from permission settings
-        (hasAccess('sds') || hasAccess('rsp_manager') || hasAccess('hr')) && (
+        (hasAccess("sds") || hasAccess("rsp_manager") || hasAccess("hr")) && (
           <>
             <ul className="pt-8 mt-4 space-y-2 border-t border-gray-700">
               <li>
@@ -87,9 +87,9 @@ const RspSidebar = () => {
                 <Link
                   href="/rankingresults"
                   className={`app__menu_link ${
-                    currentRoute === '/rankingresults'
-                      ? 'app_menu_link_active'
-                      : ''
+                    currentRoute === "/rankingresults"
+                      ? "app_menu_link_active"
+                      : ""
                   }`}
                 >
                   <span className="flex-1 ml-3 whitespace-nowrap">
@@ -99,11 +99,25 @@ const RspSidebar = () => {
               </li>
               <li>
                 <Link
+                  href="/rankingresultsrqa"
+                  className={`app__menu_link ${
+                    currentRoute === "/rankingresultsrqa"
+                      ? "app_menu_link_active"
+                      : ""
+                  }`}
+                >
+                  <span className="flex-1 ml-3 whitespace-nowrap">
+                    Ranking Results (RQA)
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/rankingappointees"
                   className={`app__menu_link ${
-                    currentRoute === '/rankingappointees'
-                      ? 'app_menu_link_active'
-                      : ''
+                    currentRoute === "/rankingappointees"
+                      ? "app_menu_link_active"
+                      : ""
                   }`}
                 >
                   <span className="flex-1 ml-3 whitespace-nowrap">
@@ -117,7 +131,7 @@ const RspSidebar = () => {
       }
       {
         // Check access from permission settings
-        hasAccess('rsp_reports') && (
+        hasAccess("rsp_reports") && (
           <ul className="pt-8 mt-4 space-y-2 border-t border-gray-700">
             <li>
               <div className="flex items-center text-gray-500 items-centers space-x-1 px-2">
@@ -130,7 +144,7 @@ const RspSidebar = () => {
               <Link
                 href="/openranking"
                 className={`app__menu_link ${
-                  currentRoute === '/openranking' ? 'app_menu_link_active' : ''
+                  currentRoute === "/openranking" ? "app_menu_link_active" : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
@@ -143,7 +157,7 @@ const RspSidebar = () => {
               <Link
                 href="/rankingier"
                 className={`app__menu_link ${
-                  currentRoute === '/rankingier' ? 'app_menu_link_active' : ''
+                  currentRoute === "/rankingier" ? "app_menu_link_active" : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">IER</span>
@@ -153,9 +167,9 @@ const RspSidebar = () => {
               <Link
                 href="/rankingturnaroundtime"
                 className={`app__menu_link ${
-                  currentRoute === '/rankingturnaroundtime'
-                    ? 'app_menu_link_active'
-                    : ''
+                  currentRoute === "/rankingturnaroundtime"
+                    ? "app_menu_link_active"
+                    : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
@@ -167,9 +181,9 @@ const RspSidebar = () => {
               <Link
                 href="/rankingexpensessummary"
                 className={`app__menu_link ${
-                  currentRoute === '/rankingexpensessummary'
-                    ? 'app_menu_link_active'
-                    : ''
+                  currentRoute === "/rankingexpensessummary"
+                    ? "app_menu_link_active"
+                    : ""
                 }`}
               >
                 <span className="flex-1 ml-3 whitespace-nowrap">
@@ -191,7 +205,7 @@ const RspSidebar = () => {
         </li>
       </ul>
     </>
-  )
-}
+  );
+};
 
-export default RspSidebar
+export default RspSidebar;
