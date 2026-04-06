@@ -64,7 +64,7 @@ export default function CreditsCertification({
   >([]);
 
   const [withPay, setWithPay] = useState(0);
-  const [certifiedWithPay, setCertifiedWithPay] = useState(0);
+
   const [withoutPay, setWithoutPay] = useState(Number(documentData.leave_days));
 
   const {
@@ -599,15 +599,6 @@ export default function CreditsCertification({
         }
 
         const d: DocumentTypes = data;
-        let daysWithPay = 0;
-        if (d.certified_by) {
-          d.leave_dates.forEach((d) => {
-            if (d.is_paid) {
-              daysWithPay++;
-            }
-          });
-        }
-        setCertifiedWithPay(daysWithPay);
         setDocumentData(data);
       } catch (error) {
         console.error("fetch error xx", error);
@@ -1247,11 +1238,11 @@ export default function CreditsCertification({
                 {documentData.certified_by ? (
                   <>
                     <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
-                      Absence with Pay: {certifiedWithPay}
+                      Absence with Pay: {documentData.leave_days_with_pay}
                     </div>
                     <div className="text-gray-600 font-medium text-xs mt-4 mb-1">
                       Absence without Pay:{" "}
-                      {Number(documentData.leave_days) - certifiedWithPay}
+                      {documentData.leave_days_without_pay}
                     </div>
                   </>
                 ) : (
