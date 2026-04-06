@@ -293,7 +293,7 @@ export default function CreditsCertification({
       const insertArray = documentData.leave_dates.map((d, index) => ({
         tracker_id: documentData.id,
         date: d.date,
-        is_paid: index < withPay, // Mark as paid if within the withPay limit
+        is_paid: index < Math.floor(withPay), // Mark as paid if within the withPay limit
       }));
 
       // Store each leave dates

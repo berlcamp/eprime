@@ -8,8 +8,7 @@ import remarksReducer from "./Features/remarksSlice";
 import resultsReducer from "./Features/resultsCounterSlice";
 import slowListReducer from "./Features/slowListSlice";
 
-// Create a function to make the store a singleton
-function makeStore() {
+export function makeStore() {
   return configureStore({
     reducer: {
       list: listReducer,
@@ -22,25 +21,6 @@ function makeStore() {
   });
 }
 
-// Create store instance
-let storeInstance: ReturnType<typeof makeStore> | undefined;
-
-export const getStore = () => {
-  if (typeof window === "undefined") {
-    // Server-side: always return a new store
-    return makeStore();
-  }
-  // Client-side: use singleton pattern
-  if (!storeInstance) {
-    storeInstance = makeStore();
-  }
-  return storeInstance;
-};
-
-export const store = getStore();
-
-// Infer the `RootState` type from the store
-export type RootState = ReturnType<typeof store.getState>;
-
-// You can also export the `AppDispatch` type
-export type AppDispatch = typeof store.dispatch;
+export type AppStore = ReturnType<typeof makeStore>;
+export type RootState = ReturnType<AppStore["getState"]>;
+export type AppDispatch = AppStore["dispatch"];

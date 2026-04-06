@@ -133,12 +133,16 @@ export default function DetailsModal({
 
   const { setToast, hasAccess } = useFilter();
 
-  // superAdmin: edit leave date range
+  // superAdmin: edit date range (leave and other request types)
   const [showEditLeaveDates, setShowEditLeaveDates] = useState(false);
   const [leaveFrom, setLeaveFrom] = useState("");
   const [leaveTo, setLeaveTo] = useState("");
   const [includeWeekend, setIncludeWeekend] = useState(false);
   const [savingLeaveDates, setSavingLeaveDates] = useState(false);
+  const [showEditDates, setShowEditDates] = useState(false);
+  const [editDateFrom, setEditDateFrom] = useState("");
+  const [editDateTo, setEditDateTo] = useState("");
+  const [savingDates, setSavingDates] = useState(false);
   const isSuperAdmin = superAdmins.includes(session?.user.email ?? "");
 
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -1104,8 +1108,7 @@ export default function DetailsModal({
         (date) => includeWeekend || (date.getDay() !== 0 && date.getDay() !== 6),
       );
 
-      const paidCount =
-        documentData.leave_dates?.filter((d) => d.is_paid).length ?? 0;
+      const paidCount = Number(documentData.leave_days_with_pay) || 0;
       const insertArray = dateRange.map((date, index) => ({
         tracker_id: documentData.id,
         date: format(date, "yyyy-MM-dd"),
@@ -1187,6 +1190,87 @@ export default function DetailsModal({
       setToast("error", "Failed to update leave dates.");
     } finally {
       setSavingLeaveDates(false);
+    }
+  };
+
+  const handleSaveEditDates = async () => {
+    if (savingDates) return;
+
+    setSavingDates(true);
+    try {
+      const type = documentData.type;
+      let updateFields: Record<string, string> = {};
+
+      if (type === "Locator Slip") {
+        if (!editDateFrom) {
+          setToast("error", "Travel date is required.");
+          return;
+        }
+        updateFields = {
+          locator_slip_date: editDateFrom,
+          ...(editDateTo ? { locator_slip_return_date: editDateTo } : {}),
+        };
+      } else if (type === "Pass Slip") {
+        if (!editDateFrom) {
+          setToast("error", "Date is required.");
+          return;
+        }
+        updateFields = { pass_slip_date: editDateFrom };
+      } else if (type === "Travel Authority") {
+        if (!editDateFrom || !editDateTo) {
+          setToast("error", "Both From and To dates are required.");
+          return;
+        }
+        if (new Date(editDateFrom) > new Date(editDateTo)) {
+          setToast("error", "From date must be before To date.");
+          return;
+        }
+        updateFields = {
+          travel_from: editDateFrom,
+          travel_to: editDateTo,
+        };
+      } else {
+        return;
+      }
+
+      const { error } = await supabase
+        .from("hrm_request_trackers")
+        .update(updateFields)
+        .eq("id", documentData.id);
+
+      if (error) {
+        void logError(
+          "Edit Request Dates",
+          "hrm_request_trackers",
+          JSON.stringify(updateFields),
+          error.message,
+        );
+        setToast("error", "Failed to update dates.");
+        return;
+      }
+
+      setDocumentData((prev) => ({
+        ...prev,
+        ...updateFields,
+      }));
+
+      const items = [...globallist];
+      const foundIndex = items.findIndex((x) => x.id === documentData.id);
+      if (foundIndex >= 0) {
+        items[foundIndex] = {
+          ...items[foundIndex],
+          ...updateFields,
+        };
+        dispatch(updateList(items));
+      }
+
+      setToast("success", "Dates updated successfully.");
+      setShowEditDates(false);
+    } catch (e) {
+      console.error(e);
+      setToast("error", "Failed to update dates.");
+    } finally {
+      setSavingDates(false);
     }
   };
 
@@ -1899,6 +1983,64 @@ export default function DetailsModal({
                               {documentData.locator_slip_destination}
                             </td>
                           </tr>
+                          {isSuperAdmin && (
+                            <tr>
+                              <td className="px-2 py-2 font-light text-right">
+                                Edit dates:
+                              </td>
+                              <td className="text-sm">
+                                {!showEditDates ? (
+                                  <CustomButton
+                                    containerStyles="app__btn_blue_xs"
+                                    title="Edit Dates"
+                                    btnType="button"
+                                    handleClick={() => {
+                                      setEditDateFrom(
+                                        documentData.locator_slip_date?.slice(0, 10) ?? "",
+                                      );
+                                      setEditDateTo(
+                                        documentData.locator_slip_return_date?.slice(0, 10) ?? "",
+                                      );
+                                      setShowEditDates(true);
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="space-y-2">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <label className="text-xs text-gray-500">Travel:</label>
+                                      <input
+                                        type="date"
+                                        value={editDateFrom}
+                                        onChange={(e) => setEditDateFrom(e.target.value)}
+                                        className="app__input_standard max-w-[140px]"
+                                      />
+                                      <label className="text-xs text-gray-500">Return:</label>
+                                      <input
+                                        type="date"
+                                        value={editDateTo}
+                                        onChange={(e) => setEditDateTo(e.target.value)}
+                                        className="app__input_standard max-w-[140px]"
+                                      />
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <CustomButton
+                                        containerStyles="app__btn_green"
+                                        title={savingDates ? "Saving..." : "Save"}
+                                        btnType="button"
+                                        handleClick={handleSaveEditDates}
+                                      />
+                                      <CustomButton
+                                        containerStyles="app__btn_gray"
+                                        title="Cancel"
+                                        btnType="button"
+                                        handleClick={() => setShowEditDates(false)}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
                         </>
                       )}
                       {/* End - Locator Slip Fields */}
@@ -2034,6 +2176,54 @@ export default function DetailsModal({
                               {documentData.pass_slip_reason}
                             </td>
                           </tr>
+                          {isSuperAdmin && (
+                            <tr>
+                              <td className="px-2 py-2 font-light text-right">
+                                Edit dates:
+                              </td>
+                              <td className="text-sm">
+                                {!showEditDates ? (
+                                  <CustomButton
+                                    containerStyles="app__btn_blue_xs"
+                                    title="Edit Date"
+                                    btnType="button"
+                                    handleClick={() => {
+                                      setEditDateFrom(
+                                        documentData.pass_slip_date?.slice(0, 10) ?? "",
+                                      );
+                                      setShowEditDates(true);
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="space-y-2">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <label className="text-xs text-gray-500">Date:</label>
+                                      <input
+                                        type="date"
+                                        value={editDateFrom}
+                                        onChange={(e) => setEditDateFrom(e.target.value)}
+                                        className="app__input_standard max-w-[140px]"
+                                      />
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <CustomButton
+                                        containerStyles="app__btn_green"
+                                        title={savingDates ? "Saving..." : "Save"}
+                                        btnType="button"
+                                        handleClick={handleSaveEditDates}
+                                      />
+                                      <CustomButton
+                                        containerStyles="app__btn_gray"
+                                        title="Cancel"
+                                        btnType="button"
+                                        handleClick={() => setShowEditDates(false)}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
                         </>
                       )}
                       {/* End - Pass Slip Fields */}
@@ -2116,6 +2306,64 @@ export default function DetailsModal({
                               {documentData.travel_with}
                             </td>
                           </tr>
+                          {isSuperAdmin && (
+                            <tr>
+                              <td className="px-2 py-2 font-light text-right">
+                                Edit dates:
+                              </td>
+                              <td className="text-sm">
+                                {!showEditDates ? (
+                                  <CustomButton
+                                    containerStyles="app__btn_blue_xs"
+                                    title="Edit Date Range"
+                                    btnType="button"
+                                    handleClick={() => {
+                                      setEditDateFrom(
+                                        documentData.travel_from?.slice(0, 10) ?? "",
+                                      );
+                                      setEditDateTo(
+                                        documentData.travel_to?.slice(0, 10) ?? "",
+                                      );
+                                      setShowEditDates(true);
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="space-y-2">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <label className="text-xs text-gray-500">From:</label>
+                                      <input
+                                        type="date"
+                                        value={editDateFrom}
+                                        onChange={(e) => setEditDateFrom(e.target.value)}
+                                        className="app__input_standard max-w-[140px]"
+                                      />
+                                      <label className="text-xs text-gray-500">To:</label>
+                                      <input
+                                        type="date"
+                                        value={editDateTo}
+                                        onChange={(e) => setEditDateTo(e.target.value)}
+                                        className="app__input_standard max-w-[140px]"
+                                      />
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <CustomButton
+                                        containerStyles="app__btn_green"
+                                        title={savingDates ? "Saving..." : "Save"}
+                                        btnType="button"
+                                        handleClick={handleSaveEditDates}
+                                      />
+                                      <CustomButton
+                                        containerStyles="app__btn_gray"
+                                        title="Cancel"
+                                        btnType="button"
+                                        handleClick={() => setShowEditDates(false)}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
                         </>
                       )}
                       {/* End - Travel Authority Fields */}

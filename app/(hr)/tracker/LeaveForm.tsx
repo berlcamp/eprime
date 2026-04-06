@@ -249,7 +249,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         const insertArray = dateRange.map((date, index) => ({
           tracker_id: data[0].id,
           date: format(date, "yyyy-MM-dd"),
-          is_paid: index < withPay, // Mark as paid if within the withPay limit
+          is_paid: index < Math.floor(withPay), // Mark as paid if within the withPay limit
         }));
 
         // Store each leave dates
@@ -553,7 +553,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     const withpayAmount =
       origBal >= Number(watchedDays)
         ? Number(watchedDays)
-        : Math.max(0, Math.floor(origBal));
+        : Math.max(0, origBal);
     const withoutpayAmount = Number(watchedDays) - withpayAmount;
 
     setWithPay(withpayAmount);
