@@ -36,7 +36,7 @@ export function PrintFooter() {
           <div>DepEd Bldg., Palusapis Street, Poblacion, Bayugan City</div>
           <div className="text-blue-600">deped.bayugan@gmail.com</div>
           <div>Telephone Numbers: (085) 231-1496, (085) 231-1924</div>
-          <div>Mobile No: 0962-867-6334</div>
+          <div>Mobile No: 0962-837-6334</div>
         </div>
       </div>
     </>
