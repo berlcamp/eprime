@@ -1,10 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { RankingAppointmentTemplate } from '@/components/Emails/RankingAppointmentTemplate'
+import { getResend } from '@/lib/resend'
 import type * as React from 'react'
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_KEY)
 
 interface RequestParamTypes {
   position: string
@@ -19,6 +17,14 @@ interface RequestParamTypes {
 export async function POST(req: NextRequest) {
   try {
     const params: RequestParamTypes = await req.json()
+
+    const resend = getResend()
+    if (!resend) {
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 503 }
+      )
+    }
 
     const { error: error2 } = await resend.emails.send({
       from: 'DepEd Bayugan (No-reply) <noreply@sortbrite.com>',

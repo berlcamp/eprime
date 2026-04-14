@@ -4,10 +4,8 @@ import { IesTemplate } from '@/components/Emails/IesTemplate'
 import { ApplicantTypes } from '@/types'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
 import { createClient } from '@supabase/supabase-js'
+import { getResend } from '@/lib/resend'
 import type * as React from 'react'
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_KEY)
 
 interface RequestParamTypes {
   applicant: ApplicantTypes
@@ -28,6 +26,14 @@ export async function POST(req: NextRequest) {
   const params: RequestParamTypes = await req.json()
 
   try {
+    const resend = getResend()
+    if (!resend) {
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 503 }
+      )
+    }
+
     const { data } = await supabase
       .from('hrm_ranking_applicants')
       .select(

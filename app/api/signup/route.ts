@@ -7,10 +7,8 @@ import { logError } from '@/utils/fetchApi'
 
 import { RegisteredTemplate } from '@/components/Emails/RegisteredTemplate'
 import { leaveCreditTypes } from '@/constants'
+import { getResend } from '@/lib/resend'
 import type * as React from 'react'
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_KEY)
 
 export async function POST(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
@@ -25,6 +23,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const { item }: { item: Employee } = await req.json()
+
+    const resend = getResend()
+    if (!resend) {
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 503 }
+      )
+    }
 
     // Signup to supabase auth system
     const { data: signUpData, error } = await supabase.auth.admin.createUser({

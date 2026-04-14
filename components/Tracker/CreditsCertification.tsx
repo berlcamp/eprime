@@ -598,7 +598,6 @@ export default function CreditsCertification({
           throw new Error(error.message);
         }
 
-        const d: DocumentTypes = data;
         setDocumentData(data);
       } catch (error) {
         console.error("fetch error xx", error);

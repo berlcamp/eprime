@@ -4,10 +4,8 @@ import { DisqualifiedApplicantTemplate } from '@/components/Emails/DisqualifiedA
 import { QualifiedApplicantTemplate } from '@/components/Emails/QualifiedApplicantTemplate'
 import { ApplicantTypes } from '@/types'
 import { createClient } from '@supabase/supabase-js'
+import { getResend } from '@/lib/resend'
 import type * as React from 'react'
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_KEY)
 
 interface RequestParamTypes {
   applicant: ApplicantTypes
@@ -33,6 +31,14 @@ export async function POST(req: NextRequest) {
     .eq('applicant_id', params.applicant.id)
 
   try {
+    const resend = getResend()
+    if (!resend) {
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 503 }
+      )
+    }
+
     // If Qualified
     if (params.applicant.evaluation_status === 'Qualified') {
       const { error } = await resend.emails.send({

@@ -1,9 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const serviceRoleKey = process.env.NEXT_PUBLIC_SERVICE_ROLE_KEY ?? ''
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return NextResponse.json(
+      { message: 'Server configuration incomplete' },
+      { status: 503 }
+    )
+  }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: {
