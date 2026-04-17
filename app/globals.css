@@ -342,6 +342,7 @@
   /* .print-footer::after {
     content: 'Page ' counter(page);
   } */
+
 }
 
 @layer base {

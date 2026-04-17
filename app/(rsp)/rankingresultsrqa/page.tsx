@@ -84,6 +84,20 @@ const Page: React.FC = () => {
     documentTitle: "request-form",
   });
 
+  const appointmentFormRef = React.useRef(null);
+  const printAppointmentFn = useReactToPrint({
+    contentRef: appointmentFormRef,
+    documentTitle: "appointment-form",
+    pageStyle: `@page { size: 8.5in 13in; margin: 0.4in; } html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }`,
+  });
+
+  const assumptionRef = React.useRef(null);
+  const printAssumptionFn = useReactToPrint({
+    contentRef: assumptionRef,
+    documentTitle: "assumption-to-duty",
+    pageStyle: `@page { size: 8.5in 13in; margin: 1in; } html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }`,
+  });
+
   const fetchData = async () => {
     if (filterRankingIds.length === 0) {
       return;
@@ -458,11 +472,11 @@ const Page: React.FC = () => {
         position,
         attested_by: attestedBy,
         attested_by_position: attestedByPosition,
-      }); // Set the new item after a short delay
+      });
       setTimeout(() => {
-        printFn(); // Trigger the print function after re-rendering the new content
-      }, 100); // Adjust this delay if needed
-    }, 100); // This delay ensures the unmounting and re-rendering are separated
+        printAssumptionFn();
+      }, 100);
+    }, 100);
   };
 
   const handlePrintOathOfOffice = async (
@@ -553,7 +567,7 @@ const Page: React.FC = () => {
             publicationPosting.hrmpsbAssessmentStartedOn,
         }),
       } as ApplicantTypes);
-      setTimeout(() => printFn(), 100);
+      setTimeout(() => printAppointmentFn(), 100);
     }, 100);
   };
 
@@ -1022,7 +1036,7 @@ const Page: React.FC = () => {
       )}
       {/* Print Assumption */}
       {selectedItem && selectedType === "assumption" && (
-        <PrintAssumption selectedItem={selectedItem} ref={componentRef} />
+        <PrintAssumption selectedItem={selectedItem} ref={assumptionRef} />
       )}
       {/* Print Oath of Office */}
       {selectedItem && selectedType === "oath-of-office" && (
@@ -1030,7 +1044,7 @@ const Page: React.FC = () => {
       )}
       {/* Print Appointment Form */}
       {selectedItem && selectedType === "appointment-form" && (
-        <PrintAppointmentForm selectedItem={selectedItem} ref={componentRef} />
+        <PrintAppointmentForm selectedItem={selectedItem} ref={appointmentFormRef} />
       )}
 
       {/* Show Casted Points Modal */}

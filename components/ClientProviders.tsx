@@ -5,7 +5,7 @@ import SupabaseProvider from '@/context/SupabaseProvider'
 import { Providers } from '@/GlobalRedux/provider'
 import SupabaseListener from '@/utils/supabase-listener'
 import { Session } from '@supabase/supabase-js'
-import { ReactNode } from 'react'
+import { ReactNode, Suspense } from 'react'
 import { Toaster } from 'react-hot-toast'
 import TopLoadingBar from '@/components/TopLoadingBar'
 
@@ -36,7 +36,9 @@ export default function ClientProviders({
       systemOffices={systemOffices}
     >
       <SupabaseListener serverAccessToken={session?.access_token} />
-      <TopLoadingBar />
+      <Suspense>
+        <TopLoadingBar />
+      </Suspense>
       {session ? (
         <Providers>
           <FilterProvider>

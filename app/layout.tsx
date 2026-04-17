@@ -96,8 +96,18 @@ export default async function RootLayout({
       sysUsers = systemUsers
       sysSchools = schools
       sysOffices = offices
-    } catch (err) {
-      return 'Something went wrong, please contact the system administrator.'
+    } catch (err: any) {
+      console.error('Root layout error:', err?.message || err)
+      return (
+        <html lang="en">
+          <body className="flex items-center justify-center min-h-screen bg-gray-100">
+            <div className="text-center p-8">
+              <p className="text-lg text-gray-700">Something went wrong, please contact the system administrator.</p>
+              <p className="text-sm text-gray-500 mt-2">{err?.message}</p>
+            </div>
+          </body>
+        </html>
+      )
     }
   }
 

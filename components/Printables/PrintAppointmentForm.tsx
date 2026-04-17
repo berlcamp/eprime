@@ -3,15 +3,36 @@ import { useSupabase } from "@/context/SupabaseProvider";
 import { ApplicantTypes } from "@/types";
 import { format } from "date-fns";
 import * as React from "react";
-import { PrintHeader } from "./PrintHeader";
 
 interface ComponentToPrintProps {
   selectedItem: ApplicantTypes;
 }
 
+// Folio bond paper: 8.5in x 13in
+// @page margin: 0.4in → printable height ≈ 12.2in
+// Using fixed height so flex children can expand to fill the page
+const PAGE_W = "100%";
+const PAGE_H = "12.2in";
+const GRAY_BG = "#d0d0d0";
+const GRAY_PAD = "10px"; // gray gap between outer border and white box
+
+// Reusable checkbox square
+const Checkbox = () => (
+  <span
+    style={{
+      display: "inline-block",
+      width: "11px",
+      height: "11px",
+      border: "1.5px solid black",
+      marginRight: "5px",
+      verticalAlign: "middle",
+    }}
+  />
+);
+
 /**
  * CS Form No. 33-B (Revised 2018): Appointment Form - For Accredited/Deregulated Agencies
- * Matches the exact CSC official format as per the reference PDF.
+ * Sized for folio bond paper (8.5in x 13in).
  */
 export const PrintAppointmentForm = React.forwardRef<
   HTMLDivElement | null,
@@ -28,18 +49,39 @@ export const PrintAppointmentForm = React.forwardRef<
   );
   const sdsName = sdsUser
     ? `${sdsUser.firstname} ${sdsUser.middlename ?? ""} ${sdsUser.lastname}`.trim()
-    : null;
+    : "";
+
+  const hrmoAccess = systemAccess?.find(
+    (a: { type: string }) => a.type === "hrmo",
+  );
+  const hrmoUser = systemUsers?.find(
+    (u: { id: string }) => u.id === hrmoAccess?.user_id,
+  );
+  const hrmoName = hrmoUser
+    ? `${hrmoUser.firstname} ${hrmoUser.middlename ?? ""} ${hrmoUser.lastname}`.trim()
+    : "";
+  const hrmoTitle = hrmoAccess?.title || "HRMO";
+
+  const hrmpsbAccess = systemAccess?.find(
+    (a: { type: string }) => a.type === "hrmpsb_chair",
+  );
+  const hrmpsbUser = systemUsers?.find(
+    (u: { id: string }) => u.id === hrmpsbAccess?.user_id,
+  );
+  const hrmpsbName = hrmpsbUser
+    ? `${hrmpsbUser.firstname} ${hrmpsbUser.middlename ?? ""} ${hrmpsbUser.lastname}`.trim()
+    : "";
 
   const positionName =
     selectedItem?.ranking?.position?.name ||
     selectedItem?.hrm_item?.hrm_position?.name ||
-    "N/A";
+    "";
   const salaryGrade =
     selectedItem?.ranking?.position?.salary_grade ||
     selectedItem?.hrm_item?.salary_grade ||
     selectedItem?.hrm_item?.hrm_position?.salary_grade ||
     "______";
-  const fullName = `${selectedItem.firstname} ${selectedItem.middlename ?? ""} ${selectedItem.lastname}`;
+  const fullName = `${selectedItem.firstname} ${selectedItem.middlename ?? ""} ${selectedItem.lastname}`.trim();
   const assignment =
     selectedItem?.assignment || "Schools Division Office of Bayugan City";
   const employmentStatus = (
@@ -48,21 +90,18 @@ export const PrintAppointmentForm = React.forwardRef<
   const natureOfAppointment = (
     selectedItem?.nature_of_appointment || "Original"
   ).toUpperCase();
-  const vice = selectedItem?.vice ?? "________________";
+  const vice = selectedItem?.vice ?? "";
   const reasonOfVacancy = (
-    selectedItem?.reason_of_vacancy ?? "________________"
+    selectedItem?.reason_of_vacancy ?? ""
   ).toUpperCase();
-  const plantillaNumber = selectedItem?.plantilla_number ?? "________________";
-  const salaryAmount = selectedItem?.salary_amount ?? "________________";
+  const plantillaNumber = selectedItem?.plantilla_number ?? "";
+  const salaryAmount = selectedItem?.salary_amount ?? "";
   const salaryInWords = (
-    selectedItem?.salary_in_words ?? "________________"
+    selectedItem?.salary_in_words ?? ""
   ).toUpperCase();
-  const plantillaType =
-    (selectedItem as ApplicantTypes & { plantilla_type?: string })
-      ?.plantilla_type ?? "";
   const effectiveDate = selectedItem?.date
     ? format(new Date(selectedItem.date), "MMMM d, yyyy")
-    : "________________";
+    : "";
 
   const formatDateOrBlank = (val?: string) =>
     val && !Number.isNaN(new Date(val).getTime())
@@ -95,183 +134,517 @@ export const PrintAppointmentForm = React.forwardRef<
         ? "Ms."
         : "Mr./Mrs./Ms.";
 
-  return (
-    <div
-      className="fixed left-[-9999px] top-0 w-[816px] print:left-0 print:relative print:m-0"
-      style={{ fontFamily: "Times New Roman, serif" }}
+  // Underline blank
+  const uline = (
+    value: string,
+    minW = "150px",
+    bold = true,
+  ) => (
+    <span
+      style={{
+        display: "inline-block",
+        minWidth: minW,
+        borderBottom: "1px solid black",
+        textAlign: "center",
+        fontWeight: bold && value ? "bold" : "normal",
+      }}
     >
+      {value || "\u00A0"}
+    </span>
+  );
+
+  return (
+    <div className="invisible">
       <div
         ref={ref}
-        className="w-[816px] bg-white py-2 px-8 m-12 print:m-0 print:p-0 print:pb-36 text-[14px]"
-        style={{ fontFamily: "Times New Roman, serif" }}
+        style={{
+          fontFamily: "Times New Roman, serif",
+          fontSize: "12px",
+          WebkitPrintColorAdjust: "exact",
+          printColorAdjust: "exact",
+        } as React.CSSProperties}
       >
         {/* ==================== PAGE 1 ==================== */}
-        <div className="print:break-after-page">
-          <div className="flex justify-end mb-1">
-            <div className="inline-block border border-black px-3 py-1 text-[10px] font-medium">
+        <div
+          style={{
+            width: PAGE_W,
+            height: PAGE_H,
+            display: "flex",
+            flexDirection: "column",
+            pageBreakAfter: "always",
+          }}
+        >
+          {/* Top right label — sits above the gray area */}
+          <div style={{ textAlign: "right", marginBottom: "3px" }}>
+            <span
+              style={{
+                display: "inline-block",
+                border: "1px solid black",
+                padding: "2px 10px",
+                fontSize: "10px",
+                fontStyle: "italic",
+              }}
+            >
               For Accredited/Deregulated Agencies
-            </div>
+            </span>
           </div>
-          <div className=" border-2 border-black p-4 mb-1 bg-gray-200">
-            <div className="border-2 border-black p-4 mb-4 bg-white">
-              {/* Top section: Form number left, Accredited box right, Stamp right */}
-              <div className="flex justify-between items-start mb-1">
-                <div className="text-[11px] leading-tight">
-                  <div className="font-bold">CS Form No. 33-B</div>
-                  <div>Revised 2018</div>
+
+          {/* Gray outer area fills the rest of the page */}
+          <div
+            style={{
+              flex: 1,
+              border: "2px solid black",
+              backgroundColor: GRAY_BG,
+              padding: GRAY_PAD,
+              boxSizing: "border-box",
+              WebkitPrintColorAdjust: "exact",
+              printColorAdjust: "exact",
+            } as React.CSSProperties}
+          >
+            {/* Single white content box */}
+            <div
+              style={{
+                border: "2px solid black",
+                backgroundColor: "white",
+                padding: "18px 26px",
+                height: "100%",
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              {/* CS Form number + Stamp */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  marginBottom: "8px",
+                }}
+              >
+                <div style={{ fontSize: "11px", lineHeight: "1.4" }}>
+                  <div style={{ fontWeight: "bold" }}>CS Form No. 33-B</div>
+                  <div style={{ fontStyle: "italic" }}>Revised 2018</div>
                 </div>
-                <div className="flex items-start gap-4">
-                  <div className="text-[10px] text-slate-500">
-                    (Stamp of Date of Receipt)
-                  </div>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    fontStyle: "italic",
+                    color: "#666",
+                  }}
+                >
+                  (Stamp of Date of Receipt)
                 </div>
               </div>
 
-              <PrintHeader hrLine={false} />
-
-              {/* Appointment clause - exact format per CSC Form 33-B */}
-              <div className="mt-4 text-justify leading-relaxed space-y-3 font-semibold">
-                <p>
-                  {salutation}:{" "}
-                  <span className="font-bold underline underline-offset-2">
-                    {fullName}
-                  </span>
-                </p>
-                <p
-                  className="indent-8"
-                  style={{ textAlign: "justify", textAlignLast: "justify" }}
+              {/* Republic header */}
+              <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                <div
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                    marginBottom: "2px",
+                  }}
                 >
-                  You are hereby appointed as{" "}
-                  <span className="font-bold underline underline-offset-2">
-                    {positionName}
+                  Republic of the Philippines
+                </div>
+                <div
+                  style={{
+                    borderBottom: "1px solid black",
+                    display: "inline-block",
+                    padding: "0 20px",
+                    fontSize: "12px",
+                    marginBottom: "2px",
+                  }}
+                >
+                  DEPARTMENT OF EDUCATION
+                </div>
+                <br />
+                <div
+                  style={{
+                    borderBottom: "1px solid black",
+                    display: "inline-block",
+                    padding: "0 20px",
+                    fontSize: "12px",
+                  }}
+                >
+                  SCHOOLS DIVISION OFFICE OF BAYUGAN CITY
+                </div>
+              </div>
+
+              {/* Addressee */}
+              <div style={{ marginBottom: "16px" }}>
+                <span style={{ fontWeight: "bold" }}>{salutation}:</span>{" "}
+                {uline(fullName, "250px")}
+              </div>
+
+              {/* Form fields */}
+              <div style={{ lineHeight: "2.2", fontSize: "12px" }}>
+                {/* You are hereby appointed as ___ (SG/JG/PG ___) */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                  }}
+                >
+                  <span style={{ whiteSpace: "nowrap", marginRight: "4px" }}>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;You are hereby appointed
+                    as{" "}
                   </span>
-                  <span className="ml-2">(SG {salaryGrade}, Step 1)</span>
-                </p>
-                <p style={{ textAlign: "justify", textAlignLast: "justify" }}>
-                  under{" "}
-                  <span className="font-bold underline underline-offset-2">
-                    {employmentStatus}
-                  </span>{" "}
-                  status at the{" "}
-                  <span className="font-bold underline underline-offset-2">
-                    {assignment.toUpperCase()}
+                  <span
+                    style={{
+                      flex: 1,
+                      borderBottom: "1px solid black",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {positionName || "\u00A0"}
                   </span>
-                  .
-                </p>
-                <p style={{ textAlign: "justify", textAlignLast: "justify" }}>
-                  with a compensation rate of{" "}
-                  <span className="font-bold underline underline-offset-2">
-                    {salaryInWords}
-                  </span>{" "}
-                  pesos per month.
-                  <span className="ml-2">
-                    (P{" "}
-                    <span className="font-bold underline underline-offset-2">
-                      {salaryAmount}
+                  <span style={{ whiteSpace: "nowrap", marginLeft: "8px" }}>
+                    (SG/JG/PG{" "}
+                    <span
+                      style={{
+                        display: "inline-block",
+                        minWidth: "40px",
+                        borderBottom: "1px solid black",
+                        textAlign: "center",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {salaryGrade}
                     </span>
                     )
                   </span>
-                </p>
-                <p
-                  className="indent-8"
-                  style={{ textAlign: "justify", textAlignLast: "justify" }}
+                </div>
+                <div
+                  style={{
+                    textAlign: "center",
+                    fontSize: "9px",
+                    fontStyle: "italic",
+                    marginTop: "-6px",
+                    marginBottom: "2px",
+                  }}
                 >
-                  The nature of this appointment is{" "}
-                  <span className="font-bold underline underline-offset-2">
-                    {natureOfAppointment}
-                  </span>{" "}
-                  vice{" "}
-                  <span className="font-bold underline underline-offset-2">
-                    {vice}
-                  </span>{" "}
-                  who{" "}
-                  <span className="font-bold underline underline-offset-2">
-                    {reasonOfVacancy}
+                  (Position Title)
+                </div>
+
+                {/* under ___ status at the ___ */}
+                <div style={{ display: "flex", alignItems: "baseline" }}>
+                  <span style={{ fontWeight: "bold", marginRight: "4px" }}>
+                    under{" "}
                   </span>
-                  with Plantilla Item No.{" "}
-                  <span className="font-bold underline underline-offset-2">
-                    {plantillaNumber}
+                  <span
+                    style={{
+                      minWidth: "160px",
+                      borderBottom: "1px solid black",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {employmentStatus || "\u00A0"}
                   </span>
-                </p>
-                <p>Page ____________.</p>
+                  <span
+                    style={{ whiteSpace: "nowrap", margin: "0 4px" }}
+                  >
+                    {" "}
+                    status at the{" "}
+                  </span>
+                  <span
+                    style={{
+                      flex: 1,
+                      borderBottom: "1px solid black",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {assignment.toUpperCase() || "\u00A0"}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "9px",
+                    fontStyle: "italic",
+                    marginTop: "-6px",
+                    marginBottom: "2px",
+                  }}
+                >
+                  <span style={{ marginLeft: "40px" }}>
+                    (Permanent, Temporary, etc.)
+                  </span>
+                  <span style={{ marginRight: "60px" }}>
+                    (Office/Department/Unit)
+                  </span>
+                </div>
+
+                {/* with a compensation rate of ___ (P___) */}
+                <div style={{ display: "flex", alignItems: "baseline" }}>
+                  <span style={{ whiteSpace: "nowrap", marginRight: "4px" }}>
+                    with a compensation rate of{" "}
+                  </span>
+                  <span
+                    style={{
+                      flex: 1,
+                      borderBottom: "1px solid black",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {salaryInWords || "\u00A0"}
+                  </span>
+                  <span style={{ whiteSpace: "nowrap", marginLeft: "4px" }}>
+                    (P
+                    <span
+                      style={{
+                        display: "inline-block",
+                        minWidth: "100px",
+                        borderBottom: "1px solid black",
+                        textAlign: "center",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {salaryAmount || "\u00A0"}
+                    </span>
+                    )
+                  </span>
+                </div>
+                <div style={{ fontSize: "12px", marginBottom: "2px" }}>
+                  <strong>pesos per month.</strong>
+                </div>
+
+                {/* The nature of this appointment is ___ vice ___ */}
+                <div style={{ display: "flex", alignItems: "baseline" }}>
+                  <span style={{ whiteSpace: "nowrap", marginRight: "4px" }}>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The nature of this
+                    appointment is{" "}
+                  </span>
+                  <span
+                    style={{
+                      flex: 1,
+                      borderBottom: "1px solid black",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {natureOfAppointment || "\u00A0"}
+                  </span>
+                  <span style={{ whiteSpace: "nowrap", margin: "0 4px" }}>
+                    {" "}
+                    vice{" "}
+                  </span>
+                  <span
+                    style={{
+                      minWidth: "120px",
+                      borderBottom: "1px solid black",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {vice || "\u00A0"}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    textAlign: "center",
+                    fontSize: "9px",
+                    fontStyle: "italic",
+                    marginTop: "-6px",
+                    marginBottom: "2px",
+                    marginRight: "120px",
+                  }}
+                >
+                  (Original, Promotion, etc.)
+                </div>
+
+                {/* ___, who ___ with Plantilla Item No. ___ */}
+                <div style={{ display: "flex", alignItems: "baseline" }}>
+                  <span
+                    style={{
+                      minWidth: "180px",
+                      borderBottom: "1px solid black",
+                      textAlign: "center",
+                    }}
+                  >
+                    {"\u00A0"}
+                  </span>
+                  <span style={{ whiteSpace: "nowrap", margin: "0 4px" }}>
+                    , who
+                  </span>
+                  <span
+                    style={{
+                      minWidth: "130px",
+                      borderBottom: "1px solid black",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {reasonOfVacancy || "\u00A0"}
+                  </span>
+                  <span style={{ whiteSpace: "nowrap", margin: "0 4px" }}>
+                    {" "}
+                    with Plantilla Item No.
+                  </span>
+                  <span
+                    style={{
+                      minWidth: "100px",
+                      borderBottom: "1px solid black",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {plantillaNumber || "\u00A0"}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: "9px",
+                    fontStyle: "italic",
+                    marginTop: "-6px",
+                    marginBottom: "2px",
+                    marginLeft: "200px",
+                  }}
+                >
+                  (Transferred, Retired, etc.)
+                </div>
+
+                {/* Page ___. */}
+                <div>
+                  Page
+                  <span
+                    style={{
+                      display: "inline-block",
+                      minWidth: "50px",
+                      borderBottom: "1px solid black",
+                    }}
+                  >
+                    &nbsp;
+                  </span>
+                  .
+                </div>
               </div>
 
               {/* Effective date clause */}
-              <div className="mt-4 text-justify leading-relaxed space-y-3 font-semibold">
-                <p className="indent-8">
+              <div
+                style={{
+                  marginTop: "20px",
+                  fontWeight: "bold",
+                  fontSize: "12px",
+                }}
+              >
+                <p style={{ textIndent: "2em", textAlign: "justify" }}>
                   This appointment shall take effect on the date of signing by
                   the appointing officer/authority.
                 </p>
               </div>
 
-              {/* Plantilla type - italic */}
-              {plantillaType && (
-                <div className="mt-8 italic">
-                  <span className="underline underline-offset-2 font-semibold">
-                    Plantilla: {plantillaType}
-                  </span>
+              {/* Spacer pushes signature down */}
+              <div style={{ flex: 1 }} />
+
+              {/* Very truly yours */}
+              <div style={{ textAlign: "right", marginBottom: "6px" }}>
+                <div style={{ fontWeight: "bold", marginBottom: "28px" }}>
+                  Very truly yours,
                 </div>
-              )}
-
-              {/* Reversion clause - for Promotion only */}
-
-              <div className="mt-8 text-[12px] italic w-1/3 font-semibold">
-                *the appointee shall be reverted to his/her former position in
-                case the promotional appointment of the previous position holder
-                is disapproved or invalidated.
+                {sdsUser?.signature_path && (
+                  <div style={{ marginBottom: "2px" }}>
+                    <img
+                      src={sdsUser.signature_path}
+                      alt=""
+                      width={80}
+                      height={50}
+                      style={{
+                        objectFit: "contain",
+                        marginLeft: "auto",
+                        display: "block",
+                      }}
+                    />
+                  </div>
+                )}
+                <div
+                  style={{
+                    display: "inline-block",
+                    borderBottom: "2px solid black",
+                    paddingBottom: "2px",
+                    minWidth: "220px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}
+                >
+                  {sdsName || "\u00A0"}
+                </div>
+                <div style={{ fontSize: "11px", marginTop: "2px" }}>
+                  Appointing Officer/Authority
+                </div>
               </div>
 
-              {/* Signatory section - right aligned */}
-              <div className="mt-10 flex justify-between items-end">
-                <div className="text-[12px]">
-                  <div>Accredited/Deregulated Pursuant to</div>
+              {/* Date of signing */}
+              <div
+                style={{
+                  textAlign: "right",
+                  marginTop: "16px",
+                  marginBottom: "12px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "inline-block",
+                    borderBottom: "1px solid black",
+                    paddingBottom: "2px",
+                    minWidth: "220px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}
+                >
+                  {effectiveDate || "\u00A0"}
+                </div>
+                <div style={{ fontSize: "11px", marginTop: "2px" }}>
+                  Date of Signing
+                </div>
+              </div>
+
+              {/* Bottom: Accreditation left, Stamp right */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-end",
+                  marginTop: "auto",
+                }}
+              >
+                <div style={{ fontSize: "11px", lineHeight: "1.5" }}>
+                  <div style={{ fontWeight: "bold" }}>
+                    Accredited/Deregulated Pursuant to
+                  </div>
                   <div>
                     CSC Resolution No.{" "}
-                    <span className="underline underline-offset-2">
-                      2100140, s. 2021
-                    </span>{" "}
-                    s.{" "}
-                    <span className="underline underline-offset-2">2021</span>
+                    {uline("2100140", "60px", false)}, s.{" "}
+                    {uline("2021", "40px", false)}
                   </div>
                   <div>
-                    dated{" "}
-                    <span className="underline underline-offset-2">
-                      February 16, 2021
-                    </span>
+                    dated {uline("February 16, 2021", "120px", false)}
                   </div>
-                  <div className="mt-6 text-slate-400 font-medium">
+                  <div
+                    style={{
+                      marginTop: "16px",
+                      fontStyle: "italic",
+                      fontWeight: "bold",
+                      color: "#999",
+                      fontSize: "13px",
+                    }}
+                  >
                     DRY SEAL
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="mb-4">Very truly yours,</div>
-                  {sdsUser?.signature_path && (
-                    <div className="mb-1">
-                      <img
-                        src={sdsUser.signature_path}
-                        alt=""
-                        width={80}
-                        height={50}
-                        className="object-contain ml-auto mr-0"
-                      />
-                    </div>
-                  )}
-                  <div className="font-bold border-b-2 border-black pb-1">
-                    {sdsName ?? "________________"}
-                  </div>
-                  <div className="text-[12px] mt-1">
-                    OIC-Schools Division Superintendent
-                  </div>
-                  <div className="text-[12px]">
-                    Appointing Officer/Authority
-                  </div>
-                  <div className="text-[12px] mt-3 font-bold">
-                    {effectiveDate}
-                  </div>
-                  <div className="text-[12px]">Date of Signing</div>
-                  <div className="mt-8 text-[10px] text-slate-500">
-                    (Stamp of Date of Release)
-                  </div>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    fontStyle: "italic",
+                    color: "#666",
+                  }}
+                >
+                  (Stamp of Date of Release)
                 </div>
               </div>
             </div>
@@ -279,206 +652,500 @@ export const PrintAppointmentForm = React.forwardRef<
         </div>
 
         {/* ==================== PAGE 2 ==================== */}
-        <div className="mt-8 print:break-before-page">
-          {/* Certification 1 */}
-          <div className="border-2 border-black p-4 mb-1 bg-gray-200">
-            <div className="border-2 border-black p-4 mb-4 bg-white">
-              <div className="text-center font-bold mb-3">Certification</div>
-              <div className="text-justify leading-relaxed text-[13px] space-y-2">
-                <p className="indent-8">
+        <div
+          style={{
+            width: PAGE_W,
+            height: PAGE_H,
+            display: "flex",
+            flexDirection: "column",
+            gap: "5px",
+            pageBreakBefore: "always",
+          }}
+        >
+          {/* ---- Gray Box 1: Both Certifications grouped ---- */}
+          <div
+            style={{
+              flex: 5,
+              border: "2px solid black",
+              backgroundColor: GRAY_BG,
+              padding: GRAY_PAD,
+              display: "flex",
+              flexDirection: "column",
+              WebkitPrintColorAdjust: "exact",
+              printColorAdjust: "exact",
+            } as React.CSSProperties}
+          >
+            {/* Certification 1 — HRMO */}
+            <div
+              style={{
+                flex: 1,
+                border: "2px solid black",
+                backgroundColor: "white",
+                padding: "14px 22px",
+                marginBottom: GRAY_PAD,
+              }}
+            >
+              <div
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: "13px",
+                  marginBottom: "8px",
+                  textDecoration: "underline",
+                }}
+              >
+                Certification
+              </div>
+              <div
+                style={{
+                  textAlign: "justify",
+                  lineHeight: "1.8",
+                  fontSize: "12px",
+                }}
+              >
+                <p style={{ textIndent: "2em", marginBottom: "6px" }}>
                   This is to certify that all requirements and supporting papers
-                  pursuant to CSC MC No. 24, s. 2017,{" "}
-                  <strong>as amended</strong>, have been complied with, reviewed
-                  and found to be in order.
+                  pursuant to{" "}
+                  <strong>CSC MC No. 24, s. 2017, as amended,</strong> have been
+                  complied with, reviewed and found to be in order.
                 </p>
-                <p className="indent-8">
+                <p style={{ textIndent: "2em" }}>
                   The position was published at{" "}
-                  <span className="underline">{publishedAt}</span> from{" "}
-                  <span className="underline">{publishedFrom}</span> to{" "}
-                  <span className="underline">{publishedTo}</span> and posted in{" "}
-                  <span className="underline">{postedIn}</span> from{" "}
-                  <span className="underline">{postedFrom}</span> to{" "}
-                  <span className="underline">{postedTo}</span> in consonance
-                  with RA No. 7041. The assessment by the Human Resource Merit
-                  Promotion and Selection Board (HRMPSB) started on{" "}
-                  <span className="underline">{hrmpsbAssessmentStarted}</span>.
+                  {uline(publishedAt, "170px")} from{" "}
+                  {uline(publishedFrom, "75px")} to{" "}
+                  {uline(publishedTo, "75px")} and posted in{" "}
+                  {uline(postedIn, "190px")} from{" "}
+                  {uline(postedFrom, "75px")} to{" "}
+                  {uline(postedTo, "75px")} in consonance with RA No. 7041. The
+                  assessment by the Human Resource Merit Promotion and Selection
+                  Board (HRMPSB) started on{" "}
+                  {uline(hrmpsbAssessmentStarted, "110px")}.
                 </p>
               </div>
-              <div className="mt-6 flex justify-end">
-                <div className="text-right min-w-[200px]">
-                  <div className="font-bold border-b-2 border-black pb-1">
-                    JASMINE B. NEPA
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: "16px",
+                }}
+              >
+                <div style={{ textAlign: "center", minWidth: "200px" }}>
+                  <div
+                    style={{
+                      borderBottom: "2px solid black",
+                      paddingBottom: "2px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {hrmoName || "\u00A0"}
                   </div>
-                  <div className="text-[12px]">
-                    Administrative Officer IV - HRMO
+                  <div style={{ fontSize: "11px", marginTop: "2px" }}>
+                    {hrmoTitle}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Certification 2 */}
-
-          <div className="border-2 border-black p-4 mb-1 bg-gray-200">
-            <div className="border-2 border-black p-4 mb-4 bg-white">
-              <div className="text-center font-bold mb-3">Certification</div>
-              <div className="text-justify leading-relaxed text-[13px]">
-                <p className="indent-8">
+            {/* Certification 2 — HRMPSB/Placement Committee */}
+            <div
+              style={{
+                flex: 1,
+                border: "2px solid black",
+                backgroundColor: "white",
+                padding: "14px 22px",
+              }}
+            >
+              <div
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: "13px",
+                  marginBottom: "8px",
+                  textDecoration: "underline",
+                }}
+              >
+                Certification
+              </div>
+              <div
+                style={{
+                  textAlign: "justify",
+                  lineHeight: "1.8",
+                  fontSize: "12px",
+                }}
+              >
+                <p style={{ textIndent: "2em" }}>
                   This is to certify that the appointee has been screened and
-                  found qualified by the majority of the HRMPSB during the
-                  deliberation held on{" "}
-                  <span className="underline">________________</span>.
+                  found qualified by the majority of the HRMPSB/
+                  <strong>Placement Committee</strong> during the deliberation
+                  held on{" "}
+                  <span
+                    style={{
+                      borderBottom: "1px solid black",
+                      display: "inline-block",
+                      minWidth: "120px",
+                    }}
+                  >
+                    &nbsp;
+                  </span>
+                  .
                 </p>
               </div>
-              <div className="mt-6 flex justify-end">
-                <div className="text-right min-w-[200px]">
-                  <div className="font-bold border-b-2 border-black pb-1">
-                    CORAZON P. ROA
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: "16px",
+                }}
+              >
+                <div style={{ textAlign: "center", minWidth: "260px" }}>
+                  <div
+                    style={{
+                      borderBottom: "2px solid black",
+                      paddingBottom: "2px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {hrmpsbName || "\u00A0"}
                   </div>
-                  <div className="text-[12px]">
-                    Assistant Schools Division Superintendent
+                  <div style={{ fontSize: "11px", marginTop: "2px" }}>
+                    Chairperson, HRMPSB/<strong>Placement Committee</strong>
                   </div>
-                  <div className="text-[12px]">Chairperson, HRMPSB</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* CSC/HRMO Notation */}
-          <div className="border-2 border-black p-2 mb-1 bg-gray-200">
-            <div className="border-2 border-black p-2 mb-2 bg-white">
-              <div className="text-center font-bold mb-2">
+          {/* ---- Gray Box 2: CSC/HRMO Notation ---- */}
+          <div
+            style={{
+              flex: 4,
+              border: "2px solid black",
+              backgroundColor: GRAY_BG,
+              padding: GRAY_PAD,
+              display: "flex",
+              flexDirection: "column",
+              WebkitPrintColorAdjust: "exact",
+              printColorAdjust: "exact",
+            } as React.CSSProperties}
+          >
+            <div
+              style={{
+                flex: 1,
+                border: "2px solid black",
+                backgroundColor: "white",
+                padding: "8px 14px",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <div
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: "13px",
+                  marginBottom: "6px",
+                }}
+              >
                 CSC/HRMO Notation
               </div>
-              <table className="w-full text-[12px] border-collapse">
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: "11px",
+                }}
+              >
                 <tbody>
                   <tr>
                     <td
                       colSpan={3}
-                      className="border border-black p-1 font-bold"
+                      style={{
+                        border: "1px solid black",
+                        padding: "3px 6px",
+                        fontWeight: "bold",
+                        textAlign: "center",
+                      }}
                     >
-                      <div className="text-center">ACTION ON APPOINTMENTS</div>
+                      ACTION ON APPOINTMENTS
                     </td>
-                    <td className="border border-black p-1 w-32 font-bold text-center">
+                    <td
+                      style={{
+                        border: "1px solid black",
+                        padding: "3px 6px",
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        width: "90px",
+                      }}
+                    >
                       Recorded by
                     </td>
                   </tr>
                   <tr>
-                    <td colSpan={3} className="border border-black p-1">
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-4 h-4 border-2 border-black" />
-                        Validated per RAI for the month of{" "}
-                        <span className="underline flex-1">
-                          _______________
-                        </span>
-                      </div>
+                    <td
+                      colSpan={3}
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    >
+                      <Checkbox />
+                      <strong>Validated</strong> per RAI for the month of{" "}
+                      <span
+                        style={{
+                          borderBottom: "1px solid black",
+                          display: "inline-block",
+                          minWidth: "190px",
+                        }}
+                      >
+                        &nbsp;
+                      </span>
                     </td>
-                    <td className="border border-black p-1"></td>
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
                   </tr>
                   <tr>
-                    <td colSpan={3} className="border border-black p-1">
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-4 h-4 border-2 border-black" />
-                        Invalidated per CSCRO/FO letter dated{" "}
-                        <span className="underline flex-1">
-                          _______________
-                        </span>
-                      </div>
+                    <td
+                      colSpan={3}
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    >
+                      <Checkbox />
+                      <strong>Invalidated</strong> per CSCRO/FO letter dated{" "}
+                      <span
+                        style={{
+                          borderBottom: "1px solid black",
+                          display: "inline-block",
+                          minWidth: "170px",
+                        }}
+                      >
+                        &nbsp;
+                      </span>
                     </td>
-                    <td className="border border-black p-1"></td>
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
                   </tr>
                   <tr>
-                    <td className="border border-black p-1">
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-4 h-4 border-2 border-black" />
-                        Appeal
-                      </div>
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    >
+                      <Checkbox />
+                      <strong>Appeal</strong>
                     </td>
-                    <td className="border border-black p-1">DATE FILED</td>
-                    <td className="border border-black p-1">STATUS</td>
-                    <td className="border border-black p-1"></td>
+                    <td
+                      style={{
+                        border: "1px solid black",
+                        padding: "3px 6px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      DATE FILED
+                    </td>
+                    <td
+                      style={{
+                        border: "1px solid black",
+                        padding: "3px 6px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      STATUS
+                    </td>
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
                   </tr>
                   <tr>
-                    <td className="border border-black p-1 pl-6">
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-4 h-4 border-2 border-black" />
-                        CSCRO/CSC-Commission
-                      </div>
+                    <td
+                      style={{
+                        border: "1px solid black",
+                        padding: "3px 6px",
+                        paddingLeft: "26px",
+                      }}
+                    >
+                      <Checkbox />
+                      CSCRO/ CSC-Commission
                     </td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
                   </tr>
                   <tr>
-                    <td className="border border-black p-1">
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-4 h-4 border-2 border-black" />
-                        Petition for Review
-                      </div>
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    >
+                      <Checkbox />
+                      <strong>Petition for Review</strong>
                     </td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
                   </tr>
                   <tr>
-                    <td className="border border-black p-1 pl-6">
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-4 h-4 border-2 border-black" />
-                        CSC-Commission
-                      </div>
+                    <td
+                      style={{
+                        border: "1px solid black",
+                        padding: "3px 6px",
+                        paddingLeft: "26px",
+                      }}
+                    >
+                      <Checkbox />
+                      CSC-Commission
                     </td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
                   </tr>
                   <tr>
-                    <td className="border border-black p-1 pl-6">
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-4 h-4 border-2 border-black" />
-                        Court of Appeals
-                      </div>
+                    <td
+                      style={{
+                        border: "1px solid black",
+                        padding: "3px 6px",
+                        paddingLeft: "26px",
+                      }}
+                    >
+                      <Checkbox />
+                      Court of Appeals
                     </td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
                   </tr>
                   <tr>
-                    <td className="border border-black p-1 pl-6">
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-4 h-4 border-2 border-black" />
-                        Supreme Court
-                      </div>
+                    <td
+                      style={{
+                        border: "1px solid black",
+                        padding: "3px 6px",
+                        paddingLeft: "26px",
+                      }}
+                    >
+                      <Checkbox />
+                      Supreme Court
                     </td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
+                    <td
+                      style={{ border: "1px solid black", padding: "3px 6px" }}
+                    />
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Acknowledgement */}
-          <div className="border-2 border-black p-4 mb-1 bg-gray-200">
-            <div className="border-2 border-black bg-white">
-              <div className="flex">
-                <div className="flex-1 text-[13px] p-2">
-                  <div>Original Copy - for the Appointee</div>
-                  <div>Original Copy - for the Civil Service Commission</div>
-                  <div>Original Copy - for the Agency</div>
+          {/* ---- Gray Box 3: Acknowledgement + Original Copy ---- */}
+          <div
+            style={{
+              flex: 1.5,
+              border: "2px solid black",
+              backgroundColor: GRAY_BG,
+              padding: GRAY_PAD,
+              display: "flex",
+              flexDirection: "column",
+              WebkitPrintColorAdjust: "exact",
+              printColorAdjust: "exact",
+            } as React.CSSProperties}
+          >
+            <div
+              style={{
+                flex: 1,
+                border: "2px solid black",
+                backgroundColor: "white",
+                display: "flex",
+              }}
+            >
+              {/* Left: Original Copy info */}
+              <div
+                style={{
+                  flex: 1,
+                  padding: "10px 14px",
+                  fontSize: "11px",
+                  lineHeight: "1.8",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                }}
+              >
+                <div>Original Copy &nbsp;- &nbsp;for the Appointee</div>
+                <div>
+                  Original Copy &nbsp;- &nbsp;for the Civil Service Commission
                 </div>
-                <div className="flex-1 border-l border-black p-2">
-                  <div className="text-center font-bold mb-3">
-                    Acknowledgement
-                  </div>
-                  <div className="text-[13px] mb-2">
-                    Received original/photocopy of appointment on{" "}
-                    <span className="underline">________________</span>
-                  </div>
-                  <div className="font-bold border-b border-black text-center mx-4">
+                <div>Original Copy &nbsp;- &nbsp;for the Agency</div>
+              </div>
+              {/* Right: Acknowledgement */}
+              <div
+                style={{
+                  flex: 1,
+                  borderLeft: "1px solid black",
+                  padding: "10px 14px",
+                }}
+              >
+                <div
+                  style={{
+                    textAlign: "center",
+                    fontWeight: "bold",
+                    fontSize: "12px",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Acknowledgement
+                </div>
+                <div
+                  style={{
+                    fontSize: "11px",
+                    fontStyle: "italic",
+                    marginBottom: "14px",
+                  }}
+                >
+                  Received original/photocopy of appointment on
+                  <span
+                    style={{
+                      borderBottom: "1px solid black",
+                      display: "inline-block",
+                      minWidth: "80px",
+                    }}
+                  >
+                    &nbsp;
+                  </span>
+                </div>
+                <div style={{ textAlign: "center", marginTop: "10px" }}>
+                  <div
+                    style={{
+                      borderBottom: "1px solid black",
+                      display: "inline-block",
+                      minWidth: "200px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     {fullName}
                   </div>
-                  <div className="text-[12px] text-center">Appointee</div>
+                  <div style={{ fontSize: "11px", marginTop: "2px" }}>
+                    Appointee
+                  </div>
                 </div>
               </div>
             </div>

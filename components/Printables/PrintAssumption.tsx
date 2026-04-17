@@ -1,146 +1,290 @@
 /* eslint-disable @next/next/no-img-element */
+import { useSupabase } from "@/context/SupabaseProvider";
 import { ApplicantTypes } from "@/types";
 import { format } from "date-fns";
 import * as React from "react";
-import { PrintFooter } from "./PrintFooter";
-import { PrintHeader } from "./PrintHeader";
 
 interface ComponentToPrintProps {
   selectedItem: ApplicantTypes;
 }
 
 /**
- * CS Form No. 4: Certification of Assumption to Duty
- * CSC standard format per 2025 Omnibus Rules on Appointments
+ * CS Form No. 4 (Revised 2018): Certification of Assumption to Duty
+ * Matches the exact CSC official format. Sized for folio bond paper (8.5in x 13in).
  */
 export const PrintAssumption = React.forwardRef<
   HTMLDivElement | null,
   ComponentToPrintProps
 >((props, ref) => {
   const { selectedItem } = props;
+  const { systemAccess, systemUsers } = useSupabase();
 
   if (!selectedItem?.date) {
     return null;
   }
 
+  const hrmoAccess = systemAccess?.find(
+    (a: { type: string }) => a.type === "hrmo",
+  );
+  const hrmoUser = systemUsers?.find(
+    (u: { id: string }) => u.id === hrmoAccess?.user_id,
+  );
+  const hrmoName = hrmoUser
+    ? `${hrmoUser.firstname} ${hrmoUser.middlename ?? ""} ${hrmoUser.lastname}`.trim()
+    : "";
+
   const targetDate = new Date(selectedItem.date);
-  const formattedDate = format(targetDate, "do 'day of' MMMM, yyyy");
+  const dayOfMonth = format(targetDate, "d");
+  const monthName = format(targetDate, "MMMM");
+  const year = format(targetDate, "yyyy");
+  const effectiveDate = format(targetDate, "MMMM d, yyyy");
+
   const honorific =
     selectedItem?.sex === "Female"
       ? "Ms."
       : selectedItem?.sex === "Male"
         ? "Mr."
-        : "";
+        : "Ms./Mr.";
+  const fullName =
+    `${selectedItem.firstname} ${selectedItem.middlename ?? ""} ${selectedItem.lastname}`.trim();
   const positionName =
     selectedItem?.ranking?.position?.name ||
     selectedItem?.hrm_item?.hrm_position?.name ||
-    "N/A";
+    "";
   const assignment =
     selectedItem?.assignment || "Schools Division Office of Bayugan City";
+  const signatory = selectedItem?.signatory || "";
+  const signatoryPosition =
+    selectedItem?.position || "Head of Office/Department/Unit";
+  const attestedBy = selectedItem?.attested_by || hrmoName || "";
+  const attestedByPosition =
+    selectedItem?.attested_by_position || "HRMO";
+  const signingDate = selectedItem?.date
+    ? format(new Date(selectedItem.date), "MMMM d, yyyy")
+    : "";
+
+  // Underline blank
+  const uline = (value: string, minW = "150px") => (
+    <span
+      style={{
+        display: "inline-block",
+        minWidth: minW,
+        borderBottom: "1px solid black",
+        textAlign: "center",
+        fontWeight: value ? "bold" : "normal",
+      }}
+    >
+      {value || "\u00A0"}
+    </span>
+  );
 
   return (
-    <div className="fixed left-[-9999px] top-0 w-[816px] print:left-0 print:relative print:m-0">
+    <div className="invisible">
       <div
         ref={ref}
-        className="w-[816px] bg-white py-2 px-8 m-12 print:m-0 print:p-0 print:pb-36 text-base"
-        style={{ fontFamily: "Times New Roman, serif" }}
+        style={{
+          fontFamily: "Times New Roman, serif",
+          fontSize: "14px",
+          width: "100%",
+          height: "11in",
+          display: "flex",
+          flexDirection: "column",
+          WebkitPrintColorAdjust: "exact",
+          printColorAdjust: "exact",
+        } as React.CSSProperties}
       >
-        {/* Upper left form info - fixed to top of paper */}
-        <div className="text-[12px] leading-tight mb-2">
-          <div>CS Form No. 4 (Revised 2025)</div>
+        {/* CS Form number */}
+        <div style={{ fontSize: "12px", lineHeight: "1.4", fontStyle: "italic" }}>
+          <div style={{ fontWeight: "bold" }}>CS Form No. 4</div>
+          <div>Revised 2018</div>
         </div>
 
-        <PrintHeader />
+        {/* Republic header */}
+        <div style={{ textAlign: "center", marginTop: "40px" }}>
+          <div
+            style={{
+              fontWeight: "bold",
+              fontSize: "16px",
+              marginBottom: "2px",
+            }}
+          >
+            Republic of the Philippines
+          </div>
+          <div
+            style={{
+              borderBottom: "1px solid black",
+              display: "inline-block",
+              padding: "0 20px",
+              fontSize: "14px",
+              marginBottom: "2px",
+            }}
+          >
+            DEPARTMENT OF EDUCATION
+          </div>
+          <br />
+          <div
+            style={{
+              borderBottom: "1px solid black",
+              display: "inline-block",
+              padding: "0 20px",
+              fontSize: "14px",
+            }}
+          >
+            SCHOOLS DIVISION OFFICE OF BAYUGAN CITY
+          </div>
+        </div>
 
-        <table className="mt-2 w-full text-base">
-          <tbody>
-            <tr>
-              <td colSpan={2} className="text-center pt-4">
-                <div className="font-bold text-2xl my-10">
-                  CERTIFICATION OF ASSUMPTION TO DUTY
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={2} className="px-1 pt-4">
-                <div className="text-justify leading-relaxed space-y-3">
-                  <p>
-                    This is to certify that {honorific}{" "}
-                    <span className="font-bold underline underline-offset-2">
-                      {selectedItem.firstname} {selectedItem.middlename}{" "}
-                      {selectedItem.lastname}
-                    </span>{" "}
-                    has assumed the duties and responsibilities as{" "}
-                    <span className="font-bold underline underline-offset-2">
-                      {positionName}
-                    </span>{" "}
-                    of <span className="font-bold">{assignment}</span> effective{" "}
-                    <span className="underline underline-offset-2">
-                      {format(targetDate, "MMMM d, yyyy")}
-                    </span>
-                    .
-                  </p>
-                  <p className="indent-8">
-                    This certification is issued in connection with the issuance
-                    of the appointment of {honorific}{" "}
-                    <span className="font-bold underline underline-offset-2">
-                      {selectedItem.firstname} {selectedItem.middlename}{" "}
-                      {selectedItem.lastname}
-                    </span>{" "}
-                    as{" "}
-                    <span className="font-bold underline underline-offset-2">
-                      {positionName}
-                    </span>{" "}
-                    pursuant to existing civil service rules and regulations.
-                  </p>
-                  <p className="indent-8">
-                    Done this {formattedDate} at the Schools Division Office of
-                    Bayugan City.
-                  </p>
-                </div>
+        {/* Title */}
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "18px",
+            marginTop: "50px",
+            marginBottom: "40px",
+          }}
+        >
+          CERTIFICATION OF ASSUMPTION TO DUTY
+        </div>
 
-                {/* Signed by Head of Office - CSC requirement */}
-                <div className="mt-10 flex justify-end">
-                  <div className="text-center">
-                    <div className="font-bold underline underline-offset-2">
-                      {selectedItem.signatory || "_______________________"}
-                    </div>
-                    <div className="text-base">
-                      {selectedItem.position || "Head of Office"}
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-2 text-base">
-                  Date:{" "}
-                  {selectedItem.date &&
-                    format(new Date(selectedItem.date), "MMMM d, yyyy")}
-                </div>
+        {/* Body text — justified with blanks */}
+        <div
+          style={{
+            textAlign: "justify",
+            lineHeight: "2.4",
+            fontSize: "14px",
+            padding: "0 20px",
+          }}
+        >
+          {/* Paragraph 1 */}
+          <p style={{ textIndent: "2em", marginBottom: "16px" }}>
+            This is to certify that {honorific}{" "}
+            {uline(fullName, "220px")} has assumed the duties and
+            responsibilities as {uline(positionName, "170px")} of{" "}
+            {uline(assignment, "200px")}, effective{" "}
+            {uline(effectiveDate, "130px")}.
+          </p>
 
-                {/* Attested by HRMO - CSC requirement */}
-                <div className="mt-8">
-                  <div className="text-base font-bold">Attested by:</div>
-                </div>
-                <div className="mt-4 flex justify-end">
-                  <div className="text-center">
-                    <div className="font-bold underline underline-offset-2">
-                      {selectedItem.attested_by || "_______________________"}
-                    </div>
-                    <div className="text-base">
-                      {selectedItem.attested_by_position || "Administrative Officer IV - HRMO"}
-                    </div>
-                  </div>
-                </div>
+          {/* Paragraph 2 */}
+          <p style={{ textIndent: "2em", marginBottom: "16px" }}>
+            This certification is issued in connection with the issuance of the
+            appointment of {honorific}{" "}
+            {uline(fullName, "220px")} as{" "}
+            {uline(positionName, "170px")}.
+          </p>
 
-                <div className="text-sm mt-8">
-                  <strong>Distribution:</strong> 201 File / Admin / COA / CSC
-                  Field Office (within 30 days from assumption)
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+          {/* Paragraph 3 */}
+          <p style={{ textIndent: "2em" }}>
+            Done this {uline(dayOfMonth, "30px")} day of{" "}
+            {uline(monthName, "80px")} {uline(year, "50px")} in{" "}
+            {uline("Bayugan City", "120px")}.
+          </p>
+        </div>
 
-        <PrintFooter />
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* Signatory — Head of Office (right aligned) */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            padding: "0 20px",
+            marginBottom: "8px",
+          }}
+        >
+          <div style={{ textAlign: "center", minWidth: "220px" }}>
+            <div
+              style={{
+                borderBottom: "1px solid black",
+                paddingBottom: "2px",
+                fontWeight: "bold",
+              }}
+            >
+              {signatory || "\u00A0"}
+            </div>
+            <div style={{ fontSize: "13px", marginTop: "2px" }}>
+              {signatoryPosition}
+            </div>
+          </div>
+        </div>
+
+        {/* Date */}
+        <div style={{ padding: "0 20px", marginBottom: "30px", fontSize: "14px" }}>
+          Date: {uline(signingDate, "130px")}
+        </div>
+
+        {/* Attested by */}
+        <div
+          style={{
+            padding: "0 20px",
+            fontSize: "14px",
+            marginBottom: "20px",
+          }}
+        >
+          <div style={{ fontWeight: "bold" }}>Attested by:</div>
+        </div>
+
+        {/* HRMO signature (left aligned) */}
+        <div style={{ padding: "0 20px", marginBottom: "40px" }}>
+          <div style={{ minWidth: "220px", display: "inline-block" }}>
+            <div
+              style={{
+                borderBottom: "1px solid black",
+                paddingBottom: "2px",
+                fontWeight: "bold",
+                minWidth: "200px",
+              }}
+            >
+              {attestedBy || "\u00A0"}
+            </div>
+            <div
+              style={{
+                fontSize: "13px",
+                marginTop: "2px",
+                fontWeight: "bold",
+                textAlign: "center",
+              }}
+            >
+              {attestedByPosition}
+            </div>
+          </div>
+        </div>
+
+        {/* Distribution + CSC submission note */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            padding: "0 20px",
+            fontSize: "12px",
+            fontStyle: "italic",
+          }}
+        >
+          <div style={{ lineHeight: "1.6" }}>
+            <div>201 file</div>
+            <div>Admin</div>
+            <div>COA</div>
+            <div>CSC</div>
+          </div>
+          <div
+            style={{
+              border: "1px solid black",
+              padding: "8px 14px",
+              textAlign: "center",
+              lineHeight: "1.6",
+              fontStyle: "italic",
+            }}
+          >
+            <div>
+              <strong>For submission to CSC FO</strong>
+            </div>
+            <div>within 30 days from the</div>
+            <div>date of assumption of the</div>
+            <div>appointee</div>
+          </div>
+        </div>
       </div>
     </div>
   );
