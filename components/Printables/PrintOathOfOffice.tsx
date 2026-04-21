@@ -107,6 +107,13 @@ export const PrintOathOfOffice = React.forwardRef<
 
           {/* Centered republic / department header */}
           <div style={{ textAlign: "center" }}>
+          <img
+            src="/logos/deped.png"
+            alt="DepEd Seal"
+            width={80}
+            height={80}
+            style={{ display: "inline-block", objectFit: "contain", marginBottom: "6px" }}
+          />
           <div style={{ fontSize: "16px" }}>REPUBLIKA NG PILIPINAS</div>
           <div style={{ fontSize: "14px", fontStyle: "italic" }}>
             REPUBLIC OF THE PHILIPPINES

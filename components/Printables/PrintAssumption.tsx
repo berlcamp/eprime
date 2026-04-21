@@ -101,6 +101,13 @@ export const PrintAssumption = React.forwardRef<
 
         {/* Republic header */}
         <div style={{ textAlign: "center", marginTop: "40px" }}>
+          <img
+            src="/logos/deped.png"
+            alt="DepEd Seal"
+            width={80}
+            height={80}
+            style={{ display: "inline-block", objectFit: "contain", marginBottom: "6px" }}
+          />
           <div
             style={{
               fontWeight: "bold",

@@ -10,13 +10,18 @@ export function PrintHeader({ hrLine = false }: { hrLine?: boolean }) {
     <div className="text-center mb-2">
       <div className="flex justify-center">
         <img
-          src="/deped_header.png"
-          alt="DepEd Logo"
-          width={300}
-          height={300}
+          src="/logos/deped.png"
+          alt="DepEd Seal"
+          width={96}
+          height={96}
           className="object-contain"
         />
       </div>
+      <div className="mt-1" style={{ fontFamily: "'Old English Text MT', 'UnifrakturCook', serif" }}>
+        <div className="text-base">Republic of the Philippines</div>
+        <div className="text-2xl font-semibold">Department of Education</div>
+      </div>
+      <div className="text-xs tracking-wider">CARAGA REGION</div>
       <div className="text-base mt-1 font-semibold">
         SCHOOLS DIVISION OFFICE OF BAYUGAN CITY
       </div>
