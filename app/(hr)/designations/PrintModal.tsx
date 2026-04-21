@@ -36,37 +36,33 @@ const PrintModal = ({ item, hideModal }: ModalProps) => {
   }
 
   useEffect(() => {
+    // **...** marks text the printed PDF will render in bold.
+    const designation = capitalizeWords(item.designation)
+    const station = item.area_assigned === 'school'
+      ? item.hrm_schools?.name
+      : item.hrm_offices?.name
+
     let content = ''
-    let subject = ''
-    if (item.type === 'Function only') {
-      subject = 'DESIGNATION ORDER'
+    if (item.type === 'Function only' || !station) {
       content =
-        'In the exigency of service, you are hereby designated as ' +
-        item.designation.toUpperCase() +
-        ' effective immediately.'
-      content +=
-        '\n\nThis shall take effect until revoke by the Superintendent.'
-      content += '\n\nPlease be guided accordingly.'
+        'In the exigency of service, you are hereby designated as **' +
+        designation +
+        '**, effective immediately.'
     } else {
-      let station = ''
-      if (item.area_assigned === 'school') {
-        station = item.hrm_schools?.name
-      } else {
-        station = item.hrm_offices?.name
-      }
-      subject = item.designation.toUpperCase() + ' DESIGNATION'
       content =
-        'You are hereby designated as ' +
-        item.designation.toUpperCase() +
-        ' of ' +
-        station.toUpperCase() +
-        ' effective immediately.'
-      content += '\nThis shall take effect until revoke by the Superintendent.'
-      content += '\nPlease be guided accordingly.'
+        'In the exigency of service, you are hereby designated as **' +
+        designation +
+        '** of **' +
+        station +
+        '**, effective immediately.'
     }
+    content +=
+      '\nAs such, you are to perform duties and responsibilities concomitant to your position.'
+    content +=
+      '\nIt is understood that you should clear yourself from all money and property accountabilities in your present station.'
 
     setLetterContent(content)
-    setLetterSubject(subject)
+    setLetterSubject('DESIGNATION ORDER')
   }, [])
 
   return (
@@ -109,7 +105,7 @@ const PrintModal = ({ item, hideModal }: ModalProps) => {
                       {capitalizeWords(`${process.env.NEXT_PUBLIC_SDS ?? ''}`)}
                     </div>
                     <div className="font-light">
-                      Schools Division Superintendent
+                      OIC - Schools Division Superintendent
                     </div>
                   </div>
                 </div>

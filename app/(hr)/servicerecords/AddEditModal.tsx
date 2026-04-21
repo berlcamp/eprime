@@ -1,6 +1,8 @@
 import { CustomButton } from '@/components/index'
+import { personnelActions, separationCauses } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { add, format } from 'date-fns'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -30,17 +32,24 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
   const dispatch = useDispatch()
 
   const user: Employee = systemUsers.find(
-    (user: Employee) => user.id === session?.user.id
+    (user: Employee) => user.id === userId
   )
 
   const {
     register,
     formState: { errors },
     reset,
+    watch,
     handleSubmit
   } = useForm<ServiceRecordTypes>({
     mode: 'onSubmit'
   })
+
+  const [isCurrent, setIsCurrent] = useState(true)
+
+  const personnelAction = watch('personnel_action')
+  const isSeparation =
+    personnelAction === 'Separation' || personnelAction === 'Retirement'
 
   const onSubmit = async (formdata: ServiceRecordTypes) => {
     if (saving) return
@@ -54,12 +63,101 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
     }
   }
 
+  // Treat 'Present' / empty as infinite future for interval math
+  const toTime = (d: string) =>
+    !d || d === 'Present' ? Number.MAX_SAFE_INTEGER : new Date(d).getTime()
+  const fromTime = (d: string) => new Date(d).getTime()
+
+  // Validates overlap and auto-closes prior 'Present' rows when isCurrent=true.
+  // Returns an error message on failure, or null on success (side-effects applied).
+  const runDateGuards = async (
+    newFrom: string,
+    newTo: string,
+    current: boolean,
+    excludeId: string | null
+  ): Promise<string | null> => {
+    if (!newFrom) return 'From date is required.'
+    if (!current && !newTo) return 'To date is required.'
+    if (!current && fromTime(newFrom) > toTime(newTo))
+      return 'From date must be on or before To date.'
+
+    const { data: existing } = await supabase
+      .from('hrm_service_records')
+      .select('id, from, to')
+      .eq('user_id', userId)
+
+    const rows = (existing ?? []).filter(
+      (r: any) => !excludeId || r.id !== excludeId
+    )
+
+    const newFromT = fromTime(newFrom)
+    const newToT = current ? Number.MAX_SAFE_INTEGER : toTime(newTo)
+
+    // Auto-close set: only when this entry is the new 'Present' line. Prior
+    // Present rows whose `from` precedes the new `from` get their `to` set to
+    // the day before the new `from`. Other Present rows (with from >= newFrom)
+    // are NOT auto-closed — that would corrupt a chronologically later line.
+    const autoCloseIds: string[] = current
+      ? rows
+          .filter(
+            (r: any) => r.to === 'Present' && fromTime(r.from) < newFromT
+          )
+          .map((r: any) => r.id)
+      : []
+
+    // Overlap check for everything not in the auto-close set
+    const overlap = rows.find((r: any) => {
+      if (autoCloseIds.includes(r.id)) return false
+      const eFrom = fromTime(r.from)
+      const eTo = toTime(r.to)
+      return newFromT <= eTo && eFrom <= newToT
+    })
+    if (overlap) {
+      return 'Date range overlaps with an existing service record entry.'
+    }
+
+    if (autoCloseIds.length > 0) {
+      const dayBefore = format(
+        add(new Date(newFrom), { days: -1 }),
+        'yyyy-MM-dd'
+      )
+      const { error } = await supabase
+        .from('hrm_service_records')
+        .update({ to: dayBefore })
+        .in('id', autoCloseIds)
+      if (error) {
+        void logError(
+          'Close previous Present service records',
+          'hrm_service_records',
+          JSON.stringify({ ids: autoCloseIds, new_to: dayBefore }),
+          error.message
+        )
+        return 'Failed to close the previous active service record.'
+      }
+    }
+
+    return null
+  }
+
   const handleCreate = async (formdata: ServiceRecordTypes) => {
+    const toValue = isCurrent ? 'Present' : formdata.to
+    const guardError = await runDateGuards(
+      formdata.from,
+      toValue,
+      isCurrent,
+      null
+    )
+    if (guardError) {
+      setToast('error', guardError)
+      setSaving(false)
+      return
+    }
+
     const newData = {
       user_id: userId,
       org_id: process.env.NEXT_PUBLIC_ORG_ID,
       from: formdata.from,
-      to: formdata.to,
+      to: toValue,
       designation: formdata.designation,
       days_without_pay: formdata.days_without_pay,
       status: formdata.status,
@@ -68,6 +166,7 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
       branch: formdata.branch,
       separation_date: formdata.separation_date,
       separation_cause: formdata.separation_cause,
+      personnel_action: formdata.personnel_action,
       remarks: formdata.remarks,
       created_by: session?.user.id
     }
@@ -126,9 +225,22 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
   const handleUpdate = async (formdata: ServiceRecordTypes) => {
     if (!editData) return
 
+    const toValue = isCurrent ? 'Present' : formdata.to
+    const guardError = await runDateGuards(
+      formdata.from,
+      toValue,
+      isCurrent,
+      editData.id
+    )
+    if (guardError) {
+      setToast('error', guardError)
+      setSaving(false)
+      return
+    }
+
     const newData = {
       from: formdata.from,
-      to: formdata.to,
+      to: toValue,
       designation: formdata.designation,
       days_without_pay: formdata.days_without_pay,
       status: formdata.status,
@@ -137,6 +249,7 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
       branch: formdata.branch,
       separation_date: formdata.separation_date,
       separation_cause: formdata.separation_cause,
+      personnel_action: formdata.personnel_action,
       remarks: formdata.remarks,
       created_by: session?.user.id
     }
@@ -163,9 +276,6 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
 
       // Update data in redux
       const items = [...globallist]
-      const user: Employee = systemUsers.find(
-        (user: Employee) => user.id === session?.user.id
-      )
       const updatedData = { ...newData, hrm_user: user, id: editData.id }
       const foundIndex = items.findIndex((x) => x.id === updatedData.id)
       items[foundIndex] = { ...items[foundIndex], ...updatedData }
@@ -186,6 +296,16 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
     }
   }
 
+  // On open / edit: initialise "Currently holds this position" based on editData.
+  useEffect(() => {
+    setIsCurrent(editData ? editData.to === 'Present' : true)
+  }, [editData])
+
+  // Force isCurrent=false when personnel action implies separation.
+  useEffect(() => {
+    if (isSeparation) setIsCurrent(false)
+  }, [isSeparation])
+
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
   useEffect(() => {
     reset({
@@ -199,6 +319,7 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
       branch: editData ? editData.branch : '',
       separation_date: editData ? editData.separation_date : '',
       separation_cause: editData ? editData.separation_cause : '',
+      personnel_action: editData ? editData.personnel_action : '',
       remarks: editData ? editData.remarks : ''
     })
   }, [editData, reset])
@@ -228,12 +349,41 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
                   </span>
                 </div>
               </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">
+                    Personnel Action
+                    <span className="text-red-500 ml-1">*</span>
+                  </div>
+                  <div>
+                    <select
+                      {...register('personnel_action', { required: true })}
+                      className="app__input_standard"
+                    >
+                      <option value="">Select Personnel Action</option>
+                      {personnelActions.map((action) => (
+                        <option key={action} value={action}>
+                          {action}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.personnel_action && (
+                      <div className="app__error_message">
+                        Personnel Action is required
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div className="flex space-x-4 w-full">
                 {/* Column 1 */}
                 <div className="w-1/2">
                   <div className="app__form_field_container">
                     <div className="w-full">
-                      <div className="app__label_standard">From (date)</div>
+                      <div className="app__label_standard">
+                        From (date)
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
                       <div>
                         <input
                           {...register('from', { required: true })}
@@ -251,25 +401,54 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
                   </div>
                   <div className="app__form_field_container">
                     <div className="w-full">
-                      <div className="app__label_standard">To (date)</div>
-                      <div>
+                      <label className="flex items-center space-x-2 text-xs">
                         <input
-                          {...register('to', { required: true })}
-                          type="text"
-                          placeholder="MM/DD/YYYY"
-                          className="app__select_standard"
+                          type="checkbox"
+                          checked={isCurrent}
+                          disabled={isSeparation}
+                          onChange={(e) => setIsCurrent(e.target.checked)}
                         />
-                        {errors.to && (
-                          <div className="app__error_message">
-                            To Date is required
-                          </div>
-                        )}
-                      </div>
+                        <span>
+                          Currently holds this position (To = Present)
+                        </span>
+                      </label>
+                      {isSeparation && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Disabled because Personnel Action is{' '}
+                          {personnelAction}.
+                        </div>
+                      )}
                     </div>
                   </div>
+                  {!isCurrent && (
+                    <div className="app__form_field_container">
+                      <div className="w-full">
+                        <div className="app__label_standard">
+                          To (date)
+                          <span className="text-red-500 ml-1">*</span>
+                        </div>
+                        <div>
+                          <input
+                            {...register('to', { required: !isCurrent })}
+                            type="text"
+                            placeholder="MM/DD/YYYY"
+                            className="app__select_standard"
+                          />
+                          {errors.to && (
+                            <div className="app__error_message">
+                              To Date is required
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="app__form_field_container">
                     <div className="w-full">
-                      <div className="app__label_standard">Designation</div>
+                      <div className="app__label_standard">
+                        Designation
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
                       <div>
                         <input
                           {...register('designation', { required: true })}
@@ -309,7 +488,10 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
                   </div>
                   <div className="app__form_field_container">
                     <div className="w-full">
-                      <div className="app__label_standard">Status</div>
+                      <div className="app__label_standard">
+                        Status
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
                       <div>
                         <input
                           {...register('status', { required: true })}
@@ -327,7 +509,10 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
                   </div>
                   <div className="app__form_field_container">
                     <div className="w-full">
-                      <div className="app__label_standard">Salary</div>
+                      <div className="app__label_standard">
+                        Salary
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
                       <div>
                         <input
                           {...register('salary', { required: true })}
@@ -349,7 +534,10 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
                 <div className="w-1/2">
                   <div className="app__form_field_container">
                     <div className="w-full">
-                      <div className="app__label_standard">Station</div>
+                      <div className="app__label_standard">
+                        Station
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
                       <div>
                         <input
                           {...register('station', { required: true })}
@@ -367,7 +555,10 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
                   </div>
                   <div className="app__form_field_container">
                     <div className="w-full">
-                      <div className="app__label_standard">Branch</div>
+                      <div className="app__label_standard">
+                        Branch
+                        <span className="text-red-500 ml-1">*</span>
+                      </div>
                       <div>
                         <input
                           {...register('branch', { required: true })}
@@ -385,14 +576,26 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
                   </div>
                   <div className="app__form_field_container">
                     <div className="w-full">
-                      <div className="app__label_standard">Separation Date</div>
+                      <div className="app__label_standard">
+                        Separation Date
+                        {isSeparation && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
+                      </div>
                       <div>
                         <input
-                          {...register('separation_date')}
+                          {...register('separation_date', {
+                            required: isSeparation
+                          })}
                           type="text"
                           placeholder="MM/DD/YYYY"
                           className="app__select_standard"
                         />
+                        {errors.separation_date && (
+                          <div className="app__error_message">
+                            Separation Date is required
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -400,14 +603,29 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
                     <div className="w-full">
                       <div className="app__label_standard">
                         Separation Cause
+                        {isSeparation && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
                       </div>
                       <div>
-                        <input
-                          {...register('separation_cause')}
-                          type="text"
-                          placeholder="Separation Cause"
-                          className="app__select_standard"
-                        />
+                        <select
+                          {...register('separation_cause', {
+                            required: isSeparation
+                          })}
+                          className="app__input_standard"
+                        >
+                          <option value="">Select Separation Cause</option>
+                          {separationCauses.map((cause) => (
+                            <option key={cause} value={cause}>
+                              {cause}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.separation_cause && (
+                          <div className="app__error_message">
+                            Separation Cause is required
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -5,9 +5,10 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import type { PromotionTypes } from '@/types'
-import { logError } from '@/utils/fetchApi'
+import { fetchSalaryGrades, logError } from '@/utils/fetchApi'
+import { formatToPesos } from '@/utils/text-helper'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid'
-import { format } from 'date-fns'
+import { add, format, parseISO } from 'date-fns'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import uuid from 'react-uuid'
@@ -23,7 +24,7 @@ interface Attachment {
 }
 
 export default function DetailsModal({ promotionData, hideModal }: ModalProps) {
-  const { supabase } = useSupabase()
+  const { supabase, session, systemSchools, systemOffices } = useSupabase()
   const { setToast, hasAccess } = useFilter()
 
   const [confirmModal, setConfirmModal] = useState('')
@@ -157,6 +158,102 @@ export default function DetailsModal({ promotionData, hideModal }: ModalProps) {
     }
   }
 
+  const handleCreateServiceRecord = async () => {
+    // Fetch the plantilla item for station (school/office) and salary grade.
+    // Falls back to the position's salary_grade if the item itself doesn't have one.
+    const { data: itemData } = await supabase
+      .from('hrm_items')
+      .select(
+        'school_id, office_id, salary_grade, hrm_position:position_id(salary_grade)'
+      )
+      .eq('id', promotionData.item_id)
+      .single()
+
+    let station = ''
+    if (itemData?.school_id) {
+      const school = systemSchools?.find(
+        (s: any) => s.id?.toString() === itemData.school_id?.toString()
+      )
+      station = school?.name ?? ''
+    } else if (itemData?.office_id) {
+      const office = systemOffices?.find(
+        (o: any) => o.id?.toString() === itemData.office_id?.toString()
+      )
+      station = office?.name ?? ''
+    }
+
+    // Derive monthly salary for the new position at step 1 (standard on promotion)
+    let salary = ''
+    const grade =
+      itemData?.salary_grade ?? (itemData as any)?.hrm_position?.salary_grade
+    if (grade) {
+      const { data: salaryRows } = await fetchSalaryGrades(999, 0)
+      const match = salaryRows?.find(
+        (sg: any) =>
+          sg.grade?.toString() === grade.toString() &&
+          sg.step?.toString() === '1'
+      )
+      if (match?.salary) {
+        salary = formatToPesos(Number(match.salary))
+      }
+    }
+
+    // Close any open 'Present' service records for this employee — a promotion
+    // starts a new line, so the previous one ends the day before effectivity.
+    const dayBefore = format(
+      add(parseISO(promotionData.effectivity_date), { days: -1 }),
+      'yyyy-MM-dd'
+    )
+    const { error: closeError } = await supabase
+      .from('hrm_service_records')
+      .update({ to: dayBefore })
+      .eq('user_id', promotionData.user_id)
+      .eq('to', 'Present')
+
+    if (closeError) {
+      void logError(
+        'Close previous Present service records on promotion approval',
+        'hrm_service_records',
+        JSON.stringify({
+          user_id: promotionData.user_id,
+          new_to: dayBefore
+        }),
+        closeError.message
+      )
+    }
+
+    const srData = {
+      user_id: promotionData.user_id,
+      org_id: process.env.NEXT_PUBLIC_ORG_ID,
+      from: promotionData.effectivity_date,
+      to: 'Present',
+      designation: promotionData.hrm_item?.hrm_position?.name ?? '',
+      status: 'Permanent',
+      salary,
+      station,
+      branch: 'National',
+      separation_date: '',
+      separation_cause: '',
+      personnel_action: 'Promotion',
+      remarks: '',
+      created_by: session?.user.id
+    }
+
+    const { error } = await supabase
+      .from('hrm_service_records')
+      .insert(srData)
+
+    if (error) {
+      void logError(
+        'Create service record from promotion',
+        'hrm_service_records',
+        JSON.stringify(srData),
+        error.message
+      )
+      throw new Error(error.message)
+    }
+  }
+
   const handleApprove = async () => {
     try {
       const newData = {
@@ -181,6 +278,9 @@ export default function DetailsModal({ promotionData, hideModal }: ModalProps) {
         throw new Error(error.message)
       }
 
+      // Create service record entry for the approved promotion
+      await handleCreateServiceRecord()
+
       // Update data in redux
       const items = [...globallist]
       const updatedData = { ...newData, id: promotionData.id }
@@ -195,6 +295,10 @@ export default function DetailsModal({ promotionData, hideModal }: ModalProps) {
       hideModal()
     } catch (e) {
       console.error(e)
+      setToast(
+        'error',
+        'Promotion approved, but service record creation failed. Please create it manually.'
+      )
     }
   }
 

@@ -203,6 +203,46 @@ export const leaveTypes = [
   "Others",
 ];
 
+// CSC-standard personnel actions for Service Records (CS Form No. 211 Remarks)
+export const personnelActions = [
+  "Original Appointment",
+  "Reemployment",
+  "Permanent Appointment",
+  "Renewal of Appointment",
+  "Promotion",
+  "Demotion",
+  "Transfer",
+  "Reassignment",
+  "Detail",
+  "Secondment",
+  "Designation",
+  "Reclassification",
+  "Step Increment",
+  "Salary Adjustment",
+  "Retirement",
+  "Separation",
+  "Others",
+];
+
+// CSC-standard separation causes for Service Records (CS Form No. 211)
+export const separationCauses = [
+  "Resigned",
+  "Transferred",
+  "Retired (Compulsory)",
+  "Retired (Optional)",
+  "Promoted",
+  "Demoted",
+  "Dismissed",
+  "Dropped from the Rolls",
+  "Expiration of Temporary Appointment",
+  "End of Contract",
+  "Abolition of Position",
+  "Reorganization",
+  "AWOL",
+  "Death",
+  "Others",
+];
+
 export const interventions = [
   "Training/Capability Building",
   "Mentoring",

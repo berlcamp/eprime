@@ -4,6 +4,60 @@ import { format } from 'date-fns'
 
 // import 'jspdf-autotable'
 
+// Render a paragraph with inline **bold** segments, word-wrapping at rightEdgeX.
+// Returns the y-cursor advanced past the last line, matching the prior loop's
+// end-of-paragraph semantics.
+function drawRichParagraph (
+  doc: jsPDF,
+  paragraph: string,
+  startY: number,
+  firstLineX: number,
+  wrapX: number,
+  rightEdgeX: number,
+  lineHeight: number
+): number {
+  interface Segment { text: string, bold: boolean }
+  const segments: Segment[] = []
+  const re = /\*\*([^*]+)\*\*/g
+  let last = 0
+  let m: RegExpExecArray | null
+  while ((m = re.exec(paragraph)) !== null) {
+    if (m.index > last) segments.push({ text: paragraph.slice(last, m.index), bold: false })
+    segments.push({ text: m[1], bold: true })
+    last = re.lastIndex
+  }
+  if (last < paragraph.length) segments.push({ text: paragraph.slice(last), bold: false })
+
+  const tokens: Segment[] = []
+  for (const s of segments) {
+    for (const part of s.text.split(/(\s+)/)) {
+      if (part.length > 0) tokens.push({ text: part, bold: s.bold })
+    }
+  }
+
+  let y = startY
+  let x = firstLineX
+  let atLineStart = true
+
+  for (const tok of tokens) {
+    doc.setFont('times', tok.bold ? 'bold' : 'normal')
+    const isSpace = /^\s+$/.test(tok.text)
+    if (isSpace && atLineStart) continue
+    const w = doc.getTextWidth(tok.text)
+    if (!isSpace && x + w > rightEdgeX) {
+      y += lineHeight
+      x = wrapX
+      atLineStart = true
+    }
+    doc.text(tok.text, x, y)
+    x += w
+    atLineStart = false
+  }
+
+  doc.setFont('times', 'normal')
+  return y + lineHeight
+}
+
 export async function printLetter (item: DesignationTypes, letterDate: string, letterSubject: string, letterContent: string) {
   // Default export is a4 paper, portrait, using millimeters for units 210mm x 297mm
   // eslint-disable-next-line new-cap
@@ -11,7 +65,7 @@ export async function printLetter (item: DesignationTypes, letterDate: string, l
 
   // Header Logo
   const logo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/deped_logo.png`
-  const bayuganLogo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/bayugan_logo.png`
+  const footerLogo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/logos/footer.png`
   const rpText = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/rp_text.png`
   const depedText = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/deped_text.png`
 
@@ -46,7 +100,7 @@ export async function printLetter (item: DesignationTypes, letterDate: string, l
   doc.text(': ' + `${process.env.NEXT_PUBLIC_SDS ?? ''}`, 40, y)
   y += 5
   doc.setFont('times', 'normal')
-  doc.text('School Division Superintendent', 42, y)
+  doc.text('OIC - Schools Division Superintendent', 42, y)
   y += 10
   doc.setFont('times', 'normal')
   doc.text('Date', 15, y)
@@ -64,31 +118,28 @@ export async function printLetter (item: DesignationTypes, letterDate: string, l
 
   y += 10
 
-  // letter body
+  // letter body — render paragraph-by-paragraph, parsing **bold** markers.
   doc.setFont('times', 'normal')
-  const content = letterContent
-  const paragraphs = content.split('\n')
-
-  for (const paragraph of paragraphs) {
-    const maxWidth = 160
-    const line = doc.splitTextToSize(paragraph, maxWidth)
-
-    for (let i = 0; i < line.length; i++) {
-      if (i === 0) {
-        doc.text(line[i], 35, y)
-      } else {
-        doc.text(line[i], 15, y)
-      }
-      y += 7
-    }
+  for (const paragraph of letterContent.split('\n')) {
+    y = drawRichParagraph(doc, paragraph, y, 35, 15, 195, 7)
   }
 
   y += 20
   // End letter body
 
-  // Start signature
-  doc.text('Conformed:', 105, y)
-  y += 10
+  // Two-column bottom block: CC list on the left, Conformed signature on the right.
+  const bottomY = y
+
+  // Left column: CC (copy furnish)
+  doc.setFont('times', 'normal')
+  doc.text('CC:  School Head', 15, bottomY)
+  doc.text('       District In-Charge', 15, bottomY + 5)
+  doc.text('       Division Planning Officer', 15, bottomY + 10)
+  doc.text('       File Copy', 15, bottomY + 15)
+
+  // Right column: Conformed signature
+  doc.text('Conformed:', 105, bottomY)
+  y = bottomY + 10
   doc.line(120, y, 180, y)
   y += 5
   doc.text('Name & Signature', 130, y)
@@ -99,18 +150,12 @@ export async function printLetter (item: DesignationTypes, letterDate: string, l
   // End signature
 
   // Start footer
-  // line
-  y = 265
+  y = 270
   doc.line(15, y, 195, y)
-  y += 5
-  doc.setFontSize(10)
-  doc.addImage(bayuganLogo, 'PNG', 15, 266, 20, 20)
-  doc.text('Lanzones Street, Poblacion, Bayugan City', 37, y)
-  y += 5
-  doc.text('deped.bayugan@gmail.com', 37, y)
-  y += 5
-  doc.text('Telephone Number: (085) 303-0664', 37, y)
+  // /logos/footer.png is a wide strip (~10:1) containing the three agency
+  // logos plus the full contact block — matches the reference PDF exactly.
+  doc.addImage(footerLogo, 'PNG', 15, y + 2, 180, 18)
   // End footer
 
-  doc.save('Assignment.pdf')
+  doc.save('DesignationOrder.pdf')
 }

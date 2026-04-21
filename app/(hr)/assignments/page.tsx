@@ -46,6 +46,7 @@ const Page: React.FC = () => {
   const [showRevokeModal, setShowRevokeModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showPrintModal, setShowPrintModal] = useState(false)
+  const [printVariant, setPrintVariant] = useState<'intent' | 'exigency'>('intent')
   const [selectedItem, setSelectedItem] = useState<AssignmentTypes | null>(null)
 
   const [selectedId, setSelectedId] = useState<string>('')
@@ -125,8 +126,9 @@ const Page: React.FC = () => {
     setEditData(null)
   }
 
-  const handlePrint = (item: AssignmentTypes) => {
+  const handlePrint = (item: AssignmentTypes, variant: 'intent' | 'exigency') => {
     setSelectedItem(item)
+    setPrintVariant(variant)
     setShowPrintModal(true)
   }
 
@@ -248,11 +250,20 @@ const Page: React.FC = () => {
                               <div className="py-1">
                                 <Menu.Item>
                                   <div
-                                    onClick={() => handlePrint(item)}
+                                    onClick={() => handlePrint(item, 'intent')}
                                     className="app__dropdown_item"
                                   >
                                     <PrinterIcon className="w-4 h-4" />
-                                    <span>Print Memo</span>
+                                    <span>Print Reassignment (Intent)</span>
+                                  </div>
+                                </Menu.Item>
+                                <Menu.Item>
+                                  <div
+                                    onClick={() => handlePrint(item, 'exigency')}
+                                    className="app__dropdown_item"
+                                  >
+                                    <PrinterIcon className="w-4 h-4" />
+                                    <span>Print Reassignment (Exigency)</span>
                                   </div>
                                 </Menu.Item>
                                 {item.status !== 'Revoked' && (
@@ -428,6 +439,7 @@ const Page: React.FC = () => {
       {showPrintModal && selectedItem && (
         <PrintModal
           item={selectedItem}
+          variant={printVariant}
           hideModal={() => setShowPrintModal(false)}
         />
       )}

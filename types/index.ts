@@ -553,6 +553,7 @@ export interface ServiceRecordTypes {
   assignment_id: string;
   separation_date: string;
   separation_cause: string;
+  personnel_action: string;
   remarks: string;
   created_by: string;
   hrm_user: Employee;

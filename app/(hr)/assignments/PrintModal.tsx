@@ -7,14 +7,14 @@ import { printLetter } from './printLetter'
 import type { AssignmentTypes } from '@/types'
 import { capitalizeWords } from '@/utils/text-helper'
 import { DocumentArrowDownIcon } from '@heroicons/react/20/solid'
-import { format } from 'date-fns'
 
 interface ModalProps {
   hideModal: () => void
   item: AssignmentTypes
+  variant: 'intent' | 'exigency'
 }
 
-const PrintModal = ({ item, hideModal }: ModalProps) => {
+const PrintModal = ({ item, hideModal, variant }: ModalProps) => {
   const [letterDate, setLetterDate] = useState(
     new Date().toISOString().substr(0, 10)
   )
@@ -32,38 +32,47 @@ const PrintModal = ({ item, hideModal }: ModalProps) => {
     setErrorMessage('')
     setPrinting(true)
 
-    void printLetter(item, letterDate, letterSubject, letterContent)
+    void printLetter(item, letterDate, letterSubject, letterContent, variant)
 
     setPrinting(false)
   }
 
   useEffect(() => {
+    const station = item.area_assigned === 'school'
+      ? item.hrm_schools?.name
+      : item.hrm_offices?.name
+    const position = item.hrm_positions?.name ?? ''
+
+    // **...** marks text the printed PDF will render in bold.
     let content = ''
-    let subject = ''
-    let station = ''
-    if (item.area_assigned === 'school') {
-      station = item.hrm_schools?.name
+    if (variant === 'intent') {
+      content =
+        'In the exigency of service, you are hereon advised of your reassignment as **' +
+        position +
+        '** from [previous station] **to ' +
+        station +
+        '** effective immediately.'
+      content +=
+        '\nAs such, you are to perform duties and responsibilities concomitant to your position.'
+      content +=
+        '\nIt is understood that you should clear yourself of all money and property accountabilities in your present station.'
+      content += '\nPlease be guided accordingly.'
     } else {
-      station = item.hrm_offices?.name
+      content =
+        'In the exigency of service, you are hereby informed of your reassignment as **' +
+        position +
+        '** from your current assigned school, [previous station], to **' +
+        station +
+        '**, effective immediately.'
+      content +=
+        '\nAs such, you are to perform duties and responsibilities concomitant to your position.'
+      content += '\nYou are further advised to report immediately to your School Head/s.'
+      content += '\nPlease be guided accordingly.'
     }
-    subject = 'ASSIGNMENT ORDER'
-    content =
-      'You are hereby advised of your assignment as ' +
-      item.hrm_positions?.name.toUpperCase() +
-      ' at ' +
-      station +
-      ' effective ' +
-      format(new Date(item.from), 'MMMM d, yyyy') +
-      '. This order is subject to the exigency of service.'
-    content +=
-      '\nAs such you are to perform duties and responsibilities concomitant to your position.'
-    content +=
-      '\nYou are further advised to report immediately to the School Head for specific instructions.'
-    content += '\nPlease be guided accordingly.'
 
     setLetterContent(content)
-    setLetterSubject(subject)
-  }, [])
+    setLetterSubject('REASSIGNMENT ORDER')
+  }, [variant])
 
   return (
     <>
@@ -105,7 +114,7 @@ const PrintModal = ({ item, hideModal }: ModalProps) => {
                       {capitalizeWords(`${process.env.NEXT_PUBLIC_SDS ?? ''}`)}
                     </div>
                     <div className="font-light">
-                      Schools Division Superintendent
+                      OIC-Schools Division Superintendent
                     </div>
                   </div>
                 </div>

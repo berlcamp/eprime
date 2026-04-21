@@ -679,8 +679,8 @@ export default function DetailsModal({
           throw new Error(error.message);
         }
 
-        // If leave days without pay > 0, add to Service Record and Update hrm_user 'step_increment_leave_days'
-        if (Number(leaveData.leave_days_without_pay) > 0) {
+        // If leave days without pay >= 30, add to Service Record and Update hrm_user 'step_increment_leave_days'
+        if (Number(leaveData.leave_days_without_pay) >= 30) {
           const newData = {
             user_id: leaveData.created_by,
             org_id: process.env.NEXT_PUBLIC_ORG_ID,
