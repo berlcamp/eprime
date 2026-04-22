@@ -103,13 +103,13 @@ function drawRichParagraph (
 }
 
 export async function printLetter (item: DesignationTypes, letterDate: string, letterSubject: string, letterContent: string) {
-  // Default export is a4 paper, portrait, using millimeters for units 210mm x 297mm
+  // Folio (long bond), portrait, millimeters — 215.9mm x 330.2mm
   // eslint-disable-next-line new-cap
-  const doc = new jsPDF()
+  const doc = new jsPDF({ unit: 'mm', format: [215.9, 330.2] })
 
   // Header Logo
   const logo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/deped_logo.png`
-  const footerLogo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/logos/footer.png`
+  const footerLogo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/footer_logo.png`
   const rpText = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/rp_text.png`
   const depedText = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/deped_text.png`
 
@@ -119,7 +119,7 @@ export async function printLetter (item: DesignationTypes, letterDate: string, l
 
   // Header Text
   doc.setFont('times', 'bold')
-  doc.setFontSize(12)
+  doc.setFontSize(10)
   doc.setTextColor('#000')
   doc.text('SCHOOLS DIVISION OFFICE OF BAYUGAN CITY', 105, 51, { align: 'center' })
 
@@ -129,10 +129,10 @@ export async function printLetter (item: DesignationTypes, letterDate: string, l
   let y = 62
 
   // Begin Document Title
-  doc.setFontSize(14)
+  doc.setFontSize(11)
   doc.text('Office of the Schools Division Superintendent', 15, y)
 
-  y += 15
+  y += 12
   doc.setFont('times', 'normal')
   doc.text('To', 15, y)
   doc.setFont('times', 'bold')
@@ -171,7 +171,8 @@ export async function printLetter (item: DesignationTypes, letterDate: string, l
   // letter body — render paragraph-by-paragraph, parsing **bold** markers.
   doc.setFont('times', 'normal')
   for (const paragraph of letterContent.split('\n')) {
-    y = drawRichParagraph(doc, paragraph, y, 35, 15, 195, 7)
+    y = drawRichParagraph(doc, paragraph, y, 35, 15, 195, 5.5)
+    y += 3
   }
 
   y += 20
@@ -200,10 +201,7 @@ export async function printLetter (item: DesignationTypes, letterDate: string, l
   // End signature
 
   // Start footer
-  y = 270
-  doc.line(15, y, 195, y)
-  // /logos/footer.png is a wide strip (~10:1) containing the three agency
-  // logos plus the full contact block — matches the reference PDF exactly.
+  y = 305
   doc.addImage(footerLogo, 'PNG', 15, y + 2, 180, 18)
   // End footer
 
