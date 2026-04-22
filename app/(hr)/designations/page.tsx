@@ -2,6 +2,7 @@
 
 import {
   CustomButton,
+  DeleteModal,
   PerPage,
   RecordsSideBar,
   ShowMore,
@@ -21,7 +22,8 @@ import { Menu, Transition } from '@headlessui/react'
 import {
   ChevronDownIcon,
   PencilSquareIcon,
-  PrinterIcon
+  PrinterIcon,
+  TrashIcon
 } from '@heroicons/react/20/solid'
 import { format } from 'date-fns'
 import React, { Fragment, useEffect, useState } from 'react'
@@ -43,11 +45,13 @@ const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showRevokeModal, setShowRevokeModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showPrintModal, setShowPrintModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState<DesignationTypes | null>(
     null
   )
 
+  const [selectedId, setSelectedId] = useState<string>('')
   const [list, setList] = useState<DesignationTypes[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
   const [filterSchool, setFilterSchool] = useState<string>('')
@@ -132,6 +136,11 @@ const Page: React.FC = () => {
   const handleRevoke = (item: DesignationTypes) => {
     setShowRevokeModal(true)
     setEditData(item)
+  }
+
+  const handleDelete = (id: string) => {
+    setSelectedId(id)
+    setShowDeleteModal(true)
   }
 
   // Update list whenever list in redux updates
@@ -244,18 +253,25 @@ const Page: React.FC = () => {
                                   </div>
                                 </Menu.Item>
                                 {item.status !== 'Revoked' && (
-                                  <>
-                                    <Menu.Item>
-                                      <div
-                                        onClick={() => handleRevoke(item)}
-                                        className="app__dropdown_item"
-                                      >
-                                        <PencilSquareIcon className="w-4 h-4" />
-                                        <span>Revoke</span>
-                                      </div>
-                                    </Menu.Item>
-                                  </>
+                                  <Menu.Item>
+                                    <div
+                                      onClick={() => handleRevoke(item)}
+                                      className="app__dropdown_item"
+                                    >
+                                      <PencilSquareIcon className="w-4 h-4" />
+                                      <span>Revoke</span>
+                                    </div>
+                                  </Menu.Item>
                                 )}
+                                <Menu.Item>
+                                  <div
+                                    onClick={() => handleDelete(item.id)}
+                                    className="app__dropdown_item"
+                                  >
+                                    <TrashIcon className="w-4 h-4" />
+                                    <span>Delete</span>
+                                  </div>
+                                </Menu.Item>
                               </div>
                             </Menu.Items>
                           </Transition>
@@ -413,6 +429,15 @@ const Page: React.FC = () => {
         <PrintModal
           item={selectedItem}
           hideModal={() => setShowPrintModal(false)}
+        />
+      )}
+
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <DeleteModal
+          id={selectedId}
+          table="hrm_designations"
+          hideModal={() => setShowDeleteModal(false)}
         />
       )}
     </>

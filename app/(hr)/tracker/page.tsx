@@ -172,11 +172,12 @@ const Page: React.FC = () => {
         .eq('user_id', item.created_by)
         .maybeSingle()
 
-      // Service
+      // Service records, sorted chronologically by the "from" column
       const { data: sr } = await supabase
         .from('hrm_service_records')
         .select()
         .eq('user_id', item.created_by)
+        .order('from', { ascending: true })
 
       pdsData = pds
       serviceRecordsData = sr ?? []

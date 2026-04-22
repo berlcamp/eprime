@@ -50,8 +50,8 @@ export const PrintServiceRecord = React.forwardRef<
                         <img
                           src="/deped_header.png"
                           alt="DepEd Header"
-                          width={200}
-                          height={200}
+                          width={150}
+                          height={150}
                         />
                         <div className="text-xs">Division of Bayugan City</div>
                       </div>
@@ -251,7 +251,7 @@ export const PrintServiceRecord = React.forwardRef<
                 </tr>
                 <tr>
                   <td colSpan={2} className="text-xs">
-                    <div className="mt-14 pb-4 flex items-start justify-evenly space-x-1">
+                    <div className="mt-8 pb-2 flex items-start justify-evenly space-x-1">
                       <div className="text-center">
                         <div className="font-bold">
                           {selectedItem.date_approved
@@ -279,16 +279,18 @@ export const PrintServiceRecord = React.forwardRef<
                 </tr>
                 <tr>
                   <td colSpan={2} className="text-xs">
-                    {/* Page Footer */}
-                    <div className="print-footer mt-4">
-                      <div className="border-t-2 border-black flex items-start justify-start space-x-1">
+                    {/* Page footer — sits in the normal flow below the
+                        Date/Approver row (no fixed positioning, otherwise the
+                        row above collapses into the footer on print). */}
+                    <div className="mt-3 page-footer-block">
+                      <div className="border-t-2 border-black flex items-start justify-start space-x-2 pt-1">
                         <img
                           src="/deped_bayugan.png"
                           alt=""
-                          width={100}
-                          height={100}
+                          width={55}
+                          height={55}
                         />
-                        <div className="mt-3">
+                        <div className="mt-1 leading-tight">
                           <div>Lanzones Street, Poblacion, Bayugan City</div>
                           <div className="text-blue-500">
                             deped.bayugan@gmail.com
@@ -299,8 +301,8 @@ export const PrintServiceRecord = React.forwardRef<
                           </div>
                         </div>
                       </div>
-                      <div className="text-center">
-                        {pageIndex} Page {pageIndex + 1} of {total}
+                      <div className="text-center mt-1">
+                        Page {pageIndex + 1} of {total}
                       </div>
                     </div>
                   </td>

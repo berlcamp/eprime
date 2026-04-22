@@ -3,6 +3,7 @@ import { useSupabase } from "@/context/SupabaseProvider";
 import { ApplicantTypes } from "@/types";
 import { format } from "date-fns";
 import * as React from "react";
+import { PrintFooter } from "./PrintFooter";
 
 interface ComponentToPrintProps {
   selectedItem: ApplicantTypes;
@@ -82,11 +83,13 @@ export const PrintAssumption = React.forwardRef<
     <div className="invisible">
       <div
         ref={ref}
+        className="print:pb-36"
         style={{
           fontFamily: "Times New Roman, serif",
           fontSize: "14px",
           width: "100%",
-          height: "11in",
+          // Reserve ~2in at the bottom of the folio page for the fixed PrintFooter
+          height: "9in",
           display: "flex",
           flexDirection: "column",
           WebkitPrintColorAdjust: "exact",
@@ -292,6 +295,8 @@ export const PrintAssumption = React.forwardRef<
             <div>appointee</div>
           </div>
         </div>
+
+        <PrintFooter />
       </div>
     </div>
   );

@@ -19,25 +19,17 @@ export function PrintFooter() {
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 12px 1in;
+            padding: 0;
             background: white;
           }
         }
       `}</style>
-      <div className="mt-6 pt-3 border-t-2 border-black flex items-start gap-4 text-sm print-footer-fixed">
+      <div className="print-footer-fixed">
         <img
-          src="/logo3.png"
+          src="/images/footer_logo.png"
           alt=""
-          width={196}
-          height={196}
-          className="object-contain flex-shrink-0"
+          className="w-full h-auto object-contain"
         />
-        <div>
-          <div>DepEd Bldg., Palusapis Street, Poblacion, Bayugan City</div>
-          <div className="text-blue-600">deped.bayugan@gmail.com</div>
-          <div>Telephone Numbers: (085) 231-1496, (085) 231-1924</div>
-          <div>Mobile No: 0962-837-6334</div>
-        </div>
       </div>
     </>
   );

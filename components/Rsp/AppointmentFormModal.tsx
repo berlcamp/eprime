@@ -36,6 +36,7 @@ interface AppointmentFormModalProps {
   ) => void
   defaultVice?: string
   defaultPlantillaNumber?: string
+  defaultNatureOfAppointment?: string
 }
 
 export default function AppointmentFormModal({
@@ -44,10 +45,13 @@ export default function AppointmentFormModal({
   onConfirm,
   defaultVice = '',
   defaultPlantillaNumber = '',
+  defaultNatureOfAppointment = 'Original',
 }: AppointmentFormModalProps) {
   const [selectedDate, setSelectedDate] = useState('')
   const [employmentStatus, setEmploymentStatus] = useState('Permanent')
-  const [natureOfAppointment, setNatureOfAppointment] = useState('Original')
+  const [natureOfAppointment, setNatureOfAppointment] = useState(
+    defaultNatureOfAppointment
+  )
   const [assignment, setAssignment] = useState(
     'Schools Division Office of Bayugan City'
   )
@@ -66,7 +70,8 @@ export default function AppointmentFormModal({
   useEffect(() => {
     setVice(defaultVice)
     setPlantillaNumber(defaultPlantillaNumber)
-  }, [defaultVice, defaultPlantillaNumber])
+    setNatureOfAppointment(defaultNatureOfAppointment)
+  }, [defaultVice, defaultPlantillaNumber, defaultNatureOfAppointment])
 
   const handleConfirm = () => {
     if (!selectedDate) return

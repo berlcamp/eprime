@@ -13,11 +13,13 @@ import {
   TopBar,
   Unauthorized
 } from '@/components/index'
+import { PrintServiceRecord } from '@/components/Printables/PrintServiceRecord'
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
+import { useSupabase } from '@/context/SupabaseProvider'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import type { Employee, ServiceRecordTypes } from '@/types'
+import type { DocumentTypes, Employee, ServiceRecordTypes } from '@/types'
 import { fetchServiceRecords } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
 import {
@@ -25,8 +27,9 @@ import {
   PencilSquareIcon,
   TrashIcon
 } from '@heroicons/react/20/solid'
-import { Fragment, useEffect, useState } from 'react'
+import React, { Fragment, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useReactToPrint } from 'react-to-print'
 import AddEditModal from './AddEditModal'
 
 export default function Page() {
@@ -45,12 +48,69 @@ export default function Page() {
 
   const [user, setUser] = useState<Employee | null>(null)
 
+  const [printing, setPrinting] = useState(false)
+  const [printItem, setPrintItem] = useState<DocumentTypes | null>(null)
+
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
   const resultsCounter = useSelector((state: any) => state.results.value)
   const dispatch = useDispatch()
 
   const { hasAccess, session }: { hasAccess: any; session: any } = useFilter()
+  const { supabase, systemUsers } = useSupabase()
+
+  const printRef = React.useRef(null)
+  const printFn = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: 'service-record',
+    pageStyle: `@page { size: letter; margin: 0.2in 0.5in 0.5in 0.5in; } html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }`
+  })
+
+  const handlePrintServiceRecord = async () => {
+    if (!user || printing) return
+    setPrinting(true)
+    try {
+      // Place of birth from PDS
+      const { data: pds } = await supabase
+        .from('hrm_pds')
+        .select()
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      // All service records for this user
+      const { data: sr } = await supabase
+        .from('hrm_service_records')
+        .select()
+        .eq('user_id', user.id)
+        .order('from', { ascending: true })
+
+      // Approver = currently logged-in user (enriched with position from context)
+      const approver = systemUsers?.find(
+        (u: Employee) => u.id === session?.user?.id
+      )
+
+      const doc = {
+        id: user.id,
+        created_at: new Date().toISOString(),
+        date_approved: new Date().toISOString(),
+        creator: user,
+        approver,
+        print_place_of_birth: pds?.place_of_birth ?? '',
+        print_service_records: sr ?? []
+      } as unknown as DocumentTypes
+
+      // Unmount then remount so react-to-print picks up fresh content
+      setPrintItem(null)
+      setTimeout(() => {
+        setPrintItem(doc)
+        setTimeout(() => printFn(), 100)
+      }, 100)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setPrinting(false)
+    }
+  }
 
   const fetchData = async () => {
     setLoading(true)
@@ -215,7 +275,13 @@ export default function Page() {
             handleSelectedUsers={handleSelectedUsers}
           />
           {user && !isDataEmpty && !loading && (
-            <div className="flex justify-end mx-4 mb-4">
+            <div className="flex justify-end mx-4 mb-4 space-x-2">
+              <CustomButton
+                containerStyles="app__btn_blue"
+                title={printing ? 'Preparing…' : 'Print Service Record'}
+                btnType="button"
+                handleClick={handlePrintServiceRecord}
+              />
               <CustomButton
                 containerStyles="app__btn_green"
                 title={`Add New Service Record for ${user.firstname} ${user.middlename} ${user.lastname}`}
@@ -479,6 +545,11 @@ export default function Page() {
           table="hrm_service_records"
           hideModal={() => setShowDeleteModal(false)}
         />
+      )}
+      {/* Hidden print target (CS Form 212 — Service Record). Same layout as
+          the tracker's Service Record Print Request output. */}
+      {printItem && (
+        <PrintServiceRecord selectedItem={printItem} ref={printRef} />
       )}
     </>
   )

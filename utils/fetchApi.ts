@@ -1146,7 +1146,7 @@ export async function fetchPromotions(
     let query = supabase
       .from("hrm_promotions")
       .select(
-        "*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_item:item_id(item_number,hrm_position:position_id(name))",
+        "*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url,gender,assignment),hrm_item:item_id(item_number,vice,salary_grade,hrm_position:position_id(name,salary_grade))",
         { count: "exact" },
       )
       .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);

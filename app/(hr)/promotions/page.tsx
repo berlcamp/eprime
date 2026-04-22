@@ -13,6 +13,10 @@ import {
   Unauthorized,
   UserBlock
 } from '@/components/index'
+import {
+  EmployeePrintablesController,
+  type EmployeePrintablesControllerHandle,
+} from '@/components/Rsp/EmployeePrintablesController'
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -22,6 +26,7 @@ import {
   ArrowLeftIcon,
   ChevronDownIcon,
   PencilSquareIcon,
+  PrinterIcon,
   TrashIcon
 } from '@heroicons/react/20/solid'
 import React, { Fragment, useEffect, useState } from 'react'
@@ -30,7 +35,7 @@ import AddEditModal from './AddEditModal'
 import Filters from './Filters'
 
 // Types
-import type { PromotionTypes } from '@/types'
+import type { ApplicantTypes, PromotionTypes } from '@/types'
 
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
@@ -40,6 +45,27 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
 import DetailsModal from './DetailsModal'
+
+/**
+ * Shape the promotion record into the ApplicantTypes the printables expect.
+ * The 4 printables (Oath of Office, Advise Order, Assumption, Appointment Form)
+ * all read from ApplicantTypes fields — this adapter fills in the minimum set
+ * from a promoted employee so the same print components work on both /rsp
+ * rankingresults and /promotions.
+ */
+const promotionToApplicant = (p: PromotionTypes): ApplicantTypes =>
+  ({
+    id: p.id,
+    firstname: p.hrm_user?.firstname ?? '',
+    middlename: p.hrm_user?.middlename ?? '',
+    lastname: p.hrm_user?.lastname ?? '',
+    sex: p.hrm_user?.gender ?? '',
+    // Employee records don't carry an address; oath of office just renders a blank line.
+    address: '',
+    hrm_item: p.hrm_item,
+    // Prefill the appointment/assumption/oath date from the promotion effectivity date.
+    date: p.effectivity_date,
+  } as ApplicantTypes)
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -67,6 +93,8 @@ const Page: React.FC = () => {
 
   const searchParams = useSearchParams()
   const filterUrl = searchParams.get('ref')
+
+  const printablesRef = React.useRef<EmployeePrintablesControllerHandle>(null)
 
   const fetchData = async () => {
     setLoading(true)
@@ -287,6 +315,63 @@ const Page: React.FC = () => {
                                     </div>
                                   )}
                                 </Menu.Item>
+                                {item.status === 'Approved' && (
+                                  <>
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() =>
+                                          printablesRef.current?.openAdviseOrder(
+                                            promotionToApplicant(item),
+                                          )
+                                        }
+                                        className="app__dropdown_item"
+                                      >
+                                        <PrinterIcon className="w-4 h-4" />
+                                        <span>Print Advise Order</span>
+                                      </div>
+                                    </Menu.Item>
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() =>
+                                          printablesRef.current?.openAssumption(
+                                            promotionToApplicant(item),
+                                          )
+                                        }
+                                        className="app__dropdown_item"
+                                      >
+                                        <PrinterIcon className="w-4 h-4" />
+                                        <span>Print Assumption to Duty</span>
+                                      </div>
+                                    </Menu.Item>
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() =>
+                                          printablesRef.current?.openOathOfOffice(
+                                            promotionToApplicant(item),
+                                          )
+                                        }
+                                        className="app__dropdown_item"
+                                      >
+                                        <PrinterIcon className="w-4 h-4" />
+                                        <span>Print Oath of Office</span>
+                                      </div>
+                                    </Menu.Item>
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() =>
+                                          printablesRef.current?.openAppointmentForm(
+                                            promotionToApplicant(item),
+                                            { defaultNatureOfAppointment: 'Promotion' },
+                                          )
+                                        }
+                                        className="app__dropdown_item"
+                                      >
+                                        <PrinterIcon className="w-4 h-4" />
+                                        <span>Print Appointment Form</span>
+                                      </div>
+                                    </Menu.Item>
+                                  </>
+                                )}
                               </div>
                             </Menu.Items>
                           </Transition>
@@ -429,6 +514,8 @@ const Page: React.FC = () => {
           hideModal={() => setShowDetailsModal(false)}
         />
       )}
+      {/* Appointment printables: Oath of Office, Advise Order, Assumption, Appointment Form */}
+      <EmployeePrintablesController ref={printablesRef} />
     </>
   )
 }
