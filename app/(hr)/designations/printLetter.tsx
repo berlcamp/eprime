@@ -141,7 +141,7 @@ export async function printLetter (item: DesignationTypes, letterDate: string, l
   const sdsSignaturePath = process.env.NEXT_PUBLIC_SDS_SIGNATURE ?? ''
   if (sdsSignaturePath) {
     const sdsSignatureUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}${sdsSignaturePath}`
-    doc.addImage(sdsSignatureUrl, 'PNG', 42, y, 40, 12)
+    doc.addImage(sdsSignatureUrl, 'PNG', 42, y, 26, 8)
     y += 13
   }
   doc.setFont('times', 'normal')

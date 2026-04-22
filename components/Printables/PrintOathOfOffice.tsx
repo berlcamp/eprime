@@ -65,7 +65,7 @@ export const PrintOathOfOffice = React.forwardRef<
   const textCol = (tl: React.ReactNode, en: React.ReactNode) => (
     <span style={{ display: "inline-flex", flexDirection: "column", verticalAlign: "top" }}>
       <span style={{ lineHeight: 1.4 }}>{tl}</span>
-      <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>{en}</span>
+      <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>{en}</span>
     </span>
   );
 
@@ -83,7 +83,7 @@ export const PrintOathOfOffice = React.forwardRef<
       }}>
         {value || " "}
       </span>
-      <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2, textAlign: "center", display: "block" }}>
+      <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2, textAlign: "center", display: "block" }}>
         {label}
       </span>
     </span>
@@ -199,7 +199,7 @@ export const PrintOathOfOffice = React.forwardRef<
         <div
           style={{
             marginTop: "28px",
-            fontSize: "15px",
+            fontSize: "17px",
             lineHeight: 1.4,
             paddingLeft: "40px",
             paddingRight: "40px",
@@ -247,15 +247,15 @@ export const PrintOathOfOffice = React.forwardRef<
           <div style={{ marginTop: "14px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>buong husay at katapatan,</span>
-              <span style={{ fontSize: "11px", lineHeight: 1.2 }}>&nbsp;</span>
+              <span style={{ fontSize: "13px", lineHeight: 1.2 }}>&nbsp;</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>sa abot ng aking kakayahan,</span>
-              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>to the best of my ability,</span>
+              <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>to the best of my ability,</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>ang mga katungkulang pinagtalagahan sa akin</span>
-              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>the duties of my present position</span>
+              <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>the duties of my present position</span>
             </div>
           </div>
 
@@ -263,11 +263,11 @@ export const PrintOathOfOffice = React.forwardRef<
           <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>at sa dapat gampanan sa iba pang pagkaraan nito&apos;y gagampanan ko</span>
-              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>and of all others that I may hereafter hold</span>
+              <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>and of all others that I may hereafter hold</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>sa ilalim ng Republika ng Pilipinas;</span>
-              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>under the Republic of the Philippines;</span>
+              <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>under the Republic of the Philippines;</span>
             </div>
           </div>
 
@@ -275,11 +275,11 @@ export const PrintOathOfOffice = React.forwardRef<
           <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>na aking itataguyod at ipagtatanggol ang Saligang Batas ng Pilipinas;</span>
-              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>to uphold and defend the Constitution,</span>
+              <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>to uphold and defend the Constitution,</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>na tunay na mananalig at</span>
-              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>that I will bear true faith</span>
+              <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>that I will bear true faith</span>
             </div>
           </div>
 
@@ -287,15 +287,15 @@ export const PrintOathOfOffice = React.forwardRef<
           <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>tatalima ako rito;</span>
-              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>and allegiance to the same;</span>
+              <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>and allegiance to the same;</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>na susundin ko ang mga batas at mga kautusang legal,</span>
-              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>that I will obey the laws, legal orders, and</span>
+              <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>that I will obey the laws, legal orders, and</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>at mga dekretong pinaiiral</span>
-              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>decrees promulgated</span>
+              <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>decrees promulgated</span>
             </div>
           </div>
 
@@ -303,11 +303,11 @@ export const PrintOathOfOffice = React.forwardRef<
           <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>ng mga sadyang itinakdang maykapangyarihan ng Republika ng Pilipinas;</span>
-              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>by the duly constituted authorities of the Republic of the Philippines;</span>
+              <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>by the duly constituted authorities of the Republic of the Philippines;</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ lineHeight: 1.4 }}>at kusa kong babalikatin</span>
-              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>and that I impose</span>
+              <span style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>and that I impose</span>
             </div>
           </div>
 
@@ -316,7 +316,7 @@ export const PrintOathOfOffice = React.forwardRef<
             <div style={{ lineHeight: 1.4 }}>
               ang pananagutang ito nang walang ano mang pasubali o hangaring umiwas.
             </div>
-            <div style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>
+            <div style={{ fontStyle: "italic", fontSize: "13px", lineHeight: 1.2 }}>
               this obligation upon myself voluntarily, without mental reservation or purpose of evasion.
             </div>
           </div>
@@ -329,7 +329,7 @@ export const PrintOathOfOffice = React.forwardRef<
             <div
               style={{
                 fontStyle: "italic",
-                fontSize: "13px",
+                fontSize: "15px",
                 textIndent: "80px",
               }}
             >
