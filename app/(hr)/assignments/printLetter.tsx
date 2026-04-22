@@ -16,8 +16,9 @@ function drawRichParagraph (
   rightEdgeX: number,
   lineHeight: number
 ): number {
-  interface Segment { text: string, bold: boolean }
-  const segments: Segment[] = []
+  interface Word { text: string, bold: boolean, width: number }
+
+  const segments: Array<{ text: string, bold: boolean }> = []
   const re = /\*\*([^*]+)\*\*/g
   let last = 0
   let m: RegExpExecArray | null
@@ -28,35 +29,77 @@ function drawRichParagraph (
   }
   if (last < paragraph.length) segments.push({ text: paragraph.slice(last), bold: false })
 
-  // Tokenize each segment into words + whitespace so we can wrap mid-paragraph.
-  const tokens: Segment[] = []
+  const words: Word[] = []
   for (const s of segments) {
-    for (const part of s.text.split(/(\s+)/)) {
-      if (part.length > 0) tokens.push({ text: part, bold: s.bold })
+    for (const part of s.text.split(/\s+/)) {
+      if (!part) continue
+      doc.setFont('times', s.bold ? 'bold' : 'normal')
+      words.push({ text: part, bold: s.bold, width: doc.getTextWidth(part) })
     }
   }
 
-  let y = startY
-  let x = firstLineX
-  let atLineStart = true
-
-  for (const tok of tokens) {
-    doc.setFont('times', tok.bold ? 'bold' : 'normal')
-    const isSpace = /^\s+$/.test(tok.text)
-    if (isSpace && atLineStart) continue
-    const w = doc.getTextWidth(tok.text)
-    if (!isSpace && x + w > rightEdgeX) {
-      y += lineHeight
-      x = wrapX
-      atLineStart = true
-    }
-    doc.text(tok.text, x, y)
-    x += w
-    atLineStart = false
+  if (words.length === 0) {
+    doc.setFont('times', 'normal')
+    return startY + lineHeight
   }
 
   doc.setFont('times', 'normal')
-  return y + lineHeight
+  const spaceWidth = doc.getTextWidth(' ')
+
+  // Build lines
+  const lines: Array<{ words: Word[], lineX: number }> = []
+  let lineWords: Word[] = []
+  let lineUsed = 0
+  let onFirstLine = true
+
+  for (const word of words) {
+    const lineX = onFirstLine ? firstLineX : wrapX
+    const maxWidth = rightEdgeX - lineX
+    const needed = lineWords.length === 0 ? word.width : lineUsed + spaceWidth + word.width
+
+    if (lineWords.length > 0 && needed > maxWidth) {
+      lines.push({ words: lineWords, lineX })
+      onFirstLine = false
+      lineWords = [word]
+      lineUsed = word.width
+    } else {
+      lineWords.push(word)
+      lineUsed = needed
+    }
+  }
+  if (lineWords.length > 0) {
+    lines.push({ words: lineWords, lineX: onFirstLine ? firstLineX : wrapX })
+  }
+
+  // Render with full justification (last line left-aligned)
+  let y = startY
+  for (let i = 0; i < lines.length; i++) {
+    const { words: lw, lineX } = lines[i]
+    const isLast = i === lines.length - 1
+
+    if (isLast || lw.length === 1) {
+      let cx = lineX
+      for (const w of lw) {
+        doc.setFont('times', w.bold ? 'bold' : 'normal')
+        doc.text(w.text, cx, y)
+        cx += w.width + spaceWidth
+      }
+    } else {
+      const totalWordWidth = lw.reduce((s, w) => s + w.width, 0)
+      const gap = (rightEdgeX - lineX - totalWordWidth) / (lw.length - 1)
+      let cx = lineX
+      for (const w of lw) {
+        doc.setFont('times', w.bold ? 'bold' : 'normal')
+        doc.text(w.text, cx, y)
+        cx += w.width + gap
+      }
+    }
+
+    y += lineHeight
+  }
+
+  doc.setFont('times', 'normal')
+  return y
 }
 
 export async function printLetter (item: AssignmentTypes, letterDate: string, letterSubject: string, letterContent: string, variant: 'intent' | 'exigency' = 'intent') {
@@ -96,6 +139,12 @@ export async function printLetter (item: AssignmentTypes, letterDate: string, le
   doc.setFont('times', 'bold')
   doc.text(': ' + (item.hrm_users?.firstname + ' ' + item.hrm_users?.middlename + ' ' + item.hrm_users?.lastname).toUpperCase(), 40, y)
   y += 10
+  const sdsSignaturePath = process.env.NEXT_PUBLIC_SDS_SIGNATURE ?? ''
+  if (sdsSignaturePath) {
+    const sdsSignatureUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}${sdsSignaturePath}`
+    doc.addImage(sdsSignatureUrl, 'PNG', 42, y, 40, 12)
+    y += 13
+  }
   doc.setFont('times', 'normal')
   doc.text('From', 15, y)
   doc.setFont('times', 'bold')

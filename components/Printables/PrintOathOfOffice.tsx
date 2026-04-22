@@ -28,6 +28,7 @@ export const PrintOathOfOffice = React.forwardRef<
   const sdsName = sdsUser
     ? `${sdsUser.firstname} ${sdsUser.middlename ?? ""} ${sdsUser.lastname}`.trim().toUpperCase()
     : "";
+  const sdsSignature = process.env.NEXT_PUBLIC_SDS_SIGNATURE ?? "";
 
   const positionName =
     selectedItem?.ranking?.position?.name ||
@@ -60,13 +61,33 @@ export const PrintOathOfOffice = React.forwardRef<
     </span>
   );
 
-  const engLabel: React.CSSProperties = {
-    fontStyle: "italic",
-    fontSize: "11px",
-    lineHeight: 1.1,
-    position: "absolute",
-    whiteSpace: "nowrap",
-  };
+  // Inline bilingual column: Filipino text on top, italic English below
+  const textCol = (tl: React.ReactNode, en: React.ReactNode) => (
+    <span style={{ display: "inline-flex", flexDirection: "column", verticalAlign: "top" }}>
+      <span style={{ lineHeight: 1.4 }}>{tl}</span>
+      <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>{en}</span>
+    </span>
+  );
+
+  // Inline blank field: underline on top, centered italic label below — same fixed width in both rows
+  const blankCol = (value: string, width: string, label: string) => (
+    <span style={{ display: "inline-flex", flexDirection: "column", verticalAlign: "top", width, minWidth: width }}>
+      <span style={{
+        display: "block",
+        borderBottom: "1px solid black",
+        textAlign: "center",
+        fontWeight: value ? "bold" : "normal",
+        lineHeight: 1.4,
+        overflow: "hidden",
+        whiteSpace: "nowrap",
+      }}>
+        {value || " "}
+      </span>
+      <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2, textAlign: "center", display: "block" }}>
+        {label}
+      </span>
+    </span>
+  );
 
   return (
     <div
@@ -180,133 +201,123 @@ export const PrintOathOfOffice = React.forwardRef<
             marginTop: "28px",
             fontSize: "15px",
             lineHeight: 1.4,
+            paddingLeft: "40px",
+            paddingRight: "40px",
           }}
         >
+          {/*
+           * Lines 1–2 use inline-flex "bilingual columns": each text chunk and
+           * each blank is its own column, Filipino on row-1 and English on row-2,
+           * so labels are always centred directly under their blank underline.
+           *
+           * Lines 3–8 use a plain two-div structure (Filipino above, italic
+           * English below) — no absolute positioning, no clipping height.
+           * Line 3 uses a flex split so the English begins where the un-translated
+           * "sa abot ng aking kakayahan" phrase starts (~200 px in).
+           */}
+
           {/* Line 1: Ako si ___ , ng ___ , na */}
-          <div style={{ position: "relative", marginTop: "8px" }}>
-            <div style={{ textIndent: "48px" }}>
-              Ako si {blank(fullName, "360px")}, ng{blank(address, "210px")}, na
-            </div>
-            <div style={{ position: "relative", height: "14px" }}>
-              <span style={{ ...engLabel, left: "52px" }}>I ,</span>
-              <span style={{ ...engLabel, left: "230px" }}>
-                (Name of Appointee)
-              </span>
-              <span style={{ ...engLabel, left: "540px" }}>(Address)</span>
-              <span style={{ ...engLabel, right: "0" }}>,having</span>
-            </div>
+          <div style={{ marginTop: "8px", paddingLeft: "48px" }}>
+            {textCol("Ako si ", "I, ")}
+            {blankCol(fullName, "310px", "(Name of Appointee)")}
+            {textCol(", ng ", ", ")}
+            {blankCol(address, "190px", "(Address)")}
+            {textCol(", na", ", having")}
           </div>
 
           {/* Line 2: itinalaga bilang ___ , ay taimtim... */}
-          <div style={{ position: "relative", marginTop: "14px" }}>
-            <div>
-              itinalaga bilang {blank(positionName, "280px")}, ay taimtim na
-              nanunumpa na tutuparin ko nang
+          <div style={{ marginTop: "10px" }}>
+            {textCol("itinalaga bilang ", "been appointed to ")}
+            {blankCol(positionName, "265px", "(Position)")}
+            {textCol(
+              ", ay taimtim na nanunumpa na tutuparin ko nang",
+              ", hereby solemnly swear, that I will faithfully discharge",
+            )}
+          </div>
+
+          {/*
+           * Lines 3–8: each line is a flex row of segments distributed with
+           * justify-content: space-between so the Filipino text spans the full
+           * width (justified). Each segment is a column: Filipino on top,
+           * italic English translation directly below — so the translation
+           * always sits under its corresponding Filipino phrase.
+           */}
+
+          {/* Line 3 — 3 Filipino segments; first has no English translation */}
+          <div style={{ marginTop: "14px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>buong husay at katapatan,</span>
+              <span style={{ fontSize: "11px", lineHeight: 1.2 }}>&nbsp;</span>
             </div>
-            <div style={{ position: "relative", height: "14px" }}>
-              <span style={{ ...engLabel, left: "0" }}>been appointed to</span>
-              <span style={{ ...engLabel, left: "215px" }}>(Position)</span>
-              <span style={{ ...engLabel, left: "370px" }}>
-                ,hereby solemnly swear, that I will faithfully discharge
-              </span>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>sa abot ng aking kakayahan,</span>
+              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>to the best of my ability,</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>ang mga katungkulang pinagtalagahan sa akin</span>
+              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>the duties of my present position</span>
             </div>
           </div>
 
-          {/* Line 3: buong husay... pinagtalagahan sa akin */}
-          <div style={{ position: "relative", marginTop: "14px" }}>
-            <div>
-              buong husay at katapatan, sa abot ng aking kakayahan, ang mga
-              katungkulang pinagtalagahan sa akin
+          {/* Line 4 */}
+          <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>at sa dapat gampanan sa iba pang pagkaraan nito&apos;y gagampanan ko</span>
+              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>and of all others that I may hereafter hold</span>
             </div>
-            <div style={{ position: "relative", height: "14px" }}>
-              <span style={{ ...engLabel, left: "80px" }}>
-                to the best of my ability,
-              </span>
-              <span style={{ ...engLabel, right: "20px" }}>
-                the duties of my present position
-              </span>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>sa ilalim ng Republika ng Pilipinas;</span>
+              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>under the Republic of the Philippines;</span>
             </div>
           </div>
 
-          {/* Line 4: at sa dapat gampanan... Republika ng Pilipinas; */}
-          <div style={{ position: "relative", marginTop: "14px" }}>
-            <div>
-              at sa dapat gampanan sa iba pang pagkaraan nito&apos;y gagampanan
-              ko sa ilalim ng Republika ng Pilipinas;
+          {/* Line 5 */}
+          <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>na aking itataguyod at ipagtatanggol ang Saligang Batas ng Pilipinas;</span>
+              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>to uphold and defend the Constitution,</span>
             </div>
-            <div style={{ position: "relative", height: "14px" }}>
-              <span style={{ ...engLabel, left: "30px" }}>
-                and of all others that I may hereafter hold
-              </span>
-              <span style={{ ...engLabel, right: "0" }}>
-                under the Republic of the Philippines;
-              </span>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>na tunay na mananalig at</span>
+              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>that I will bear true faith</span>
             </div>
           </div>
 
-          {/* Line 5: na aking itataguyod... mananalig at */}
-          <div style={{ position: "relative", marginTop: "14px" }}>
-            <div>
-              na aking itataguyod at ipagtatanggol ang Saligang Batas ng
-              Pilipinas; na tunay na mananalig at
+          {/* Line 6 — 3 segments */}
+          <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>tatalima ako rito;</span>
+              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>and allegiance to the same;</span>
             </div>
-            <div style={{ position: "relative", height: "14px" }}>
-              <span style={{ ...engLabel, left: "110px" }}>
-                to uphold and defend the Constitution,
-              </span>
-              <span style={{ ...engLabel, right: "0" }}>
-                that I will bear true faith
-              </span>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>na susundin ko ang mga batas at mga kautusang legal,</span>
+              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>that I will obey the laws, legal orders, and</span>
             </div>
-          </div>
-
-          {/* Line 6: tatalima ako rito... dekretong pinaiiral */}
-          <div style={{ position: "relative", marginTop: "14px" }}>
-            <div>
-              tatalima ako rito; na susundin ko ang mga batas at mga kautusang
-              legal, at mga dekretong pinaiiral
-            </div>
-            <div style={{ position: "relative", height: "14px" }}>
-              <span style={{ ...engLabel, left: "0" }}>
-                and allegiance to the same;
-              </span>
-              <span style={{ ...engLabel, left: "210px" }}>
-                that I will obey the laws, legal orders, and
-              </span>
-              <span style={{ ...engLabel, right: "0" }}>
-                decrees promulgated
-              </span>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>at mga dekretong pinaiiral</span>
+              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>decrees promulgated</span>
             </div>
           </div>
 
-          {/* Line 7: ng mga sadyang itinakdang... babalikatin */}
-          <div style={{ position: "relative", marginTop: "14px" }}>
-            <div>
-              ng mga sadyang itinakdang maykapangyarihan ng Republika ng
-              Pilipinas; at kusa kong babalikatin
+          {/* Line 7 */}
+          <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>ng mga sadyang itinakdang maykapangyarihan ng Republika ng Pilipinas;</span>
+              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>by the duly constituted authorities of the Republic of the Philippines;</span>
             </div>
-            <div style={{ position: "relative", height: "14px" }}>
-              <span style={{ ...engLabel, left: "60px" }}>
-                by the duly constituted authorities of the Republic of the
-                Philippines;
-              </span>
-              <span style={{ ...engLabel, right: "0" }}>
-                and that I impose
-              </span>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ lineHeight: 1.4 }}>at kusa kong babalikatin</span>
+              <span style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>and that I impose</span>
             </div>
           </div>
 
-          {/* Line 8: ang pananagutang ito... umiwas. */}
-          <div style={{ position: "relative", marginTop: "14px" }}>
-            <div>
-              ang pananagutang ito nang walang ano mang pasubali o hangaring
-              umiwas.
+          {/* Line 8 — single segment */}
+          <div style={{ marginTop: "10px" }}>
+            <div style={{ lineHeight: 1.4 }}>
+              ang pananagutang ito nang walang ano mang pasubali o hangaring umiwas.
             </div>
-            <div style={{ position: "relative", height: "14px" }}>
-              <span style={{ ...engLabel, left: "0" }}>
-                this obligation upon myself voluntarily, without mental
-                reservation or purpose of evasion.
-              </span>
+            <div style={{ fontStyle: "italic", fontSize: "11px", lineHeight: 1.2 }}>
+              this obligation upon myself voluntarily, without mental reservation or purpose of evasion.
             </div>
           </div>
 
@@ -409,13 +420,17 @@ export const PrintOathOfOffice = React.forwardRef<
           }}
         >
           <div style={{ textAlign: "center", minWidth: "280px" }}>
-            <div
-              style={{
-                borderBottom: "1px solid black",
-                height: "20px",
-              }}
-            />
-            <div style={{ fontWeight: "bold", fontSize: "15px" }}>
+            <div style={{ height: "60px", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+              {sdsSignature && (
+                <img
+                  src={sdsSignature}
+                  alt="SDS Signature"
+                  style={{ maxHeight: "60px", maxWidth: "220px", objectFit: "contain" }}
+                />
+              )}
+            </div>
+            <div style={{ borderBottom: "1px solid black" }} />
+            <div style={{ fontWeight: "bold", fontSize: "15px", marginTop: "4px" }}>
               {sdsName || "\u00A0"}
             </div>
             <div style={{ fontWeight: "bold", fontSize: "14px" }}>

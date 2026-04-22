@@ -47,11 +47,11 @@ const PrintModal = ({ item, hideModal, variant }: ModalProps) => {
     let content = ''
     if (variant === 'intent') {
       content =
-        'In the exigency of service, you are hereon advised of your reassignment as **' +
+        'As per your intent for transfer, we are pleased to inform you that it is hereby granted and that you are hereon advised of your reassignment as ' +
         position +
-        '** from [previous station] **to ' +
+        ' from **[previous station] to ' +
         station +
-        '** effective immediately.'
+        '**, effective immediately.'
       content +=
         '\nAs such, you are to perform duties and responsibilities concomitant to your position.'
       content +=
