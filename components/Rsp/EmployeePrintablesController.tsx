@@ -213,6 +213,11 @@ export const EmployeePrintablesController = React.forwardRef<
       postedTo: string;
       hrmpsbAssessmentStartedOn: string;
     },
+    hrmpsbChair?: {
+      id: string;
+      name: string;
+    },
+    acknowledgementDate?: string,
   ) => {
     if (!selectedItem) return;
     await preloadImages(PRINT_IMAGES);
@@ -220,16 +225,20 @@ export const EmployeePrintablesController = React.forwardRef<
     const base = selectedItem;
     const salaryGrade =
       base?.ranking?.position?.salary_grade ||
-      base?.hrm_item?.salary_grade ||
-      base?.hrm_item?.hrm_position?.salary_grade;
+      base?.hrm_item?.hrm_position?.salary_grade ||
+      base?.hrm_item?.salary_grade;
     let salaryAmount = "";
     let salaryInWords = "";
     if (salaryGrade) {
       const { data: salaryGrades } = await fetchSalaryGrades(999, 0);
-      const matching = salaryGrades?.find(
-        (sg: { grade: string; step: string }) =>
-          String(sg.grade) === String(salaryGrade) && String(sg.step) === "1",
+      const sameGrade = (salaryGrades ?? []).filter(
+        (sg: { grade: string | number }) =>
+          String(sg.grade) === String(salaryGrade),
       );
+      const matching =
+        sameGrade.find(
+          (sg: { step: string | number }) => String(sg.step) === "1",
+        ) ?? sameGrade[0];
       if (matching?.salary) {
         const amt = Number(matching.salary);
         salaryAmount = amt.toLocaleString("en-PH", {
@@ -264,6 +273,10 @@ export const EmployeePrintablesController = React.forwardRef<
           hrmpsb_assessment_started_on:
             publicationPosting.hrmpsbAssessmentStartedOn,
         }),
+        ...(hrmpsbChair && {
+          hrmpsb_chair_name: hrmpsbChair.name,
+        }),
+        acknowledgement_date: acknowledgementDate ?? "",
       } as ApplicantTypes);
       setTimeout(() => printAppointmentFn(), 100);
     }, 100);
@@ -334,6 +347,8 @@ export const EmployeePrintablesController = React.forwardRef<
             plantillaNumber,
             plantillaType,
             publicationPosting,
+            hrmpsbChair,
+            acknowledgementDate,
           ) => {
             void handlePrintAppointmentForm(
               date,
@@ -345,6 +360,8 @@ export const EmployeePrintablesController = React.forwardRef<
               plantillaNumber,
               plantillaType,
               publicationPosting,
+              hrmpsbChair,
+              acknowledgementDate,
             );
           }}
         />

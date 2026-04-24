@@ -1,5 +1,6 @@
 'use client'
 
+import SearchUserInput from '@/components/SearchUserInput'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -10,7 +11,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { PrintModal } from '@/components/Rsp/PrintModal'
+import type { Employee } from '@/types'
 import { useEffect, useState } from 'react'
+
+export interface HrmpsbChairSelection {
+  id: string
+  name: string
+}
 
 interface AppointmentFormModalProps {
   open: boolean
@@ -32,7 +39,9 @@ interface AppointmentFormModalProps {
       postedFrom: string
       postedTo: string
       hrmpsbAssessmentStartedOn: string
-    }
+    },
+    hrmpsbChair?: HrmpsbChairSelection,
+    acknowledgementDate?: string
   ) => void
   defaultVice?: string
   defaultPlantillaNumber?: string
@@ -66,6 +75,8 @@ export default function AppointmentFormModal({
   const [postedFrom, setPostedFrom] = useState('')
   const [postedTo, setPostedTo] = useState('')
   const [hrmpsbAssessmentStartedOn, setHrmpsbAssessmentStartedOn] = useState('')
+  const [hrmpsbChair, setHrmpsbChair] = useState<Employee | null>(null)
+  const [acknowledgementDate, setAcknowledgementDate] = useState('')
 
   useEffect(() => {
     setVice(defaultVice)
@@ -75,6 +86,14 @@ export default function AppointmentFormModal({
 
   const handleConfirm = () => {
     if (!selectedDate) return
+    const chairPayload: HrmpsbChairSelection | undefined = hrmpsbChair
+      ? {
+          id: hrmpsbChair.id,
+          name: `${hrmpsbChair.firstname} ${hrmpsbChair.middlename ?? ''} ${hrmpsbChair.lastname}`
+            .replace(/\s+/g, ' ')
+            .trim(),
+        }
+      : undefined
     onConfirm(
       selectedDate,
       employmentStatus,
@@ -92,7 +111,9 @@ export default function AppointmentFormModal({
         postedFrom,
         postedTo,
         hrmpsbAssessmentStartedOn,
-      }
+      },
+      chairPayload,
+      acknowledgementDate
     )
     onOpenChange(false)
   }
@@ -287,6 +308,37 @@ export default function AppointmentFormModal({
                 onChange={(e) => setHrmpsbAssessmentStartedOn(e.target.value)}
               />
             </div>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200 pt-4">
+          <p className="mb-3 text-sm font-medium text-slate-600">
+            HRMPSB / Placement Committee Chairperson
+          </p>
+          <div className="space-y-2">
+            <Label>Chairperson</Label>
+            <SearchUserInput
+              handleSelectedUsers={(users) =>
+                setHrmpsbChair(users[0] ?? null)
+              }
+              selectedUsers={hrmpsbChair ? [hrmpsbChair] : []}
+            />
+            <p className="text-xs text-slate-500">Search by name.</p>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200 pt-4">
+          <p className="mb-3 text-sm font-medium text-slate-600">
+            Acknowledgement
+          </p>
+          <div className="space-y-2">
+            <Label htmlFor="appt-ack-date">Date received by appointee</Label>
+            <Input
+              id="appt-ack-date"
+              type="date"
+              value={acknowledgementDate}
+              onChange={(e) => setAcknowledgementDate(e.target.value)}
+            />
           </div>
         </div>
       </div>

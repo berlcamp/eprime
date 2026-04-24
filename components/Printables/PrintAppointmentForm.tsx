@@ -52,7 +52,7 @@ export const PrintAppointmentForm = React.forwardRef<
     : "";
 
   const hrmoAccess = systemAccess?.find(
-    (a: { type: string }) => a.type === "hrmo",
+    (a: { type: string }) => a.type === "hr",
   );
   const hrmoUser = systemUsers?.find(
     (u: { id: string }) => u.id === hrmoAccess?.user_id,
@@ -61,16 +61,6 @@ export const PrintAppointmentForm = React.forwardRef<
     ? `${hrmoUser.firstname} ${hrmoUser.middlename ?? ""} ${hrmoUser.lastname}`.trim()
     : "";
   const hrmoTitle = hrmoAccess?.title || "HRMO";
-
-  const hrmpsbAccess = systemAccess?.find(
-    (a: { type: string }) => a.type === "hrmpsb_chair",
-  );
-  const hrmpsbUser = systemUsers?.find(
-    (u: { id: string }) => u.id === hrmpsbAccess?.user_id,
-  );
-  const hrmpsbName = hrmpsbUser
-    ? `${hrmpsbUser.firstname} ${hrmpsbUser.middlename ?? ""} ${hrmpsbUser.lastname}`.trim()
-    : "";
 
   const positionName =
     selectedItem?.ranking?.position?.name ||
@@ -116,7 +106,11 @@ export const PrintAppointmentForm = React.forwardRef<
     posted_from?: string;
     posted_to?: string;
     hrmpsb_assessment_started_on?: string;
+    hrmpsb_chair_name?: string;
+    acknowledgement_date?: string;
   };
+  const hrmpsbName = ext?.hrmpsb_chair_name ?? "";
+  const acknowledgementDate = formatDateOrBlank(ext?.acknowledgement_date);
   const publishedAt = ext?.published_at ?? "________________";
   const publishedFrom = formatDateOrBlank(ext?.published_from);
   const publishedTo = formatDateOrBlank(ext?.published_to);
@@ -1121,15 +1115,25 @@ export const PrintAppointmentForm = React.forwardRef<
                     marginBottom: "14px",
                   }}
                 >
-                  Received original/photocopy of appointment on
+                  Received original/photocopy of appointment on{" "}
                   <span
                     style={{
                       borderBottom: "1px solid black",
                       display: "inline-block",
-                      minWidth: "80px",
+                      minWidth: "140px",
+                      textAlign: "center",
+                      fontStyle: "normal",
+                      fontWeight:
+                        acknowledgementDate &&
+                        acknowledgementDate !== "________________"
+                          ? "bold"
+                          : "normal",
                     }}
                   >
-                    &nbsp;
+                    {acknowledgementDate &&
+                    acknowledgementDate !== "________________"
+                      ? acknowledgementDate
+                      : " "}
                   </span>
                 </div>
                 <div style={{ textAlign: "center", marginTop: "10px" }}>
