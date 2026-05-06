@@ -1,11 +1,16 @@
 import { CustomButton } from '@/components/index'
-import { fetchCoordinatorships, fetchSchools } from '@/utils/fetchApi'
+import {
+  fetchCoordinatorships,
+  fetchPositions,
+  fetchSchools
+} from '@/utils/fetchApi'
 import { TagIcon } from '@heroicons/react/20/solid'
 import React, { useEffect, useState } from 'react'
 
 import {
   CoordinatorshipTypes,
   MajorTypes,
+  PositionTypes,
   SubjectTypes,
   type SchoolTypes
 } from '@/types'
@@ -18,6 +23,7 @@ interface FilterTypes {
   setFilterMajor: (type: string) => void
   setFilterSubject: (type: string) => void
   setFilterCoodinatorship: (type: string) => void
+  setFilterPosition: (type: string) => void
 }
 
 const Filters = ({
@@ -27,18 +33,21 @@ const Filters = ({
   setFilterLevel,
   setFilterMajor,
   setFilterSubject,
-  setFilterCoodinatorship
+  setFilterCoodinatorship,
+  setFilterPosition
 }: FilterTypes) => {
   const [selectedSchool, setSelectedSchool] = useState('')
   const [selectedLevel, setSelectedLevel] = useState('')
   const [selectedMajor, setSelectedMajor] = useState('')
   const [selectedSubject, setSelectedSubject] = useState('')
   const [selectedCoordinatorship, setSelectedCoordinatorship] = useState('')
+  const [selectedPosition, setSelectedPosition] = useState('')
 
   const [coordinatorships, setCoordinatorships] = useState<
     CoordinatorshipTypes[]
   >([])
   const [schools, setSchools] = useState<SchoolTypes[] | []>([])
+  const [positions, setPositions] = useState<PositionTypes[]>([])
 
   const handleApply = () => {
     if (
@@ -46,7 +55,8 @@ const Filters = ({
       selectedLevel === '' &&
       selectedMajor === '' &&
       selectedSubject === '' &&
-      selectedCoordinatorship === ''
+      selectedCoordinatorship === '' &&
+      selectedPosition === ''
     )
       return
 
@@ -56,6 +66,7 @@ const Filters = ({
     setFilterMajor(selectedMajor)
     setFilterSubject(selectedSubject)
     setFilterCoodinatorship(selectedCoordinatorship)
+    setFilterPosition(selectedPosition)
   }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -66,7 +77,8 @@ const Filters = ({
       selectedLevel === '' &&
       selectedMajor === '' &&
       selectedSubject === '' &&
-      selectedCoordinatorship === ''
+      selectedCoordinatorship === '' &&
+      selectedPosition === ''
     )
       return
 
@@ -76,6 +88,7 @@ const Filters = ({
     setFilterMajor(selectedMajor)
     setFilterSubject(selectedSubject)
     setFilterCoodinatorship(selectedCoordinatorship)
+    setFilterPosition(selectedPosition)
   }
 
   // clear all filters
@@ -85,6 +98,7 @@ const Filters = ({
     setFilterMajor('')
     setFilterSubject('')
     setFilterCoodinatorship('')
+    setFilterPosition('')
 
     // local state
     setSelectedSchool('')
@@ -92,6 +106,7 @@ const Filters = ({
     setSelectedMajor('')
     setSelectedSubject('')
     setSelectedCoordinatorship('')
+    setSelectedPosition('')
   }
 
   // Featch data
@@ -106,8 +121,14 @@ const Filters = ({
       setCoordinatorships(result.data.length > 0 ? result.data : [])
     }
 
+    const fetchPositionsData = async () => {
+      const result = await fetchPositions('', 999, 0)
+      setPositions(result.data && result.data.length > 0 ? result.data : [])
+    }
+
     void fetchSchoolsData()
     void fetchCoordinatorshipsData()
+    void fetchPositionsData()
   }, [])
 
   return (
@@ -188,6 +209,21 @@ const Filters = ({
                 {coordinatorships.map((item, index) => (
                   <option key={index} value={item.id}>
                     {item.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="app__filter_container">
+              <TagIcon className="w-4 h-4 mr-1" />
+              <select
+                value={selectedPosition}
+                onChange={(e) => setSelectedPosition(e.target.value)}
+                className="app__filter_select"
+              >
+                <option value="">Choose Position</option>
+                {positions.map((item, index) => (
+                  <option key={index} value={item.id}>
+                    {item.name}
                   </option>
                 ))}
               </select>

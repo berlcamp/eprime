@@ -7,8 +7,8 @@ import { CustomButton, Sidebar, Title, TopBar } from "@/components/index";
 import ReportsSidebar from "@/components/Sidebars/ReportsSidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSupabase } from "@/context/SupabaseProvider";
-import { type Office, type SchoolTypes } from "@/types";
-import { fetchOffices, fetchSchools } from "@/utils/fetchApi";
+import { type Office, type PositionTypes, type SchoolTypes } from "@/types";
+import { fetchOffices, fetchPositions, fetchSchools } from "@/utils/fetchApi";
 import Excel from "exceljs";
 import { saveAs } from "file-saver";
 
@@ -17,21 +17,31 @@ import { TagIcon } from "@heroicons/react/20/solid";
 export default function EmployeesRecordsPage() {
   const [filterSchool, setFilterSchool] = useState("");
   const [filterOffice, setFilterOffice] = useState("");
+  const [filterPosition, setFilterPosition] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
   const [selectedOffice, setSelectedOffice] = useState("");
+  const [selectedPosition, setSelectedPosition] = useState("");
   const [schools, setSchools] = useState<SchoolTypes[]>([]);
   const [offices, setOffices] = useState<Office[]>([]);
+  const [positions, setPositions] = useState<PositionTypes[]>([]);
   const [exporting, setExporting] = useState(false);
+  const [exportingByPosition, setExportingByPosition] = useState(false);
 
   const { supabase } = useSupabase();
 
-  // Fetch schools and offices
+  // Fetch schools, offices, and positions
   useEffect(() => {
     const fetchData = async () => {
       const schoolsResult = await fetchSchools({}, 300, 0);
       const officesResult = await fetchOffices("", 300, 0);
+      const positionsResult = await fetchPositions("", 999, 0);
       setSchools(schoolsResult.data.length > 0 ? schoolsResult.data : []);
       setOffices(officesResult.data.length > 0 ? officesResult.data : []);
+      setPositions(
+        positionsResult.data && positionsResult.data.length > 0
+          ? positionsResult.data
+          : []
+      );
     };
     void fetchData();
   }, []);
@@ -39,6 +49,7 @@ export default function EmployeesRecordsPage() {
   const handleApply = () => {
     setFilterSchool(selectedSchool);
     setFilterOffice(selectedOffice);
+    setFilterPosition(selectedPosition);
   };
 
   const handleClear = () => {
@@ -46,6 +57,8 @@ export default function EmployeesRecordsPage() {
     setSelectedSchool("");
     setFilterOffice("");
     setSelectedOffice("");
+    setFilterPosition("");
+    setSelectedPosition("");
   };
 
   const exportToExcel = async () => {
@@ -88,6 +101,10 @@ export default function EmployeesRecordsPage() {
 
       if (filterOffice && filterOffice !== "") {
         query = query.eq("office_id", filterOffice);
+      }
+
+      if (filterPosition && filterPosition !== "") {
+        query = query.eq("position_id", filterPosition);
       }
 
       // Order by name
@@ -257,6 +274,93 @@ export default function EmployeesRecordsPage() {
     }
   };
 
+  const exportByPosition = async () => {
+    setExportingByPosition(true);
+    try {
+      let query = supabase
+        .from("hrm_users")
+        .select(
+          `
+          id,
+          firstname,
+          middlename,
+          lastname,
+          hrm_schools:school_id(name),
+          hrm_offices:office_id(name),
+          hrm_positions:position_id(name),
+          hrm_item:item_id(hrm_position:position_id(name))
+        `
+        )
+        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID!)
+        .eq("status", "Active")
+        .not("item_id", "is", null);
+
+      if (filterSchool && filterSchool !== "") {
+        query = query.eq("school_id", filterSchool);
+      }
+
+      if (filterOffice && filterOffice !== "") {
+        query = query.eq("office_id", filterOffice);
+      }
+
+      if (filterPosition && filterPosition !== "") {
+        query = query.eq("position_id", filterPosition);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw new Error(error.message);
+
+      const rows = (data || []).map((user: any) => {
+        const position =
+          user.hrm_item?.hrm_position?.name || user.hrm_positions?.name || "";
+        const fullName = `${user.lastname || ""}, ${user.firstname || ""} ${
+          user.middlename || ""
+        }`.trim();
+        const schoolOffice =
+          user.hrm_schools?.name || user.hrm_offices?.name || "";
+        return { position, fullName, schoolOffice };
+      });
+
+      // Sort by position, then by name
+      rows.sort((a, b) => {
+        const p = a.position.localeCompare(b.position);
+        if (p !== 0) return p;
+        return a.fullName.localeCompare(b.fullName);
+      });
+
+      const workbook = new Excel.Workbook();
+      const worksheet = workbook.addWorksheet("Employees by Position");
+
+      worksheet.columns = [
+        { header: "No.", key: "no", width: 8 },
+        { header: "Position", key: "position", width: 35 },
+        { header: "Name", key: "full_name", width: 35 },
+        { header: "School / Office", key: "school_office", width: 35 },
+      ];
+
+      rows.forEach((row, index) => {
+        worksheet.addRow({
+          no: index + 1,
+          position: row.position,
+          full_name: row.fullName,
+          school_office: row.schoolOffice,
+        });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(blob, `Employees by Position - DepEd.xlsx`);
+    } catch (error) {
+      console.error("Export by position error:", error);
+      alert("Failed to export data. Please try again.");
+    } finally {
+      setExportingByPosition(false);
+    }
+  };
+
   return (
     <>
       <Sidebar>
@@ -299,6 +403,21 @@ export default function EmployeesRecordsPage() {
                     >
                       <option value="">All</option>
                       {offices.map((item, index) => (
+                        <option key={index} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="app__filter_container">
+                    <TagIcon className="w-4 h-4 mr-1" />
+                    <select
+                      value={selectedPosition}
+                      onChange={(e) => setSelectedPosition(e.target.value)}
+                      className="app__filter_select"
+                    >
+                      <option value="">Choose Position</option>
+                      {positions.map((item, index) => (
                         <option key={index} value={item.id}>
                           {item.name}
                         </option>
@@ -350,6 +469,37 @@ export default function EmployeesRecordsPage() {
                     }`}
                   >
                     {exporting ? "Exporting..." : "Export to Excel"}
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Export by Position Card */}
+          <div className="w-full px-4 pt-4 pb-4 bg-gray-100">
+            <Card className="rounded-xl shadow">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <h2 className="font-semibold text-lg mb-4">
+                    Export Employees by Position
+                  </h2>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Export a simplified list grouped and sorted by position.
+                    Columns: Position, Name, and School/Office. Honors the
+                    School, Office, and Position filters above.
+                  </p>
+                  <button
+                    onClick={exportByPosition}
+                    disabled={exportingByPosition}
+                    className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                      exportingByPosition
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700 text-white"
+                    }`}
+                  >
+                    {exportingByPosition
+                      ? "Exporting..."
+                      : "Export by Position"}
                   </button>
                 </div>
               </CardContent>

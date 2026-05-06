@@ -51,6 +51,7 @@ export default function Page() {
   const [filterMajor, setFilterMajor] = useState('')
   const [filterSubject, setFilterSubject] = useState('')
   const [filterCoodinatorship, setFilterCoodinatorship] = useState('')
+  const [filterPosition, setFilterPosition] = useState('')
 
   const [showNamesModal, setShowNamesModal] = useState(false)
 
@@ -184,6 +185,10 @@ export default function Page() {
 
       if (filterSchool !== '') {
         query = query.eq('school_id', filterSchool)
+      }
+
+      if (filterPosition !== '') {
+        query = query.eq('position_id', filterPosition)
       }
 
       if (userIds.length > 0) {
@@ -326,7 +331,8 @@ export default function Page() {
     filterLevel,
     filterMajor,
     filterSubject,
-    filterCoodinatorship
+    filterCoodinatorship,
+    filterPosition
   ])
 
   // Check access from permission settings or Super Admins
@@ -362,6 +368,7 @@ export default function Page() {
               setFilterMajor={setFilterMajor}
               setFilterSubject={setFilterSubject}
               setFilterCoodinatorship={setFilterCoodinatorship}
+              setFilterPosition={setFilterPosition}
             />
           </div>
           {/* Export Button */}
