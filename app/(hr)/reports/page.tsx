@@ -254,7 +254,7 @@ export default function Page() {
         lastname: `${item.lastname ?? ''}`,
         firstname: `${item.firstname ?? ''}`,
         middlename: `${item.middlename ?? ''}`,
-        school: `${item.hrm_schools?.name}`,
+        school: `${item.hrm_schools?.name ?? ''}`,
         subjects,
         majors,
         coordinatorships
