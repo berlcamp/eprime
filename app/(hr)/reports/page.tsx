@@ -251,9 +251,9 @@ export default function Page() {
 
       data.push({
         no: index + 1,
-        lastname: `${item.lastname}`,
-        firstname: `${item.lastname}`,
-        middlename: `${item.lastname}`,
+        lastname: `${item.lastname ?? ''}`,
+        firstname: `${item.firstname ?? ''}`,
+        middlename: `${item.middlename ?? ''}`,
         school: `${item.hrm_schools?.name}`,
         subjects,
         majors,
