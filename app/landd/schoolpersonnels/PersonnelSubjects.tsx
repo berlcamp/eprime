@@ -108,12 +108,12 @@ const PersonnelSubjects = ({ hideModal, employee }: ModalProps) => {
 
   const assignment = employee.hrm_schools?.name ?? employee.hrm_offices?.name ?? ''
 
-  const subjectsByCategory = CATEGORY_ORDER.reduce(
+  const subjectsByCategory = CATEGORY_ORDER.reduce<Record<string, SubjectTypes[]>>(
     (acc, cat) => {
       acc[cat] = subjects.filter((s) => s.category_level === cat)
       return acc
     },
-    {} as Record<string, SubjectTypes[]>
+    {}
   )
 
   const handleSave = async () => {
