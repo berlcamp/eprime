@@ -1011,10 +1011,19 @@ export interface MajorTypes {
   type: string;
 }
 
+export interface SchoolYearTypes {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+}
+
 export interface PersonnelSubjectTypes {
   id: string;
   user_id: string;
   subject_id: string;
+  school_year_id: string | null;
   subject: SubjectTypes;
 }
 export interface PersonnelGradeLevels {

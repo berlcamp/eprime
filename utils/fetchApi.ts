@@ -619,6 +619,26 @@ export async function fetchSubjects(perPageCount: number, rangeFrom: number) {
   }
 }
 
+export async function fetchSchoolYears(perPageCount: number, rangeFrom: number) {
+  try {
+    let query = supabase
+      .from("hrm_school_years")
+      .select("*", { count: "exact" });
+
+    const from = rangeFrom;
+    const to = from + (perPageCount - 1);
+    query = query.range(from, to);
+    query = query.order("title", { ascending: false });
+
+    const { data, error, count } = await query;
+    if (error) throw new Error(error.message);
+    return { data, count };
+  } catch (error) {
+    console.error("fetch school years error", error);
+    return { data: [], count: 0 };
+  }
+}
+
 export async function fetchCoordinatorships(
   perPageCount: number,
   rangeFrom: number,

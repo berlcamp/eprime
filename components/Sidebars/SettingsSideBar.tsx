@@ -127,6 +127,18 @@ const SettingsSideBar = () => {
             </span>
           </Link>
         </li>
+        <li>
+          <Link
+            href="/settings/schoolyears"
+            className={`app__menu_link ${
+              currentRoute === '/settings/schoolyears'
+                ? 'app_menu_link_active'
+                : ''
+            }`}
+          >
+            <span className="flex-1 ml-3 whitespace-nowrap">School Years</span>
+          </Link>
+        </li>
       </ul>
       <ul className="pt-8 mt-4 space-y-2 border-t border-gray-700">
         <li>
