@@ -30,6 +30,9 @@ export function PrintFooter() {
           alt=""
           className="w-full h-auto object-contain"
         />
+        <div className="text-center text-sm italic text-gray-500">
+          This is a system generated document
+        </div>
       </div>
     </>
   );
