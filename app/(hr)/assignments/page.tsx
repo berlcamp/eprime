@@ -13,7 +13,7 @@ import {
   Unauthorized,
   UserBlock
 } from '@/components/index'
-import { superAdmins } from '@/constants'
+import { ALS_STATION_LABEL, ALS_STATION_VALUE, superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { fetchAssignments } from '@/utils/fetchApi'
@@ -328,6 +328,8 @@ const Page: React.FC = () => {
                               </span>
                               {item.area_assigned === 'school' ? (
                                 <span>{item.hrm_schools?.name}</span>
+                              ) : item.area_assigned === ALS_STATION_VALUE ? (
+                                <span>{ALS_STATION_LABEL}</span>
                               ) : (
                                 <span>{item.hrm_offices?.name}</span>
                               )}
@@ -379,6 +381,8 @@ const Page: React.FC = () => {
                         <div className="font-semibold">
                           {item.area_assigned === 'school' ? (
                             <span>{item.hrm_schools?.name}</span>
+                          ) : item.area_assigned === ALS_STATION_VALUE ? (
+                            <span>{ALS_STATION_LABEL}</span>
                           ) : (
                             <span>{item.hrm_offices?.name}</span>
                           )}

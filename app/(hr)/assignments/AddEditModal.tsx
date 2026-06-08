@@ -13,6 +13,7 @@ import {
   fetchSchools,
   logError
 } from '@/utils/fetchApi'
+import { ALS_STATION_LABEL, ALS_STATION_VALUE } from '@/constants'
 import { generateReferenceCode } from '@/utils/text-helper'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -274,6 +275,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
         (p) => p.id.toString() === formdata.school_id?.toString()
       )
       station = hrmSchool ? hrmSchool.name : ''
+    } else if (formdata.area_assigned === ALS_STATION_VALUE) {
+      station = ALS_STATION_LABEL
     } else {
       const hrmOffice = offices.find(
         (p) => p.id.toString() === formdata.office_id?.toString()
@@ -382,6 +385,8 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
       let station = ''
       if (item.area_assigned === 'school') {
         station = item.hrm_schools?.name
+      } else if (item.area_assigned === ALS_STATION_VALUE) {
+        station = ALS_STATION_LABEL
       } else {
         station = item.hrm_offices?.name
       }
@@ -596,6 +601,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       <option value="">Choose</option>
                       <option value="school">School</option>
                       <option value="office">Division Office</option>
+                      <option value={ALS_STATION_VALUE}>
+                        {ALS_STATION_LABEL}
+                      </option>
                     </select>
                     {errors.area_assigned && (
                       <div className="app__error_message">
@@ -620,11 +628,13 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                           className="app__select_standard"
                         >
                           <option value="">Choose</option>
-                          {districts.map((item, index) => (
-                            <option key={index} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
+                          {districts
+                            .filter((item) => item.name !== ALS_STATION_LABEL)
+                            .map((item, index) => (
+                              <option key={index} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
                         </select>
                         {errors.district_id && (
                           <div className="app__error_message">

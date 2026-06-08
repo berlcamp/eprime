@@ -1,5 +1,10 @@
 export const PER_PAGE = 25;
 
+// Station option representing the Alternative Learning System.
+// Stored on hrm_assignments.area_assigned as 'als'; the label below is shown wherever a station name is rendered.
+export const ALS_STATION_VALUE = "als";
+export const ALS_STATION_LABEL = "Alternative Learning System - ALS";
+
 export const statusList = [
   {
     status: "Disapproved",

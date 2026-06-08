@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { CustomButton } from '@/components/index'
+import { ALS_STATION_LABEL, ALS_STATION_VALUE } from '@/constants'
 import { useEffect, useState } from 'react'
 import { printLetter } from './printLetter'
 
@@ -40,7 +41,9 @@ const PrintModal = ({ item, hideModal, variant }: ModalProps) => {
   useEffect(() => {
     const station = item.area_assigned === 'school'
       ? item.hrm_schools?.name
-      : item.hrm_offices?.name
+      : item.area_assigned === ALS_STATION_VALUE
+        ? ALS_STATION_LABEL
+        : item.hrm_offices?.name
     const position = item.hrm_positions?.name ?? ''
 
     // **...** marks text the printed PDF will render in bold.
