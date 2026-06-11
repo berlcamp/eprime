@@ -255,28 +255,6 @@ const PassSlipForm = ({ hideModal }: ModalProps) => {
                 <div className="app__form_field_container">
                   <div className="w-full">
                     <div className="app__label_standard">
-                      Intended time of arrival
-                    </div>
-                    <div>
-                      <input
-                        {...register('intended_time_arrival', {
-                          required: true
-                        })}
-                        type="text"
-                        placeholder="Intended time of arrival"
-                        className="app__input_standard"
-                      />
-                      {errors.intended_time_arrival && (
-                        <div className="app__error_message">
-                          Intended time of arrival is required
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="app__form_field_container">
-                  <div className="w-full">
-                    <div className="app__label_standard">
                       Intended time of departure
                     </div>
                     <div>
@@ -291,6 +269,28 @@ const PassSlipForm = ({ hideModal }: ModalProps) => {
                       {errors.intended_time_departure && (
                         <div className="app__error_message">
                           Intended time of departure is required
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="app__form_field_container">
+                  <div className="w-full">
+                    <div className="app__label_standard">
+                      Intended time of arrival
+                    </div>
+                    <div>
+                      <input
+                        {...register('intended_time_arrival', {
+                          required: true
+                        })}
+                        type="text"
+                        placeholder="Intended time of arrival"
+                        className="app__input_standard"
+                      />
+                      {errors.intended_time_arrival && (
+                        <div className="app__error_message">
+                          Intended time of arrival is required
                         </div>
                       )}
                     </div>
