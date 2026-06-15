@@ -200,6 +200,15 @@ export async function printLetter (item: DesignationTypes, letterDate: string, l
   doc.text('Date', 145, y)
   // End signature
 
+  // System-generated note
+  doc.setFont('times', 'italic')
+  doc.setFontSize(8)
+  doc.setTextColor('#808080')
+  doc.text('This is a system-generated document and does not require a signature unless otherwise specified.', 105, 300, { align: 'center' })
+  doc.setFont('times', 'normal')
+  doc.setFontSize(11)
+  doc.setTextColor('#000')
+
   // Start footer
   y = 305
   doc.addImage(footerLogo, 'PNG', 15, y + 2, 180, 18)
