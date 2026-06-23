@@ -125,6 +125,19 @@ export default function DetailsModal({
   const [showConfirmModal, setShowConfirmModal] = useState("");
   const [confirmMessage, setConfirmMessage] = useState("");
 
+  // Revert Approval preview (super admin only)
+  const [loadingRevertPreview, setLoadingRevertPreview] = useState(false);
+  const [revertPreview, setRevertPreview] = useState<{
+    credits: Array<{
+      type: string;
+      restore: number;
+      currentBalance: number;
+      newBalance: number;
+    }>;
+    coc: { restore: number; currentCoc: number; newCoc: number } | null;
+    leaveDaysWithoutPay: number;
+  } | null>(null);
+
   // Forward to this user
   const [selectedUser, setSelectedUser] = useState<namesType | null>(null);
 
@@ -293,7 +306,6 @@ export default function DetailsModal({
       }
       setConfirmMessage("Are you sure you want to Forward this request?");
     }
-
     setShowConfirmModal(action);
   };
 
@@ -317,7 +329,6 @@ export default function DetailsModal({
     if (showConfirmModal === "Cancel") {
       void handleConfirmedCancel();
     }
-
     setShowConfirmModal("");
     setConfirmMessage("");
   };
@@ -749,6 +760,378 @@ export default function DetailsModal({
       setSaving(false);
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  // Computes exactly what will be restored before showing the revert
+  // confirmation modal, so the super admin can see the real numbers.
+  const handleOpenRevertPreview = async () => {
+    if (loadingRevertPreview) return;
+
+    setLoadingRevertPreview(true);
+
+    try {
+      const { data: freshTracker } = await supabase
+        .from("hrm_request_trackers")
+        .select(
+          "leave_credit_use_vl, leave_credit_use_sl, leave_credit_use_sc, leave_credit_use_adoption, leave_credit_use_vawc, leave_credit_use_emergency, leave_credit_use_study, leave_credit_use_soloparent, leave_credit_use_slbw, leave_credit_use_spl, leave_credit_use_rehab, leave_credit_use_paternity, leave_credit_use_maternity, leave_credit_use_wellness, leave_days_without_pay",
+        )
+        .eq("id", documentData.id)
+        .single();
+
+      const leaveData = freshTracker
+        ? { ...documentData, ...freshTracker }
+        : documentData;
+
+      const { data: balancesData } = await supabase
+        .from("hrm_leave_credits")
+        .select()
+        .eq("user_id", documentData.creator.id);
+
+      const balances: Array<{ type: string; balance: string }> = [];
+      if (balancesData && balancesData.length > 0) {
+        const creditsData: LeaveCreditTypes[] = balancesData;
+        creditsData.forEach((credit) => {
+          balances.push({ type: credit.type, balance: credit.credits.toString() });
+        });
+      }
+
+      const creditsUsed = [
+        { type: "Vacation Leave", value: leaveData.leave_credit_use_vl },
+        { type: "Sick Leave", value: leaveData.leave_credit_use_sl },
+        { type: "Service Credit", value: leaveData.leave_credit_use_sc },
+        { type: "Adoption Leave", value: leaveData.leave_credit_use_adoption },
+        { type: "10-Day VAWC Leave", value: leaveData.leave_credit_use_vawc },
+        {
+          type: "Special Emergency (Calamity) Leave",
+          value: leaveData.leave_credit_use_emergency,
+        },
+        { type: "Study Leave", value: leaveData.leave_credit_use_study },
+        { type: "Solo Parent Leave", value: leaveData.leave_credit_use_soloparent },
+        {
+          type: "Special Leave Benefits For Women",
+          value: leaveData.leave_credit_use_slbw,
+        },
+        { type: "Special Privilege Leave", value: leaveData.leave_credit_use_spl },
+        { type: "Rehabilitation Leave", value: leaveData.leave_credit_use_rehab },
+        { type: "Paternity Leave", value: leaveData.leave_credit_use_paternity },
+        { type: "Maternity Leave", value: leaveData.leave_credit_use_maternity },
+        { type: "Wellness Break", value: leaveData.leave_credit_use_wellness },
+      ];
+
+      const credits = creditsUsed
+        .filter((c) => c.value && Number(c.value) > 0)
+        .map((c) => {
+          const bal = balances.find((b) => b.type === c.type);
+          const currentBalance = bal ? Number(bal.balance) : 0;
+          return {
+            type: c.type,
+            restore: Number(c.value),
+            currentBalance,
+            newBalance: currentBalance + Number(c.value),
+          };
+        });
+
+      const { data: leaveCocRecords } = await supabase
+        .from("hrm_leave_coc")
+        .select("use_coc, user_cto_id")
+        .eq("tracker_id", documentData.id);
+
+      let coc: {
+        restore: number;
+        currentCoc: number;
+        newCoc: number;
+      } | null = null;
+
+      if (leaveCocRecords && leaveCocRecords.length > 0) {
+        let totalRestore = 0;
+        let currentCoc = 0;
+        for (const record of leaveCocRecords) {
+          totalRestore += Number(record.use_coc);
+          const { data: userCto } = await supabase
+            .from("hrm_cto_users")
+            .select("coc")
+            .eq("id", record.user_cto_id)
+            .maybeSingle();
+          if (userCto) currentCoc += Number(userCto.coc);
+        }
+        coc = {
+          restore: totalRestore,
+          currentCoc,
+          newCoc: currentCoc + totalRestore,
+        };
+      }
+
+      setRevertPreview({
+        credits,
+        coc,
+        leaveDaysWithoutPay: Number(leaveData.leave_days_without_pay) || 0,
+      });
+    } catch (e) {
+      console.error(e);
+      setToast("error", "Failed to load revert preview, please try again.");
+    } finally {
+      setLoadingRevertPreview(false);
+    }
+  };
+
+  // Reverts an "Approved" leave request back to "Approval Recommended" and
+  // undoes the leave credit / CTO deductions and leave card entry created
+  // during approval, so it can be re-certified and re-approved without
+  // double-deducting balances. Super admin only — this mutates financial data.
+  const handleConfirmedRevertApproval = async () => {
+    if (saving) return;
+
+    setSaving(true);
+
+    try {
+      // Refetch tracker to get the exact certified values used at approval time
+      const { data: freshTracker } = await supabase
+        .from("hrm_request_trackers")
+        .select(
+          "leave_credit_use_vl, leave_credit_use_sl, leave_credit_use_sc, leave_credit_use_adoption, leave_credit_use_vawc, leave_credit_use_emergency, leave_credit_use_study, leave_credit_use_soloparent, leave_credit_use_slbw, leave_credit_use_spl, leave_credit_use_rehab, leave_credit_use_paternity, leave_credit_use_maternity, leave_credit_use_wellness, leave_days_without_pay",
+        )
+        .eq("id", documentData.id)
+        .single();
+
+      const leaveData = freshTracker
+        ? { ...documentData, ...freshTracker }
+        : documentData;
+
+      // Restore leave credit balances
+      const { data: balancesData } = await supabase
+        .from("hrm_leave_credits")
+        .select()
+        .eq("user_id", documentData.creator.id);
+
+      const balances: Array<{ type: string; balance: string }> = [];
+      if (balancesData && balancesData.length > 0) {
+        const creditsData: LeaveCreditTypes[] = balancesData;
+        creditsData.forEach((credit) => {
+          balances.push({ type: credit.type, balance: credit.credits.toString() });
+        });
+      }
+
+      const creditsUsed = [
+        { type: "Vacation Leave", value: leaveData.leave_credit_use_vl },
+        { type: "Sick Leave", value: leaveData.leave_credit_use_sl },
+        { type: "Service Credit", value: leaveData.leave_credit_use_sc },
+        { type: "Adoption Leave", value: leaveData.leave_credit_use_adoption },
+        { type: "10-Day VAWC Leave", value: leaveData.leave_credit_use_vawc },
+        {
+          type: "Special Emergency (Calamity) Leave",
+          value: leaveData.leave_credit_use_emergency,
+        },
+        { type: "Study Leave", value: leaveData.leave_credit_use_study },
+        { type: "Solo Parent Leave", value: leaveData.leave_credit_use_soloparent },
+        {
+          type: "Special Leave Benefits For Women",
+          value: leaveData.leave_credit_use_slbw,
+        },
+        { type: "Special Privilege Leave", value: leaveData.leave_credit_use_spl },
+        { type: "Rehabilitation Leave", value: leaveData.leave_credit_use_rehab },
+        { type: "Paternity Leave", value: leaveData.leave_credit_use_paternity },
+        { type: "Maternity Leave", value: leaveData.leave_credit_use_maternity },
+        { type: "Wellness Break", value: leaveData.leave_credit_use_wellness },
+      ];
+
+      const restoreCreditsPromises = creditsUsed.map(async (c) => {
+        if (c.value && Number(c.value) > 0) {
+          const bal = balances.find((b) => b.type === c.type);
+          if (bal) {
+            return await supabase
+              .from("hrm_leave_credits")
+              .update({ credits: Number(bal.balance) + Number(c.value) })
+              .eq("type", c.type)
+              .eq("user_id", documentData.creator.id);
+          }
+        }
+      });
+      await Promise.all(restoreCreditsPromises);
+
+      // Restore CTO/COC balances
+      const { data: leaveCocRecords, error: leaveError } = await supabase
+        .from("hrm_leave_coc")
+        .select("use_coc, user_cto_id")
+        .eq("tracker_id", documentData.id);
+
+      if (leaveError) {
+        void logError(
+          "Revert Approval - fetch leave coc records",
+          "hrm_leave_coc",
+          "",
+          leaveError.message,
+        );
+      }
+
+      for (const record of leaveCocRecords ?? []) {
+        const { use_coc, user_cto_id } = record;
+
+        const { data: userCto, error: fetchCtoError } = await supabase
+          .from("hrm_cto_users")
+          .select("coc, used_coc")
+          .eq("id", user_cto_id)
+          .maybeSingle();
+
+        if (fetchCtoError || !userCto) {
+          void logError(
+            "Revert Approval - fetch current CTO user",
+            "hrm_cto_users",
+            user_cto_id,
+            fetchCtoError?.message || "CTO user not found",
+          );
+          continue;
+        }
+
+        const { error: updateError } = await supabase
+          .from("hrm_cto_users")
+          .update({
+            coc: Number(userCto.coc) + Number(use_coc),
+            used_coc: Math.max(0, (Number(userCto.used_coc) || 0) - Number(use_coc)),
+          })
+          .eq("id", user_cto_id);
+
+        if (updateError) {
+          void logError(
+            "Revert Approval - update CTO user balance",
+            "hrm_cto_users",
+            user_cto_id,
+            updateError.message,
+          );
+        }
+      }
+
+      // Remove the leave card entry created during approval
+      const { error: leaveCardError } = await supabase
+        .from("hrm_leave_cards")
+        .delete()
+        .eq("tracker_id", documentData.id);
+
+      if (leaveCardError) {
+        void logError(
+          "Revert Approval - delete leave card entry",
+          "hrm_leave_cards",
+          "",
+          leaveCardError.message,
+        );
+      }
+
+      // Restore step_increment_leave_days if it was bumped (>=30 days without pay)
+      let needsManualServiceRecordCheck = false;
+      if (Number(leaveData.leave_days_without_pay) >= 30) {
+        needsManualServiceRecordCheck = true;
+
+        const { error: updateUserError } = await supabase
+          .from("hrm_users")
+          .update({
+            step_increment_leave_days: Math.max(
+              0,
+              Number(documentData.creator.step_increment_leave_days) -
+                Number(leaveData.leave_days_without_pay),
+            ),
+          })
+          .eq("id", documentData.created_by);
+
+        if (updateUserError) {
+          void logError(
+            "Revert Approval - revert step_increment_leave_days",
+            "hrm_users",
+            "",
+            updateUserError.message,
+          );
+        }
+      }
+
+      // Revert the request status
+      const newData = {
+        current_status: "Approval Recommended",
+        current_approver_id: session?.user.id,
+        approved_by: null,
+        date_approved: null,
+      };
+
+      const { error } = await supabase
+        .from("hrm_request_trackers")
+        .update(newData)
+        .eq("id", documentData.id);
+
+      if (error) {
+        void logError(
+          "Revert Approval",
+          "hrm_request_trackers",
+          JSON.stringify(newData),
+          error.message,
+        );
+        setToast(
+          "error",
+          "Saving failed, please reload the page and try again.",
+        );
+        throw new Error(error.message);
+      }
+
+      // Added log to latest tracker flow
+      const { data } = await supabase
+        .from("hrm_tracker_flow")
+        .select()
+        .eq("tracker_id", documentData.id)
+        .order("id", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data) {
+        const logMessage = needsManualServiceRecordCheck
+          ? "Reverted to Approval Recommended (please manually review the Service Record entry for the >=30 days without pay adjustment)"
+          : "Reverted to Approval Recommended";
+
+        const newLogData = {
+          message: logMessage,
+          tracker_flow_id: data.id,
+          user_id: session?.user.id,
+        };
+
+        const { error: error2 } = await supabase
+          .from("hrm_tracker_logs")
+          .insert(newLogData)
+          .eq("id", documentData.id);
+
+        if (error2) {
+          void logError(
+            "Approval Flow Logs",
+            "hrm_tracker_flow",
+            "",
+            error2.message,
+          );
+        }
+      }
+
+      // Update data in redux
+      const items = [...globallist];
+      const updatedData = { ...newData, id: documentData.id };
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+      items[foundIndex] = { ...items[foundIndex], ...updatedData };
+      dispatch(updateList(items));
+      setDocumentData(items[foundIndex]); // update ui with new data
+
+      // Notify requester and follower
+      void handleNotify(items[foundIndex], "Reverted to Approval Recommended");
+
+      setToast(
+        "success",
+        needsManualServiceRecordCheck
+          ? "Reverted. Please manually review the Service Record entry."
+          : "Successfully reverted to Approval Recommended.",
+      );
+
+      // Recount sidebar counter
+      dispatch(recount());
+
+      refresh?.();
+
+      setUpdateStatusFlow(!updateStatusFlow);
+      setSaving(false);
+    } catch (e) {
+      console.error(e);
+      setSaving(false);
     }
   };
 
@@ -1572,6 +1955,34 @@ export default function DetailsModal({
                       By clicking &apos;Approve&apos;, you are authorizing and
                       granting permission to the requester to proceed with the
                       specified request.
+                    </div>
+                  </div>
+                )}
+              {/* Revert Approval (super admin only) - for fixing leave requests approved before credits were certified */}
+              {isSuperAdmin &&
+                documentData.type === "Leave" &&
+                documentData.current_status === "Approved" && (
+                  <div className="mb-6">
+                    <div className="space-x-2">
+                      <CustomButton
+                        containerStyles="app__btn_orange"
+                        title={
+                          loadingRevertPreview
+                            ? "Loading..."
+                            : "Revert to Approval Recommended"
+                        }
+                        btnType="button"
+                        handleClick={() => {
+                          void handleOpenRevertPreview();
+                        }}
+                      />
+                    </div>
+                    <div className="text-[10px] mt-1 text-gray-600">
+                      Use this if the leave request was approved without
+                      certifying leave credits first. This restores the
+                      deducted leave credit/CTO balances and removes the
+                      leave card entry, then sends it back to &apos;Approval
+                      Recommended&apos; so it can be certified and re-approved.
                     </div>
                   </div>
                 )}
@@ -2510,6 +2921,137 @@ export default function DetailsModal({
           onConfirm={HandleOnConfirm}
           onCancel={handleOnCancel}
         />
+      )}
+      {/* Revert Approval Preview Modal (super admin only) */}
+      {revertPreview && (
+        <div className="app__modal_wrapper">
+          <div className="app__modal_wrapper2">
+            <div className="app__modal_wrapper3">
+              <div className="app__modal_header">
+                <h5 className="app__modal_header_text">
+                  Revert to Approval Recommended
+                </h5>
+              </div>
+              <div className="modal-body relative p-4">
+                <div className="text-gray-600 text-sm mb-3">
+                  This will send the request back to{" "}
+                  <span className="font-medium">Approval Recommended</span>{" "}
+                  so leave credits can be certified, then re-approved. The
+                  following will be restored:
+                </div>
+
+                {revertPreview.credits.length === 0 && !revertPreview.coc && (
+                  <div className="text-sm text-gray-600 mb-3">
+                    No leave credit or CTO deductions were found for this
+                    request.
+                  </div>
+                )}
+
+                {revertPreview.credits.length > 0 && (
+                  <div className="mb-3">
+                    <div className="text-xs font-medium text-gray-700 mb-1">
+                      Leave credits
+                    </div>
+                    <table className="w-full text-xs border">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="text-left p-1 border">Type</th>
+                          <th className="text-right p-1 border">Restore</th>
+                          <th className="text-right p-1 border">Current</th>
+                          <th className="text-right p-1 border">New</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {revertPreview.credits.map((c) => (
+                          <tr key={c.type}>
+                            <td className="p-1 border">{c.type}</td>
+                            <td className="p-1 border text-right text-green-600">
+                              +{c.restore}
+                            </td>
+                            <td className="p-1 border text-right">
+                              {c.currentBalance}
+                            </td>
+                            <td className="p-1 border text-right font-medium">
+                              {c.newBalance}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {revertPreview.coc && (
+                  <div className="mb-3">
+                    <div className="text-xs font-medium text-gray-700 mb-1">
+                      Compensatory Time Off (CTO/COC)
+                    </div>
+                    <table className="w-full text-xs border">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="text-left p-1 border">Restore</th>
+                          <th className="text-right p-1 border">Current</th>
+                          <th className="text-right p-1 border">New</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="p-1 border text-green-600">
+                            +{revertPreview.coc.restore}
+                          </td>
+                          <td className="p-1 border text-right">
+                            {revertPreview.coc.currentCoc}
+                          </td>
+                          <td className="p-1 border text-right font-medium">
+                            {revertPreview.coc.newCoc}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div className="text-xs text-gray-600 mb-2">
+                  • The leave card entry created on approval will be removed.
+                </div>
+                <div className="text-xs text-gray-600 mb-2">
+                  • Status will change back to &apos;Approval
+                  Recommended&apos; and the approved-by/date will be cleared.
+                </div>
+                {revertPreview.leaveDaysWithoutPay >= 30 && (
+                  <div className="text-xs text-red-600 mb-2">
+                    • This request had {revertPreview.leaveDaysWithoutPay}{" "}
+                    days without pay (≥30), which bumped the employee&apos;s
+                    step increment leave days. That will be reverted
+                    automatically, but the related Service Record entry
+                    cannot be matched safely and must be reviewed/deleted
+                    manually.
+                  </div>
+                )}
+
+                <div className="app__modal_footer">
+                  <button
+                    onClick={() => {
+                      setRevertPreview(null);
+                      void handleConfirmedRevertApproval();
+                    }}
+                    type="button"
+                    className="flex items-center bg-emerald-500 hover:bg-emerald-600 border border-emerald-600 font-medium px-2 py-1 text-sm text-white rounded-sm"
+                  >
+                    Confirm Revert
+                  </button>
+                  <button
+                    onClick={() => setRevertPreview(null)}
+                    type="button"
+                    className="flex items-center bg-gray-500 hover:bg-gray-600 border border-gray-600 font-medium px-2 py-1 text-sm text-white rounded-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       {/* Add to Sticky Modal */}
       {showAddStickyModal && (

@@ -118,6 +118,13 @@ function StatusFlow({
                             {log.message}
                           </span>
                         )}
+                        {log.message?.startsWith(
+                          'Reverted to Approval Recommended'
+                        ) && (
+                          <span className="app__status_red">
+                            {log.message}
+                          </span>
+                        )}
                         <span className="font-normal">
                           {' '}
                           by {log.hrm_user?.firstname}{' '}
