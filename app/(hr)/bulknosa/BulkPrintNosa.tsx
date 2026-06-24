@@ -41,7 +41,7 @@ function SignatoryBlock({
       </div>
       <div className="font-bold border-t border-t-black mt-1 text-sm">
         {user
-          ? [user.firstname, user.middlename, user.lastname]
+          ? [user.firstname, user.middlename, user.lastname, user.suffix]
               .filter(Boolean)
               .join(" ")
           : name}
@@ -280,20 +280,15 @@ function SinglePrintNosa({
         <div>Copy Furnished: GSIS, DPSU</div>
       </div>
 
-      {/* Footer branding - in document flow for print */}
-      <div className="mt-6 pt-3 border-t-2 border-black flex items-start gap-4 text-xs">
+      {/* Footer - system generated, matches Print Advise Order */}
+      <div className="mt-6">
         <img
-          src="/logo3.png"
+          src="/images/footer_logo.png"
           alt=""
-          width={96}
-          height={96}
-          className="object-contain flex-shrink-0"
+          className="w-full h-auto object-contain"
         />
-        <div>
-          <div>DepEd Bldg., Palusapis Street, Poblacion, Bayugan City</div>
-          <div className="text-blue-600">deped.bayugan@gmail.com</div>
-          <div>Telephone Numbers: (085) 231-1496, (085) 231-1924</div>
-          <div>Mobile No: 0962-837-6334</div>
+        <div className="text-center text-sm italic text-gray-500">
+          This is a system generated document
         </div>
       </div>
     </div>

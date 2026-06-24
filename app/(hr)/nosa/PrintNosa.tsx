@@ -38,9 +38,9 @@ function SignatoryBlock({
       </div>
       <div className="font-bold border-t border-t-black mt-1 text-sm">
         {user
-          ? [user.lastname, user.firstname, user.middlename]
+          ? [user.firstname, user.middlename, user.lastname, user.suffix]
               .filter(Boolean)
-              .join(", ")
+              .join(" ")
           : name}
       </div>
       <div className="text-xs">{position}</div>
@@ -294,20 +294,15 @@ export const PrintNosa = React.forwardRef<
             </tr>
           </tbody>
         </table>
-        <div className="absolute bottom-0 w-full text-sm">
-          <div className="border-t-2 border-black flex items-start justify-start space-x-1">
-            <img
-              src="/deped_bayugan.png"
-              alt=""
-              width={120}
-              height={120}
-              className="object-contain"
-            />
-            <div className="mt-3">
-              <div>Lanzones Street, Poblacion, Bayugan City</div>
-              <div className="text-blue-500">deped.bayugan@gmail.com</div>
-              <div>Telephone Number: (085) 303 - 0664</div>
-            </div>
+        {/* Footer - system generated, matches Print Advise Order */}
+        <div className="mt-6">
+          <img
+            src="/images/footer_logo.png"
+            alt=""
+            className="w-full h-auto object-contain"
+          />
+          <div className="text-center text-sm italic text-gray-500">
+            This is a system generated document
           </div>
         </div>
       </div>

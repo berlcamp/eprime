@@ -126,6 +126,7 @@ export interface Employee {
   firstname: string;
   middlename: string;
   lastname: string;
+  suffix?: string;
   gender: string;
   password: string;
   email: string;
