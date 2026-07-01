@@ -312,9 +312,7 @@ const Page: React.FC = () => {
                       <Link
                         target="_blank"
                         className="text-blue-600 font-bold"
-                        href={`${
-                          process.env.NEXT_PUBLIC_BASE_URL ?? ''
-                        }/rankingies/${applicantDetails.id}`}
+                        href={`/rankingies/${applicantDetails.id}`}
                       >
                         Individual Evaluation Sheet (IES).
                       </Link>

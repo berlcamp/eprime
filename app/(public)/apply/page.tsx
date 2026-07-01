@@ -295,12 +295,8 @@ const Page: React.FC = () => {
                 You can upload supporting documents for your application using
                 this link{' '}
                 <Link
-                  href={`${
-                    process.env.NEXT_PUBLIC_BASE_URL ?? ''
-                  }/applicantstatus?code=${refCode}`}
-                >{`${
-                  process.env.NEXT_PUBLIC_BASE_URL ?? ''
-                }/applicantstatus?code=${refCode}`}</Link>
+                  href={`/applicantstatus?code=${refCode}`}
+                >{`/applicantstatus?code=${refCode}`}</Link>
               </div>
             )}
             {!isSuccess && (
