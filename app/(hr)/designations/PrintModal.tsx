@@ -21,7 +21,7 @@ const PrintModal = ({ item, hideModal }: ModalProps) => {
   const [errorMessage, setErrorMessage] = useState('')
   const [printing, setPrinting] = useState(false)
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (letterDate === '') {
       setErrorMessage('Letter date is required')
       return
@@ -30,9 +30,14 @@ const PrintModal = ({ item, hideModal }: ModalProps) => {
     setErrorMessage('')
     setPrinting(true)
 
-    void printLetter(item, letterDate, letterSubject, letterContent)
-
-    setPrinting(false)
+    try {
+      await printLetter(item, letterDate, letterSubject, letterContent)
+    } catch (e) {
+      console.error(e)
+      setErrorMessage('Failed to generate the PDF. Please try again.')
+    } finally {
+      setPrinting(false)
+    }
   }
 
   useEffect(() => {
