@@ -108,10 +108,10 @@ export async function printLetter (item: AssignmentTypes, letterDate: string, le
   const doc = new jsPDF({ unit: 'mm', format: [215.9, 330.2] })
 
   // Header Logo
-  const logo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/deped_logo.png`
-  const footerLogo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/footer_logo.png`
-  const rpText = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/rp_text.png`
-  const depedText = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/deped_text.png`
+  const logo = '/images/deped_logo.png'
+  const footerLogo = '/images/footer_logo.png'
+  const rpText = '/images/rp_text.png'
+  const depedText = '/images/deped_text.png'
 
   doc.addImage(logo, 'PNG', 93, 8, 25, 25)
   doc.addImage(rpText, 'PNG', 80, 35, 50, 4)
@@ -141,7 +141,7 @@ export async function printLetter (item: AssignmentTypes, letterDate: string, le
   y += 10
   const sdsSignaturePath = process.env.NEXT_PUBLIC_SDS_SIGNATURE ?? ''
   if (sdsSignaturePath) {
-    const sdsSignatureUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}${sdsSignaturePath}`
+    const sdsSignatureUrl = sdsSignaturePath
     doc.addImage(sdsSignatureUrl, 'PNG', 42, y, 26, 8)
     y += 13
   }

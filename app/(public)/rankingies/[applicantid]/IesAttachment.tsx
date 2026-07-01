@@ -15,14 +15,10 @@ export async function IesAttachment(item: ListTypes) {
   const doc = new jsPDF()
 
   // Header Logos
-  const logo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/deped_logo.png`
-  const bayuganLogo = `${
-    process.env.NEXT_PUBLIC_BASE_URL ?? ''
-  }/images/bayugan_logo.png`
-  const rpText = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/images/rp_text.png`
-  const depedText = `${
-    process.env.NEXT_PUBLIC_BASE_URL ?? ''
-  }/images/deped_text.png`
+  const logo = '/images/deped_logo.png'
+  const bayuganLogo = '/images/bayugan_logo.png'
+  const rpText = '/images/rp_text.png'
+  const depedText = '/images/deped_text.png'
 
   doc.addImage(logo, 'PNG', 93, 8, 25, 25)
   doc.addImage(rpText, 'PNG', 80, 35, 50, 4)
