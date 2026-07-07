@@ -10,6 +10,7 @@ import {
   ChartBarIcon,
   ChartBarSquareIcon,
   DocumentDuplicateIcon,
+  HeartIcon,
   HomeIcon,
   TableCellsIcon,
   TrophyIcon,
@@ -84,6 +85,15 @@ const MainMenu = () => {
             >
               <CalendarIcon className="w-6 h-6" />
               <div className="app__menu_item_label">My Service Credits</div>
+            </Link>
+            <Link
+              href={`/profile/${session?.user.id}?page=ape`}
+              className="app__menu_item"
+            >
+              <HeartIcon className="w-6 h-6" />
+              <div className="app__menu_item_label">
+                My Annual Physical Exam
+              </div>
             </Link>
             <div className="text-gray-700 text-lg font-semibold mt-10">
               Help and Support
@@ -178,6 +188,22 @@ const MainMenu = () => {
                   </div>
                 </Link>
               </>
+            )}
+            {hasAccess('medical_officer') && (
+              <Link href="/annualphysicalexams">
+                <div className="app__menu_item">
+                  <div className="pt-1">
+                    <HeartIcon className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <div className="app__menu_item_label">Medical Records</div>
+                    <div className="app__menu_item_label_description">
+                      Review employees&apos; Annual Physical Exams and record
+                      diagnoses.
+                    </div>
+                  </div>
+                </div>
+              </Link>
             )}
             <div className="pt-4">
               <hr />

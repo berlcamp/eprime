@@ -91,6 +91,12 @@ const Page: React.FC = () => {
                 />
                 <ChooseUsers
                   multiple={true}
+                  type="medical_officer"
+                  users={users}
+                  title="Medical Officers who can view Annual Physical Exams and record diagnoses"
+                />
+                <ChooseUsers
+                  multiple={true}
                   type="rsp_manager"
                   users={users}
                   title="Who can manage RSP"

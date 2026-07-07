@@ -18,6 +18,7 @@ import SearchUserInput from './SearchUserInput'
 import ShowMore from './ShowMore'
 import Sidebar from './Sidebar'
 import EmployeesSideBar from './Sidebars/EmployeesSideBar'
+import MedicalSideBar from './Sidebars/MedicalSideBar'
 import RecordsSideBar from './Sidebars/RecordsSideBar'
 import SettingsSideBar from './Sidebars/SettingsSideBar'
 import TrackerSideBar from './Sidebars/TrackerSideBar'
@@ -37,6 +38,7 @@ export {
   LeaveBalanceBoxes,
   LoginBox,
   MainMenu,
+  MedicalSideBar,
   OfflinePage,
   OneColLayoutLoading,
   OrganizationalStructure,

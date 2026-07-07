@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 'use client'
 
+import Ape from '@/components/Ape/Ape'
 import Cto from '@/components/Cto/Cto'
 import { Sidebar, Title, TopBar } from '@/components/index'
 import LeaveCard from '@/components/LeaveCard/LeaveCard'
@@ -377,6 +378,18 @@ export default function Page({ params }: { params: { id: string } }) {
                 </li>
                 <li>
                   <Link
+                    href={`/profile/${userId}?page=ape`}
+                    className={`app__profile_menu_link ${
+                      page === 'ape' ? 'bg-gray-700' : ''
+                    }`}
+                  >
+                    <span className="flex-1 ml-3 whitespace-nowrap">
+                      Annual Physical Exam
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href={`/profile/${userId}?page=nosi`}
                     className={`app__profile_menu_link ${
                       page === 'nosi' ? 'bg-gray-700' : ''
@@ -490,6 +503,7 @@ export default function Page({ params }: { params: { id: string } }) {
             {page && page === 'nosi' && <Nosi userId={userId} />}
             {page && page === 'nosa' && <Nosa userId={userId} />}
             {page && page === 'ctos' && <Cto userId={userId} />}
+            {page && page === 'ape' && <Ape userId={userId} />}
             {page && page === 'servicecredits' && (
               <ServiceCredits userId={userId} />
             )}

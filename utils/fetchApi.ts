@@ -1518,6 +1518,98 @@ export async function fetchMyCtos(
   }
 }
 
+export async function fetchApes(
+  filters: { filterKeyword?: string; filterYear?: string },
+  perPageCount: number,
+  rangeFrom: number,
+) {
+  try {
+    let query = supabase
+      .from("hrm_annual_physical_exams")
+      .select(
+        "*, hrm_users:hrm_user_id(id,firstname,middlename,lastname)",
+        { count: "exact" },
+      )
+      .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
+
+    // Search by employee name (resolve matching user ids first)
+    if (filters.filterKeyword && filters.filterKeyword !== "") {
+      const searchQuery: string = fullTextQuery(filters.filterKeyword);
+      const { data: users } = await supabase
+        .from("hrm_users")
+        .select("id")
+        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID)
+        .textSearch("fts", searchQuery);
+
+      const userIds = (users ?? []).map((u: { id: string }) => u.id);
+      // No matching users -> no results
+      query = query.in("hrm_user_id", userIds.length > 0 ? userIds : [""]);
+    }
+
+    // Filter by year of exam_date
+    if (filters.filterYear && filters.filterYear !== "") {
+      query = query
+        .gte("exam_date", `${filters.filterYear}-01-01`)
+        .lte("exam_date", `${filters.filterYear}-12-31`);
+    }
+
+    // Per Page from context
+    const from = rangeFrom;
+    const to = from + (perPageCount - 1);
+    query = query.range(from, to);
+
+    // Order By
+    query = query.order("created_at", { ascending: false });
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { data, count };
+  } catch (error) {
+    console.error("fetch apes error", error);
+    return { data: [], count: 0 };
+  }
+}
+
+export async function fetchMyApes(
+  filters: { userId: string },
+  perPageCount: number,
+  rangeFrom: number,
+) {
+  try {
+    let query = supabase
+      .from("hrm_annual_physical_exams")
+      .select(
+        "*, hrm_users:hrm_user_id(id,firstname,middlename,lastname)",
+        { count: "exact" },
+      )
+      .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID)
+      .eq("hrm_user_id", filters.userId);
+
+    // Per Page from context
+    const from = rangeFrom;
+    const to = from + (perPageCount - 1);
+    query = query.range(from, to);
+
+    // Order By
+    query = query.order("exam_date", { ascending: false });
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { data, count };
+  } catch (error) {
+    console.error("fetch my apes error", error);
+    return { data: [], count: 0 };
+  }
+}
+
 export async function fetchServiceRecords(
   userId: string,
   perPageCount: number,

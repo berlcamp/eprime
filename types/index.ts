@@ -409,6 +409,20 @@ export interface CtoUserTypes {
   remarks?: string;
 }
 
+export interface ApeTypes {
+  id: string;
+  org_id: string;
+  hrm_user_id: string;
+  hrm_users?: Employee;
+  exam_date: string;
+  remarks?: string;
+  fitness_result?: string;
+  diagnosis?: string;
+  diagnosed_by?: string;
+  diagnosed_at?: string;
+  created_at?: string;
+}
+
 export interface CtoTypes {
   reference_code: string;
   id: string;
