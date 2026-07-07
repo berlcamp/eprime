@@ -18,3 +18,29 @@ create table if not exists public.hrm_annual_physical_exams (
 
 create index if not exists idx_ape_org  on public.hrm_annual_physical_exams (org_id);
 create index if not exists idx_ape_user on public.hrm_annual_physical_exams (hrm_user_id);
+
+-- Row Level Security.
+-- Access is enforced in the app (profile ownership + medical_officer permission +
+-- lock-after-diagnosis); at the DB layer we simply allow any authenticated user to
+-- read/write, consistent with how the rest of the app talks to Supabase.
+alter table public.hrm_annual_physical_exams enable row level security;
+
+drop policy if exists "APE authenticated select" on public.hrm_annual_physical_exams;
+create policy "APE authenticated select"
+  on public.hrm_annual_physical_exams
+  for select to authenticated using (true);
+
+drop policy if exists "APE authenticated insert" on public.hrm_annual_physical_exams;
+create policy "APE authenticated insert"
+  on public.hrm_annual_physical_exams
+  for insert to authenticated with check (true);
+
+drop policy if exists "APE authenticated update" on public.hrm_annual_physical_exams;
+create policy "APE authenticated update"
+  on public.hrm_annual_physical_exams
+  for update to authenticated using (true) with check (true);
+
+drop policy if exists "APE authenticated delete" on public.hrm_annual_physical_exams;
+create policy "APE authenticated delete"
+  on public.hrm_annual_physical_exams
+  for delete to authenticated using (true);
