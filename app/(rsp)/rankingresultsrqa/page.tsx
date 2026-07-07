@@ -299,9 +299,42 @@ const Page: React.FC = () => {
     worksheet.columns = [
       { header: "No.", key: "number", width: 10 },
       { header: "Names of Applicant", key: "name", width: 25 },
+      { header: "Ranking", key: "ranking", width: 25 },
+      { header: "Ranking Type", key: "ranking_type", width: 20 },
+      { header: "Ranking Year", key: "ranking_year", width: 15 },
       { header: "Position", key: "position", width: 25 },
       { header: "Implementing Unit", key: "ius", width: 25 },
       { header: "Applicant Code", key: "code", width: 25 },
+      { header: "Email", key: "email", width: 25 },
+      { header: "Address", key: "address", width: 30 },
+      { header: "Age", key: "age", width: 10 },
+      { header: "Sex", key: "sex", width: 12 },
+      { header: "Civil Status", key: "civil_status", width: 15 },
+      { header: "Contact Number", key: "contact_number", width: 18 },
+      { header: "Religion", key: "religion", width: 18 },
+      { header: "Disability", key: "disability", width: 18 },
+      { header: "Special Skills", key: "special_skills", width: 25 },
+      { header: "Solo Parent", key: "solo_parent", width: 18 },
+      { header: "Member of Ethnic Group", key: "ethnicity", width: 25 },
+      { header: "Latin Honor", key: "latin_honor", width: 20 },
+      {
+        header: "Special Program Beneficiary",
+        key: "special_program_beneficiary",
+        width: 25,
+      },
+      { header: "Major", key: "major", width: 25 },
+      { header: "Current DepEd Employee", key: "current_employee", width: 20 },
+      {
+        header: "Current Position",
+        key: "current_position",
+        width: 25,
+      },
+      {
+        header: "Current Implementing Unit",
+        key: "current_ius",
+        width: 25,
+      },
+      { header: "Previous Applicant", key: "previous_applicant", width: 18 },
       ...allKeys.map((key) => ({ header: key, key, width: 15 })), // Dynamic columns
       { header: "Total", key: "overall_score", width: 15 },
       { header: "remarks", key: "remarks", width: 15 },
@@ -325,9 +358,52 @@ const Page: React.FC = () => {
     const data: any[] = list.map((item, index) => ({
       number: index + 1,
       name: `${item.applicant.lastname}, ${item.applicant.firstname} ${item.applicant.middlename}`,
+      ranking: `${item.applicant.ranking?.position?.name ?? "N/A"}`,
+      ranking_type: `${item.applicant.ranking?.type ?? ""}`,
+      ranking_year: `${item.applicant.ranking?.year ?? ""}`,
       position: `${item.applicant.hrm_item?.hrm_position?.name ?? "N/A"}`,
       ius: `${item.applicant.hrm_item?.implementing_unit?.name ?? "N/A"}`,
       code: `${item.applicant.code}`,
+      email: `${item.applicant.email ?? ""}`,
+      address: `${item.applicant.address ?? ""}`,
+      age: `${item.applicant.age ?? ""}`,
+      sex: `${item.applicant.sex ?? ""}`,
+      civil_status: `${item.applicant.civil_status ?? ""}`,
+      contact_number: `${item.applicant.contact_number ?? ""}`,
+      religion: `${item.applicant.religion ?? ""}`,
+      disability: `${item.applicant.disability ?? ""}`,
+      special_skills: `${item.applicant.special_skills ?? ""}`,
+      solo_parent: `${item.applicant.solo_parent ?? ""}${
+        item.applicant.solo_parent_detail
+          ? ` - ${item.applicant.solo_parent_detail}`
+          : ""
+      }`,
+      ethnicity: `${item.applicant.ethnicity ?? ""}${
+        item.applicant.ethnicity_detail
+          ? ` - ${item.applicant.ethnicity_detail}`
+          : ""
+      }`,
+      latin_honor: `${item.applicant.latin_honor_yesno ?? ""}${
+        item.applicant.latin_honor ? ` - ${item.applicant.latin_honor}` : ""
+      }`,
+      special_program_beneficiary: `${
+        item.applicant.special_program_beneficiary_yesno ?? ""
+      }${
+        item.applicant.special_program_beneficiary
+          ? ` - ${item.applicant.special_program_beneficiary}`
+          : ""
+      }`,
+      major: `${item.applicant.specific_major ?? ""}`,
+      current_employee: `${item.applicant.current_employee ?? ""}`,
+      current_position:
+        item.applicant.current_employee === "Yes"
+          ? `${item.applicant.hrm_item?.hrm_position?.name ?? ""}`
+          : "",
+      current_ius:
+        item.applicant.current_employee === "Yes"
+          ? `${item.applicant.hrm_item?.implementing_unit?.name ?? ""}`
+          : "",
+      previous_applicant: `${item.applicant.previous_applicant ?? ""}`,
       ...allKeys.reduce<Record<string, any>>((acc, key) => {
         acc[key] = item.accumulated_points?.[key] ?? "-"; // Use "-" if value is missing
         return acc;
