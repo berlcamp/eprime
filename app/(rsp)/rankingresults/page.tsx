@@ -300,7 +300,24 @@ const Page: React.FC = () => {
       { header: "Names of Applicant", key: "name", width: 25 },
       { header: "Position", key: "position", width: 25 },
       { header: "Implementing Unit", key: "ius", width: 25 },
-      { header: "Applicant Code", key: "code", width: 25 },
+      { header: "Application Code", key: "code", width: 25 },
+      { header: "Address", key: "address", width: 30 },
+      { header: "Age", key: "age", width: 10 },
+      { header: "Sex", key: "sex", width: 12 },
+      { header: "Civil Status", key: "civil_status", width: 15 },
+      { header: "Contact Number", key: "contact_number", width: 18 },
+      { header: "Religion", key: "religion", width: 20 },
+      { header: "Disability", key: "disability", width: 20 },
+      { header: "Special Skills", key: "special_skills", width: 25 },
+      { header: "Solo Parent", key: "solo_parent", width: 15 },
+      { header: "Member of Ethnic Group", key: "ethnicity", width: 25 },
+      { header: "Latin Honor", key: "latin_honor", width: 20 },
+      {
+        header: "Special Program Beneficiary?",
+        key: "special_program_beneficiary",
+        width: 25,
+      },
+      { header: "Major", key: "specific_major", width: 20 },
       ...allKeys.map((key) => ({ header: key, key, width: 15 })), // Dynamic columns
       { header: "Total", key: "overall_score", width: 15 },
       { header: "remarks", key: "remarks", width: 15 },
@@ -327,6 +344,25 @@ const Page: React.FC = () => {
       position: `${item.applicant.hrm_item?.hrm_position?.name ?? "N/A"}`,
       ius: `${item.applicant.hrm_item?.implementing_unit?.name ?? "N/A"}`,
       code: `${item.applicant.code}`,
+      address: item.applicant.address ?? "",
+      age: item.applicant.age ?? "",
+      sex: item.applicant.sex ?? "",
+      civil_status: item.applicant.civil_status ?? "",
+      contact_number: item.applicant.contact_number ?? "",
+      religion: item.applicant.religion ?? "",
+      disability: item.applicant.disability ?? "",
+      special_skills: item.applicant.special_skills ?? "",
+      solo_parent: item.applicant.solo_parent ?? "",
+      ethnicity: `${item.applicant.ethnicity ?? ""} ${
+        item.applicant.ethnicity_detail ?? ""
+      }`.trim(),
+      latin_honor: `${item.applicant.latin_honor_yesno ?? ""} ${
+        item.applicant.latin_honor ?? ""
+      }`.trim(),
+      special_program_beneficiary: `${
+        item.applicant.special_program_beneficiary_yesno ?? ""
+      } ${item.applicant.special_program_beneficiary ?? ""}`.trim(),
+      specific_major: item.applicant.specific_major ?? "",
       ...allKeys.reduce<Record<string, any>>((acc, key) => {
         acc[key] = item.accumulated_points?.[key] ?? "-"; // Use "-" if value is missing
         return acc;
