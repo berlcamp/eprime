@@ -1,6 +1,6 @@
 "use client";
 
-import AttachmentsModal from "@/components/Ape/AttachmentsModal";
+import MedicalFormModal from "@/components/Ape/MedicalFormModal";
 import {
   CustomButton,
   MedicalSideBar,
@@ -32,7 +32,7 @@ import { useDispatch, useSelector } from "react-redux";
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
-  const [showAttachmentsModal, setShowAttachmentsModal] = useState(false);
+  const [showMedicalFormModal, setShowMedicalFormModal] = useState(false);
 
   const [list, setList] = useState<ApeTypes[]>([]);
   const [filterKeyword, setFilterKeyword] = useState<string>("");
@@ -100,8 +100,8 @@ const Page: React.FC = () => {
     setEditData(item);
   };
 
-  const handleAttachments = (item: ApeTypes) => {
-    setShowAttachmentsModal(true);
+  const handleViewForm = (item: ApeTypes) => {
+    setShowMedicalFormModal(true);
     setEditData(item);
   };
 
@@ -164,7 +164,7 @@ const Page: React.FC = () => {
                     Employee
                   </th>
                   <th className="hidden md:table-cell app__th">Date of Exam</th>
-                  <th className="hidden md:table-cell app__th">Files</th>
+                  <th className="hidden md:table-cell app__th">Medical Form</th>
                   <th className="hidden md:table-cell app__th">
                     Fitness Result
                   </th>
@@ -207,9 +207,9 @@ const Page: React.FC = () => {
                       <td className="hidden md:table-cell app__td">
                         <CustomButton
                           containerStyles="app__btn_blue"
-                          title="View Files"
+                          title="View Form"
                           btnType="button"
-                          handleClick={() => handleAttachments(item)}
+                          handleClick={() => handleViewForm(item)}
                         />
                       </td>
                       <td className="hidden md:table-cell app__td">
@@ -263,12 +263,11 @@ const Page: React.FC = () => {
         />
       )}
 
-      {/* Attachments Modal (read-only for Medical Officer) */}
-      {showAttachmentsModal && (
-        <AttachmentsModal
+      {/* Medical Form Modal (read-only view of the employee's form + files) */}
+      {showMedicalFormModal && editData && (
+        <MedicalFormModal
           editData={editData}
-          readOnly={true}
-          hideModal={() => setShowAttachmentsModal(false)}
+          hideModal={() => setShowMedicalFormModal(false)}
         />
       )}
     </>
