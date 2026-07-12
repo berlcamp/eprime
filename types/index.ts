@@ -416,11 +416,72 @@ export interface ApeTypes {
   hrm_users?: Employee;
   exam_date: string;
   remarks?: string;
+  medical_history?: MedicalHistoryTypes;
   fitness_result?: string;
   diagnosis?: string;
+  medical_officer_remarks?: string;
   diagnosed_by?: string;
   diagnosed_at?: string;
   created_at?: string;
+}
+
+// DepEd "Medical History" form completed by the employee at APE creation.
+// "yes" | "no" | "" is used for Y/N answers; "" means unanswered.
+export interface MedicalHistoryPersonalHistoryItem {
+  value?: string; // "yes" | "no" | ""
+  remarks?: string;
+}
+
+export interface MedicalHistoryTypes {
+  header?: {
+    form_date?: string;
+    name?: string;
+    date_of_birth?: string;
+    age?: string;
+    gender?: string;
+    school_district_division?: string;
+    civil_status?: string;
+    position_designation?: string;
+    years_in_service?: string;
+  };
+  present_health?: {
+    cough?: string; // "" | "2wks" | "1 month" | "longer"
+    dizziness?: string;
+    dyspnea?: string;
+    chest_back_pain?: string;
+    easy_fatigability?: string;
+    joint_extremity_pains?: string;
+    blurring_of_vision?: string;
+    wearing_eyeglasses?: string;
+    vaginal_discharge_bleeding?: string;
+    lumps?: string;
+    painful_urination?: string;
+    poor_loss_of_hearing?: string;
+    syncope_fainting?: string;
+    convulsions?: string;
+    malaria?: string;
+    goiter?: string;
+    anemia?: string;
+    others?: string;
+    present_medication?: string;
+  };
+  personal_history?: Record<string, MedicalHistoryPersonalHistoryItem>;
+  social_history?: {
+    smoking?: string;
+    smoking_age_started?: string;
+    smoking_sticks_per_day?: string;
+    smoking_packs_per_year?: string;
+    alcohol?: string;
+    alcohol_how_often?: string;
+    food_preference?: string;
+    other_remarks?: string;
+  };
+  obgyn_history?: {
+    menopause?: string;
+    cycle?: string;
+    duration?: string;
+    dysmenorrhea?: string;
+  };
 }
 
 export interface CtoTypes {

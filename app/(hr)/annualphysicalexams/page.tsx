@@ -232,7 +232,7 @@ const Page: React.FC = () => {
                           title={
                             item.diagnosed_at
                               ? "Edit Diagnosis"
-                              : "Add Diagnosis"
+                              : "Review & Diagnose"
                           }
                           btnType="button"
                           handleClick={() => handleDiagnose(item)}

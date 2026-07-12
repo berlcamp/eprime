@@ -4,7 +4,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import { CustomButton } from "@/components/index";
 import { useFilter } from "@/context/FilterContext";
 import { useSupabase } from "@/context/SupabaseProvider";
-import { ArrowDownTrayIcon } from "@heroicons/react/24/solid";
+import { EyeIcon } from "@heroicons/react/24/solid";
 import { useCallback, useEffect, useState } from "react";
 import { type FileWithPath, useDropzone } from "react-dropzone";
 import uuid from "react-uuid";
@@ -135,23 +135,20 @@ export default function AttachmentsModal({
     </div>
   ));
 
-  const handleDownloadFile = async (file: string) => {
+  // Open the attachment in a new browser tab for viewing (no forced download).
+  const handleViewFile = async (file: string) => {
     if (!editData) return;
 
-    const { data } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from("hrm")
-      .download(`annual_physical_exams/${editData.id}/${file}`);
+      .createSignedUrl(`annual_physical_exams/${editData.id}/${file}`, 300);
 
-    if (data) {
-      const url = window.URL.createObjectURL(data);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", file);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+    if (error || !data?.signedUrl) {
+      setToast("error", "Unable to open the file. Please try again.");
+      return;
     }
+
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   };
 
   const handleConfirm = async () => {
@@ -301,11 +298,12 @@ export default function AttachmentsModal({
                           >
                             <div
                               onClick={async () =>
-                                await handleDownloadFile(file.name)
+                                await handleViewFile(file.name)
                               }
                               className="flex space-x-2 items-center cursor-pointer"
+                              title="View in browser"
                             >
-                              <ArrowDownTrayIcon className="w-4 h-4 text-blue-700" />
+                              <EyeIcon className="w-4 h-4 text-blue-700" />
                               {file.name.length > 11 ? (
                                 <span className="text-blue-500 text-xs">
                                   {file.name.charAt(0)}...{file.name.slice(-10)}
