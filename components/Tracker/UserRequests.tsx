@@ -31,6 +31,7 @@ import { useReactToPrint } from 'react-to-print'
 import { PrintLeaveForm } from '../Printables/PrintLeaveForm'
 import { PrintLocatorSlipForm } from '../Printables/PrintLocatorSlipForm'
 import { PrintPassSlipForm } from '../Printables/PrintPassSlipForm'
+import { PrintServiceRecord } from '../Printables/PrintServiceRecord'
 import { PrintTravelForm } from '../Printables/PrintTravelForm'
 import { PrintUndertimeForm } from '../Printables/PrintUndertimeForm'
 
@@ -183,10 +184,37 @@ export default function UserRequests({
     setLoading(false)
   }
 
-  const handlePrint = (item: DocumentTypes) => {
+  const handlePrint = async (item: DocumentTypes) => {
     setSelectedItem(null) // Temporarily set selectedItem to null to unmount the content
+
+    let placeOfBirth = ''
+    let serviceRecordsData: any[] = []
+
+    if (item.type === 'Service Record Print Request') {
+      // place of birth from PDS
+      const { data: pds } = await supabase
+        .from('hrm_pds')
+        .select()
+        .eq('user_id', item.created_by)
+        .maybeSingle()
+
+      // Service records, sorted chronologically by the "from" column
+      const { data: sr } = await supabase
+        .from('hrm_service_records')
+        .select()
+        .eq('user_id', item.created_by)
+        .order('from', { ascending: true })
+
+      placeOfBirth = pds ? pds.place_of_birth : ''
+      serviceRecordsData = sr ?? []
+    }
+
     setTimeout(() => {
-      setSelectedItem(item) // Set the new item after a short delay
+      setSelectedItem({
+        ...item,
+        print_place_of_birth: placeOfBirth,
+        print_service_records: serviceRecordsData
+      }) // Set the new item after a short delay
       setTimeout(() => {
         printFn() // Trigger the print function after re-rendering the new content
       }, 100) // Adjust this delay if needed
@@ -498,6 +526,11 @@ export default function UserRequests({
       {selectedItem && selectedItem.type === 'Travel Authority' && (
         <PrintTravelForm selectedItem={selectedItem} ref={componentRef} />
       )}
+      {/* Print Service Record */}
+      {selectedItem &&
+        selectedItem.type === 'Service Record Print Request' && (
+          <PrintServiceRecord selectedItem={selectedItem} ref={componentRef} />
+        )}
     </div>
   )
 }

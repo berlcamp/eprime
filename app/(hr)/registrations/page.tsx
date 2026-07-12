@@ -123,19 +123,25 @@ const Page: React.FC = () => {
         dispatch(updateList(updatedList))
 
         setToast('success', 'An email has been sent to newly approved user.')
-        setApproving(false)
+        router.refresh()
       })
       .catch(function (error) {
+        const message =
+          error?.response?.data?.error ??
+          'Failed to approve registration. Please try again.'
+
         void logError(
           'Approving registration',
           'hrm_registrations',
           JSON.stringify(item),
-          JSON.stringify(error)
+          JSON.stringify(error?.response?.data ?? error)
         )
         console.error(error)
+        setToast('error', message)
       })
-
-    router.refresh()
+      .finally(function () {
+        setApproving(false)
+      })
   }
 
   const handleDelete = (id: string) => {
