@@ -428,10 +428,15 @@ export default function DetailsModal({
       date_approved: format(new Date(), "yyyy-MM-dd"),
     };
     try {
-      const { error } = await supabase
+      // Atomic guard: only approve if the request is still "Approval Recommended".
+      // Prevents a double-approval (and double credit/COC deduction) when the
+      // modal is opened from a stale list where the status hasn't refreshed.
+      const { data: updatedRows, error } = await supabase
         .from("hrm_request_trackers")
         .update(newData)
-        .eq("id", documentData.id);
+        .eq("id", documentData.id)
+        .eq("current_status", "Approval Recommended")
+        .select();
 
       if (error) {
         void logError(
@@ -445,6 +450,28 @@ export default function DetailsModal({
           "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
+      }
+
+      // No row matched → it was already approved (or no longer approvable).
+      // Bail out before deducting credits or inserting a duplicate log.
+      if (!updatedRows || updatedRows.length === 0) {
+        setToast(
+          "error",
+          "This request has already been approved or is no longer awaiting approval. Please reload the page.",
+        );
+
+        // Sync local + redux state to the real status so the button hides
+        const items = [...globallist];
+        const foundIndex = items.findIndex((x) => x.id === documentData.id);
+        if (foundIndex >= 0) {
+          items[foundIndex] = { ...items[foundIndex], ...newData };
+          dispatch(updateList(items));
+          setDocumentData(items[foundIndex]);
+        }
+
+        setUpdateStatusFlow(!updateStatusFlow);
+        setSaving(false);
+        return;
       }
 
       // Added log to latest tracker flow
@@ -1145,10 +1172,14 @@ export default function DetailsModal({
       current_approver_id: session?.user.id,
     };
     try {
-      const { error } = await supabase
+      // Atomic guard: only send back for reverification if the request is
+      // still "Approval Recommended".
+      const { data: updatedRows, error } = await supabase
         .from("hrm_request_trackers")
         .update(newData)
-        .eq("id", documentData.id);
+        .eq("id", documentData.id)
+        .eq("current_status", "Approval Recommended")
+        .select();
 
       if (error) {
         void logError(
@@ -1162,6 +1193,16 @@ export default function DetailsModal({
           "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        setToast(
+          "error",
+          "This request's status has changed. Please reload the page and try again.",
+        );
+        setUpdateStatusFlow(!updateStatusFlow);
+        setSaving(false);
+        return;
       }
 
       // Added log to latest tracker flow
@@ -1231,10 +1272,18 @@ export default function DetailsModal({
       date_recommeded: format(new Date(), "yyyy-MM-dd"),
     };
     try {
-      const { error } = await supabase
+      // Atomic guard: only recommend if the request hasn't already been
+      // recommended/approved/disapproved/cancelled, so a stale modal can't
+      // insert a duplicate "Approval Recommended" log.
+      const { data: updatedRows, error } = await supabase
         .from("hrm_request_trackers")
         .update(newData)
-        .eq("id", documentData.id);
+        .eq("id", documentData.id)
+        .neq("current_status", "Approval Recommended")
+        .neq("current_status", "Approved")
+        .neq("current_status", "Disapproved")
+        .neq("current_status", "Cancelled")
+        .select();
 
       if (error) {
         void logError(
@@ -1248,6 +1297,16 @@ export default function DetailsModal({
           "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        setToast(
+          "error",
+          "This request's status has changed. Please reload the page and try again.",
+        );
+        setUpdateStatusFlow(!updateStatusFlow);
+        setSaving(false);
+        return;
       }
 
       // Added log to latest tracker flow
@@ -1315,10 +1374,17 @@ export default function DetailsModal({
       current_approver_id: session?.user.id,
     };
     try {
-      const { error } = await supabase
+      // Atomic guard: only cancel if the request hasn't already reached a
+      // terminal status, so a stale modal can't insert a duplicate log or
+      // re-delete leave dates.
+      const { data: updatedRows, error } = await supabase
         .from("hrm_request_trackers")
         .update(newData)
-        .eq("id", documentData.id);
+        .eq("id", documentData.id)
+        .neq("current_status", "Approved")
+        .neq("current_status", "Disapproved")
+        .neq("current_status", "Cancelled")
+        .select();
 
       if (error) {
         void logError(
@@ -1332,6 +1398,16 @@ export default function DetailsModal({
           "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        setToast(
+          "error",
+          "This request's status has changed. Please reload the page and try again.",
+        );
+        setUpdateStatusFlow(!updateStatusFlow);
+        setSaving(false);
+        return;
       }
 
       // Added log to latest tracker flow
@@ -1396,10 +1472,17 @@ export default function DetailsModal({
       current_approver_id: session?.user.id,
     };
     try {
-      const { error } = await supabase
+      // Atomic guard: only disapprove if the request hasn't already reached a
+      // terminal status, so a stale modal can't insert a duplicate flow entry
+      // or re-delete leave dates.
+      const { data: updatedRows, error } = await supabase
         .from("hrm_request_trackers")
         .update(newData)
-        .eq("id", documentData.id);
+        .eq("id", documentData.id)
+        .neq("current_status", "Approved")
+        .neq("current_status", "Disapproved")
+        .neq("current_status", "Cancelled")
+        .select();
 
       if (error) {
         void logError(
@@ -1413,6 +1496,16 @@ export default function DetailsModal({
           "Saving failed, please reload the page and try again.",
         );
         throw new Error(error.message);
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        setToast(
+          "error",
+          "This request's status has changed. Please reload the page and try again.",
+        );
+        setUpdateStatusFlow(!updateStatusFlow);
+        setSaving(false);
+        return;
       }
 
       // add to tracker flow
