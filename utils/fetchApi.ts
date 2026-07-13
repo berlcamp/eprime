@@ -1518,8 +1518,53 @@ export async function fetchMyCtos(
   }
 }
 
+// Resolve which users should be notified about an employee's APE submission:
+// all Physical Exam Managers plus the Medical Officers assigned to the
+// employee's school. Returns a de-duplicated list of user ids.
+export async function getApeNotifiableUserIds(
+  employeeUserId: string,
+): Promise<string[]> {
+  const userIds = new Set<string>();
+
+  try {
+    // Physical Exam Managers (org-wide).
+    const { data: managers } = await supabase
+      .from("hrm_system_access")
+      .select("user_id")
+      .eq("type", "physical_exam_manager")
+      .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
+
+    (managers ?? []).forEach((m: any) => userIds.add(m.user_id));
+
+    // Medical Officers assigned to the employee's school.
+    const { data: employee } = await supabase
+      .from("hrm_users")
+      .select("school_id")
+      .eq("id", employeeUserId)
+      .maybeSingle();
+
+    if (employee?.school_id) {
+      const { data: officers } = await supabase
+        .from("hrm_medical_officers")
+        .select("user_id, hrm_medical_officer_schools!inner(school_id)")
+        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID)
+        .eq("hrm_medical_officer_schools.school_id", employee.school_id);
+
+      (officers ?? []).forEach((o: any) => userIds.add(o.user_id));
+    }
+  } catch (e) {
+    console.error("getApeNotifiableUserIds error", e);
+  }
+
+  return Array.from(userIds);
+}
+
 export async function fetchApes(
-  filters: { filterKeyword?: string; filterYear?: string },
+  filters: {
+    filterKeyword?: string;
+    filterYear?: string;
+    schoolIds?: string[]; // when set, only exams from employees in these schools
+  },
   perPageCount: number,
   rangeFrom: number,
 ) {
@@ -1531,6 +1576,23 @@ export async function fetchApes(
         { count: "exact" },
       )
       .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
+
+    // Scope to a Medical Officer's assigned school(s): resolve the employees
+    // belonging to those schools and restrict the exams to them.
+    if (filters.schoolIds) {
+      const schoolIds = filters.schoolIds;
+      const { data: schoolUsers } = await supabase
+        .from("hrm_users")
+        .select("id")
+        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID)
+        .in("school_id", schoolIds.length > 0 ? schoolIds : ["-1"]);
+
+      const schoolUserIds = (schoolUsers ?? []).map((u: { id: string }) => u.id);
+      query = query.in(
+        "hrm_user_id",
+        schoolUserIds.length > 0 ? schoolUserIds : [""],
+      );
+    }
 
     // Search by employee name (resolve matching user ids first)
     if (filters.filterKeyword && filters.filterKeyword !== "") {

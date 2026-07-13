@@ -13,18 +13,34 @@ const MedicalSideBar = () => {
   const [pendingCount, setPendingCount] = useState("");
 
   const { hasAccess } = useFilter();
-  const { supabase, session } = useSupabase();
+  const { supabase, session, medicalOfficer } = useSupabase();
 
-  const canAccess =
-    hasAccess("medical_officer") ||
-    superAdmins.includes(session?.user.email ?? "");
+  const isSuperAdmin = superAdmins.includes(session?.user.email ?? "");
+  const isManager = hasAccess("physical_exam_manager") || isSuperAdmin;
+  const canAccess = isManager || medicalOfficer?.isOfficer;
 
   const counter = async () => {
-    const { count } = await supabase
+    let query = supabase
       .from("hrm_annual_physical_exams")
       .select("id", { count: "exact" })
       .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID)
       .is("diagnosed_at", null);
+
+    // A Medical Officer (who is not a manager) only counts exams from the
+    // employees belonging to their assigned school(s).
+    if (!isManager && medicalOfficer?.isOfficer) {
+      const schoolIds = medicalOfficer.schoolIds ?? [];
+      const { data: users } = await supabase
+        .from("hrm_users")
+        .select("id")
+        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID)
+        .in("school_id", schoolIds.length > 0 ? schoolIds : ["-1"]);
+
+      const userIds = (users ?? []).map((u: { id: string }) => u.id);
+      query = query.in("hrm_user_id", userIds.length > 0 ? userIds : [""]);
+    }
+
+    const { count } = await query;
 
     if (count && count > 0) setPendingCount(`For Diagnosis (${count})`);
   };
@@ -61,6 +77,20 @@ const MedicalSideBar = () => {
           )}
         </Link>
       </li>
+      {isManager && (
+        <li>
+          <Link
+            href="/medicalofficers"
+            className={`app__menu_link ${
+              currentRoute === "/medicalofficers" ? "app_menu_link_active" : ""
+            }`}
+          >
+            <span className="flex-1 ml-3 whitespace-nowrap">
+              Medical Officers
+            </span>
+          </Link>
+        </li>
+      )}
     </ul>
   );
 };

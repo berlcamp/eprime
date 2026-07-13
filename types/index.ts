@@ -425,6 +425,26 @@ export interface ApeTypes {
   created_at?: string;
 }
 
+// A user flagged as a Medical Officer, managed by a Physical Exam Manager.
+// Assigned to one or more schools; only sees APEs from employees in those schools.
+export interface MedicalOfficerTypes {
+  id: string;
+  org_id: string;
+  user_id: string;
+  hrm_user?: Employee;
+  hrm_medical_officer_schools?: MedicalOfficerSchoolTypes[];
+  created_at?: string;
+}
+
+export interface MedicalOfficerSchoolTypes {
+  id: string;
+  org_id: string;
+  medical_officer_id: string;
+  school_id: string;
+  hrm_schools?: SchoolTypes;
+  created_at?: string;
+}
+
 // DepEd "Medical History" form completed by the employee at APE creation.
 // "yes" | "no" | "" is used for Y/N answers; "" means unanswered.
 export interface MedicalHistoryPersonalHistoryItem {
@@ -481,6 +501,11 @@ export interface MedicalHistoryTypes {
     cycle?: string;
     duration?: string;
     dysmenorrhea?: string;
+    lmp?: string;
+    gravida?: string;
+    parity?: string;
+    abortion?: string;
+    living?: string;
   };
 }
 

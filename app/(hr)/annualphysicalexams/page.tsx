@@ -1,6 +1,5 @@
 "use client";
 
-import MedicalFormModal from "@/components/Ape/MedicalFormModal";
 import {
   CustomButton,
   MedicalSideBar,
@@ -32,7 +31,6 @@ import { useDispatch, useSelector } from "react-redux";
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
-  const [showMedicalFormModal, setShowMedicalFormModal] = useState(false);
 
   const [list, setList] = useState<ApeTypes[]>([]);
   const [filterKeyword, setFilterKeyword] = useState<string>("");
@@ -45,15 +43,26 @@ const Page: React.FC = () => {
   const resultsCounter = useSelector((state: any) => state.results.value);
   const dispatch = useDispatch();
 
-  const { session } = useSupabase();
+  const { session, medicalOfficer } = useSupabase();
   const { hasAccess } = useFilter();
+
+  const isManager =
+    hasAccess("physical_exam_manager") ||
+    superAdmins.includes(session?.user.email ?? "");
+
+  // Managers see all exams (org-wide). A Medical Officer who is not a manager is
+  // scoped to the employees of their assigned school(s).
+  const scopedSchoolIds =
+    !isManager && medicalOfficer?.isOfficer
+      ? medicalOfficer.schoolIds ?? []
+      : undefined;
 
   const fetchData = async () => {
     setLoading(true);
 
     try {
       const result = await fetchApes(
-        { filterKeyword, filterYear },
+        { filterKeyword, filterYear, schoolIds: scopedSchoolIds },
         perPageCount,
         0,
       );
@@ -76,7 +85,7 @@ const Page: React.FC = () => {
 
     try {
       const result = await fetchApes(
-        { filterKeyword, filterYear },
+        { filterKeyword, filterYear, schoolIds: scopedSchoolIds },
         perPageCount,
         list.length,
       );
@@ -100,11 +109,6 @@ const Page: React.FC = () => {
     setEditData(item);
   };
 
-  const handleViewForm = (item: ApeTypes) => {
-    setShowMedicalFormModal(true);
-    setEditData(item);
-  };
-
   // Update list whenever list in redux updates
   useEffect(() => {
     setList(globallist);
@@ -120,12 +124,8 @@ const Page: React.FC = () => {
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list;
 
-  // Check access from permission settings or Super Admins
-  if (
-    !hasAccess("medical_officer") &&
-    !superAdmins.includes(session?.user.email ?? "")
-  )
-    return <Unauthorized />;
+  // Check access: Physical Exam Managers, Super Admins, or Medical Officers.
+  if (!isManager && !medicalOfficer?.isOfficer) return <Unauthorized />;
 
   return (
     <>
@@ -164,7 +164,6 @@ const Page: React.FC = () => {
                     Employee
                   </th>
                   <th className="hidden md:table-cell app__th">Date of Exam</th>
-                  <th className="hidden md:table-cell app__th">Medical Form</th>
                   <th className="hidden md:table-cell app__th">
                     Fitness Result
                   </th>
@@ -205,14 +204,6 @@ const Page: React.FC = () => {
                         </div>
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        <CustomButton
-                          containerStyles="app__btn_blue"
-                          title="View Form"
-                          btnType="button"
-                          handleClick={() => handleViewForm(item)}
-                        />
-                      </td>
-                      <td className="hidden md:table-cell app__td">
                         {item.fitness_result ? (
                           <span className="app__status_container_green">
                             {item.fitness_result}
@@ -240,7 +231,7 @@ const Page: React.FC = () => {
                       </td>
                     </tr>
                   ))}
-                {loading && <TableRowLoading cols={6} rows={2} />}
+                {loading && <TableRowLoading cols={5} rows={2} />}
               </tbody>
             </table>
             {!loading && isDataEmpty && (
@@ -260,14 +251,6 @@ const Page: React.FC = () => {
         <DiagnosisModal
           editData={editData}
           hideModal={() => setShowDiagnosisModal(false)}
-        />
-      )}
-
-      {/* Medical Form Modal (read-only view of the employee's form + files) */}
-      {showMedicalFormModal && editData && (
-        <MedicalFormModal
-          editData={editData}
-          hideModal={() => setShowMedicalFormModal(false)}
         />
       )}
     </>

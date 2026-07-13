@@ -16,6 +16,7 @@ interface ClientProvidersProps {
   systemUsers: any
   systemSchools: any
   systemOffices: any
+  medicalOfficer: any
   children: ReactNode
 }
 
@@ -25,7 +26,8 @@ export default function ClientProviders({
   systemAccess,
   systemUsers,
   systemSchools,
-  systemOffices
+  systemOffices,
+  medicalOfficer
 }: ClientProvidersProps) {
   return (
     <SupabaseProvider
@@ -34,6 +36,7 @@ export default function ClientProviders({
       systemUsers={systemUsers}
       systemSchools={systemSchools}
       systemOffices={systemOffices}
+      medicalOfficer={medicalOfficer}
     >
       <SupabaseListener serverAccessToken={session?.access_token} />
       <Suspense>

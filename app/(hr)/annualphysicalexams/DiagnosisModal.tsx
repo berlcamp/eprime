@@ -238,6 +238,21 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
                 </div>
 
                 <div className="w-full">
+                  <div className="app__label_standard">Diagnosis</div>
+                  <textarea
+                    {...register("diagnosis", { required: true })}
+                    rows={5}
+                    placeholder="Enter diagnosis"
+                    className="app__select_standard"
+                  />
+                  {errors.diagnosis && (
+                    <div className="app__error_message">
+                      Diagnosis is required
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-full">
                   <div className="app__label_standard">Fitness Result</div>
                   <select
                     {...register("fitness_result", { required: true })}
@@ -265,21 +280,6 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
                     placeholder="Additional remarks (optional)"
                     className="app__select_standard"
                   />
-                </div>
-
-                <div className="w-full">
-                  <div className="app__label_standard">Diagnosis</div>
-                  <textarea
-                    {...register("diagnosis", { required: true })}
-                    rows={5}
-                    placeholder="Enter diagnosis"
-                    className="app__select_standard"
-                  />
-                  {errors.diagnosis && (
-                    <div className="app__error_message">
-                      Diagnosis is required
-                    </div>
-                  )}
                 </div>
               </div>
 

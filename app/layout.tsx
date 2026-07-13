@@ -32,6 +32,10 @@ export default async function RootLayout({
   let sysAccess: UserAccessTypes[] | null = []
   let sysSchools: SchoolTypes[] | null = []
   let sysOffices: Office[] | null = []
+  let medicalOfficer: {
+    isOfficer: boolean
+    schoolIds: string[]
+  } = { isOfficer: false, schoolIds: [] }
 
   if (session) {
     try {
@@ -92,6 +96,24 @@ export default async function RootLayout({
         throw new Error(error4.message)
       }
 
+      // Current user's Medical Officer assignment (if any). Used to scope the
+      // Annual Physical Exams page to their assigned school(s).
+      const { data: mo } = await supabase
+        .from('hrm_medical_officers')
+        .select('id, hrm_medical_officer_schools(school_id)')
+        .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID)
+        .eq('user_id', session.user.id)
+        .maybeSingle()
+
+      if (mo) {
+        medicalOfficer = {
+          isOfficer: true,
+          schoolIds: (mo.hrm_medical_officer_schools ?? []).map((s: any) =>
+            s.school_id.toString()
+          )
+        }
+      }
+
       sysAccess = systemAccess
       sysUsers = systemUsers
       sysSchools = schools
@@ -143,6 +165,7 @@ export default async function RootLayout({
           systemUsers={sysUsers}
           systemSchools={sysSchools}
           systemOffices={sysOffices}
+          medicalOfficer={medicalOfficer}
         >
           {children}
         </ClientProviders>

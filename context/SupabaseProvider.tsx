@@ -12,6 +12,7 @@ interface SupabaseContextType {
   systemUsers: any
   systemSchools: any
   systemOffices: any
+  medicalOfficer: { isOfficer: boolean; schoolIds: string[] }
 }
 
 // Define props expected by the provider
@@ -30,7 +31,8 @@ export default function SupabaseProvider({
   systemAccess,
   systemUsers,
   systemSchools,
-  systemOffices
+  systemOffices,
+  medicalOfficer
 }: SupabaseProviderProps) {
   const [supabase] = useState(() => createBrowserClient())
 
@@ -42,7 +44,8 @@ export default function SupabaseProvider({
         systemAccess,
         systemUsers,
         systemSchools,
-        systemOffices
+        systemOffices,
+        medicalOfficer
       }}
     >
       {children}

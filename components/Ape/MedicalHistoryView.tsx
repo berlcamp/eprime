@@ -321,6 +321,11 @@ export default function MedicalHistoryView({ medicalHistory }: Props) {
           <Field label="Cycle" value={obgyn.cycle} />
           <Field label="Duration" value={obgyn.duration} />
           <Field label="Dysmenorrhea" value={obgyn.dysmenorrhea} />
+          <Field label="LMP (Last Menstrual Period)" value={obgyn.lmp} />
+          <Field label="Gravida" value={obgyn.gravida} />
+          <Field label="Parity" value={obgyn.parity} />
+          <Field label="Abortion" value={obgyn.abortion} />
+          <Field label="Living" value={obgyn.living} />
         </div>
       </Section>
     </div>

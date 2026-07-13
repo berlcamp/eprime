@@ -14,7 +14,7 @@ import type { ApeTypes } from "@/types";
 // Redux imports
 import { updateList } from "@/GlobalRedux/Features/listSlice";
 import { updateResultCounter } from "@/GlobalRedux/Features/resultsCounterSlice";
-import { logError } from "@/utils/fetchApi";
+import { getApeNotifiableUserIds, logError } from "@/utils/fetchApi";
 import { XMarkIcon } from "@heroicons/react/20/solid";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -150,22 +150,17 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
     );
   };
 
-  // Notify Medical Officers that a new APE / Medical History form is ready to review.
+  // Notify the Physical Exam Managers and the Medical Officers assigned to the
+  // employee's school that a new APE / Medical History form is ready to review.
   const handleNotify = async (fullname: string, id: string) => {
     try {
-      const { data, error } = await supabase
-        .from("hrm_system_access")
-        .select("user_id")
-        .eq("type", "medical_officer")
-        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
+      const notifyUserIds = await getApeNotifiableUserIds(userId);
 
-      if (error) throw new Error(error.message);
-
-      const notificationData = (data ?? []).map((item: any) => ({
+      const notificationData = notifyUserIds.map((notifyUserId: string) => ({
         message: `${fullname} submitted an Annual Physical Exam (Medical History form). Kindly review and record a diagnosis.`,
         url: `/annualphysicalexams?ref=${id}`,
         type: "Annual Physical Exam",
-        user_id: item.user_id,
+        user_id: notifyUserId,
         reference_table: "hrm_annual_physical_exams",
       }));
 
@@ -757,6 +752,48 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
                   <div className="app__label_standard">Dysmenorrhea</div>
                   <input
                     {...register("medical_history.obgyn_history.dysmenorrhea")}
+                    type="text"
+                    className="app__select_standard"
+                  />
+                </div>
+                <div>
+                  <div className="app__label_standard">
+                    LMP (Last Menstrual Period)
+                  </div>
+                  <input
+                    {...register("medical_history.obgyn_history.lmp")}
+                    type="text"
+                    className="app__select_standard"
+                  />
+                </div>
+                <div>
+                  <div className="app__label_standard">Gravida</div>
+                  <input
+                    {...register("medical_history.obgyn_history.gravida")}
+                    type="text"
+                    className="app__select_standard"
+                  />
+                </div>
+                <div>
+                  <div className="app__label_standard">Parity</div>
+                  <input
+                    {...register("medical_history.obgyn_history.parity")}
+                    type="text"
+                    className="app__select_standard"
+                  />
+                </div>
+                <div>
+                  <div className="app__label_standard">Abortion</div>
+                  <input
+                    {...register("medical_history.obgyn_history.abortion")}
+                    type="text"
+                    className="app__select_standard"
+                  />
+                </div>
+                <div>
+                  <div className="app__label_standard">Living</div>
+                  <input
+                    {...register("medical_history.obgyn_history.living")}
                     type="text"
                     className="app__select_standard"
                   />

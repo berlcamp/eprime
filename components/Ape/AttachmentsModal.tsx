@@ -11,6 +11,7 @@ import uuid from "react-uuid";
 
 // types
 import type { ApeTypes } from "@/types";
+import { getApeNotifiableUserIds } from "@/utils/fetchApi";
 import { XMarkIcon } from "@heroicons/react/20/solid";
 
 interface ModalProps {
@@ -207,22 +208,8 @@ export default function AttachmentsModal({
     if (!editData) return;
 
     try {
-      const userIds: string[] = [];
-
-      // Medical Officers
-      const { data, error } = await supabase
-        .from("hrm_system_access")
-        .select("user_id")
-        .eq("type", "medical_officer")
-        .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      data.forEach((item: any) => {
-        userIds.push(item.user_id);
-      });
+      // Physical Exam Managers + Medical Officers assigned to the employee's school.
+      const userIds = await getApeNotifiableUserIds(editData.hrm_user_id);
 
       const notificationData: any[] = [];
 

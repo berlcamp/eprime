@@ -26,9 +26,17 @@ const MainMenu = () => {
   const {
     systemSchools,
     systemOffices,
-    session
-  }: { systemSchools: SchoolTypes[]; systemOffices: Office[]; session: any } =
-    useSupabase()
+    session,
+    medicalOfficer
+  }: {
+    systemSchools: SchoolTypes[]
+    systemOffices: Office[]
+    session: any
+    medicalOfficer: { isOfficer: boolean; schoolIds: string[] }
+  } = useSupabase()
+
+  const canAccessMedical =
+    hasAccess('physical_exam_manager') || medicalOfficer?.isOfficer
 
   let schools: SchoolTypes[] = []
   let offices: Office[] = []
@@ -189,7 +197,7 @@ const MainMenu = () => {
                 </Link>
               </>
             )}
-            {hasAccess('medical_officer') && (
+            {canAccessMedical && (
               <Link href="/annualphysicalexams">
                 <div className="app__menu_item">
                   <div className="pt-1">
