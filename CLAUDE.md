@@ -415,6 +415,8 @@ Data and side-effect logic live in `utils/`:
 - `reset_annual_leave_credits`
 - `process_nosi`
 
+Scheduled daily via **pg_cron** inside Supabase (see `supabase/migrations/0008_schedule_pg_cron_jobs.sql`). `/api/cronann` remains only as a manual trigger from Settings → Cron Jobs.
+
 ---
 
 ## Constants Summary
