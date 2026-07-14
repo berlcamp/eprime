@@ -192,7 +192,19 @@ const Page: React.FC = () => {
                             Fitness Result: {item.fitness_result ?? "Pending"}
                           </div>
                           <div className="font-light">
-                            Diagnosis: {item.diagnosis ?? "Pending"}
+                            Diagnosis:{" "}
+                            {item.hrm_ape_diagnoses &&
+                            item.hrm_ape_diagnoses.length > 0
+                              ? item.hrm_ape_diagnoses
+                                  .map(
+                                    (d) =>
+                                      `${format(
+                                        new Date(d.diagnosis_date),
+                                        "MMM d, yyyy",
+                                      )}: ${d.diagnosis}`,
+                                  )
+                                  .join("; ")
+                              : item.diagnosis ?? "Pending"}
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -215,7 +227,31 @@ const Page: React.FC = () => {
                         )}
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        <div>{item.diagnosis}</div>
+                        {item.hrm_ape_diagnoses &&
+                        item.hrm_ape_diagnoses.length > 0 ? (
+                          <div className="space-y-1">
+                            {[...item.hrm_ape_diagnoses]
+                              .sort((a, b) =>
+                                a.diagnosis_date.localeCompare(
+                                  b.diagnosis_date,
+                                ),
+                              )
+                              .map((d) => (
+                                <div key={d.id}>
+                                  <span className="font-semibold text-xs">
+                                    {format(
+                                      new Date(d.diagnosis_date),
+                                      "MMM d, yyyy",
+                                    )}
+                                    :
+                                  </span>{" "}
+                                  {d.diagnosis}
+                                </div>
+                              ))}
+                          </div>
+                        ) : (
+                          <div>{item.diagnosis}</div>
+                        )}
                       </td>
                       <td className="hidden md:table-cell app__td">
                         <CustomButton

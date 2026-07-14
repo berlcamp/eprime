@@ -4,11 +4,13 @@ import { CustomButton } from "@/components/index";
 import { useFilter } from "@/context/FilterContext";
 import { useSupabase } from "@/context/SupabaseProvider";
 import { EyeIcon } from "@heroicons/react/24/solid";
+import { TrashIcon } from "@heroicons/react/20/solid";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 // Types
-import type { ApeTypes } from "@/types";
+import type { ApeDiagnosisTypes, ApeTypes } from "@/types";
 
 // Redux imports
 import { updateList } from "@/GlobalRedux/Features/listSlice";
@@ -22,11 +24,29 @@ interface ModalProps {
 
 const fitnessResults = ["Fit", "Fit with conditions", "Unfit"];
 
+// A diagnosis entry being edited in the modal. Entries without an id are new
+// (not yet saved to hrm_ape_diagnoses).
+interface DiagnosisEntry {
+  id?: string;
+  diagnosis: string;
+  diagnosis_date: string;
+  diagnosed_by_user?: ApeDiagnosisTypes["diagnosed_by_user"];
+}
+
 const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
   const { setToast } = useFilter();
   const { supabase, session } = useSupabase();
   const [saving, setSaving] = useState(false);
   const [attachments, setAttachments] = useState<Array<{ name: string }>>([]);
+
+  // Diagnosis history (multiple entries, each with its own date)
+  const [diagnoses, setDiagnoses] = useState<DiagnosisEntry[]>([]);
+  const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const [newDiagnosis, setNewDiagnosis] = useState("");
+  const [newDiagnosisDate, setNewDiagnosisDate] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
+  const [diagnosisError, setDiagnosisError] = useState("");
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value);
@@ -41,20 +61,98 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
     mode: "onSubmit",
   });
 
+  const handleAddDiagnosis = () => {
+    if (newDiagnosis.trim() === "") {
+      setDiagnosisError("Enter a diagnosis before adding.");
+      return;
+    }
+    if (newDiagnosisDate === "") {
+      setDiagnosisError("Choose a date for this diagnosis.");
+      return;
+    }
+
+    setDiagnoses([
+      ...diagnoses,
+      { diagnosis: newDiagnosis.trim(), diagnosis_date: newDiagnosisDate },
+    ]);
+    setNewDiagnosis("");
+    setNewDiagnosisDate(format(new Date(), "yyyy-MM-dd"));
+    setDiagnosisError("");
+  };
+
+  const handleRemoveDiagnosis = (index: number) => {
+    const entry = diagnoses[index];
+    if (entry.id) {
+      setRemovedIds([...removedIds, entry.id]);
+    }
+    setDiagnoses(diagnoses.filter((_, i) => i !== index));
+  };
+
   const onSubmit = async (formdata: ApeTypes) => {
     if (saving) return;
 
+    if (diagnoses.length === 0) {
+      setDiagnosisError("Add at least one diagnosis.");
+      return;
+    }
+
     setSaving(true);
+
+    // Latest entry (by date) is mirrored to the legacy diagnosis column so older
+    // views/exports keep working.
+    const sorted = [...diagnoses].sort((a, b) =>
+      a.diagnosis_date.localeCompare(b.diagnosis_date),
+    );
+    const latest = sorted[sorted.length - 1];
 
     const newData = {
       fitness_result: formdata.fitness_result,
       medical_officer_remarks: formdata.medical_officer_remarks ?? "",
-      diagnosis: formdata.diagnosis ?? "",
+      diagnosis: latest.diagnosis,
       diagnosed_by: session?.user.id,
       diagnosed_at: new Date(),
     };
 
     try {
+      // Remove deleted diagnosis entries
+      if (removedIds.length > 0) {
+        const { error } = await supabase
+          .from("hrm_ape_diagnoses")
+          .delete()
+          .in("id", removedIds);
+        if (error) throw new Error(error.message);
+      }
+
+      // Insert newly added diagnosis entries
+      const newEntries = diagnoses.filter((d) => !d.id);
+      let insertedEntries: ApeDiagnosisTypes[] = [];
+      if (newEntries.length > 0) {
+        const { data, error } = await supabase
+          .from("hrm_ape_diagnoses")
+          .insert(
+            newEntries.map((d) => ({
+              org_id: process.env.NEXT_PUBLIC_ORG_ID,
+              ape_id: editData.id,
+              diagnosis: d.diagnosis,
+              diagnosis_date: d.diagnosis_date,
+              diagnosed_by: session?.user.id,
+            })),
+          )
+          .select(
+            "id,ape_id,diagnosis,diagnosis_date,diagnosed_by,diagnosed_by_user:diagnosed_by(id,firstname,middlename,lastname)",
+          );
+        if (error) {
+          void logError(
+            "Diagnose APE",
+            "hrm_ape_diagnoses",
+            JSON.stringify(newEntries),
+            error.message,
+          );
+          throw new Error(error.message);
+        }
+        insertedEntries = (data ?? []) as unknown as ApeDiagnosisTypes[];
+      }
+
       const { error } = await supabase
         .from("hrm_annual_physical_exams")
         .update(newData)
@@ -67,15 +165,19 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
           JSON.stringify(newData),
           error.message,
         );
-        setToast(
-          "error",
-          "Saving failed, please reload the page and try again.",
-        );
         throw new Error(error.message);
       }
 
       // Notify the employee
       await handleNotify();
+
+      // Rebuild the full diagnosis history for redux (kept entries + new inserts)
+      const keptEntries = (editData.hrm_ape_diagnoses ?? []).filter(
+        (d) => !removedIds.includes(d.id),
+      );
+      const updatedDiagnoses = [...keptEntries, ...insertedEntries].sort(
+        (a, b) => a.diagnosis_date.localeCompare(b.diagnosis_date),
+      );
 
       // Update data in redux
       const items = [...globallist];
@@ -84,6 +186,7 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
         ...items[foundIndex],
         ...newData,
         diagnosed_at: new Date().toISOString(),
+        hrm_ape_diagnoses: updatedDiagnoses,
       };
       dispatch(updateList(items));
 
@@ -93,6 +196,7 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
       reset();
     } catch (e) {
       console.error(e);
+      setToast("error", "Saving failed, please reload the page and try again.");
       setSaving(false);
     }
   };
@@ -156,8 +260,21 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
     reset({
       fitness_result: editData.fitness_result ?? "",
       medical_officer_remarks: editData.medical_officer_remarks ?? "",
-      diagnosis: editData.diagnosis ?? "",
     });
+    setDiagnoses(
+      [...(editData.hrm_ape_diagnoses ?? [])]
+        .sort((a, b) => a.diagnosis_date.localeCompare(b.diagnosis_date))
+        .map((d) => ({
+          id: d.id,
+          diagnosis: d.diagnosis,
+          diagnosis_date: d.diagnosis_date,
+          diagnosed_by_user: d.diagnosed_by_user,
+        })),
+    );
+    setRemovedIds([]);
+    setNewDiagnosis("");
+    setNewDiagnosisDate(format(new Date(), "yyyy-MM-dd"));
+    setDiagnosisError("");
   }, [editData, reset]);
 
   return (
@@ -238,17 +355,82 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
                 </div>
 
                 <div className="w-full">
-                  <div className="app__label_standard">Diagnosis</div>
-                  <textarea
-                    {...register("diagnosis", { required: true })}
-                    rows={5}
-                    placeholder="Enter diagnosis"
-                    className="app__select_standard"
-                  />
-                  {errors.diagnosis && (
-                    <div className="app__error_message">
-                      Diagnosis is required
+                  <div className="app__label_standard">Diagnosis History</div>
+
+                  {diagnoses.length === 0 ? (
+                    <div className="text-xs text-gray-500 italic mb-2">
+                      No diagnosis recorded yet. Add one below.
                     </div>
+                  ) : (
+                    <div className="flex flex-col gap-y-2 mb-2">
+                      {diagnoses.map((entry, index) => (
+                        <div
+                          key={entry.id ?? `new-${index}`}
+                          className="flex items-start justify-between gap-x-2 border rounded-md bg-white dark:bg-gray-800 p-2"
+                        >
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                              {format(
+                                new Date(entry.diagnosis_date),
+                                "MMM d, yyyy",
+                              )}
+                              {entry.diagnosed_by_user && (
+                                <span className="font-normal capitalize">
+                                  {" "}
+                                  &middot; {entry.diagnosed_by_user.firstname}{" "}
+                                  {entry.diagnosed_by_user.lastname}
+                                </span>
+                              )}
+                              {!entry.id && (
+                                <span className="ml-2 text-[10px] uppercase text-green-600 font-bold">
+                                  New
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm whitespace-pre-wrap">
+                              {entry.diagnosis}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDiagnosis(index)}
+                            className="text-red-500 hover:text-red-700 shrink-0"
+                            title="Remove this diagnosis"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add new diagnosis entry */}
+                  <div className="border rounded-md bg-white dark:bg-gray-800 p-2 space-y-2">
+                    <div className="app__label_standard">Add Diagnosis</div>
+                    <div className="flex flex-col md:flex-row gap-2">
+                      <input
+                        type="date"
+                        value={newDiagnosisDate}
+                        onChange={(e) => setNewDiagnosisDate(e.target.value)}
+                        className="app__select_standard md:w-44"
+                      />
+                      <textarea
+                        value={newDiagnosis}
+                        onChange={(e) => setNewDiagnosis(e.target.value)}
+                        rows={2}
+                        placeholder="Enter diagnosis"
+                        className="app__select_standard flex-1"
+                      />
+                      <CustomButton
+                        containerStyles="app__btn_blue md:self-start"
+                        title="Add"
+                        btnType="button"
+                        handleClick={handleAddDiagnosis}
+                      />
+                    </div>
+                  </div>
+                  {diagnosisError !== "" && (
+                    <div className="app__error_message">{diagnosisError}</div>
                   )}
                 </div>
 

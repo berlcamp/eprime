@@ -1572,7 +1572,7 @@ export async function fetchApes(
     let query = supabase
       .from("hrm_annual_physical_exams")
       .select(
-        "*, hrm_users:hrm_user_id(id,firstname,middlename,lastname)",
+        "*, hrm_users:hrm_user_id(id,firstname,middlename,lastname), hrm_ape_diagnoses(id,ape_id,diagnosis,diagnosis_date,diagnosed_by,diagnosed_by_user:diagnosed_by(id,firstname,middlename,lastname))",
         { count: "exact" },
       )
       .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
@@ -1645,7 +1645,7 @@ export async function fetchMyApes(
     let query = supabase
       .from("hrm_annual_physical_exams")
       .select(
-        "*, hrm_users:hrm_user_id(id,firstname,middlename,lastname)",
+        "*, hrm_users:hrm_user_id(id,firstname,middlename,lastname), hrm_ape_diagnoses(id,ape_id,diagnosis,diagnosis_date,diagnosed_by,diagnosed_by_user:diagnosed_by(id,firstname,middlename,lastname))",
         { count: "exact" },
       )
       .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID)

@@ -418,10 +418,24 @@ export interface ApeTypes {
   remarks?: string;
   medical_history?: MedicalHistoryTypes;
   fitness_result?: string;
-  diagnosis?: string;
+  diagnosis?: string; // legacy single diagnosis; history lives in hrm_ape_diagnoses
+  hrm_ape_diagnoses?: ApeDiagnosisTypes[];
   medical_officer_remarks?: string;
   diagnosed_by?: string;
   diagnosed_at?: string;
+  created_at?: string;
+}
+
+// One diagnosis entry for an APE record. A Medical Officer may record several
+// diagnoses per exam, each with its own date (diagnosis history).
+export interface ApeDiagnosisTypes {
+  id: string;
+  org_id: string;
+  ape_id: string;
+  diagnosis: string;
+  diagnosis_date: string;
+  diagnosed_by?: string;
+  diagnosed_by_user?: Employee;
   created_at?: string;
 }
 
