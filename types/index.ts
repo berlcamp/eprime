@@ -436,6 +436,19 @@ export interface ApeDiagnosisTypes {
   diagnosis_date: string;
   diagnosed_by?: string;
   diagnosed_by_user?: Employee;
+  hrm_ape_diagnosis_files?: ApeDiagnosisFileTypes[];
+  created_at?: string;
+}
+
+// An optional file (image/PDF) attached by the Medical Officer to one diagnosis
+// entry. file_path is the full path within the "hrm" storage bucket.
+export interface ApeDiagnosisFileTypes {
+  id: string;
+  org_id: string;
+  diagnosis_id: string;
+  file_name: string;
+  file_path: string;
+  uploaded_by?: string;
   created_at?: string;
 }
 

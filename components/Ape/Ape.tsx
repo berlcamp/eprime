@@ -21,6 +21,7 @@ import { Fragment, useEffect, useState } from "react";
 
 import AddEditModal from "./AddEditModal";
 import AttachmentsModal from "./AttachmentsModal";
+import DiagnosisFileLinks from "./DiagnosisFileLinks";
 
 // Types
 import type { ApeTypes } from "@/types";
@@ -295,6 +296,9 @@ export default function Ape({ userId }: { userId: string }) {
                                     :
                                   </span>{" "}
                                   {d.diagnosis}
+                                  <DiagnosisFileLinks
+                                    files={d.hrm_ape_diagnosis_files}
+                                  />
                                 </div>
                               ))}
                           </div>

@@ -1,16 +1,22 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import DiagnosisFileLinks from "@/components/Ape/DiagnosisFileLinks";
 import MedicalHistoryView from "@/components/Ape/MedicalHistoryView";
 import { CustomButton } from "@/components/index";
 import { useFilter } from "@/context/FilterContext";
 import { useSupabase } from "@/context/SupabaseProvider";
-import { EyeIcon } from "@heroicons/react/24/solid";
-import { TrashIcon } from "@heroicons/react/20/solid";
+import { EyeIcon, PaperClipIcon } from "@heroicons/react/24/solid";
+import { TrashIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import uuid from "react-uuid";
 
 // Types
-import type { ApeDiagnosisTypes, ApeTypes } from "@/types";
+import type {
+  ApeDiagnosisFileTypes,
+  ApeDiagnosisTypes,
+  ApeTypes,
+} from "@/types";
 
 // Redux imports
 import { updateList } from "@/GlobalRedux/Features/listSlice";
@@ -24,13 +30,18 @@ interface ModalProps {
 
 const fitnessResults = ["Fit", "Fit with conditions", "Unfit"];
 
+const maxFileSize = 5242880; // 5 MB in bytes
+
 // A diagnosis entry being edited in the modal. Entries without an id are new
-// (not yet saved to hrm_ape_diagnoses).
+// (not yet saved to hrm_ape_diagnoses); their attachments are held in newFiles
+// until the entry is inserted and the files can be uploaded under its id.
 interface DiagnosisEntry {
   id?: string;
   diagnosis: string;
   diagnosis_date: string;
   diagnosed_by_user?: ApeDiagnosisTypes["diagnosed_by_user"];
+  hrm_ape_diagnosis_files?: ApeDiagnosisFileTypes[];
+  newFiles?: File[];
 }
 
 const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
@@ -46,6 +57,7 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
   const [newDiagnosisDate, setNewDiagnosisDate] = useState(
     format(new Date(), "yyyy-MM-dd"),
   );
+  const [newFiles, setNewFiles] = useState<File[]>([]);
   const [diagnosisError, setDiagnosisError] = useState("");
 
   // Redux staff
@@ -61,6 +73,31 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
     mode: "onSubmit",
   });
 
+  // Stage the picked file/s for the diagnosis about to be added. Attachments are
+  // optional, so anything rejected here is reported without blocking the entry.
+  const handleSelectFiles = (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+
+    const picked = Array.from(fileList);
+    const tooLarge = picked.filter((f) => f.size > maxFileSize);
+    const accepted = picked.filter(
+      (f) =>
+        f.size <= maxFileSize &&
+        !newFiles.some((existing) => existing.name === f.name),
+    );
+
+    setNewFiles([...newFiles, ...accepted]);
+    setDiagnosisError(
+      tooLarge.length > 0
+        ? `Skipped ${tooLarge.length} file/s larger than 5MB.`
+        : "",
+    );
+  };
+
+  const handleRemoveNewFile = (name: string) => {
+    setNewFiles(newFiles.filter((f) => f.name !== name));
+  };
+
   const handleAddDiagnosis = () => {
     if (newDiagnosis.trim() === "") {
       setDiagnosisError("Enter a diagnosis before adding.");
@@ -73,10 +110,15 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
 
     setDiagnoses([
       ...diagnoses,
-      { diagnosis: newDiagnosis.trim(), diagnosis_date: newDiagnosisDate },
+      {
+        diagnosis: newDiagnosis.trim(),
+        diagnosis_date: newDiagnosisDate,
+        newFiles,
+      },
     ]);
     setNewDiagnosis("");
     setNewDiagnosisDate(format(new Date(), "yyyy-MM-dd"));
+    setNewFiles([]);
     setDiagnosisError("");
   };
 
@@ -114,8 +156,10 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
     };
 
     try {
-      // Remove deleted diagnosis entries
+      // Remove deleted diagnosis entries (their file rows cascade)
       if (removedIds.length > 0) {
+        await handleRemoveDiagnosisFiles(removedIds);
+
         const { error } = await supabase
           .from("hrm_ape_diagnoses")
           .delete()
@@ -123,14 +167,18 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
         if (error) throw new Error(error.message);
       }
 
-      // Insert newly added diagnosis entries
-      const newEntries = diagnoses.filter((d) => !d.id);
+      // Insert newly added diagnosis entries. Ids are generated here so each
+      // entry's staged files can be uploaded under a known diagnosis id.
+      const newEntries = diagnoses
+        .filter((d) => !d.id)
+        .map((d) => ({ ...d, id: uuid() }));
       let insertedEntries: ApeDiagnosisTypes[] = [];
       if (newEntries.length > 0) {
         const { data, error } = await supabase
           .from("hrm_ape_diagnoses")
           .insert(
             newEntries.map((d) => ({
+              id: d.id,
               org_id: process.env.NEXT_PUBLIC_ORG_ID,
               ape_id: editData.id,
               diagnosis: d.diagnosis,
@@ -151,6 +199,15 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
           throw new Error(error.message);
         }
         insertedEntries = (data ?? []) as unknown as ApeDiagnosisTypes[];
+
+        // Upload each new entry's attachments and record them.
+        const uploadedFiles = await handleUploadDiagnosisFiles(newEntries);
+        insertedEntries = insertedEntries.map((entry) => ({
+          ...entry,
+          hrm_ape_diagnosis_files: uploadedFiles.filter(
+            (f) => f.diagnosis_id === entry.id,
+          ),
+        }));
       }
 
       const { error } = await supabase
@@ -199,6 +256,73 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
       setToast("error", "Saving failed, please reload the page and try again.");
       setSaving(false);
     }
+  };
+
+  // Upload the staged attachments of freshly inserted diagnoses and record them in
+  // hrm_ape_diagnosis_files. Files live outside annual_physical_exams/{ape_id}/ so
+  // they don't show up in the employee's own exam attachment list.
+  const handleUploadDiagnosisFiles = async (
+    entries: DiagnosisEntry[],
+  ): Promise<ApeDiagnosisFileTypes[]> => {
+    const rows: Array<Omit<ApeDiagnosisFileTypes, "id" | "org_id">> = [];
+
+    for (const entry of entries) {
+      for (const file of entry.newFiles ?? []) {
+        const safeFileName = file.name
+          .replace(/\s+/g, "_")
+          .replace(/[^a-zA-Z0-9_.-]/g, "")
+          .toLowerCase();
+        const filePath = `ape_diagnoses/${entry.id}/${safeFileName}`;
+
+        const { error } = await supabase.storage
+          .from("hrm")
+          .upload(filePath, file);
+
+        if (error) throw new Error(error.message);
+
+        rows.push({
+          diagnosis_id: entry.id as string,
+          file_name: file.name,
+          file_path: filePath,
+          uploaded_by: session?.user.id,
+        });
+      }
+    }
+
+    if (rows.length === 0) return [];
+
+    const { data, error } = await supabase
+      .from("hrm_ape_diagnosis_files")
+      .insert(
+        rows.map((r) => ({ ...r, org_id: process.env.NEXT_PUBLIC_ORG_ID })),
+      )
+      .select("id,diagnosis_id,file_name,file_path");
+
+    if (error) {
+      void logError(
+        "Diagnose APE",
+        "hrm_ape_diagnosis_files",
+        JSON.stringify(rows),
+        error.message,
+      );
+      throw new Error(error.message);
+    }
+
+    return (data ?? []) as unknown as ApeDiagnosisFileTypes[];
+  };
+
+  // Best-effort cleanup of the stored files of deleted diagnoses. The DB rows go
+  // away on their own through the cascade on hrm_ape_diagnoses.
+  const handleRemoveDiagnosisFiles = async (ids: string[]) => {
+    const paths = (editData.hrm_ape_diagnoses ?? [])
+      .filter((d) => ids.includes(d.id))
+      .flatMap((d) => d.hrm_ape_diagnosis_files ?? [])
+      .map((f) => f.file_path);
+
+    if (paths.length === 0) return;
+
+    const { error } = await supabase.storage.from("hrm").remove(paths);
+    if (error) console.error(error);
   };
 
   const handleNotify = async () => {
@@ -269,11 +393,13 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
           diagnosis: d.diagnosis,
           diagnosis_date: d.diagnosis_date,
           diagnosed_by_user: d.diagnosed_by_user,
+          hrm_ape_diagnosis_files: d.hrm_ape_diagnosis_files,
         })),
     );
     setRemovedIds([]);
     setNewDiagnosis("");
     setNewDiagnosisDate(format(new Date(), "yyyy-MM-dd"));
+    setNewFiles([]);
     setDiagnosisError("");
   }, [editData, reset]);
 
@@ -390,6 +516,25 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
                             <div className="text-sm whitespace-pre-wrap">
                               {entry.diagnosis}
                             </div>
+                            {/* Saved attachments, or the ones staged for a new entry */}
+                            <DiagnosisFileLinks
+                              files={entry.hrm_ape_diagnosis_files}
+                            />
+                            {entry.newFiles && entry.newFiles.length > 0 && (
+                              <div className="flex flex-col gap-y-px mt-1">
+                                {entry.newFiles.map((file) => (
+                                  <div
+                                    key={file.name}
+                                    className="flex items-center gap-x-1 text-xs text-gray-500"
+                                  >
+                                    <PaperClipIcon className="w-3 h-3 shrink-0" />
+                                    <span className="break-all">
+                                      {file.name}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           <button
                             type="button"
@@ -427,6 +572,39 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
                         btnType="button"
                         handleClick={handleAddDiagnosis}
                       />
+                    </div>
+
+                    {/* Optional supporting file/s for this diagnosis */}
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">
+                        Attach image or PDF file/s (optional, max 5MB each)
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/jpeg,image/png,image/jpg,application/pdf"
+                        onChange={(e) => {
+                          handleSelectFiles(e.target.files);
+                          e.target.value = "";
+                        }}
+                        className="text-xs"
+                      />
+                      {newFiles.length > 0 && (
+                        <div className="flex flex-col gap-y-px mt-2">
+                          {newFiles.map((file) => (
+                            <div
+                              key={file.name}
+                              className="flex items-center gap-x-1 text-xs"
+                            >
+                              <XMarkIcon
+                                onClick={() => handleRemoveNewFile(file.name)}
+                                className="cursor-pointer w-4 h-4 text-red-400 shrink-0"
+                              />
+                              <span className="break-all">{file.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                   {diagnosisError !== "" && (

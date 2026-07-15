@@ -11,6 +11,7 @@ import {
   TopBar,
   Unauthorized,
 } from "@/components/index";
+import DiagnosisFileLinks from "@/components/Ape/DiagnosisFileLinks";
 import { superAdmins } from "@/constants";
 import { useFilter } from "@/context/FilterContext";
 import { useSupabase } from "@/context/SupabaseProvider";
@@ -246,6 +247,9 @@ const Page: React.FC = () => {
                                     :
                                   </span>{" "}
                                   {d.diagnosis}
+                                  <DiagnosisFileLinks
+                                    files={d.hrm_ape_diagnosis_files}
+                                  />
                                 </div>
                               ))}
                           </div>
