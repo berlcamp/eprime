@@ -1,6 +1,7 @@
 -- Bug fixes for the four cron functions (scheduled via pg_cron in 0008).
 --
 -- Fixes:
+--
 --   increment_monthly_leave_credits
 --     * Only accrue for Active employees (hrm_users.status = 'Active');
 --       removed/resigned employees were accruing 1.25 VL/SL forever.
