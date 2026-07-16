@@ -206,8 +206,8 @@ const MainMenu = () => {
                   <div>
                     <div className="app__menu_item_label">Medical Records</div>
                     <div className="app__menu_item_label_description">
-                      Review employees&apos; Annual Physical Exams and record
-                      diagnoses.
+                      Review employee&apos;s health status for APE and record
+                      diagnosis.
                     </div>
                   </div>
                 </div>
