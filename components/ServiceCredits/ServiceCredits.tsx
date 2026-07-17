@@ -165,6 +165,7 @@ export default function ServiceCredits({ userId }: { userId: string }) {
                 <th className="hidden md:table-cell app__th">Service Credit</th>
                 <th className="hidden md:table-cell app__th">Particulars</th>
                 <th className="hidden md:table-cell app__th">Work Duration</th>
+                <th className="hidden md:table-cell app__th">Remarks</th>
                 <th className="hidden md:table-cell app__th"></th>
               </tr>
             </thead>
@@ -241,6 +242,12 @@ export default function ServiceCredits({ userId }: { userId: string }) {
                               </>
                             )}
                           </div>
+                          <div>
+                            <span className="app_td_mobile_label">
+                              Remarks:
+                            </span>{' '}
+                            {item.remarks}
+                          </div>
                         </div>
                       </div>
                       {/* End - Mobile View */}
@@ -280,6 +287,9 @@ export default function ServiceCredits({ userId }: { userId: string }) {
                             )
                           : ''}
                       </div>
+                    </td>
+                    <td className="hidden md:table-cell app__td">
+                      <div className="">{item.remarks}</div>
                     </td>
                     <td className="hidden md:table-cell app__td">
                       {userId === session?.user.id && (
