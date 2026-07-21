@@ -212,6 +212,10 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                       <option value="Senior High School">
                         Senior High School
                       </option>
+                      <option value="ALS">ALS</option>
+                      <option value="SNED">SNED</option>
+                      <option value="KINDER">KINDER</option>
+                      <option value="MADRASA">MADRASA</option>
                     </select>
                     {errors.category_level && (
                       <div className="app__error_message">
