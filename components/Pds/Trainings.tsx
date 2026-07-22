@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import CustomButton from '../CustomButton'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
+import { notifyInvalid } from './notifyInvalid'
 
 interface FormRowTypes {
   nanoid: string
@@ -311,13 +312,13 @@ export default function Trainings({ userId }: { userId: string }) {
                             <div>
                               <input
                                 type="number"
-                                min={0.01}
-                                step="0.01"
+                                min={0}
+                                step="any"
                                 value={item.hours}
                                 onChange={(e) => {
                                   const val = e.target.value
                                   const num = Number(val)
-                                  if (val !== '' && (isNaN(num) || num <= 0))
+                                  if (val !== '' && (isNaN(num) || num < 0))
                                     return
                                   handleInlineEdit(index, val, 'hours')
                                 }}
@@ -334,13 +335,13 @@ export default function Trainings({ userId }: { userId: string }) {
                             <div>
                               <input
                                 type="number"
-                                min={0.01}
-                                step="0.01"
+                                min={0}
+                                step="any"
                                 value={item.cpd_units}
                                 onChange={(e) => {
                                   const val = e.target.value
                                   const num = Number(val)
-                                  if (val !== '' && (isNaN(num) || num <= 0))
+                                  if (val !== '' && (isNaN(num) || num < 0))
                                     return
                                   handleInlineEdit(index, val, 'cpd_units')
                                 }}
@@ -411,7 +412,7 @@ export default function Trainings({ userId }: { userId: string }) {
           {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
-                <form onSubmit={handleSubmit(onSubmitRow)} className="text-xs">
+                <form onSubmit={handleSubmit(onSubmitRow, notifyInvalid(setToast))} className="text-xs">
                   {!showAddRow ? (
                     <CustomButton
                       containerStyles="app__btn_blue"
@@ -480,12 +481,12 @@ export default function Trainings({ userId }: { userId: string }) {
                             required: true,
                             min: {
                               value: 0.01,
-                              message: 'Must be greater than 0',
-                            },
+                              message: 'Must be greater than 0'
+                            }
                           })}
                           type="number"
-                          min={0.01}
-                          step="0.01"
+                          min={0}
+                          step="any"
                           className="app__input_standard"
                         />
                         {errors.hours && (
@@ -496,18 +497,25 @@ export default function Trainings({ userId }: { userId: string }) {
                       </div>
                       <div className="mb-2 w-full">
                         <div className="app__label_standard">CPD Units:</div>
+                        {/* CPD Units is optional and legitimately 0 for many
+                            trainings, so it carries no minimum. */}
                         <input
                           {...register('cpd_units', {
                             min: {
-                              value: 0.01,
-                              message: 'Must be greater than 0',
-                            },
+                              value: 0,
+                              message: 'CPD Units cannot be negative'
+                            }
                           })}
                           type="number"
-                          min={0.01}
-                          step="0.01"
+                          min={0}
+                          step="any"
                           className="app__input_standard"
                         />
+                        {errors.cpd_units && (
+                          <div className="app__error_message">
+                            {errors.cpd_units.message ?? 'Invalid CPD Units'}
+                          </div>
+                        )}
                       </div>
                       <div className="mb-2 w-full">
                         <div className="app__label_standard">
@@ -561,7 +569,7 @@ export default function Trainings({ userId }: { userId: string }) {
                 </form>
               </div>
               <hr className="my-6 mx-4" />
-              <form onSubmit={handleSubmit2(onSubmit)} className="w-full">
+              <form onSubmit={handleSubmit2(onSubmit, notifyInvalid(setToast))} className="w-full">
                 <div className="w-full px-4">
                   <div className="app__label_standard">
                     <label className="flex items-center space-x-1">

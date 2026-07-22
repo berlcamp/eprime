@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import CustomButton from '../CustomButton'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
+import { notifyInvalid } from './notifyInvalid'
 
 interface SkillsRowTypes {
   nanoid: string
@@ -241,7 +242,7 @@ export default function Other({ userId }: { userId: string }) {
             <>
               <div className="app__pds_add_row_container">
                 <form
-                  onSubmit={handleSubmit(onSubmitSkill)}
+                  onSubmit={handleSubmit(onSubmitSkill, notifyInvalid(setToast))}
                   className="text-xs"
                 >
                   {!showAddSkill ? (
@@ -332,7 +333,7 @@ export default function Other({ userId }: { userId: string }) {
             <>
               <div className="app__pds_add_row_container">
                 <form
-                  onSubmit={handleSubmit2(onSubmitNonAcademic)}
+                  onSubmit={handleSubmit2(onSubmitNonAcademic, notifyInvalid(setToast))}
                   className="text-xs"
                 >
                   {!showAddNonAcademic ? (
@@ -427,7 +428,7 @@ export default function Other({ userId }: { userId: string }) {
             <>
               <div className="app__pds_add_row_container">
                 <form
-                  onSubmit={handleSubmit3(onSubmitMembership)}
+                  onSubmit={handleSubmit3(onSubmitMembership, notifyInvalid(setToast))}
                   className="text-xs"
                 >
                   {!showAddMembership ? (
@@ -480,7 +481,7 @@ export default function Other({ userId }: { userId: string }) {
           {userId === session?.user.id && (
             <>
               <hr className="my-6 mx-4" />
-              <form onSubmit={handleSubmit4(onSubmit)} className="w-full">
+              <form onSubmit={handleSubmit4(onSubmit, notifyInvalid(setToast))} className="w-full">
                 <div className="w-full px-4">
                   <div className="app__label_standard">
                     <label className="flex items-center space-x-1">

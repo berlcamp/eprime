@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import CustomButton from '../CustomButton'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
+import { notifyInvalid } from './notifyInvalid'
 
 interface FormRowTypes {
   nanoid: string
@@ -279,7 +280,7 @@ export default function VoluntaryWork({ userId }: { userId: string }) {
           {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
-                <form onSubmit={handleSubmit(onSubmitRow)} className="text-xs">
+                <form onSubmit={handleSubmit(onSubmitRow, notifyInvalid(setToast))} className="text-xs">
                   {!showAddRow ? (
                     <CustomButton
                       containerStyles="app__btn_blue"
@@ -304,7 +305,7 @@ export default function VoluntaryWork({ userId }: { userId: string }) {
                           type="text"
                           className="app__input_standard"
                         />
-                        {errors.from && (
+                        {errors.organization_name_address && (
                           <div className="app__error_message">
                             Name and Address of Organization is required
                           </div>
@@ -360,12 +361,12 @@ export default function VoluntaryWork({ userId }: { userId: string }) {
                             required: true,
                             min: {
                               value: 0.01,
-                              message: 'Must be greater than 0',
-                            },
+                              message: 'Must be greater than 0'
+                            }
                           })}
                           type="number"
-                          min={0.01}
-                          step="0.01"
+                          min={0}
+                          step="any"
                           className="app__input_standard"
                         />
                         {errors.hours && (
@@ -407,7 +408,7 @@ export default function VoluntaryWork({ userId }: { userId: string }) {
                 </form>
               </div>
               <hr className="my-6 mx-4" />
-              <form onSubmit={handleSubmit2(onSubmit)} className="w-full">
+              <form onSubmit={handleSubmit2(onSubmit, notifyInvalid(setToast))} className="w-full">
                 <div className="w-full px-4">
                   <div className="app__label_standard">
                     <label className="flex items-center space-x-1">

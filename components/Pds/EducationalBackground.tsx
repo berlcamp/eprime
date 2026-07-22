@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import CustomButton from '../CustomButton'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
+import { notifyInvalid } from './notifyInvalid'
 
 interface FormRowTypes {
   nanoid: string
@@ -337,7 +338,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
           {userId === session?.user.id && (
             <>
               <div className="app__pds_add_row_container">
-                <form onSubmit={handleSubmit(onSubmitRow)} className="text-xs">
+                <form onSubmit={handleSubmit(onSubmitRow, notifyInvalid(setToast))} className="text-xs">
                   {!showAddRow ? (
                     <CustomButton
                       containerStyles="app__btn_blue"
@@ -495,7 +496,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                 </form>
               </div>
               <hr className="my-6 mx-4" />
-              <form onSubmit={handleSubmit2(onSubmit)} className="w-full">
+              <form onSubmit={handleSubmit2(onSubmit, notifyInvalid(setToast))} className="w-full">
                 <div className="w-full px-4">
                   <div className="app__label_standard">
                     <label className="flex items-center space-x-1">

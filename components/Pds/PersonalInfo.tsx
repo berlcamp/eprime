@@ -5,6 +5,7 @@ import { logError } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
+import { notifyInvalid } from './notifyInvalid'
 
 export default function PersonalInfo({ userId }: { userId: string }) {
   const { supabase, session } = useSupabase()
@@ -178,7 +179,7 @@ export default function PersonalInfo({ userId }: { userId: string }) {
     <div className="w-full">
       {loading && <TwoColTableLoading />}
       {!loading && (
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+        <form onSubmit={handleSubmit(onSubmit, notifyInvalid(setToast))} className="w-full">
           <div className="flex flex-col lg:flex-row w-full items-start justify-between text-xs dark:text-gray-400">
             {/* Begin First Column */}
             <div className="w-full px-4">

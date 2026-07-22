@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import CustomButton from '../CustomButton'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
+import { notifyInvalid } from './notifyInvalid'
 
 interface childrenArrayTypes {
   child_name: string
@@ -154,7 +155,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
     <div className="w-full">
       {loading && <TwoColTableLoading />}
       {!loading && (
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+        <form onSubmit={handleSubmit(onSubmit, notifyInvalid(setToast))} className="w-full">
           <div className="flex flex-col lg:flex-row w-full items-start justify-between text-xs dark:text-gray-400">
             {/* Begin First Column */}
             <div className="w-full px-4">
