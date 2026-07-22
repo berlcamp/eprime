@@ -21,7 +21,8 @@ import { Fragment, useEffect, useState } from "react";
 
 import AddEditModal from "./AddEditModal";
 import AttachmentsModal from "./AttachmentsModal";
-import DiagnosisFileLinks from "./DiagnosisFileLinks";
+import DiagnosisHistoryModal from "./DiagnosisHistoryModal";
+import { sortDiagnosesNewestFirst } from "./diagnosisHelpers";
 
 // Types
 import type { ApeTypes } from "@/types";
@@ -40,6 +41,7 @@ export default function Ape({ userId }: { userId: string }) {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAttachmentsModal, setShowAttachmentsModal] = useState(false);
+  const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [perPageCount, setPerPageCount] = useState<number>(10);
@@ -104,6 +106,11 @@ export default function Ape({ userId }: { userId: string }) {
 
   const handleAttachments = (item: ApeTypes) => {
     setShowAttachmentsModal(true);
+    setEditData(item);
+  };
+
+  const handleDiagnosis = (item: ApeTypes) => {
+    setShowDiagnosisModal(true);
     setEditData(item);
   };
 
@@ -174,6 +181,14 @@ export default function Ape({ userId }: { userId: string }) {
               {!isDataEmpty &&
                 list.map((item: ApeTypes, index) => {
                   const isDiagnosed = !!item.diagnosed_at;
+
+                  // The column is too narrow for a full history, so it shows
+                  // the most recent entry and defers the rest to the modal.
+                  const diagnoses = sortDiagnosesNewestFirst(
+                    item.hrm_ape_diagnoses,
+                  );
+                  const latest = diagnoses[0];
+
                   return (
                     <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td">
@@ -237,19 +252,32 @@ export default function Ape({ userId }: { userId: string }) {
                             Fitness Result: {item.fitness_result ?? "Pending"}
                           </div>
                           <div className="font-light">
-                            Diagnosis:{" "}
-                            {item.hrm_ape_diagnoses &&
-                            item.hrm_ape_diagnoses.length > 0
-                              ? item.hrm_ape_diagnoses
-                                  .map(
-                                    (d) =>
-                                      `${format(
-                                        new Date(d.diagnosis_date),
-                                        "MMM d, yyyy",
-                                      )}: ${d.diagnosis}`,
-                                  )
-                                  .join("; ")
-                              : item.diagnosis ?? "Pending"}
+                            {latest ? (
+                              <>
+                                <div>
+                                  Latest Diagnosis (
+                                  {format(
+                                    new Date(latest.diagnosis_date),
+                                    "MMM d, yyyy",
+                                  )}
+                                  ):
+                                </div>
+                                <div className="line-clamp-2 whitespace-pre-wrap">
+                                  {latest.diagnosis}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDiagnosis(item)}
+                                  className="mt-1 text-blue-600 hover:underline"
+                                >
+                                  {diagnoses.length > 1
+                                    ? `View All (${diagnoses.length})`
+                                    : "View Details"}
+                                </button>
+                              </>
+                            ) : (
+                              <div>Diagnosis: {item.diagnosis || "Pending"}</div>
+                            )}
                           </div>
                         </div>
                         {/* End - Mobile View */}
@@ -276,34 +304,31 @@ export default function Ape({ userId }: { userId: string }) {
                           </span>
                         )}
                       </td>
-                      <td className="hidden md:table-cell app__td">
-                        {item.hrm_ape_diagnoses &&
-                        item.hrm_ape_diagnoses.length > 0 ? (
-                          <div className="space-y-1">
-                            {[...item.hrm_ape_diagnoses]
-                              .sort((a, b) =>
-                                a.diagnosis_date.localeCompare(
-                                  b.diagnosis_date,
-                                ),
-                              )
-                              .map((d) => (
-                                <div key={d.id}>
-                                  <span className="font-semibold text-xs">
-                                    {format(
-                                      new Date(d.diagnosis_date),
-                                      "MMM d, yyyy",
-                                    )}
-                                    :
-                                  </span>{" "}
-                                  {d.diagnosis}
-                                  <DiagnosisFileLinks
-                                    files={d.hrm_ape_diagnosis_files}
-                                  />
-                                </div>
-                              ))}
+                      <td className="hidden md:table-cell app__td align-top">
+                        {latest ? (
+                          <div className="space-y-1 max-w-xs">
+                            <div className="font-semibold text-xs">
+                              {format(
+                                new Date(latest.diagnosis_date),
+                                "MMM d, yyyy",
+                              )}
+                            </div>
+                            <div className="line-clamp-2 whitespace-pre-wrap">
+                              {latest.diagnosis}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDiagnosis(item)}
+                              className="text-blue-600 hover:underline text-xs font-medium"
+                            >
+                              {diagnoses.length > 1
+                                ? `View All (${diagnoses.length})`
+                                : "View Details"}
+                            </button>
                           </div>
                         ) : (
-                          <div>{item.diagnosis}</div>
+                          // Records diagnosed before hrm_ape_diagnoses existed.
+                          <div>{item.diagnosis || "Pending"}</div>
                         )}
                       </td>
                     </tr>
@@ -338,6 +363,14 @@ export default function Ape({ userId }: { userId: string }) {
           editData={editData}
           readOnly={!isOwner || !!editData?.diagnosed_at}
           hideModal={() => setShowAttachmentsModal(false)}
+        />
+      )}
+
+      {/* Diagnosis History Modal */}
+      {showDiagnosisModal && editData && (
+        <DiagnosisHistoryModal
+          editData={editData}
+          hideModal={() => setShowDiagnosisModal(false)}
         />
       )}
 
