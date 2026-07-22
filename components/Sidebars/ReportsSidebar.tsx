@@ -40,6 +40,18 @@ const ReportsSidebar = () => {
             <span className="flex-1 ml-3 whitespace-nowrap">Requests</span>
           </Link>
         </li>
+        <li>
+          <Link
+            href="/reports/data-profile"
+            className={`app__menu_link ${
+              currentRoute === "/reports/data-profile"
+                ? "app_menu_link_active"
+                : ""
+            }`}
+          >
+            <span className="flex-1 ml-3 whitespace-nowrap">Data Profile</span>
+          </Link>
+        </li>
         {superAdmins.includes(session?.user.email ?? "") && (
           <li>
             <Link

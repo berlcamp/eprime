@@ -20,10 +20,16 @@ export default function PersonalInfo({ userId }: { userId: string }) {
     register,
     formState: { errors },
     reset,
+    watch,
     handleSubmit
   } = useForm<PdsPersonalInfomationTypes>({
     mode: 'onSubmit'
   })
+
+  // Detail fields are only asked for when the answer is Yes
+  const watchedPwd = watch('pwd')
+  const watchedIpGroup = watch('ip_group')
+  const watchedSoloParent = watch('solo_parent')
 
   const onSubmit = async (formdata: PdsPersonalInfomationTypes) => {
     if (saving) return
@@ -69,7 +75,17 @@ export default function PersonalInfo({ userId }: { userId: string }) {
       philhealth_no: formdata.philhealth_no,
       sss_no: formdata.sss_no,
       tin_no: formdata.tin_no,
-      agency_employee_no: formdata.agency_employee_no
+      agency_employee_no: formdata.agency_employee_no,
+      religion: formdata.religion,
+      deped_email: formdata.deped_email,
+      pwd: formdata.pwd,
+      pwd_detail: formdata.pwd === 'Yes' ? formdata.pwd_detail : '',
+      ip_group: formdata.ip_group,
+      ip_group_detail:
+        formdata.ip_group === 'Yes' ? formdata.ip_group_detail : '',
+      solo_parent: formdata.solo_parent,
+      solo_parent_detail:
+        formdata.solo_parent === 'Yes' ? formdata.solo_parent_detail : ''
     }
     const { error } = await supabase
       .from('hrm_pds')
@@ -140,7 +156,15 @@ export default function PersonalInfo({ userId }: { userId: string }) {
       philhealth_no: data ? data.philhealth_no : '',
       sss_no: data ? data.sss_no : '',
       tin_no: data ? data.tin_no : '',
-      agency_employee_no: data ? data.agency_employee_no : ''
+      agency_employee_no: data ? data.agency_employee_no : '',
+      religion: data ? data.religion : '',
+      deped_email: data ? data.deped_email : '',
+      pwd: data ? data.pwd : '',
+      pwd_detail: data ? data.pwd_detail : '',
+      ip_group: data ? data.ip_group : '',
+      ip_group_detail: data ? data.ip_group_detail : '',
+      solo_parent: data ? data.solo_parent : '',
+      solo_parent_detail: data ? data.solo_parent_detail : ''
     })
 
     setLoading(false)
@@ -320,6 +344,22 @@ export default function PersonalInfo({ userId }: { userId: string }) {
               </div>
               <div className="app__form_field_container">
                 <div className="w-full">
+                  <div className="app__label_standard">Religion:</div>
+                  {userId !== session?.user.id ? (
+                    <div className="app__label_value">{userData?.religion}</div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('religion')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
                   <div className="app__label_standard">Height (inches):</div>
                   {userId !== session?.user.id ? (
                     <div className="app__label_value">{userData?.height}</div>
@@ -415,6 +455,26 @@ export default function PersonalInfo({ userId }: { userId: string }) {
                     <div>
                       <input
                         {...register('mobile_number')}
+                        type="text"
+                        className="app__input_standard"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">
+                    Official DepEd Email Address:
+                  </div>
+                  {userId !== session?.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.deped_email}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        {...register('deped_email')}
                         type="text"
                         className="app__input_standard"
                       />
@@ -801,6 +861,111 @@ export default function PersonalInfo({ userId }: { userId: string }) {
                         type="text"
                         className="app__input_standard"
                       />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center">
+                <div className="flex-grow bg-gray-300 h-px"></div>
+                <div className="mx-4 my-4 text-gray-500 text-sm">
+                  Social Profile
+                </div>
+                <div className="flex-grow bg-gray-300 h-px"></div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">
+                    Person with Disability (PWD):
+                  </div>
+                  {userId !== session?.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.pwd}
+                      {userData?.pwd_detail ? ` - ${userData.pwd_detail}` : ''}
+                    </div>
+                  ) : (
+                    <div>
+                      <select
+                        {...register('pwd')}
+                        className="app__select_standard"
+                      >
+                        <option value="">Choose</option>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                      {watchedPwd === 'Yes' && (
+                        <input
+                          {...register('pwd_detail')}
+                          type="text"
+                          placeholder="Please specify the disability"
+                          className="app__input_standard mt-1"
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">
+                    Member of an Indigenous Peoples (IP) Group:
+                  </div>
+                  {userId !== session?.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.ip_group}
+                      {userData?.ip_group_detail
+                        ? ` - ${userData.ip_group_detail}`
+                        : ''}
+                    </div>
+                  ) : (
+                    <div>
+                      <select
+                        {...register('ip_group')}
+                        className="app__select_standard"
+                      >
+                        <option value="">Choose</option>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                      {watchedIpGroup === 'Yes' && (
+                        <input
+                          {...register('ip_group_detail')}
+                          type="text"
+                          placeholder="Please specify the IP group"
+                          className="app__input_standard mt-1"
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="app__form_field_container">
+                <div className="w-full">
+                  <div className="app__label_standard">Solo Parent:</div>
+                  {userId !== session?.user.id ? (
+                    <div className="app__label_value">
+                      {userData?.solo_parent}
+                      {userData?.solo_parent_detail
+                        ? ` - ${userData.solo_parent_detail}`
+                        : ''}
+                    </div>
+                  ) : (
+                    <div>
+                      <select
+                        {...register('solo_parent')}
+                        className="app__select_standard"
+                      >
+                        <option value="">Choose</option>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                      {watchedSoloParent === 'Yes' && (
+                        <input
+                          {...register('solo_parent_detail')}
+                          type="text"
+                          placeholder="Please specify (e.g. Solo Parent ID No.)"
+                          className="app__input_standard mt-1"
+                        />
+                      )}
                     </div>
                   )}
                 </div>

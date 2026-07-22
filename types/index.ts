@@ -938,6 +938,14 @@ export interface PdsPersonalInfomationTypes {
   sss_no: string;
   tin_no: string;
   agency_employee_no: string;
+  religion: string;
+  deped_email: string;
+  pwd: string;
+  pwd_detail: string;
+  ip_group: string;
+  ip_group_detail: string;
+  solo_parent: string;
+  solo_parent_detail: string;
   confirmed: string;
 }
 
