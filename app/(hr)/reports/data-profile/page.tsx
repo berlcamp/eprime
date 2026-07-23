@@ -193,6 +193,7 @@ export default function Page() {
         )
         .eq('org_id', process.env.NEXT_PUBLIC_ORG_ID!)
         .eq('status', 'Active')
+        .eq('position_type', 'Teaching')
         .not('item_id', 'is', null)
         .order('lastname', { ascending: true })
 
@@ -436,9 +437,12 @@ export default function Page() {
       const schoolsResult = await fetchSchools({}, 300, 0)
       const positionsResult = await fetchPositions('', 999, 0)
       setSchools(schoolsResult.data.length > 0 ? schoolsResult.data : [])
+      // Only teaching positions are relevant to this report
       setPositions(
         positionsResult.data && positionsResult.data.length > 0
-          ? positionsResult.data
+          ? positionsResult.data.filter(
+              (item: PositionTypes) => item.type === 'Teaching'
+            )
           : []
       )
     }
