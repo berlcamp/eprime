@@ -1,12 +1,14 @@
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { logError } from '@/utils/fetchApi'
 import { nanoid } from 'nanoid'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import CustomButton from '../CustomButton'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
 import { notifyInvalid } from './notifyInvalid'
+import { useReportPdsDirty } from './pdsDirty'
+import { hasPendingEntry, pendingEntryMessage } from './pendingEntry'
+import { savePds } from './savePds'
 
 interface FormRowTypes {
   nanoid: string
@@ -36,12 +38,14 @@ export default function WorkExperience({ userId }: { userId: string }) {
     FormRowTypes[] | []
   >([])
   const [showAddRow, setShowAddRow] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   const {
     register,
     formState: { errors },
     reset,
     watch,
+    getValues,
     handleSubmit
   } = useForm<FormRowTypes>({
     mode: 'onSubmit'
@@ -77,10 +81,18 @@ export default function WorkExperience({ userId }: { userId: string }) {
 
     reset()
     setShowAddRow(false)
+    setHasUnsavedChanges(true)
   }
 
   const onSubmit = async () => {
     if (saving) return
+
+    // The Add form is separate from this one, so an entry that was typed but
+    // never added would be dropped without a word.
+    if (showAddRow && hasPendingEntry(getValues())) {
+      setToast('error', pendingEntryMessage)
+      return
+    }
 
     setSaving(true)
 
@@ -90,21 +102,14 @@ export default function WorkExperience({ userId }: { userId: string }) {
       work_experience: workExperienceArray
     }
 
-    const { error } = await supabase
-      .from('hrm_pds')
-      .upsert(newData, { onConflict: 'user_id' })
+    const { ok, message } = await savePds(
+      supabase,
+      'Update Work Experience PDS',
+      newData
+    )
 
-    if (error) {
-      void logError(
-        'Update Work Experience PDS',
-        'hrm_pds',
-        JSON.stringify(newData),
-        error.message
-      )
-      setToast('error', 'Saving failed, please reload the page and try again.')
-    } else {
-      setToast('success', 'Successfully saved.')
-    }
+    if (ok) setHasUnsavedChanges(false)
+    setToast(ok ? 'success' : 'error', message)
 
     setSaving(false)
   }
@@ -136,6 +141,7 @@ export default function WorkExperience({ userId }: { userId: string }) {
       (e) => e.nanoid !== item.nanoid
     )
     setWorkExperienceArray(updatedData)
+    setHasUnsavedChanges(true)
   }
 
   const handleInlineEdit = (index: number, newValue: string, field: string) => {
@@ -144,7 +150,12 @@ export default function WorkExperience({ userId }: { userId: string }) {
       (item, idx) => (idx === index ? { ...item, [field]: newValue } : item) // Dynamically set the field
     )
     setWorkExperienceArray(updatedArray)
+    setHasUnsavedChanges(true)
   }
+
+  useReportPdsDirty(
+    () => hasUnsavedChanges || (showAddRow && hasPendingEntry(getValues()))
+  )
 
   useEffect(() => {
     void fetchData()

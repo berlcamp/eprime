@@ -1,6 +1,5 @@
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { logError } from '@/utils/fetchApi'
 import { format } from 'date-fns'
 import { nanoid } from 'nanoid'
 import { useEffect, useState } from 'react'
@@ -8,6 +7,9 @@ import { useForm } from 'react-hook-form'
 import CustomButton from '../CustomButton'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
 import { notifyInvalid } from './notifyInvalid'
+import { useReportPdsDirty } from './pdsDirty'
+import { hasPendingEntry, pendingEntryMessage } from './pendingEntry'
+import { savePds } from './savePds'
 
 interface FormRowTypes {
   nanoid: string
@@ -34,11 +36,13 @@ export default function Trainings({ userId }: { userId: string }) {
 
   const [trainingsArray, setTrainingsArray] = useState<FormRowTypes[] | []>([])
   const [showAddRow, setShowAddRow] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   const {
     register,
     formState: { errors },
     reset,
+    getValues,
     handleSubmit
   } = useForm<FormRowTypes>({
     mode: 'onSubmit'
@@ -70,10 +74,18 @@ export default function Trainings({ userId }: { userId: string }) {
 
     reset()
     setShowAddRow(false)
+    setHasUnsavedChanges(true)
   }
 
   const onSubmit = async () => {
     if (saving) return
+
+    // The Add form is separate from this one, so a training that was typed but
+    // never added would be dropped without a word.
+    if (showAddRow && hasPendingEntry(getValues())) {
+      setToast('error', pendingEntryMessage)
+      return
+    }
 
     setSaving(true)
 
@@ -83,21 +95,14 @@ export default function Trainings({ userId }: { userId: string }) {
       trainings: trainingsArray
     }
 
-    const { error } = await supabase
-      .from('hrm_pds')
-      .upsert(newData, { onConflict: 'user_id' })
+    const { ok, message } = await savePds(
+      supabase,
+      'Update L and D Trainings PDS',
+      newData
+    )
 
-    if (error) {
-      void logError(
-        'Update L and D Trainings PDS',
-        'hrm_pds',
-        JSON.stringify(newData),
-        error.message
-      )
-      setToast('error', 'Saving failed, please reload the page and try again.')
-    } else {
-      setToast('success', 'Successfully saved.')
-    }
+    if (ok) setHasUnsavedChanges(false)
+    setToast(ok ? 'success' : 'error', message)
 
     setSaving(false)
   }
@@ -128,11 +133,17 @@ export default function Trainings({ userId }: { userId: string }) {
       (item, idx) => (idx === index ? { ...item, [field]: newValue } : item) // Dynamically set the field
     )
     setTrainingsArray(updatedArray)
+    setHasUnsavedChanges(true)
   }
+
+  useReportPdsDirty(
+    () => hasUnsavedChanges || (showAddRow && hasPendingEntry(getValues()))
+  )
 
   const HandleRemoveItem = (item: FormRowTypes) => {
     const updatedData = trainingsArray.filter((e) => e.nanoid !== item.nanoid)
     setTrainingsArray(updatedData)
+    setHasUnsavedChanges(true)
   }
   const HandleApproveItem = async (item: FormRowTypes) => {
     if (saving) return
@@ -157,7 +168,6 @@ export default function Trainings({ userId }: { userId: string }) {
       'status',
       'Approved'
     )
-    setTrainingsArray(updatedTrainingArray)
 
     setSaving(true)
 
@@ -167,21 +177,15 @@ export default function Trainings({ userId }: { userId: string }) {
       trainings: updatedTrainingArray
     }
 
-    const { error } = await supabase
-      .from('hrm_pds')
-      .upsert(newData, { onConflict: 'user_id' })
+    const { ok, message } = await savePds(
+      supabase,
+      'Approve L and D Training PDS',
+      newData
+    )
 
-    if (error) {
-      void logError(
-        'Update L and D Trainings PDS',
-        'hrm_pds',
-        JSON.stringify(newData),
-        error.message
-      )
-      setToast('error', 'Saving failed, please reload the page and try again.')
-    } else {
-      setToast('success', 'Successfully saved.')
-    }
+    // Only show the training as approved once that is what the database says.
+    if (ok) setTrainingsArray(updatedTrainingArray)
+    setToast(ok ? 'success' : 'error', message)
 
     setSaving(false)
   }

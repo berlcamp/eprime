@@ -1,13 +1,15 @@
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { PdsFamilyBackgroundTypes } from '@/types'
-import { logError } from '@/utils/fetchApi'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import CustomButton from '../CustomButton'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
 import { notifyInvalid } from './notifyInvalid'
+import { useReportPdsDirty } from './pdsDirty'
+import { pendingEntryMessage } from './pendingEntry'
+import { savePds } from './savePds'
 
 interface childrenArrayTypes {
   child_name: string
@@ -33,15 +35,29 @@ export default function FamilyBackground({ userId }: { userId: string }) {
 
   const {
     register,
-    formState: { errors },
+    formState: { errors, isDirty },
     reset,
     handleSubmit
   } = useForm<PdsFamilyBackgroundTypes>({
     mode: 'onSubmit'
   })
 
+  const [childrenChanged, setChildrenChanged] = useState(false)
+
+  // A child that was typed in but never added would be dropped without a word.
+  const pendingChild = () =>
+    showAddChildForm &&
+    (childName.trim() !== '' || childBirthday.trim() !== '')
+
+  useReportPdsDirty(() => isDirty || childrenChanged || pendingChild())
+
   const onSubmit = async (formdata: PdsFamilyBackgroundTypes) => {
     if (saving) return
+
+    if (pendingChild()) {
+      setToast('error', pendingEntryMessage)
+      return
+    }
 
     setSaving(true)
 
@@ -66,21 +82,18 @@ export default function FamilyBackground({ userId }: { userId: string }) {
       children: childrenArray
     }
 
-    const { error } = await supabase
-      .from('hrm_pds')
-      .upsert(newData, { onConflict: 'user_id' })
+    const { ok, message } = await savePds(
+      supabase,
+      'Update Pds Family Background',
+      newData
+    )
 
-    if (error) {
-      void logError(
-        'Update Pds Family Background',
-        'hrm_pds',
-        JSON.stringify(newData),
-        error.message
-      )
-      setToast('error', 'Saving failed, please reload the page and try again.')
-    } else {
-      setToast('success', 'Successfully saved.')
+    // Rebaseline so the tab no longer counts as unsaved.
+    if (ok) {
+      reset(formdata)
+      setChildrenChanged(false)
     }
+    setToast(ok ? 'success' : 'error', message)
 
     setSaving(false)
   }
@@ -138,6 +151,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
     setChildName('')
     setChildBirthday('')
     setShowAddChildForm(false)
+    setChildrenChanged(true)
   }
 
   const HandleRemoveChild = (child: childrenArrayTypes) => {
@@ -145,6 +159,7 @@ export default function FamilyBackground({ userId }: { userId: string }) {
       (item) => child.child_name !== item.child_name
     )
     setChildrenArray(updatedChildren)
+    setChildrenChanged(true)
   }
 
   useEffect(() => {

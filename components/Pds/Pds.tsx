@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { PdsDirtyContext, usePdsDirtyRegistry } from './pdsDirty'
 import EducationalBackground from './EducationalBackground'
 import Eligibility from './Eligibility'
 import FamilyBackground from './FamilyBackground'
@@ -16,15 +17,34 @@ interface PageProps {
 
 const Pds = ({ userId }: PageProps) => {
   const [activeMenu, setActiveMenu] = useState('personal')
+  const { contextValue, isActiveTabDirty } = usePdsDirtyRegistry()
+
+  // Every tab saves separately and is unmounted the moment another one is
+  // opened, so leaving with unsaved work silently discards it.
+  const handleMenuClick = (menu: string) => {
+    if (menu === activeMenu) return
+
+    if (
+      isActiveTabDirty() &&
+      !window.confirm(
+        'You have unsaved changes on this tab. Leaving will discard them. Leave without saving?'
+      )
+    ) {
+      return
+    }
+
+    setActiveMenu(menu)
+  }
+
   return (
-    <>
+    <PdsDirtyContext.Provider value={contextValue}>
       <div className="border-t">
         {/* Modal Content */}
         <div className="flex flex-col md:flex-row items-start justify-start">
           <div className="app__modal_menu">
             <ul>
               <li
-                onClick={() => setActiveMenu('personal')}
+                onClick={() => handleMenuClick('personal')}
                 className={`${
                   activeMenu === 'personal'
                     ? 'app__modal_menu_link_active'
@@ -34,7 +54,7 @@ const Pds = ({ userId }: PageProps) => {
                 Personal Information
               </li>
               <li
-                onClick={() => setActiveMenu('family')}
+                onClick={() => handleMenuClick('family')}
                 className={`${
                   activeMenu === 'family'
                     ? 'app__modal_menu_link_active'
@@ -44,7 +64,7 @@ const Pds = ({ userId }: PageProps) => {
                 Family Background
               </li>
               <li
-                onClick={() => setActiveMenu('educational')}
+                onClick={() => handleMenuClick('educational')}
                 className={`${
                   activeMenu === 'educational'
                     ? 'app__modal_menu_link_active'
@@ -54,7 +74,7 @@ const Pds = ({ userId }: PageProps) => {
                 Educational Background
               </li>
               <li
-                onClick={() => setActiveMenu('eligibility')}
+                onClick={() => handleMenuClick('eligibility')}
                 className={`${
                   activeMenu === 'eligibility'
                     ? 'app__modal_menu_link_active'
@@ -64,7 +84,7 @@ const Pds = ({ userId }: PageProps) => {
                 Civil Service Eligibility
               </li>
               <li
-                onClick={() => setActiveMenu('work')}
+                onClick={() => handleMenuClick('work')}
                 className={`${
                   activeMenu === 'work'
                     ? 'app__modal_menu_link_active'
@@ -74,7 +94,7 @@ const Pds = ({ userId }: PageProps) => {
                 Work Experience
               </li>
               <li
-                onClick={() => setActiveMenu('voluntary')}
+                onClick={() => handleMenuClick('voluntary')}
                 className={`${
                   activeMenu === 'voluntary'
                     ? 'app__modal_menu_link_active'
@@ -84,7 +104,7 @@ const Pds = ({ userId }: PageProps) => {
                 Voluntary Work
               </li>
               <li
-                onClick={() => setActiveMenu('trainings')}
+                onClick={() => handleMenuClick('trainings')}
                 className={`${
                   activeMenu === 'trainings'
                     ? 'app__modal_menu_link_active'
@@ -94,7 +114,7 @@ const Pds = ({ userId }: PageProps) => {
                 L&D Interventions/Trainings
               </li>
               <li
-                onClick={() => setActiveMenu('other')}
+                onClick={() => handleMenuClick('other')}
                 className={`${
                   activeMenu === 'other'
                     ? 'app__modal_menu_link_active'
@@ -103,9 +123,9 @@ const Pds = ({ userId }: PageProps) => {
               >
                 Other Information
               </li>
-              {/* <li onClick={() => setActiveMenu('question')} className={`${activeMenu === 'question' ? 'app__modal_menu_link_active' : 'app__modal_menu_link'}`}>Questionaires</li> */}
+              {/* <li onClick={() => handleMenuClick('question')} className={`${activeMenu === 'question' ? 'app__modal_menu_link_active' : 'app__modal_menu_link'}`}>Questionaires</li> */}
               <li
-                onClick={() => setActiveMenu('references')}
+                onClick={() => handleMenuClick('references')}
                 className={`${
                   activeMenu === 'references'
                     ? 'app__modal_menu_link_active'
@@ -134,7 +154,7 @@ const Pds = ({ userId }: PageProps) => {
           </div>
         </div>
       </div>
-    </>
+    </PdsDirtyContext.Provider>
   )
 }
 

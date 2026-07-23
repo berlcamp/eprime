@@ -1,11 +1,12 @@
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { PdsPersonalInfomationTypes } from '@/types'
-import { logError } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
 import { notifyInvalid } from './notifyInvalid'
+import { useReportPdsDirty } from './pdsDirty'
+import { savePds } from './savePds'
 
 export default function PersonalInfo({ userId }: { userId: string }) {
   const { supabase, session } = useSupabase()
@@ -19,13 +20,15 @@ export default function PersonalInfo({ userId }: { userId: string }) {
 
   const {
     register,
-    formState: { errors },
+    formState: { errors, isDirty },
     reset,
     watch,
     handleSubmit
   } = useForm<PdsPersonalInfomationTypes>({
     mode: 'onSubmit'
   })
+
+  useReportPdsDirty(() => isDirty)
 
   // Detail fields are only asked for when the answer is Yes
   const watchedPwd = watch('pwd')
@@ -88,21 +91,15 @@ export default function PersonalInfo({ userId }: { userId: string }) {
       solo_parent_detail:
         formdata.solo_parent === 'Yes' ? formdata.solo_parent_detail : ''
     }
-    const { error } = await supabase
-      .from('hrm_pds')
-      .upsert(newData, { onConflict: 'user_id' })
+    const { ok, message } = await savePds(
+      supabase,
+      'Update Pds Personal Info',
+      newData
+    )
 
-    if (error) {
-      void logError(
-        'Update Pds Personal Info',
-        'hrm_pds',
-        JSON.stringify(newData),
-        error.message
-      )
-      setToast('error', 'Saving failed, please reload the page and try again.')
-    } else {
-      setToast('success', 'Successfully saved.')
-    }
+    // Rebaseline so the tab no longer counts as unsaved.
+    if (ok) reset(formdata)
+    setToast(ok ? 'success' : 'error', message)
 
     setSaving(false)
   }

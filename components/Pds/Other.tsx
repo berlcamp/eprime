@@ -1,12 +1,14 @@
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { logError } from '@/utils/fetchApi'
 import { nanoid } from 'nanoid'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import CustomButton from '../CustomButton'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
 import { notifyInvalid } from './notifyInvalid'
+import { useReportPdsDirty } from './pdsDirty'
+import { hasPendingEntry, pendingEntryMessage } from './pendingEntry'
+import { savePds } from './savePds'
 
 interface SkillsRowTypes {
   nanoid: string
@@ -45,11 +47,13 @@ export default function Other({ userId }: { userId: string }) {
   const [showAddSkill, setShowAddSkill] = useState(false)
   const [showAddNonAcademic, setShowAddNonAcademic] = useState(false)
   const [showAddMembership, setShowAddMembership] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   const {
     register,
     formState: { errors },
     reset,
+    getValues,
     handleSubmit
   } = useForm<SkillsRowTypes>({
     mode: 'onSubmit'
@@ -59,6 +63,7 @@ export default function Other({ userId }: { userId: string }) {
     register: register2,
     formState: { errors: errors2 },
     reset: reset2,
+    getValues: getValues2,
     handleSubmit: handleSubmit2
   } = useForm<NonAcademicRowTypes>({
     mode: 'onSubmit'
@@ -68,6 +73,7 @@ export default function Other({ userId }: { userId: string }) {
     register: register3,
     formState: { errors: errors3 },
     reset: reset3,
+    getValues: getValues3,
     handleSubmit: handleSubmit3
   } = useForm<MembershipRowTypes>({
     mode: 'onSubmit'
@@ -92,6 +98,7 @@ export default function Other({ userId }: { userId: string }) {
 
     reset()
     setShowAddSkill(false)
+    setHasUnsavedChanges(true)
   }
   const onSubmitNonAcademic = async (formdata: SkillsRowTypes) => {
     setNonAcademicArray([
@@ -104,6 +111,7 @@ export default function Other({ userId }: { userId: string }) {
 
     reset2()
     setShowAddNonAcademic(false)
+    setHasUnsavedChanges(true)
   }
   const onSubmitMembership = async (formdata: SkillsRowTypes) => {
     setMembershipArray([
@@ -116,10 +124,23 @@ export default function Other({ userId }: { userId: string }) {
 
     reset3()
     setShowAddMembership(false)
+    setHasUnsavedChanges(true)
   }
+
+  // Each of the three Add forms is separate from the Save form, so an entry
+  // that was typed but never added would be dropped without a word.
+  const pendingEntry = () =>
+    (showAddSkill && hasPendingEntry(getValues())) ||
+    (showAddNonAcademic && hasPendingEntry(getValues2())) ||
+    (showAddMembership && hasPendingEntry(getValues3()))
 
   const onSubmit = async () => {
     if (saving) return
+
+    if (pendingEntry()) {
+      setToast('error', pendingEntryMessage)
+      return
+    }
 
     setSaving(true)
 
@@ -131,21 +152,14 @@ export default function Other({ userId }: { userId: string }) {
       membership_association: membershipArray
     }
 
-    const { error } = await supabase
-      .from('hrm_pds')
-      .upsert(newData, { onConflict: 'user_id' })
+    const { ok, message } = await savePds(
+      supabase,
+      'Update Other information PDS',
+      newData
+    )
 
-    if (error) {
-      void logError(
-        'Update Other information PDS',
-        'hrm_pds',
-        JSON.stringify(newData),
-        error.message
-      )
-      setToast('error', 'Saving failed, please reload the page and try again.')
-    } else {
-      setToast('success', 'Successfully saved.')
-    }
+    if (ok) setHasUnsavedChanges(false)
+    setToast(ok ? 'success' : 'error', message)
 
     setSaving(false)
   }
@@ -181,15 +195,20 @@ export default function Other({ userId }: { userId: string }) {
   const HandleRemoveSkill = (item: SkillsRowTypes) => {
     const updatedData = skillsArray.filter((e) => e.nanoid !== item.nanoid)
     setSkillsArray(updatedData)
+    setHasUnsavedChanges(true)
   }
   const HandleRemoveNonAcademic = (item: NonAcademicRowTypes) => {
     const updatedData = nonAcademicArray.filter((e) => e.nanoid !== item.nanoid)
     setNonAcademicArray(updatedData)
+    setHasUnsavedChanges(true)
   }
   const HandleRemoveMembership = (item: MembershipRowTypes) => {
     const updatedData = membershipArray.filter((e) => e.nanoid !== item.nanoid)
     setMembershipArray(updatedData)
+    setHasUnsavedChanges(true)
   }
+
+  useReportPdsDirty(() => hasUnsavedChanges || pendingEntry())
 
   useEffect(() => {
     void fetchData()
