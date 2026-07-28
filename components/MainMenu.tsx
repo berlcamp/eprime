@@ -265,7 +265,7 @@ const MainMenu = () => {
                 </div>
                 <div>
                   <div className="app__menu_item_label">
-                    Rewards & Recognation
+                    Rewards & Recognitions
                   </div>
                   <div className="app__menu_item_label_description">
                     Pasidungog, loyalty, tribute to retirees, gawad agad.
