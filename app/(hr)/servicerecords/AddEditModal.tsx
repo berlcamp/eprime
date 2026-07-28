@@ -2,7 +2,6 @@ import { CustomButton } from '@/components/index'
 import { personnelActions, separationCauses } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { add, format } from 'date-fns'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -68,85 +67,25 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
     !d || d === 'Present' ? Number.MAX_SAFE_INTEGER : new Date(d).getTime()
   const fromTime = (d: string) => new Date(d).getTime()
 
-  // Validates overlap and auto-closes prior 'Present' rows when isCurrent=true.
-  // Returns an error message on failure, or null on success (side-effects applied).
-  const runDateGuards = async (
+  // Validates the date fields of this entry only. Entries may overlap each
+  // other freely, and more than one row may stay open at 'Present'.
+  // Returns an error message on failure, or null when the dates are usable.
+  const runDateGuards = (
     newFrom: string,
     newTo: string,
-    current: boolean,
-    excludeId: string | null
-  ): Promise<string | null> => {
+    current: boolean
+  ): string | null => {
     if (!newFrom) return 'From date is required.'
     if (!current && !newTo) return 'To date is required.'
     if (!current && fromTime(newFrom) > toTime(newTo))
       return 'From date must be on or before To date.'
-
-    const { data: existing } = await supabase
-      .from('hrm_service_records')
-      .select('id, from, to')
-      .eq('user_id', userId)
-
-    const rows = (existing ?? []).filter(
-      (r: any) => !excludeId || r.id !== excludeId
-    )
-
-    const newFromT = fromTime(newFrom)
-    const newToT = current ? Number.MAX_SAFE_INTEGER : toTime(newTo)
-
-    // Auto-close set: only when this entry is the new 'Present' line. Prior
-    // Present rows whose `from` precedes the new `from` get their `to` set to
-    // the day before the new `from`. Other Present rows (with from >= newFrom)
-    // are NOT auto-closed — that would corrupt a chronologically later line.
-    const autoCloseIds: string[] = current
-      ? rows
-          .filter(
-            (r: any) => r.to === 'Present' && fromTime(r.from) < newFromT
-          )
-          .map((r: any) => r.id)
-      : []
-
-    // Overlap check for everything not in the auto-close set
-    const overlap = rows.find((r: any) => {
-      if (autoCloseIds.includes(r.id)) return false
-      const eFrom = fromTime(r.from)
-      const eTo = toTime(r.to)
-      return newFromT <= eTo && eFrom <= newToT
-    })
-    if (overlap) {
-      return 'Date range overlaps with an existing service record entry.'
-    }
-
-    if (autoCloseIds.length > 0) {
-      const dayBefore = format(
-        add(new Date(newFrom), { days: -1 }),
-        'yyyy-MM-dd'
-      )
-      const { error } = await supabase
-        .from('hrm_service_records')
-        .update({ to: dayBefore })
-        .in('id', autoCloseIds)
-      if (error) {
-        void logError(
-          'Close previous Present service records',
-          'hrm_service_records',
-          JSON.stringify({ ids: autoCloseIds, new_to: dayBefore }),
-          error.message
-        )
-        return 'Failed to close the previous active service record.'
-      }
-    }
 
     return null
   }
 
   const handleCreate = async (formdata: ServiceRecordTypes) => {
     const toValue = isCurrent ? 'Present' : formdata.to
-    const guardError = await runDateGuards(
-      formdata.from,
-      toValue,
-      isCurrent,
-      null
-    )
+    const guardError = runDateGuards(formdata.from, toValue, isCurrent)
     if (guardError) {
       setToast('error', guardError)
       setSaving(false)
@@ -226,12 +165,7 @@ const AddEditModal = ({ hideModal, editData, userId }: ModalProps) => {
     if (!editData) return
 
     const toValue = isCurrent ? 'Present' : formdata.to
-    const guardError = await runDateGuards(
-      formdata.from,
-      toValue,
-      isCurrent,
-      editData.id
-    )
+    const guardError = runDateGuards(formdata.from, toValue, isCurrent)
     if (guardError) {
       setToast('error', guardError)
       setSaving(false)
