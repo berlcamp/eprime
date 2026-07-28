@@ -184,6 +184,7 @@ export const PrintPassSlipForm = React.forwardRef<
                           alt=""
                           width={75}
                           height={75}
+                          className="object-contain"
                         />
                       ) : (
                         <span>SGD</span>
@@ -205,6 +206,7 @@ export const PrintPassSlipForm = React.forwardRef<
                           alt=""
                           width={75}
                           height={75}
+                          className="object-contain"
                         />
                       ) : (
                         <span>SGD</span>

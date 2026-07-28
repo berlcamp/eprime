@@ -61,6 +61,7 @@ export const PrintUndertimeForm = React.forwardRef<
                         alt=""
                         width={75}
                         height={75}
+                        className="object-contain"
                       />
                     ) : (
                       <span>SGD</span>
@@ -88,6 +89,7 @@ export const PrintUndertimeForm = React.forwardRef<
                         alt=""
                         width={75}
                         height={75}
+                        className="object-contain"
                       />
                     ) : (
                       <span>SGD</span>

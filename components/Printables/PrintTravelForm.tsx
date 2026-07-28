@@ -194,6 +194,7 @@ export const PrintTravelForm = React.forwardRef<
                           alt=""
                           width={75}
                           height={75}
+                          className="object-contain"
                         />
                       ) : (
                         <span>SGD</span>
@@ -231,6 +232,7 @@ export const PrintTravelForm = React.forwardRef<
                           alt=""
                           width={75}
                           height={75}
+                          className="object-contain"
                         />
                       ) : (
                         <span>SGD</span>
@@ -267,6 +269,7 @@ export const PrintTravelForm = React.forwardRef<
                           alt=""
                           width={75}
                           height={75}
+                          className="object-contain"
                         />
                       ) : (
                         <span>SGD</span>

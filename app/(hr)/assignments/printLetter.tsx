@@ -1,4 +1,5 @@
 import type { AssignmentTypes } from '@/types'
+import { fitImageToBox } from '@/utils/image-helper'
 import { jsPDF } from 'jspdf'
 import { format } from 'date-fns'
 
@@ -141,8 +142,12 @@ export async function printLetter (item: AssignmentTypes, letterDate: string, le
   y += 10
   const sdsSignaturePath = process.env.NEXT_PUBLIC_SDS_SIGNATURE ?? ''
   if (sdsSignaturePath) {
-    const sdsSignatureUrl = sdsSignaturePath
-    doc.addImage(sdsSignatureUrl, 'PNG', 42, y, 26, 8)
+    // Fit the scan inside a 26x8mm box instead of forcing it to those exact
+    // dimensions, which stretches signatures that aren't already 26:8. Sits on
+    // the bottom of the box so it rests just above the From line.
+    const { width, height } = await fitImageToBox(sdsSignaturePath, 26, 8)
+      .catch(() => ({ width: 26, height: 8 }))
+    doc.addImage(sdsSignaturePath, 'PNG', 42, y + (8 - height), width, height)
     y += 13
   }
   doc.setFont('times', 'normal')

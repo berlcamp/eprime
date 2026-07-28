@@ -795,6 +795,7 @@ const Page: React.FC = () => {
                                       alt=""
                                       width={75}
                                       height={75}
+                                      className="object-contain"
                                     />
                                   ) : (
                                     <Image

@@ -107,6 +107,7 @@ export default function Signature({ userId }: { userId: string }) {
                     width={100}
                     height={100}
                     alt=""
+                    className="object-contain"
                   />
                 </div>
               </>

@@ -598,6 +598,7 @@ export const PrintLeaveForm = React.forwardRef<
                         alt=""
                         width={40}
                         height={40}
+                        className="object-contain"
                       />
                     ) : (
                       <span>SGD</span>
@@ -699,6 +700,7 @@ export const PrintLeaveForm = React.forwardRef<
                         alt=""
                         width={40}
                         height={40}
+                        className="object-contain"
                       />
                     ) : (
                       <span>SGD</span>
@@ -734,6 +736,7 @@ export const PrintLeaveForm = React.forwardRef<
                         alt=""
                         width={40}
                         height={40}
+                        className="object-contain"
                       />
                     ) : (
                       <span>SGD</span>
@@ -808,6 +811,7 @@ export const PrintLeaveForm = React.forwardRef<
                         alt=""
                         width={40}
                         height={40}
+                        className="object-contain"
                       />
                     ) : (
                       <span>SGD</span>
