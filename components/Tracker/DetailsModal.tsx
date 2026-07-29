@@ -36,7 +36,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { useDispatch, useSelector } from "react-redux";
 import { Tooltip } from "react-tooltip";
-import { superAdmins } from "@/constants";
+import { LWOP_SERVICE_RECORD_MIN_DAYS, superAdmins } from "@/constants";
 import AddStickyModal from "./AddStickyModal";
 import CreditsCertification from "./CreditsCertification";
 
@@ -717,8 +717,11 @@ export default function DetailsModal({
           throw new Error(error.message);
         }
 
-        // If leave days without pay >= 30, add to Service Record and Update hrm_user 'step_increment_leave_days'
-        if (Number(leaveData.leave_days_without_pay) >= 30) {
+        // If leave days without pay reaches the threshold, add to Service Record and Update hrm_user 'step_increment_leave_days'
+        if (
+          Number(leaveData.leave_days_without_pay) >=
+          LWOP_SERVICE_RECORD_MIN_DAYS
+        ) {
           const newData = {
             user_id: leaveData.created_by,
             org_id: process.env.NEXT_PUBLIC_ORG_ID,
@@ -1043,9 +1046,13 @@ export default function DetailsModal({
         );
       }
 
-      // Restore step_increment_leave_days if it was bumped (>=30 days without pay)
+      // Restore step_increment_leave_days if it was bumped (threshold days without pay).
+      // Must use the same threshold as the approval path above, or a revert
+      // leaves the bump in place.
       let needsManualServiceRecordCheck = false;
-      if (Number(leaveData.leave_days_without_pay) >= 30) {
+      if (
+        Number(leaveData.leave_days_without_pay) >= LWOP_SERVICE_RECORD_MIN_DAYS
+      ) {
         needsManualServiceRecordCheck = true;
 
         const { error: updateUserError } = await supabase
@@ -1107,7 +1114,7 @@ export default function DetailsModal({
 
       if (data) {
         const logMessage = needsManualServiceRecordCheck
-          ? "Reverted to Approval Recommended (please manually review the Service Record entry for the >=30 days without pay adjustment)"
+          ? `Reverted to Approval Recommended (please manually review the Service Record entry for the >=${LWOP_SERVICE_RECORD_MIN_DAYS} days without pay adjustment)`
           : "Reverted to Approval Recommended";
 
         const newLogData = {
@@ -3111,10 +3118,12 @@ export default function DetailsModal({
                   • Status will change back to &apos;Approval
                   Recommended&apos; and the approved-by/date will be cleared.
                 </div>
-                {revertPreview.leaveDaysWithoutPay >= 30 && (
+                {revertPreview.leaveDaysWithoutPay >=
+                  LWOP_SERVICE_RECORD_MIN_DAYS && (
                   <div className="text-xs text-red-600 mb-2">
                     • This request had {revertPreview.leaveDaysWithoutPay}{" "}
-                    days without pay (≥30), which bumped the employee&apos;s
+                    days without pay (≥{LWOP_SERVICE_RECORD_MIN_DAYS}), which
+                    bumped the employee&apos;s
                     step increment leave days. That will be reverted
                     automatically, but the related Service Record entry
                     cannot be matched safely and must be reviewed/deleted

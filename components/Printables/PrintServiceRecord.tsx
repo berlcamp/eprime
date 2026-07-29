@@ -1,4 +1,8 @@
 import { DocumentTypes } from '@/types'
+import {
+  displayDaysWithoutPay,
+  visibleServiceRecords
+} from '@/utils/serviceRecordDisplay'
 import { format } from 'date-fns'
 import * as React from 'react'
 
@@ -10,15 +14,16 @@ export const PrintServiceRecord = React.forwardRef<
   HTMLDivElement | null,
   ComponentToPrintProps
 >(({ selectedItem }, ref) => {
+  // Short leaves are dropped before chunking, otherwise the hidden rows would
+  // still consume slots and leave gaps in the printed pages.
+  const printableRecords = visibleServiceRecords(
+    selectedItem.print_service_records
+  )
+
   // Split service records into chunks of 20
-  const recordBatches = selectedItem.print_service_records
-    ? selectedItem.print_service_records.reduce(
-        (
-          acc: Array<typeof selectedItem.print_service_records>,
-          _,
-          index,
-          array
-        ) => {
+  const recordBatches = printableRecords
+    ? printableRecords.reduce(
+        (acc: Array<typeof printableRecords>, _, index, array) => {
           if (index % 12 === 0) acc.push(array.slice(index, index + 12))
           return acc
         },
@@ -222,7 +227,7 @@ export const PrintServiceRecord = React.forwardRef<
                               {sr.branch}
                             </td>
                             <td className="border border-gray-400 px-1">
-                              {sr.days_without_pay}
+                              {displayDaysWithoutPay(sr)}
                             </td>
                           </tr>
                         ))}

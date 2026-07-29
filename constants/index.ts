@@ -1,5 +1,16 @@
 export const PER_PAGE = 25;
 
+// Leave without pay is written to the Service Record (and counted against the
+// step increment) from this many days up, i.e. every absence with any unpaid
+// day. Kept as a constant because the approval path, the revert path and the
+// revert confirmation text must all agree — they previously drifted apart.
+export const LWOP_SERVICE_RECORD_MIN_DAYS = 1;
+
+// ...but leave without pay below this many days is withheld from the Service
+// Record view and the printed Service Record. The rows stay in the database;
+// this is presentation only. See utils/serviceRecordDisplay.ts.
+export const LWOP_DISPLAY_MIN_DAYS = 15;
+
 // Station option representing the Alternative Learning System.
 // Stored on hrm_assignments.area_assigned as 'als'; the label below is shown wherever a station name is rendered.
 export const ALS_STATION_VALUE = "als";

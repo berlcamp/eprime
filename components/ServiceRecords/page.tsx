@@ -2,6 +2,10 @@
 
 import { PerPage, ShowMore, TableRowLoading, Title } from '@/components/index'
 import { fetchServiceRecords } from '@/utils/fetchApi'
+import {
+  displayDaysWithoutPay,
+  visibleServiceRecords
+} from '@/utils/serviceRecordDisplay'
 import { useEffect, useState } from 'react'
 
 // Types
@@ -94,7 +98,12 @@ export default function ServiceRecords({ userId }: { userId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
+  // Rows logging a short leave are withheld from the Service Record, so the
+  // count shown has to follow what is actually rendered.
+  const visibleList = visibleServiceRecords(list)
+
+  const isDataEmpty =
+    !Array.isArray(visibleList) || visibleList.length < 1 || !visibleList
 
   return (
     <>
@@ -105,7 +114,7 @@ export default function ServiceRecords({ userId }: { userId: string }) {
 
         {/* Per Page */}
         <PerPage
-          showingCount={resultsCounter.showing}
+          showingCount={visibleList.length}
           resultsCount={resultsCounter.results}
           perPageCount={perPageCount}
           setPerPageCount={setPerPageCount}
@@ -134,7 +143,7 @@ export default function ServiceRecords({ userId }: { userId: string }) {
             </thead>
             <tbody>
               {!isDataEmpty &&
-                list.map((item, index) => (
+                visibleList.map((item, index) => (
                   <tr key={index} className="app__tr">
                     <th className="app__th_firstcol">
                       {/* Mobile View */}
@@ -158,8 +167,8 @@ export default function ServiceRecords({ userId }: { userId: string }) {
                             <span className="app_td_mobile_label">
                               Leave without Pay:
                             </span>{' '}
-                            {Number(item.days_without_pay) > 0 &&
-                              `${item.days_without_pay} day/s`}
+                            {Number(displayDaysWithoutPay(item)) > 0 &&
+                              `${displayDaysWithoutPay(item)} day/s`}
                           </div>
                           <div>
                             <span className="app_td_mobile_label">Status:</span>{' '}
@@ -209,8 +218,8 @@ export default function ServiceRecords({ userId }: { userId: string }) {
                       {item.designation}
                     </td>
                     <td className="hidden md:table-cell app__td">
-                      {Number(item.days_without_pay) > 0 &&
-                        `${item.days_without_pay} day/s`}
+                      {Number(displayDaysWithoutPay(item)) > 0 &&
+                        `${displayDaysWithoutPay(item)} day/s`}
                     </td>
                     <td className="hidden md:table-cell app__td">
                       {item.status}
