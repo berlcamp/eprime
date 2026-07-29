@@ -207,7 +207,7 @@ export default function EducationalBackground({ userId }: { userId: string }) {
                           {userId === session?.user.id ? (
                             <div>
                               <input
-                                value={item.level}
+                                value={item.school}
                                 onChange={(e) =>
                                   handleInlineEdit(
                                     index,

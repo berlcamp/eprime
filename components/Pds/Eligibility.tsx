@@ -231,7 +231,7 @@ export default function Eligibility({ userId }: { userId: string }) {
                                   handleInlineEdit(
                                     index,
                                     e.target.value,
-                                    'level'
+                                    'exam_date'
                                   )
                                 }
                                 className="utline-none focus:outline-none focus:ring-0 inline-flex"
