@@ -2,22 +2,17 @@ import { CustomButton } from "@/components/index";
 import {
   CalendarIcon,
   ClipboardDocumentCheckIcon,
-  MagnifyingGlassIcon,
 } from "@heroicons/react/20/solid";
 import React, { useState } from "react";
 
 interface FilterTypes {
-  setFilterKeyword: (keyword: string) => void;
   setFilterYear: (year: string) => void;
   setFilterStatus: (status: string) => void;
 }
 
-const Filters = ({
-  setFilterKeyword,
-  setFilterYear,
-  setFilterStatus,
-}: FilterTypes) => {
-  const [keyword, setKeyword] = useState<string>("");
+// Filters for a single employee's own Annual Physical Exam records. There is no
+// name search here since the list already belongs to one employee.
+const Filters = ({ setFilterYear, setFilterStatus }: FilterTypes) => {
   const [year, setYear] = useState<string>("");
   const [status, setStatus] = useState<string>("");
 
@@ -28,26 +23,13 @@ const Filters = ({
   }
 
   const handleApply = () => {
-    if (keyword.trim() === "" && year === "" && status === "") return;
+    if (year === "" && status === "") return;
 
-    setFilterKeyword(keyword);
-    setFilterYear(year);
-    setFilterStatus(status);
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (keyword.trim() === "" && year === "" && status === "") return;
-
-    setFilterKeyword(keyword);
     setFilterYear(year);
     setFilterStatus(status);
   };
 
   const handleClear = () => {
-    setFilterKeyword("");
-    setKeyword("");
     setFilterYear("");
     setYear("");
     setFilterStatus("");
@@ -55,22 +37,10 @@ const Filters = ({
   };
 
   return (
-    <div className="">
+    <div>
       <div className="items-center space-x-2 space-y-1">
-        <form
-          onSubmit={handleSubmit}
-          className="items-center inline-flex app__filter_field_container"
-        >
+        <div className="items-center inline-flex app__filter_field_container">
           <div className="items-center space-y-1">
-            <div className="app__filter_container">
-              <MagnifyingGlassIcon className="w-4 h-4 mr-1" />
-              <input
-                placeholder="Search Employee Name"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                className="app__filter_input"
-              />
-            </div>
             <div className="app__filter_container">
               <CalendarIcon className="w-4 h-4 mr-1" />
               <select
@@ -99,7 +69,7 @@ const Filters = ({
               </select>
             </div>
           </div>
-        </form>
+        </div>
       </div>
       <div className="flex items-center space-x-2 mt-4">
         <CustomButton

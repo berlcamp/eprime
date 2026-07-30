@@ -1563,6 +1563,7 @@ export async function fetchApes(
   filters: {
     filterKeyword?: string;
     filterYear?: string;
+    filterStatus?: string; // "Pending" | "Diagnosed"
     schoolIds?: string[]; // when set, only exams from employees in these schools
   },
   perPageCount: number,
@@ -1615,6 +1616,14 @@ export async function fetchApes(
         .lte("exam_date", `${filters.filterYear}-12-31`);
     }
 
+    // Filter by review status: diagnosed_at marks a reviewed record
+    if (filters.filterStatus === "Pending") {
+      query = query.is("diagnosed_at", null);
+    }
+    if (filters.filterStatus === "Diagnosed") {
+      query = query.not("diagnosed_at", "is", null);
+    }
+
     // Per Page from context
     const from = rangeFrom;
     const to = from + (perPageCount - 1);
@@ -1637,7 +1646,11 @@ export async function fetchApes(
 }
 
 export async function fetchMyApes(
-  filters: { userId: string },
+  filters: {
+    userId: string;
+    filterYear?: string;
+    filterStatus?: string; // "Pending" | "Diagnosed"
+  },
   perPageCount: number,
   rangeFrom: number,
 ) {
@@ -1650,6 +1663,21 @@ export async function fetchMyApes(
       )
       .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID)
       .eq("hrm_user_id", filters.userId);
+
+    // Filter by year of exam_date
+    if (filters.filterYear && filters.filterYear !== "") {
+      query = query
+        .gte("exam_date", `${filters.filterYear}-01-01`)
+        .lte("exam_date", `${filters.filterYear}-12-31`);
+    }
+
+    // Filter by review status: diagnosed_at marks a reviewed record
+    if (filters.filterStatus === "Pending") {
+      query = query.is("diagnosed_at", null);
+    }
+    if (filters.filterStatus === "Diagnosed") {
+      query = query.not("diagnosed_at", "is", null);
+    }
 
     // Per Page from context
     const from = rangeFrom;

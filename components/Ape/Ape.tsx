@@ -2,12 +2,12 @@
 
 import {
   CustomButton,
-  DeleteModal,
   PerPage,
   ShowMore,
   TableRowLoading,
   Title,
 } from "@/components/index";
+import { superAdmins } from "@/constants";
 import { useSupabase } from "@/context/SupabaseProvider";
 import { fetchMyApes } from "@/utils/fetchApi";
 import { Menu, Transition } from "@headlessui/react";
@@ -21,7 +21,9 @@ import { Fragment, useEffect, useState } from "react";
 
 import AddEditModal from "./AddEditModal";
 import AttachmentsModal from "./AttachmentsModal";
+import DeleteApeModal from "./DeleteApeModal";
 import DiagnosisHistoryModal from "./DiagnosisHistoryModal";
+import Filters from "./Filters";
 import { sortDiagnosesNewestFirst } from "./diagnosisHelpers";
 
 // Types
@@ -45,6 +47,8 @@ export default function Ape({ userId }: { userId: string }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [perPageCount, setPerPageCount] = useState<number>(10);
+  const [filterYear, setFilterYear] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value);
@@ -54,12 +58,17 @@ export default function Ape({ userId }: { userId: string }) {
   const { session } = useSupabase();
 
   const isOwner = userId === session?.user.id;
+  const isSuperAdmin = superAdmins.includes(session?.user.email ?? "");
 
   const fetchData = async () => {
     setLoading(true);
 
     try {
-      const result = await fetchMyApes({ userId }, perPageCount, 0);
+      const result = await fetchMyApes(
+        { userId, filterYear, filterStatus },
+        perPageCount,
+        0,
+      );
       dispatch(updateList(result.data));
       dispatch(
         updateResultCounter({
@@ -78,7 +87,11 @@ export default function Ape({ userId }: { userId: string }) {
     setLoading(true);
 
     try {
-      const result = await fetchMyApes({ userId }, perPageCount, list.length);
+      const result = await fetchMyApes(
+        { userId, filterYear, filterStatus },
+        perPageCount,
+        list.length,
+      );
       const newList = [...list, ...result.data];
       dispatch(updateList(newList));
       dispatch(
@@ -130,7 +143,7 @@ export default function Ape({ userId }: { userId: string }) {
     void fetchData();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPageCount]);
+  }, [perPageCount, filterYear, filterStatus]);
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list;
 
@@ -154,6 +167,14 @@ export default function Ape({ userId }: { userId: string }) {
           Physical Exam result/s here. A Medical Officer will review and record a
           diagnosis. Once a diagnosis is recorded, the record can no longer be
           edited.
+        </div>
+
+        {/* Filters */}
+        <div className="app__filters">
+          <Filters
+            setFilterYear={setFilterYear}
+            setFilterStatus={setFilterStatus}
+          />
         </div>
 
         {/* Per Page */}
@@ -189,10 +210,15 @@ export default function Ape({ userId }: { userId: string }) {
                   );
                   const latest = diagnoses[0];
 
+                  // The owner may only touch a record until it is diagnosed. A
+                  // Super Admin can always delete, diagnosed or not.
+                  const canEdit = isOwner && !isDiagnosed;
+                  const canDelete = canEdit || isSuperAdmin;
+
                   return (
                     <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td">
-                        {isOwner && !isDiagnosed && (
+                        {canDelete && (
                           <Menu as="div" className="app__menu_container">
                             <div>
                               <Menu.Button className="app__dropdown_btn">
@@ -214,24 +240,28 @@ export default function Ape({ userId }: { userId: string }) {
                             >
                               <Menu.Items className="app__dropdown_items">
                                 <div className="py-1">
-                                  <Menu.Item>
-                                    <div
-                                      onClick={() => handleEdit(item)}
-                                      className="app__dropdown_item"
-                                    >
-                                      <PencilSquareIcon className="w-4 h-4" />
-                                      <span>Edit</span>
-                                    </div>
-                                  </Menu.Item>
-                                  <Menu.Item>
-                                    <div
-                                      onClick={() => handleDelete(item.id)}
-                                      className="app__dropdown_item"
-                                    >
-                                      <TrashIcon className="w-4 h-4" />
-                                      <span>Delete</span>
-                                    </div>
-                                  </Menu.Item>
+                                  {canEdit && (
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() => handleEdit(item)}
+                                        className="app__dropdown_item"
+                                      >
+                                        <PencilSquareIcon className="w-4 h-4" />
+                                        <span>Edit</span>
+                                      </div>
+                                    </Menu.Item>
+                                  )}
+                                  {canDelete && (
+                                    <Menu.Item>
+                                      <div
+                                        onClick={() => handleDelete(item.id)}
+                                        className="app__dropdown_item"
+                                      >
+                                        <TrashIcon className="w-4 h-4" />
+                                        <span>Delete</span>
+                                      </div>
+                                    </Menu.Item>
+                                  )}
                                 </div>
                               </Menu.Items>
                             </Transition>
@@ -376,9 +406,8 @@ export default function Ape({ userId }: { userId: string }) {
 
       {/* Delete Modal */}
       {showDeleteModal && (
-        <DeleteModal
+        <DeleteApeModal
           id={selectedId}
-          table="hrm_annual_physical_exams"
           hideModal={() => setShowDeleteModal(false)}
         />
       )}

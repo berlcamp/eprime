@@ -11,6 +11,7 @@ import {
   TopBar,
   Unauthorized,
 } from "@/components/index";
+import DeleteApeModal from "@/components/Ape/DeleteApeModal";
 import DiagnosisFileLinks from "@/components/Ape/DiagnosisFileLinks";
 import { superAdmins } from "@/constants";
 import { useFilter } from "@/context/FilterContext";
@@ -32,12 +33,15 @@ import { useDispatch, useSelector } from "react-redux";
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [list, setList] = useState<ApeTypes[]>([]);
   const [filterKeyword, setFilterKeyword] = useState<string>("");
   const [filterYear, setFilterYear] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
   const [perPageCount, setPerPageCount] = useState<number>(10);
   const [editData, setEditData] = useState<ApeTypes | null>(null);
+  const [deleteData, setDeleteData] = useState<ApeTypes | null>(null);
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value);
@@ -47,9 +51,9 @@ const Page: React.FC = () => {
   const { session, medicalOfficer } = useSupabase();
   const { hasAccess } = useFilter();
 
-  const isManager =
-    hasAccess("physical_exam_manager") ||
-    superAdmins.includes(session?.user.email ?? "");
+  const isSuperAdmin = superAdmins.includes(session?.user.email ?? "");
+
+  const isManager = hasAccess("physical_exam_manager") || isSuperAdmin;
 
   // Managers see all exams (org-wide). A Medical Officer who is not a manager is
   // scoped to the employees of their assigned school(s).
@@ -63,7 +67,7 @@ const Page: React.FC = () => {
 
     try {
       const result = await fetchApes(
-        { filterKeyword, filterYear, schoolIds: scopedSchoolIds },
+        { filterKeyword, filterYear, filterStatus, schoolIds: scopedSchoolIds },
         perPageCount,
         0,
       );
@@ -86,7 +90,7 @@ const Page: React.FC = () => {
 
     try {
       const result = await fetchApes(
-        { filterKeyword, filterYear, schoolIds: scopedSchoolIds },
+        { filterKeyword, filterYear, filterStatus, schoolIds: scopedSchoolIds },
         perPageCount,
         list.length,
       );
@@ -110,6 +114,11 @@ const Page: React.FC = () => {
     setEditData(item);
   };
 
+  const handleDelete = (item: ApeTypes) => {
+    setShowDeleteModal(true);
+    setDeleteData(item);
+  };
+
   // Update list whenever list in redux updates
   useEffect(() => {
     setList(globallist);
@@ -121,7 +130,7 @@ const Page: React.FC = () => {
     void fetchData();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, filterYear, perPageCount]);
+  }, [filterKeyword, filterYear, filterStatus, perPageCount]);
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list;
 
@@ -145,6 +154,7 @@ const Page: React.FC = () => {
             <Filters
               setFilterKeyword={setFilterKeyword}
               setFilterYear={setFilterYear}
+              setFilterStatus={setFilterStatus}
             />
           </div>
 
@@ -258,16 +268,27 @@ const Page: React.FC = () => {
                         )}
                       </td>
                       <td className="hidden md:table-cell app__td">
-                        <CustomButton
-                          containerStyles="app__btn_green"
-                          title={
-                            item.diagnosed_at
-                              ? "Edit Diagnosis"
-                              : "Review & Diagnose"
-                          }
-                          btnType="button"
-                          handleClick={() => handleDiagnose(item)}
-                        />
+                        <div className="flex items-center space-x-2">
+                          <CustomButton
+                            containerStyles="app__btn_green"
+                            title={
+                              item.diagnosed_at
+                                ? "Edit Diagnosis"
+                                : "Review & Diagnose"
+                            }
+                            btnType="button"
+                            handleClick={() => handleDiagnose(item)}
+                          />
+                          {/* Deleting a submitted record is Super Admin only */}
+                          {isSuperAdmin && (
+                            <CustomButton
+                              containerStyles="app__btn_red"
+                              title="Delete"
+                              btnType="button"
+                              handleClick={() => handleDelete(item)}
+                            />
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -291,6 +312,21 @@ const Page: React.FC = () => {
         <DiagnosisModal
           editData={editData}
           hideModal={() => setShowDiagnosisModal(false)}
+        />
+      )}
+
+      {/* Delete Modal */}
+      {showDeleteModal && deleteData && isSuperAdmin && (
+        <DeleteApeModal
+          id={deleteData.id}
+          employeeName={[
+            deleteData.hrm_users?.firstname,
+            deleteData.hrm_users?.middlename,
+            deleteData.hrm_users?.lastname,
+          ]
+            .filter((name) => name && name.trim() !== "")
+            .join(" ")}
+          hideModal={() => setShowDeleteModal(false)}
         />
       )}
     </>
