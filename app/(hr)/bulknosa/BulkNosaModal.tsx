@@ -45,12 +45,7 @@ const BulkNosaModal = ({ hideModal, modalData }: BulkNosaModalProps) => {
   })
 
   const onSubmit = async (formdata: BulkNosaFormData) => {
-    if (
-      !trulyYoursUser ||
-      !recommending1User ||
-      !recommending2User ||
-      !approvalUser
-    ) {
+    if (!trulyYoursUser || !recommending1User || !approvalUser) {
       return
     }
     const signatories: SignatoriesTypes = {
@@ -61,9 +56,14 @@ const BulkNosaModal = ({ hideModal, modalData }: BulkNosaModalProps) => {
       recommending_1: formatSignatoryName(recommending1User),
       recommending_1_position: recommending1User.hrm_positions?.name ?? '',
       recommending_1_user: recommending1User,
-      recommending_2: formatSignatoryName(recommending2User),
-      recommending_2_position: recommending2User.hrm_positions?.name ?? '',
-      recommending_2_user: recommending2User,
+      ...(recommending2User
+        ? {
+            recommending_2: formatSignatoryName(recommending2User),
+            recommending_2_position:
+              recommending2User.hrm_positions?.name ?? '',
+            recommending_2_user: recommending2User
+          }
+        : {}),
       approval: formatSignatoryName(approvalUser),
       approval_position: approvalUser.hrm_positions?.name ?? '',
       approval_user: approvalUser
@@ -201,7 +201,10 @@ const BulkNosaModal = ({ hideModal, modalData }: BulkNosaModalProps) => {
                 <div className="app__form_field_container">
                   <div className="w-full">
                     <div className="app__label_standard">
-                      Recommending approval (2)
+                      Recommending approval (2){' '}
+                      <span className="font-normal text-gray-500">
+                        (optional)
+                      </span>
                     </div>
                     <SearchUserInput
                       isMultiple={false}
@@ -212,11 +215,6 @@ const BulkNosaModal = ({ hideModal, modalData }: BulkNosaModalProps) => {
                         recommending2User ? [recommending2User] : []
                       }
                     />
-                    {!recommending2User && (
-                      <div className="app__error_message mt-1">
-                        Select a signatory
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="app__form_field_container">
@@ -244,10 +242,7 @@ const BulkNosaModal = ({ hideModal, modalData }: BulkNosaModalProps) => {
                 type="submit"
                 className="app__btn_green_sm"
                 disabled={
-                  !trulyYoursUser ||
-                  !recommending1User ||
-                  !recommending2User ||
-                  !approvalUser
+                  !trulyYoursUser || !recommending1User || !approvalUser
                 }
               >
                 Print

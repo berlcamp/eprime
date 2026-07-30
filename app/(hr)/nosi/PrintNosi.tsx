@@ -248,13 +248,15 @@ export const PrintNosi = React.forwardRef<
               position={signatories.recommending_1_position ?? ""}
             />
           </div>
-          <div className="text-center flex-1">
-            <SignatoryBlock
-              user={signatories.recommending_2_user}
-              name={signatories.recommending_2 ?? ""}
-              position={signatories.recommending_2_position ?? ""}
-            />
-          </div>
+          {(signatories.recommending_2_user ?? signatories.recommending_2) && (
+            <div className="text-center flex-1">
+              <SignatoryBlock
+                user={signatories.recommending_2_user}
+                name={signatories.recommending_2 ?? ""}
+                position={signatories.recommending_2_position ?? ""}
+              />
+            </div>
+          )}
         </div>
 
         {/* Approved by */}
