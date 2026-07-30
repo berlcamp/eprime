@@ -76,6 +76,20 @@ const DeleteApeModal = ({ hideModal, id, employeeName }: ModalProps) => {
     );
   };
 
+  // Drop the notifications that point at this exam, so nobody is left with a
+  // "review this exam" item linking to a record that no longer exists. The exam
+  // id travels in the notification url as a ref query param (reference_id is a
+  // smallint column and cannot hold a uuid).
+  const deleteNotifications = async () => {
+    const { error } = await supabase
+      .from("hrm_notifications")
+      .delete()
+      .eq("reference_table", "hrm_annual_physical_exams")
+      .like("url", `%ref=${id}%`);
+
+    if (error) throw new Error(error.message);
+  };
+
   const handleDelete = async () => {
     if (deleting) return;
 
@@ -107,6 +121,14 @@ const DeleteApeModal = ({ hideModal, id, employeeName }: ModalProps) => {
         .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
 
       if (error) throw new Error(error.message);
+
+      // Cleanup of the now-dangling notifications. Best-effort: the record is
+      // already gone, so a failure here must not surface as a failed delete.
+      try {
+        await deleteNotifications();
+      } catch (e) {
+        console.error("APE notification cleanup failed:", e);
+      }
 
       // Update data in redux
       const items = [...globallist];

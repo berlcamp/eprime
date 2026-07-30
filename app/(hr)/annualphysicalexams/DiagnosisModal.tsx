@@ -330,7 +330,9 @@ const DiagnosisModal = ({ hideModal, editData }: ModalProps) => {
       const notificationData = {
         message:
           "A Medical Officer has recorded a diagnosis for your Annual Physical Exam.",
-        url: `/profile/${editData.hrm_user_id}?page=ape`,
+        // ref carries the exam id so the notification can be cleaned up when the
+        // record is deleted (reference_id is a smallint and cannot hold a uuid)
+        url: `/profile/${editData.hrm_user_id}?page=ape&ref=${editData.id}`,
         type: "Annual Physical Exam",
         user_id: editData.hrm_user_id,
         reference_table: "hrm_annual_physical_exams",
