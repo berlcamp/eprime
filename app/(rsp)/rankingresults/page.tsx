@@ -49,6 +49,8 @@ const Page: React.FC = () => {
   const [showCommitteePointsModal, setShowCommitteePointsModal] =
     useState(false);
   const [showConfirmAppointModal, setShowConfirmAppointModal] = useState(false);
+  const [showConfirmUnappointModal, setShowConfirmUnappointModal] =
+    useState(false);
   const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null);
 
   const [list, setList] = useState<ListTypes[]>([]);
@@ -267,6 +269,52 @@ const Page: React.FC = () => {
       setRefetch(!refetch);
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleUnappoint = (item: ApplicantTypes) => {
+    setShowConfirmUnappointModal(true);
+    setSelectedItem(item);
+  };
+
+  // Reverts an accidental appointment. No email is sent — the applicant was
+  // already notified by handleConfirmedAppoint, so this has to be relayed
+  // to them manually.
+  const handleConfirmedUnappoint = async () => {
+    if (saving || !selectedItem) return;
+
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from("hrm_ranking_applicants")
+        .update({
+          status: null,
+        })
+        .eq("id", selectedItem.id);
+
+      if (error) {
+        void logError(
+          "Unappoint applicant",
+          "hrm_ranking_applicants",
+          "",
+          error.message,
+        );
+        setToast(
+          "error",
+          "Saving failed, please reload the page and try again.",
+        );
+        throw new Error(error.message);
+      }
+
+      setToast("success", "Successfully unappointed.");
+
+      setShowConfirmUnappointModal(false);
+      setRefetch(!refetch);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -679,7 +727,19 @@ const Page: React.FC = () => {
                               />
                             )}
                           {item.applicant.status === "Appointed" && (
-                            <span className="font-bold text-lg">Appointed</span>
+                            <div className="space-y-2">
+                              <div className="font-bold text-lg">Appointed</div>
+                              {(hasAccess("sds") || hasAccess("settings")) && (
+                                <CustomButton
+                                  containerStyles="app__btn_red"
+                                  title="Unappoint"
+                                  btnType="button"
+                                  handleClick={() =>
+                                    handleUnappoint(item.applicant)
+                                  }
+                                />
+                              )}
+                            </div>
                           )}
                         </td>
                         <td className="app__td">
@@ -780,6 +840,17 @@ const Page: React.FC = () => {
           message="Are you sure you want to appoint this employee?"
           onConfirm={handleConfirmedAppoint}
           onCancel={() => setShowConfirmAppointModal(false)}
+        />
+      )}
+
+      {/* Unappoint Confirmation Modal */}
+      {showConfirmUnappointModal && (
+        <ConfirmModal
+          header="Confirmation"
+          btnText="Confirm"
+          message="Are you sure you want to unappoint this employee? The applicant already received the appointment email, so you will need to inform them separately."
+          onConfirm={handleConfirmedUnappoint}
+          onCancel={() => setShowConfirmUnappointModal(false)}
         />
       )}
     </>
