@@ -26,6 +26,7 @@ import {
 } from "@/components/Rsp/EmployeePrintablesController";
 import { PrintableActionsMenu } from "@/components/Rsp/PrintableActionsMenu";
 import RspSidebar from "@/components/Sidebars/RspSidebar";
+import { superAdmins } from "@/constants";
 import { useSupabase } from "@/context/SupabaseProvider";
 import { CommitteeAccumulatedPoints } from "@/utils/data-helpers";
 import { logError } from "@/utils/fetchApi";
@@ -68,7 +69,9 @@ const Page: React.FC = () => {
   const [majors, setMajors] = useState<string[] | []>([]);
 
   const { hasAccess, setToast } = useFilter();
-  const { supabase } = useSupabase();
+  const { supabase, session } = useSupabase();
+
+  const isSuperAdmin = superAdmins.includes(session?.user.email ?? "");
 
   const printablesRef = React.useRef<EmployeePrintablesControllerHandle>(null);
 
@@ -281,7 +284,7 @@ const Page: React.FC = () => {
   // already notified by handleConfirmedAppoint, so this has to be relayed
   // to them manually.
   const handleConfirmedUnappoint = async () => {
-    if (saving || !selectedItem) return;
+    if (saving || !selectedItem || !isSuperAdmin) return;
 
     setSaving(true);
 
@@ -729,7 +732,7 @@ const Page: React.FC = () => {
                           {item.applicant.status === "Appointed" && (
                             <div className="space-y-2">
                               <div className="font-bold text-lg">Appointed</div>
-                              {(hasAccess("sds") || hasAccess("settings")) && (
+                              {isSuperAdmin && (
                                 <CustomButton
                                   containerStyles="app__btn_red"
                                   title="Unappoint"
@@ -844,7 +847,7 @@ const Page: React.FC = () => {
       )}
 
       {/* Unappoint Confirmation Modal */}
-      {showConfirmUnappointModal && (
+      {showConfirmUnappointModal && isSuperAdmin && (
         <ConfirmModal
           header="Confirmation"
           btnText="Confirm"
