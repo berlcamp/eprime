@@ -120,7 +120,10 @@ const Page: React.FC = () => {
       solo_parent: formdata.solo_parent,
       solo_parent_detail: formdata.solo_parent_detail,
       contact_number: formdata.contact_number,
-      specific_major: formdata.specific_major,
+      specific_major:
+        formdata.specific_major === 'Others'
+          ? formdata.specific_major_other?.trim()
+          : formdata.specific_major,
       deped_email: formdata.deped_email,
       current_employee: emailFound ? 'Yes' : 'No',
       previous_applicant: formdata.previous_applicant,
@@ -860,11 +863,32 @@ const Page: React.FC = () => {
                                       {specific_major}
                                     </option>
                                   ))}
+                                <option value="Others">Others</option>
                               </select>
                               {errors.specific_major && (
                                 <span className="app__error_message">
                                   {errors.specific_major.message}
                                 </span>
+                              )}
+                              {watch('specific_major') === 'Others' && (
+                                <div className="mt-2">
+                                  <input
+                                    {...register('specific_major_other', {
+                                      required: 'Please specify your major',
+                                      validate: (value) =>
+                                        value?.trim()
+                                          ? true
+                                          : 'Please specify your major'
+                                    })}
+                                    placeholder="Please specify your major"
+                                    className="app__input_standard"
+                                  />
+                                  {errors.specific_major_other && (
+                                    <span className="app__error_message">
+                                      {errors.specific_major_other.message}
+                                    </span>
+                                  )}
+                                </div>
                               )}
                             </div>
                           )}

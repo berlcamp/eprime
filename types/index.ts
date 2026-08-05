@@ -1047,6 +1047,7 @@ export interface ApplicantTypes {
   special_skills: string;
   contact_number: string;
   specific_major: string;
+  specific_major_other: string;
   current_approver_id: string;
 
   date?: string;
