@@ -14,7 +14,7 @@ import {
   fetchSchools,
   logError,
 } from "@/utils/fetchApi";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
 // Types
@@ -45,6 +45,10 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
   const { setToast, hasAccess } = useFilter();
   const { supabase, session } = useSupabase();
   const [saving, setSaving] = useState(false);
+
+  // The `saving` state only blocks the button on the next render, so it can't
+  // stop a second click that lands before that. This ref blocks it right away.
+  const submitting = useRef(false);
 
   const [reason, setReason] = useState("");
   const [showConfirmRemoveModal, setShowConfirmRemoveModal] = useState(false);
@@ -88,26 +92,41 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
   const watchedTrack = watch("track");
 
   const onSubmit = async (formdata: ItemTypes) => {
-    if (saving) return;
+    if (submitting.current) return;
 
-    if (editData) {
-      void handleUpdate(formdata);
-    } else {
-      void handleCreate(formdata);
+    submitting.current = true;
+    setSaving(true);
+
+    try {
+      if (editData) {
+        await handleUpdate(formdata);
+      } else {
+        await handleCreate(formdata);
+      }
+    } finally {
+      submitting.current = false;
+      setSaving(false);
     }
   };
 
   const handleCreate = async (formdata: ItemTypes) => {
     // if selected item holder already has an item
     if (user) {
-      const userExists = await checkExistingHolder(user.id);
+      let userExists = false;
+      try {
+        userExists = await checkExistingHolder(user.id);
+      } catch {
+        setToast(
+          "error",
+          "Unable to verify the item holder, please try again."
+        );
+        return;
+      }
       if (userExists) {
         setToast("error", "This employee already has an existing item.");
         return;
       }
     }
-
-    setSaving(true);
 
     const newData = {
       user_id: user ? user.id : null,
@@ -218,8 +237,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
         })
       );
 
-      setSaving(false);
-
       // hide the modal
       hideModal();
 
@@ -232,8 +249,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
 
   const handleUpdate = async (formdata: ItemTypes) => {
     if (!editData) return;
-
-    setSaving(true);
 
     const newData = {
       user_id: user ? user.id : null,
@@ -337,8 +352,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       // pop up the success message
       setToast("success", "Successfully saved.");
 
-      setSaving(false);
-
       // hide the modal
       hideModal();
 
@@ -349,19 +362,21 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
     }
   };
 
+  // Counts instead of .single(): .single() errors on 0 rows and on 2+ rows
+  // alike, so once an employee had duplicate items the check stopped catching
+  // them. Throws on failure so the caller can abort instead of saving blindly.
   const checkExistingHolder = async (userId: string): Promise<boolean> => {
-    const { data, error } = await supabase
+    const { count, error } = await supabase
       .from("hrm_items")
-      .select("user_id")
-      .eq("user_id", userId)
-      .single(); // Use .single() to fetch one record, as user_id is likely unique
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
 
     if (error) {
       console.error("Error checking user:", error.message);
-      return false;
+      throw new Error(error.message);
     }
 
-    return data !== null;
+    return (count ?? 0) > 0;
   };
 
   const handleSelectedUsers = async (selectedUsers: Employee[]) => {
@@ -437,13 +452,14 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
 
     if (!editData.hrm_user) return;
 
-    if (saving) return;
+    if (submitting.current) return;
 
     if (!reason || reason.trim() === "") {
       setToast("error", "Please provide a reason for removal.");
       return;
     }
 
+    submitting.current = true;
     setSaving(true);
 
     const newData = {
@@ -538,8 +554,6 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       // pop up the success message
       setToast("success", "Successfully saved.");
 
-      setSaving(false);
-
       // hide the modal
       hideModal();
 
@@ -547,6 +561,9 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
       reset();
     } catch (e) {
       console.error(e);
+    } finally {
+      submitting.current = false;
+      setSaving(false);
     }
   };
 
@@ -673,7 +690,7 @@ const PlantillaDetails = ({ hideModal, editData }: ModalProps) => {
                       title={saving ? "Saving..." : "Remove Employee"}
                       btnType="button"
                       handleClick={handleRemove}
-                      isDisabled={!reason || reason.trim() === ""}
+                      isDisabled={saving || !reason || reason.trim() === ""}
                     />
                   </div>
                 </div>
