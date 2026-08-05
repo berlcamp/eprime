@@ -35,12 +35,7 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
   const onSubmit = async (
     formdata: Pick<SignatoriesTypes, 'first_paragraph'>
   ) => {
-    if (
-      !trulyYoursUser ||
-      !recommending1User ||
-      !recommending2User ||
-      !approvalUser
-    ) {
+    if (!trulyYoursUser || !recommending1User || !approvalUser) {
       return
     }
     const signatories: SignatoriesTypes = {
@@ -51,9 +46,14 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
       recommending_1: formatSignatoryName(recommending1User),
       recommending_1_position: recommending1User.hrm_positions?.name ?? '',
       recommending_1_user: recommending1User,
-      recommending_2: formatSignatoryName(recommending2User),
-      recommending_2_position: recommending2User.hrm_positions?.name ?? '',
-      recommending_2_user: recommending2User,
+      ...(recommending2User
+        ? {
+            recommending_2: formatSignatoryName(recommending2User),
+            recommending_2_position:
+              recommending2User.hrm_positions?.name ?? '',
+            recommending_2_user: recommending2User
+          }
+        : {}),
       approval: formatSignatoryName(approvalUser),
       approval_position: approvalUser.hrm_positions?.name ?? '',
       approval_user: approvalUser
@@ -131,7 +131,10 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
               <div className="app__form_field_container">
                 <div className="w-full">
                   <div className="app__label_standard">
-                    Recommending Approval (2):
+                    Recommending Approval (2):{' '}
+                    <span className="font-normal text-gray-500">
+                      (optional)
+                    </span>
                   </div>
                   <SearchUserInput
                     isMultiple={false}
@@ -140,11 +143,6 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
                     }
                     selectedUsers={recommending2User ? [recommending2User] : []}
                   />
-                  {!recommending2User && (
-                    <div className="app__error_message mt-1">
-                      Select a signatory
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="app__form_field_container">
@@ -169,10 +167,7 @@ const SignatoriesModal = ({ hideModal, modalData }: ModalProps) => {
                   type="submit"
                   className="app__btn_green_sm"
                   disabled={
-                    !trulyYoursUser ||
-                    !recommending1User ||
-                    !recommending2User ||
-                    !approvalUser
+                    !trulyYoursUser || !recommending1User || !approvalUser
                   }
                 >
                   Print

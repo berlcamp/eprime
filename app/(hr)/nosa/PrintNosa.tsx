@@ -252,15 +252,18 @@ export const PrintNosa = React.forwardRef<
                       />
                     </div>
                   </div>
-                  <div className="text-center">
-                    <div className="mt-6">
-                      <SignatoryBlock
-                        user={signatories.recommending_2_user}
-                        name={signatories.recommending_2 ?? ""}
-                        position={signatories.recommending_2_position ?? ""}
-                      />
+                  {(signatories.recommending_2_user ??
+                    signatories.recommending_2) && (
+                    <div className="text-center">
+                      <div className="mt-6">
+                        <SignatoryBlock
+                          user={signatories.recommending_2_user}
+                          name={signatories.recommending_2 ?? ""}
+                          position={signatories.recommending_2_position ?? ""}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </td>
             </tr>
