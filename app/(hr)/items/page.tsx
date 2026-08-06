@@ -15,7 +15,7 @@ import {
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchItems } from '@/utils/fetchApi'
+import { fetchDuplicateItems, fetchItems } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
 import {
   ChevronDownIcon,
@@ -44,6 +44,7 @@ const Page: React.FC = () => {
   const [filterPosition, setFilterPosition] = useState<string>('')
   const [filterSchool, setFilterSchool] = useState<string>('')
   const [filterUser, setFilterUser] = useState<string>('')
+  const [filterDuplicates, setFilterDuplicates] = useState<string>('')
 
   const [perPageCount, setPerPageCount] = useState<number>(10)
   const [editData, setEditData] = useState<ItemTypes | null>(null)
@@ -59,15 +60,26 @@ const Page: React.FC = () => {
 
   const isSuperAdmin = superAdmins.includes(session?.user.email ?? '')
 
+  // The duplicates filter runs its own scan over the whole table, so it uses a
+  // different fetcher than the regular filtered list.
+  const fetchList = async (rangeFrom: number) => {
+    if (isSuperAdmin && filterDuplicates !== '') {
+      return await fetchDuplicateItems(filterDuplicates, perPageCount, rangeFrom)
+    }
+
+    return await fetchItems(
+      { filterSchool, filterNumber, filterPosition, filterUser },
+      perPageCount,
+      rangeFrom
+    )
+  }
+
   const fetchData = async () => {
     setLoading(true)
 
     try {
-      const result = await fetchItems(
-        { filterSchool, filterNumber, filterPosition, filterUser },
-        perPageCount,
-        0
-      )
+      const result = await fetchList(0)
+
       // update the list in redux
       dispatch(updateList(result.data))
 
@@ -90,11 +102,7 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const result = await fetchItems(
-        { filterSchool, filterNumber, filterPosition, filterUser },
-        perPageCount,
-        list.length
-      )
+      const result = await fetchList(list.length)
 
       // update the list in redux
       const newList = [...list, ...result.data]
@@ -138,7 +146,14 @@ const Page: React.FC = () => {
     setList([])
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPageCount, filterUser, filterNumber, filterPosition, filterSchool])
+  }, [
+    perPageCount,
+    filterUser,
+    filterNumber,
+    filterPosition,
+    filterSchool,
+    filterDuplicates
+  ])
 
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
@@ -171,6 +186,8 @@ const Page: React.FC = () => {
               setFilterSchool={setFilterSchool}
               setFilterPosition={setFilterPosition}
               setFilterUser={setFilterUser}
+              setFilterDuplicates={setFilterDuplicates}
+              isSuperAdmin={isSuperAdmin}
             />
           </div>
 

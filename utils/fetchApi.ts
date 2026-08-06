@@ -562,6 +562,104 @@ export async function fetchItems(
   }
 }
 
+// Lists plantilla items that share an item number ("item_number"), or that
+// assign the same employee to more than one item ("employee").
+//
+// Duplicates can only be spotted by looking at every row, and PostgREST has no
+// GROUP BY / HAVING, so the whole table is scanned in pages and grouped in
+// memory. Paging is done over the grouped ids instead of in the query, which
+// keeps the count exact and the row set small.
+export async function fetchDuplicateItems(
+  filterDuplicates: string,
+  perPageCount: number,
+  rangeFrom: number,
+) {
+  try {
+    const scanSize = 1000; // PostgREST caps a single response at 1000 rows
+    const rows: Array<{
+      id: string;
+      item_number: string | null;
+      user_id: string | null;
+    }> = [];
+
+    for (let offset = 0; ; offset += scanSize) {
+      const { data, error } = await supabase
+        .from("hrm_items")
+        .select("id, item_number, user_id")
+        .order("id", { ascending: true })
+        .range(offset, offset + scanSize - 1);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (!data || data.length === 0) break;
+
+      rows.push(...data);
+
+      if (data.length < scanSize) break;
+    }
+
+    // Group by the duplicate key
+    const groups: Record<string, typeof rows> = {};
+
+    rows.forEach((row) => {
+      const key =
+        filterDuplicates === "employee"
+          ? (row.user_id ?? "")
+          : (row.item_number ?? "").trim().toUpperCase();
+
+      // Vacant items and blank item numbers are allowed to repeat
+      if (key === "") return;
+
+      if (groups[key]) {
+        groups[key].push(row);
+      } else {
+        groups[key] = [row];
+      }
+    });
+
+    // Only groups with more than one row, kept next to each other in the list
+    const duplicates = Object.keys(groups)
+      .filter((key) => groups[key].length > 1)
+      .sort((keyA, keyB) => keyA.localeCompare(keyB))
+      .flatMap((key) => groups[key]);
+
+    const pageIds = duplicates
+      .slice(rangeFrom, rangeFrom + perPageCount)
+      .map((row) => row.id);
+
+    if (pageIds.length === 0) {
+      return { data: [], count: duplicates.length };
+    }
+
+    const { data: itemsData, error: itemsError } = await supabase
+      .from("hrm_items")
+      .select(
+        "*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url),hrm_school:school_id(name),implementing_unit:implementing_unit_id(name),hrm_position:position_id(name)",
+      )
+      .in("id", pageIds);
+
+    if (itemsError) {
+      throw new Error(itemsError.message);
+    }
+
+    // .in() does not preserve the order of the ids, so restore the grouping
+    const itemsById: Record<string, ItemTypes> = {};
+    (itemsData as ItemTypes[]).forEach((item) => {
+      itemsById[item.id.toString()] = item;
+    });
+    const data = pageIds
+      .map((id) => itemsById[id.toString()])
+      .filter((item): item is ItemTypes => item !== undefined);
+
+    return { data, count: duplicates.length };
+  } catch (error) {
+    console.error("fetch duplicate items error", error);
+    return { data: [], count: 0 };
+  }
+}
+
 export async function fetchAnnoucements(
   perPageCount: number,
   rangeFrom: number,

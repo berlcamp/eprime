@@ -1,6 +1,7 @@
 import { CustomButton, UserBlock } from '@/components/index'
 import { fetchImplementingUnits, fetchPositions } from '@/utils/fetchApi'
 import {
+  ExclamationTriangleIcon,
   MagnifyingGlassIcon,
   TagIcon,
   UserIcon,
@@ -21,17 +22,22 @@ interface FilterTypes {
   setFilterSchool: (type: string) => void
   setFilterPosition: (type: string) => void
   setFilterUser: (employee: string) => void
+  setFilterDuplicates: (type: string) => void
+  isSuperAdmin: boolean
 }
 
 const Filters = ({
   setFilterNumber,
   setFilterSchool,
   setFilterUser,
-  setFilterPosition
+  setFilterPosition,
+  setFilterDuplicates,
+  isSuperAdmin
 }: FilterTypes) => {
   const [itemNumber, setItemNumber] = useState('')
   const [selectedSchool, setSelectedSchool] = useState('')
   const [selectedPosition, setSelectedPosition] = useState('')
+  const [selectedDuplicates, setSelectedDuplicates] = useState('')
 
   const [positions, setPositions] = useState<PositionTypes[]>([])
   const [implementingUnits, setImplementingUnits] = useState<
@@ -60,6 +66,28 @@ const Filters = ({
     setFilterSchool(selectedSchool)
     setFilterUser(selectedUserId)
     setFilterPosition(selectedPosition)
+
+    // the duplicates scan covers the whole table, it can't be narrowed down
+    setSelectedDuplicates('')
+    setFilterDuplicates('')
+  }
+
+  // The duplicates scan looks at every item, so it replaces the other filters
+  // instead of combining with them.
+  const handleDuplicates = (value: string) => {
+    setSelectedDuplicates(value)
+
+    setItemNumber('')
+    setFilterNumber('')
+    setSelectedSchool('')
+    setFilterSchool('')
+    setSelectedPosition('')
+    setFilterPosition('')
+    setSelectedUserId('')
+    setFilterUser('')
+    setSelectedItems([])
+
+    setFilterDuplicates(value)
   }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -78,6 +106,10 @@ const Filters = ({
     setFilterSchool(selectedSchool)
     setFilterUser(selectedUserId)
     setFilterPosition(selectedPosition)
+
+    // the duplicates scan covers the whole table, it can't be narrowed down
+    setSelectedDuplicates('')
+    setFilterDuplicates('')
   }
 
   // clear all filters
@@ -91,6 +123,8 @@ const Filters = ({
     setFilterUser('')
     setSelectedUserId('')
     setSelectedItems([])
+    setFilterDuplicates('')
+    setSelectedDuplicates('')
   }
 
   // Search employees
@@ -235,9 +269,33 @@ const Filters = ({
                 ))}
               </select>
             </div>
+            {isSuperAdmin && (
+              <div className="app__filter_container">
+                <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
+                <select
+                  value={selectedDuplicates}
+                  onChange={(e) => handleDuplicates(e.target.value)}
+                  className="app__filter_select"
+                >
+                  <option value="">Find Duplicates</option>
+                  <option value="item_number">Duplicate Item Numbers</option>
+                  <option value="employee">
+                    Employees with Multiple Items
+                  </option>
+                </select>
+              </div>
+            )}
           </div>
         </form>
       </div>
+      {selectedDuplicates !== '' && (
+        <div className="mt-2 text-xs text-orange-700">
+          {selectedDuplicates === 'employee'
+            ? 'Showing items whose employee is assigned to more than one item.'
+            : 'Showing items that share an item number with another item.'}{' '}
+          The other filters do not apply to this list.
+        </div>
+      )}
       <div className="flex items-center space-x-2 mt-4">
         <CustomButton
           containerStyles="app__btn_green"
