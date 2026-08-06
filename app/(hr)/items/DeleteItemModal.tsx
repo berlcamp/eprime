@@ -19,7 +19,8 @@ interface ModalProps {
   item: ItemTypes
 }
 
-// Deleting an item is permanent and only available to super admins. The
+// Deleting an item is permanent and only available to Plantilla Admins and
+// super admins. The
 // generic DeleteModal is not used here because the holder's hrm_users.item_id
 // has to be cleared first, otherwise the employee keeps pointing at a row
 // that no longer exists.

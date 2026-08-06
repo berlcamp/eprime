@@ -23,7 +23,7 @@ interface FilterTypes {
   setFilterPosition: (type: string) => void
   setFilterUser: (employee: string) => void
   setFilterDuplicates: (type: string) => void
-  isSuperAdmin: boolean
+  isPlantillaAdmin: boolean
 }
 
 const Filters = ({
@@ -32,7 +32,7 @@ const Filters = ({
   setFilterUser,
   setFilterPosition,
   setFilterDuplicates,
-  isSuperAdmin
+  isPlantillaAdmin
 }: FilterTypes) => {
   const [itemNumber, setItemNumber] = useState('')
   const [selectedSchool, setSelectedSchool] = useState('')
@@ -269,7 +269,7 @@ const Filters = ({
                 ))}
               </select>
             </div>
-            {isSuperAdmin && (
+            {isPlantillaAdmin && (
               <div className="app__filter_container">
                 <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
                 <select

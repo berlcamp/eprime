@@ -60,10 +60,14 @@ const Page: React.FC = () => {
 
   const isSuperAdmin = superAdmins.includes(session?.user.email ?? '')
 
+  // Deleting items and scanning for duplicates are restricted to Plantilla
+  // Admins (set in System Permissions) and super admins.
+  const isPlantillaAdmin = isSuperAdmin || hasAccess('plantilla_admin')
+
   // The duplicates filter runs its own scan over the whole table, so it uses a
   // different fetcher than the regular filtered list.
   const fetchList = async (rangeFrom: number) => {
-    if (isSuperAdmin && filterDuplicates !== '') {
+    if (isPlantillaAdmin && filterDuplicates !== '') {
       return await fetchDuplicateItems(filterDuplicates, perPageCount, rangeFrom)
     }
 
@@ -158,8 +162,7 @@ const Page: React.FC = () => {
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
   // Check access from permission settings or Super Admins
-  if (!hasAccess('records') && !superAdmins.includes(session?.user.email ?? ''))
-    return <Unauthorized />
+  if (!hasAccess('records') && !isPlantillaAdmin) return <Unauthorized />
 
   return (
     <>
@@ -187,7 +190,7 @@ const Page: React.FC = () => {
               setFilterPosition={setFilterPosition}
               setFilterUser={setFilterUser}
               setFilterDuplicates={setFilterDuplicates}
-              isSuperAdmin={isSuperAdmin}
+              isPlantillaAdmin={isPlantillaAdmin}
             />
           </div>
 
@@ -251,7 +254,7 @@ const Page: React.FC = () => {
                                     <span>Edit</span>
                                   </div>
                                 </Menu.Item>
-                                {isSuperAdmin && (
+                                {isPlantillaAdmin && (
                                   <Menu.Item>
                                     <div
                                       onClick={() => handleDelete(item)}
@@ -353,8 +356,8 @@ const Page: React.FC = () => {
         />
       )}
 
-      {/* Delete Modal - Super Admins only */}
-      {isSuperAdmin && deleteData && (
+      {/* Delete Modal - Plantilla Admins and Super Admins only */}
+      {isPlantillaAdmin && deleteData && (
         <DeleteItemModal
           item={deleteData}
           hideModal={() => setDeleteData(null)}

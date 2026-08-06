@@ -73,6 +73,12 @@ const Page: React.FC = () => {
                 />
                 <ChooseUsers
                   multiple={true}
+                  type="plantilla_admin"
+                  users={users}
+                  title="Plantilla Admin - Allowed to delete and filter duplicates on Plantillas"
+                />
+                <ChooseUsers
+                  multiple={true}
                   type="verify_promotions"
                   users={users}
                   title="HR Personnel who can check and verify promotions"
