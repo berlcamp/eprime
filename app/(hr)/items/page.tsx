@@ -17,8 +17,13 @@ import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { fetchItems } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
+import {
+  ChevronDownIcon,
+  PencilSquareIcon,
+  TrashIcon
+} from '@heroicons/react/20/solid'
 import React, { Fragment, useEffect, useState } from 'react'
+import DeleteItemModal from './DeleteItemModal'
 import Filters from './Filters'
 
 // Types
@@ -42,6 +47,7 @@ const Page: React.FC = () => {
 
   const [perPageCount, setPerPageCount] = useState<number>(10)
   const [editData, setEditData] = useState<ItemTypes | null>(null)
+  const [deleteData, setDeleteData] = useState<ItemTypes | null>(null)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -50,6 +56,8 @@ const Page: React.FC = () => {
 
   const { session } = useSupabase()
   const { hasAccess } = useFilter()
+
+  const isSuperAdmin = superAdmins.includes(session?.user.email ?? '')
 
   const fetchData = async () => {
     setLoading(true)
@@ -114,6 +122,10 @@ const Page: React.FC = () => {
   const handleEdit = (item: ItemTypes) => {
     setShowAddModal(true)
     setEditData(item)
+  }
+
+  const handleDelete = (item: ItemTypes) => {
+    setDeleteData(item)
   }
 
   // Update list whenever list in redux updates
@@ -222,6 +234,17 @@ const Page: React.FC = () => {
                                     <span>Edit</span>
                                   </div>
                                 </Menu.Item>
+                                {isSuperAdmin && (
+                                  <Menu.Item>
+                                    <div
+                                      onClick={() => handleDelete(item)}
+                                      className="app__dropdown_item"
+                                    >
+                                      <TrashIcon className="w-4 h-4" />
+                                      <span>Delete</span>
+                                    </div>
+                                  </Menu.Item>
+                                )}
                               </div>
                             </Menu.Items>
                           </Transition>
@@ -310,6 +333,14 @@ const Page: React.FC = () => {
         <PlantillaDetails
           editData={editData}
           hideModal={() => setShowAddModal(false)}
+        />
+      )}
+
+      {/* Delete Modal - Super Admins only */}
+      {isSuperAdmin && deleteData && (
+        <DeleteItemModal
+          item={deleteData}
+          hideModal={() => setDeleteData(null)}
         />
       )}
     </>
