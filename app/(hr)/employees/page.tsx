@@ -35,6 +35,84 @@ import { useSupabase } from "@/context/SupabaseProvider";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 
+// Original Assignment, Position, Salary Grade, Next Step Increment, Plantilla
+const SETUP_STEPS = 5;
+
+const hasStepIncrement = (item: Employee) =>
+  Boolean(item.date_of_next_step_increment) ||
+  item.salary_step?.toString() === "8";
+
+// Original Assignment is always counted, hence the base of 1
+const setupCounter = (item: Employee) => {
+  let count = 1;
+  if (item.position_id) count++;
+  if (item.salary_grade && item.salary_step) count++;
+  if (hasStepIncrement(item)) count++;
+  if (item.item_id) count++;
+
+  return count;
+};
+
+const SetupCheck = ({ done, label }: { done: boolean; label: string }) => (
+  <div className="flex items-center space-x-1">
+    {done ? (
+      <CheckCircleIcon className="w-4 h-4 text-green-500" />
+    ) : (
+      <XMarkIcon className="w-4 h-4 text-red-500" />
+    )}
+    <span>{label}</span>
+  </div>
+);
+
+const AccountSetup = ({ item }: { item: Employee }) => {
+  const completed = setupCounter(item);
+
+  if (completed === SETUP_STEPS) {
+    return (
+      <div className="flex items-center space-x-1">
+        <CheckCircleIcon className="w-4 h-4 text-green-500" />
+        <span>Complete</span>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="font-semibold">
+        <span className="text-red-600">{completed}</span> out of{" "}
+        <span className="text-green-600">{SETUP_STEPS}</span> Completed
+      </div>
+      <div className="space-y-1 mt-2 pl-4">
+        <SetupCheck done={true} label="Set Original Assignment" />
+        <SetupCheck
+          done={Boolean(item.position_id)}
+          label="Set current Position"
+        />
+        <SetupCheck
+          done={Boolean(item.salary_grade && item.salary_step)}
+          label="Set current Salary Grade"
+        />
+        <SetupCheck
+          done={hasStepIncrement(item)}
+          label="Date of next Step Increment"
+        />
+        <SetupCheck
+          done={Boolean(item.item_id)}
+          label={
+            item.item_id
+              ? `Plantilla Item${
+                  item.hrm_item?.item_number
+                    ? ` (${item.hrm_item.item_number})`
+                    : ""
+                }`
+              : "Assigned Plantilla Item"
+          }
+        />
+      </div>
+    </div>
+  );
+};
+
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [list, setList] = useState<Employee[]>([]);
@@ -200,20 +278,6 @@ const Page: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterUser, perPageCount, filterSchool, filterSetupStatus, filterOffice]);
 
-  const setupCounter = (
-    positionId: number,
-    salaryGrade: string,
-    salaryStep: string,
-    dateOfNextStepIncrement: string
-  ) => {
-    let count = 1;
-    if (positionId) count++;
-    if (salaryGrade !== "" && salaryStep !== "") count++;
-    if (salaryStep === "8" || dateOfNextStepIncrement) count++;
-
-    return count;
-  };
-
   const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list;
 
   // Check access from permission settings or Super Admins
@@ -327,65 +391,7 @@ const Page: React.FC = () => {
                         </div>
                         <div>
                           <div className="md:hidden app__td">
-                            {item.position_id &&
-                            item.salary_grade !== "" &&
-                            item.date_of_next_step_increment &&
-                            item.salary_step !== "" ? (
-                              <>
-                                <div className="flex items-center space-x-1">
-                                  <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                  <span>Complete</span>
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div className="font-semibold">
-                                  <span className="text-red-600">
-                                    {setupCounter(
-                                      item.position_id,
-                                      item.salary_grade,
-                                      item.salary_step,
-                                      item.date_of_next_step_increment
-                                    )}
-                                  </span>{" "}
-                                  out of{" "}
-                                  <span className="text-green-600">4</span>{" "}
-                                  Completed
-                                </div>
-                                <div className="space-y-1 mt-2 pl-4">
-                                  <div className="flex items-center space-x-1">
-                                    <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                    <span>Set Original Assignment</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1">
-                                    {item.position_id ? (
-                                      <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                    ) : (
-                                      <XMarkIcon className="w-4 h-4 text-red-500" />
-                                    )}
-                                    <span>Set current Position</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1">
-                                    {item.salary_grade !== "" &&
-                                    item.salary_step !== "" ? (
-                                      <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                    ) : (
-                                      <XMarkIcon className="w-4 h-4 text-red-500" />
-                                    )}
-                                    <span>Set current Salary Grade</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1">
-                                    {item.date_of_next_step_increment ||
-                                    item.salary_step.toString() === "8" ? (
-                                      <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                    ) : (
-                                      <XMarkIcon className="w-4 h-4 text-red-500" />
-                                    )}
-                                    <span>Date of next Step Increment</span>
-                                  </div>
-                                </div>
-                              </>
-                            )}
+                            <AccountSetup item={item} />
                           </div>
                         </div>
                         <div>
@@ -408,66 +414,7 @@ const Page: React.FC = () => {
                         {/* End - Mobile View */}
                       </th>
                       <td className="hidden md:table-cell app__td">
-                        <div>
-                          {item.position_id &&
-                          item.salary_grade !== "" &&
-                          (item.date_of_next_step_increment ||
-                            item.salary_step === "8") &&
-                          item.salary_step !== "" ? (
-                            <>
-                              <div className="flex items-center space-x-1">
-                                <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                <span>Complete</span>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="font-semibold">
-                                <span className="text-red-600">
-                                  {setupCounter(
-                                    item.position_id,
-                                    item.salary_grade,
-                                    item.salary_step,
-                                    item.date_of_next_step_increment
-                                  )}
-                                </span>{" "}
-                                out of <span className="text-green-600">4</span>{" "}
-                                Completed
-                              </div>
-                              <div className="space-y-1 mt-2 pl-4">
-                                <div className="flex items-center space-x-1">
-                                  <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                  <span>Set Original Assignment</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  {item.position_id ? (
-                                    <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                  ) : (
-                                    <XMarkIcon className="w-4 h-4 text-red-500" />
-                                  )}
-                                  <span>Set current Position</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  {item.salary_grade && item.salary_step ? (
-                                    <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                  ) : (
-                                    <XMarkIcon className="w-4 h-4 text-red-500" />
-                                  )}
-                                  <span>Set current Salary Grade</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  {item.date_of_next_step_increment ||
-                                  item.salary_step.toString() === "8" ? (
-                                    <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                                  ) : (
-                                    <XMarkIcon className="w-4 h-4 text-red-500" />
-                                  )}
-                                  <span>Date of next Step Increment</span>
-                                </div>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                        <AccountSetup item={item} />
                       </td>
                       <td className="hidden md:table-cell app__td space-y-1">
                         <div>

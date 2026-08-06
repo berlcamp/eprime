@@ -39,11 +39,12 @@ const Filters = ({
   const [selectedItems, setSelectedItems] = useState<namesType[] | []>([])
   const [selectedUserId, setSelectedUserId] = useState('')
 
-  const handleApply = () => {
+  const applyFilters = () => {
+    // nothing chosen, nothing to apply
     if (
       selectedUserId === '' &&
-      selectedSchool !== '' &&
-      selectedOffice !== '' &&
+      selectedSchool === '' &&
+      selectedOffice === '' &&
       selectedSetupStatus === ''
     )
       return
@@ -55,22 +56,13 @@ const Filters = ({
     setFilterSetupStatus(selectedSetupStatus)
   }
 
+  const handleApply = () => {
+    applyFilters()
+  }
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-
-    if (
-      selectedUserId === '' &&
-      selectedSchool !== '' &&
-      selectedOffice !== '' &&
-      selectedSetupStatus === ''
-    )
-      return
-
-    // pass filter values to parent
-    setFilterUser(selectedUserId)
-    setFilterSchool(selectedSchool)
-    setFilterOffice(selectedOffice)
-    setFilterSetupStatus(selectedSetupStatus)
+    applyFilters()
   }
 
   // clear all filters

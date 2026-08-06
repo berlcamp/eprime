@@ -260,7 +260,7 @@ export async function fetchEmployees(
     let query = supabase
       .from("hrm_users")
       .select(
-        "*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))",
+        "*, hrm_schools:school_id(name), hrm_positions:position_id(name), hrm_item:item_id(item_number), hrm_offices:office_id(name), hrm_assignments(status,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name)), hrm_designations(type,status,designation,area_assigned,hrm_schools:school_id(name),hrm_offices:office_id(name))",
         { count: "exact" },
       )
       .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
@@ -293,14 +293,51 @@ export async function fetchEmployees(
         query = query.is("position_id", null);
       }
       if (filters.filterSetupStatus === "No current salary grade") {
-        query = query.eq("salary_grade", "");
+        // salary_grade defaults to '' but older rows can still be NULL
+        query = query.or("salary_grade.is.null,salary_grade.eq.");
       }
       if (filters.filterSetupStatus === "No date of next increment") {
-        query = query.neq("salary_step", "8");
+        // a NULL salary_step never satisfies `neq`, so match it explicitly
+        query = query.or("salary_step.is.null,salary_step.neq.8");
         query = query.is("date_of_next_step_increment", null);
       }
       if (filters.filterSetupStatus === "No Plantilla") {
-        query = query.is("item_id", null);
+        // hrm_users.item_id is the primary link, but hrm_items.user_id can
+        // drift out of sync with it. Only treat an employee as "no plantilla"
+        // when neither side points at an item, otherwise holders whose
+        // item_id was never written back show up as unassigned.
+        const withoutItemId = await supabase
+          .from("hrm_users")
+          .select("id")
+          .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID)
+          .is("item_id", null)
+          .limit(5000);
+
+        const candidateIds: string[] = (withoutItemId.data ?? []).map(
+          (user: { id: string }) => user.id,
+        );
+
+        let holderIds: string[] = [];
+        if (candidateIds.length > 0) {
+          const holders = await supabase
+            .from("hrm_items")
+            .select("user_id")
+            .in("user_id", candidateIds);
+          holderIds = (holders.data ?? []).map(
+            (item: { user_id: string }) => item.user_id,
+          );
+        }
+
+        const noPlantillaIds = candidateIds.filter(
+          (id) => !holderIds.includes(id),
+        );
+
+        // `in` with an empty list is invalid, so short-circuit to no results
+        if (noPlantillaIds.length === 0) {
+          return { data: [], count: 0 };
+        }
+
+        query = query.in("id", noPlantillaIds);
       }
     }
 
