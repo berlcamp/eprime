@@ -116,7 +116,7 @@ const Page: React.FC = () => {
         );
         setToast("error", "Error saving, please reload the page and try again.");
       } else {
-        setToast("success", "Successfully added Medical Officer.");
+        setToast("success", "Successfully added Nurse-Incharge.");
         await fetchData();
       }
     } catch (err) {
@@ -198,7 +198,7 @@ const Page: React.FC = () => {
       if (error) {
         setToast("error", "Error saving, please reload the page and try again.");
       } else {
-        setToast("success", "Medical Officer removed.");
+        setToast("success", "Nurse-Incharge removed.");
         await fetchData();
       }
     } catch (err) {
@@ -224,7 +224,7 @@ const Page: React.FC = () => {
       <div className="app__main">
         <div>
           <div className="app__title">
-            <Title title="Medical Officers" />
+            <Title title="Nurse-Incharges" />
           </div>
 
           <div className="app__content pb-20">
@@ -232,7 +232,7 @@ const Page: React.FC = () => {
             <div className="app__form_field_container">
               <div className="w-full">
                 <div className="app__label_standard">
-                  Add a user as Medical Officer:
+                  Add user as nurse-incharge:
                 </div>
                 <div className="relative bg-white p-1 border border-gray-300 rounded-sm max-w-md">
                   <input
@@ -262,7 +262,7 @@ const Page: React.FC = () => {
             {/* Officers list */}
             {loaded && officers.length === 0 && (
               <div className="app__norecordsfound">
-                No Medical Officers added yet.
+                No Nurse-Incharges added yet.
               </div>
             )}
 
@@ -294,8 +294,8 @@ const Page: React.FC = () => {
                       {(officer.hrm_medical_officer_schools ?? []).length ===
                       0 ? (
                         <span className="text-xs text-gray-500 italic">
-                          No schools assigned. This officer will not see any
-                          exams until a school is assigned.
+                          No schools assigned. This nurse-incharge will not see
+                          any exams until a school is assigned.
                         </span>
                       ) : (
                         officer.hrm_medical_officer_schools?.map((s) => (
@@ -348,7 +348,7 @@ const Page: React.FC = () => {
         <ConfirmModal
           header="Confirmation"
           btnText="Confirm"
-          message="Are you sure you want to remove this Medical Officer? Their school assignments will also be removed."
+          message="Are you sure you want to remove this Nurse-Incharge? Their school assignments will also be removed."
           onConfirm={handleConfirmedRemoveOfficer}
           onCancel={() => setOfficerToRemove(null)}
         />

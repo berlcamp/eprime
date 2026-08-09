@@ -86,7 +86,7 @@ const MedicalSideBar = () => {
             }`}
           >
             <span className="flex-1 ml-3 whitespace-nowrap">
-              Medical Officers
+              Nurse-Incharges
             </span>
           </Link>
         </li>
