@@ -51,9 +51,18 @@ const Page: React.FC = () => {
 
   const isSuperAdmin = superAdmins.includes(session?.user.email ?? "");
 
+  const hasFilters = filterRanking !== "" || filterKeyword.trim() !== "";
+
   const printablesRef = React.useRef<EmployeePrintablesControllerHandle>(null);
 
   const fetchData = async () => {
+    // Requires at least one filter, otherwise every appointee would be loaded
+    if (!hasFilters) {
+      setList([]);
+      setRankList([]);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -72,10 +81,11 @@ const Page: React.FC = () => {
         query = query.eq("ranking_id", filterRanking);
       }
 
-      // filter keyword
-      if (filterKeyword !== "") {
+      // filter keyword - matches name or email
+      if (filterKeyword.trim() !== "") {
+        const keyword = filterKeyword.trim();
         query = query.or(
-          `lastname.ilike.%${filterKeyword}%,firstname.ilike.%${filterKeyword}%,middlename.ilike.%${filterKeyword}%`,
+          `lastname.ilike.%${keyword}%,firstname.ilike.%${keyword}%,middlename.ilike.%${keyword}%,email.ilike.%${keyword}%`,
         );
       }
       const { data, error } = await query;
@@ -84,35 +94,31 @@ const Page: React.FC = () => {
         throw new Error(error.message);
       }
 
-      if (filterRanking !== "") {
-        if (data.length > 0) {
-          const structguredData: ListTypes[] = [];
-          data.forEach((d: ApplicantTypes) => {
-            const accumulatedPoints: Record<string, number> | null =
-              CommitteeAccumulatedPoints(d.id, d.ranking.committees);
+      const structguredData: ListTypes[] = [];
+      data.forEach((d: ApplicantTypes) => {
+        const accumulatedPoints: Record<string, number> | null =
+          CommitteeAccumulatedPoints(d.id, d.ranking.committees);
 
-            structguredData.push({
-              applicant: d,
-              accumulated_points: accumulatedPoints,
-              overall_score: accumulatedPoints
-                ? Object.values(accumulatedPoints)
-                    .reduce((sum: number, points) => sum + points, 0)
-                    .toFixed(2)
-                : "",
-            });
-          });
+        structguredData.push({
+          applicant: d,
+          accumulated_points: accumulatedPoints,
+          overall_score: accumulatedPoints
+            ? Object.values(accumulatedPoints)
+                .reduce((sum: number, points) => sum + points, 0)
+                .toFixed(2)
+            : "",
+        });
+      });
 
-          // Sort structguredData by overall_score in descending order
-          structguredData.sort((a, b) => {
-            const scoreA = parseFloat(a.overall_score || "0");
-            const scoreB = parseFloat(b.overall_score || "0");
-            return scoreB - scoreA; // Sort in descending order
-          });
+      // Sort structguredData by overall_score in descending order
+      structguredData.sort((a, b) => {
+        const scoreA = parseFloat(a.overall_score || "0");
+        const scoreB = parseFloat(b.overall_score || "0");
+        return scoreB - scoreA; // Sort in descending order
+      });
 
-          setList(structguredData);
-          setRankList(structguredData);
-        }
-      }
+      setList(structguredData);
+      setRankList(structguredData);
     } catch (e) {
       console.error(e);
     } finally {
@@ -211,14 +217,15 @@ const Page: React.FC = () => {
             </div>
           )}
 
-          {filterRanking === "" && (
+          {!hasFilters && (
             <div className="mt-10 text-center text-xl font-light text-gray-600">
-              Choose ranking from filters above.
+              Search an applicant by name or email, or choose a ranking from
+              filters above.
             </div>
           )}
 
           {/* Main Content */}
-          {rankList.length > 0 && (
+          {hasFilters && (
             <div>
               <table className="app__table">
                 <thead className="app__thead">
