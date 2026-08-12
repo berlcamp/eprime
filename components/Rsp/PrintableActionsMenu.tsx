@@ -1,7 +1,7 @@
 'use client'
 
 import { Menu } from '@headlessui/react'
-import { EyeIcon, PrinterIcon } from 'lucide-react'
+import { EyeIcon, MailIcon, PrinterIcon } from 'lucide-react'
 
 interface PrintableActionsMenuProps {
   onPrintAdviseOrder: () => void
@@ -10,6 +10,9 @@ interface PrintableActionsMenuProps {
   onPrintAppointmentForm: () => void
   onViewCommitteePoints?: () => void
   showViewCommitteePoints?: boolean
+  onResendAppointmentEmail?: () => void
+  /** Super admin only — resends the congratulations email to the appointee */
+  showResendAppointmentEmail?: boolean
   /** Only show print actions when applicant is appointed */
   isAppointed?: boolean
 }
@@ -25,6 +28,8 @@ export function PrintableActionsMenu({
   onPrintAppointmentForm,
   onViewCommitteePoints,
   showViewCommitteePoints = false,
+  onResendAppointmentEmail,
+  showResendAppointmentEmail = false,
   isAppointed = true,
 }: PrintableActionsMenuProps) {
   return (
@@ -78,6 +83,17 @@ export function PrintableActionsMenu({
               <span>Print Appointment Form</span>
             </div>
           </Menu.Item>
+          {showResendAppointmentEmail && onResendAppointmentEmail && (
+            <Menu.Item>
+              <div
+                onClick={onResendAppointmentEmail}
+                className="app__dropdown_item space-x-2"
+              >
+                <MailIcon className="w-4 h-4" />
+                <span>Resend Congratulations Email</span>
+              </div>
+            </Menu.Item>
+          )}
         </>
       )}
     </div>

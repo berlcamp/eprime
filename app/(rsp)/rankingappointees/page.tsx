@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ConfirmModal,
   Sidebar,
   TableRowLoading,
   Title,
@@ -22,8 +23,11 @@ import {
 } from "@/components/Rsp/EmployeePrintablesController";
 import { PrintableActionsMenu } from "@/components/Rsp/PrintableActionsMenu";
 import RspSidebar from "@/components/Sidebars/RspSidebar";
+import { superAdmins } from "@/constants";
 import { useSupabase } from "@/context/SupabaseProvider";
 import { CommitteeAccumulatedPoints } from "@/utils/data-helpers";
+import { logError } from "@/utils/fetchApi";
+import axios from "axios";
 
 interface ListTypes {
   applicant: ApplicantTypes;
@@ -33,14 +37,19 @@ interface ListTypes {
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [showConfirmResendModal, setShowConfirmResendModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null);
 
   const [list, setList] = useState<ListTypes[]>([]);
   const [rankList, setRankList] = useState<ListTypes[]>([]);
   const [filterKeyword, setFilterKeyword] = useState<string>("");
   const [filterRanking, setFilterRanking] = useState<string>("");
 
-  const { hasAccess } = useFilter();
-  const { supabase } = useSupabase();
+  const { hasAccess, setToast } = useFilter();
+  const { supabase, session } = useSupabase();
+
+  const isSuperAdmin = superAdmins.includes(session?.user.email ?? "");
 
   const printablesRef = React.useRef<EmployeePrintablesControllerHandle>(null);
 
@@ -108,6 +117,57 @@ const Page: React.FC = () => {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendEmail = (item: ApplicantTypes) => {
+    setSelectedItem(item);
+    setShowConfirmResendModal(true);
+  };
+
+  // Resends the same congratulations email sent on appointment, for cases where
+  // the applicant never received it.
+  const handleConfirmedResendEmail = async () => {
+    if (sending || !selectedItem || !isSuperAdmin) return;
+
+    if (!selectedItem.email) {
+      setToast("error", "This applicant has no email address on file.");
+      setShowConfirmResendModal(false);
+      return;
+    }
+
+    setSending(true);
+
+    const payload = {
+      position: selectedItem.ranking?.position?.name,
+      type: selectedItem.ranking?.type,
+      code: selectedItem.code,
+      email: selectedItem.email,
+      firstname: selectedItem.firstname,
+      middlename: selectedItem.middlename,
+      lastname: selectedItem.lastname,
+    };
+
+    try {
+      const { data } = await axios.post("/api/appointemail", payload);
+
+      if (data?.error || data?.error2) {
+        throw new Error(JSON.stringify(data.error ?? data.error2));
+      }
+
+      setToast("success", "Congratulations email sent.");
+      setShowConfirmResendModal(false);
+    } catch (e) {
+      void logError(
+        "Resend appointment email",
+        "hrm_ranking_applicants",
+        JSON.stringify(payload),
+        JSON.stringify(e),
+      );
+      setToast("error", "Sending failed, please try again.");
+      console.error(e);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -216,6 +276,10 @@ const Page: React.FC = () => {
                                       item.applicant,
                                     )
                                   }
+                                  onResendAppointmentEmail={() =>
+                                    handleResendEmail(item.applicant)
+                                  }
+                                  showResendAppointmentEmail={isSuperAdmin}
                                   isAppointed={true}
                                 />
                               </Menu.Items>
@@ -279,6 +343,17 @@ const Page: React.FC = () => {
 
       {/* All print modals + hidden print targets for the 4 appointment printables */}
       <EmployeePrintablesController ref={printablesRef} />
+
+      {/* Resend Congratulations Email Confirmation Modal */}
+      {showConfirmResendModal && selectedItem && isSuperAdmin && (
+        <ConfirmModal
+          header="Confirmation"
+          btnText={sending ? "Sending..." : "Confirm"}
+          message={`Resend the congratulations email to ${selectedItem.firstname} ${selectedItem.lastname} (${selectedItem.email})?`}
+          onConfirm={handleConfirmedResendEmail}
+          onCancel={() => setShowConfirmResendModal(false)}
+        />
+      )}
     </>
   );
 };
