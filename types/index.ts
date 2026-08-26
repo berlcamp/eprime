@@ -1156,6 +1156,13 @@ export interface SchoolYearTypes {
   is_active: boolean;
 }
 
+export interface HolidayTypes {
+  id: string;
+  date: string;
+  name: string;
+  type: string;
+}
+
 export interface PersonnelSubjectTypes {
   id: string;
   user_id: string;

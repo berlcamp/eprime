@@ -13,6 +13,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 // Types
 import type {
   Employee,
+  HolidayTypes,
   LeaveCreditTypes,
   LeaveTypes,
   SalaryGradeTypes,
@@ -23,6 +24,7 @@ import { updateList } from "@/GlobalRedux/Features/listSlice";
 import { updateResultCounter } from "@/GlobalRedux/Features/resultsCounterSlice";
 import { leaveTypes } from "@/constants";
 import { fetchSalaryGrades, logError } from "@/utils/fetchApi";
+import { fetchHolidayMap } from "@/utils/holiday-helper";
 import { XMarkIcon } from "@heroicons/react/20/solid";
 import { eachDayOfInterval, format } from "date-fns";
 import { useDropzone, type FileWithPath } from "react-dropzone";
@@ -55,6 +57,12 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   const [saving, setSaving] = useState(false);
 
   const [approverError, setApproverError] = useState("");
+
+  // Holidays are keyed by `yyyy-MM-dd`. They are skipped only when weekends
+  // are skipped too -- calendar-day leaves run straight through them.
+  const [holidays, setHolidays] = useState<Map<string, HolidayTypes>>(
+    new Map()
+  );
 
   // selected approver
   const [user, setUser] = useState<Employee | null>(null);
@@ -124,6 +132,37 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   const watchedLeaveTo = watch("leave_to");
   const watchedLeaveDates = watch("leave_dates") || [];
 
+  // Weekends and holidays are excluded together: if the request counts
+  // weekends (Maternity, Adoption, SLBW, Rehabilitation, Study, or a manual
+  // tick), it is a calendar-day leave and holidays count as leave days.
+  const skipHolidays = !watchedWeeked;
+
+  const isExcludedHoliday = (date: string) =>
+    skipHolidays && holidays.has(date);
+
+  // Holidays falling inside the chosen dates, for the "not counted" notice.
+  const excludedHolidays: HolidayTypes[] = (() => {
+    if (!skipHolidays || holidays.size === 0) return [];
+
+    if (watchedDateType === "Date Range") {
+      if (!watchedLeaveFrom || !watchedLeaveTo) return [];
+      const start = new Date(watchedLeaveFrom);
+      const end = new Date(watchedLeaveTo);
+      if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start)
+        return [];
+
+      return eachDayOfInterval({ start, end })
+        .filter((date) => date.getDay() !== 0 && date.getDay() !== 6)
+        .map((date) => holidays.get(format(date, "yyyy-MM-dd")))
+        .filter((holiday): holiday is HolidayTypes => Boolean(holiday));
+    }
+
+    return watchedLeaveDates
+      .filter((item) => item.date)
+      .map((item) => holidays.get(item.date))
+      .filter((holiday): holiday is HolidayTypes => Boolean(holiday));
+  })();
+
   const onSubmit = async (formdata: LeaveTypes) => {
     if (!user) {
       setApproverError("This field is required");
@@ -133,6 +172,18 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
 
   const handleCreate = async (formdata: LeaveTypes) => {
     if (!user) return;
+
+    // Every chosen date can land on a holiday, leaving nothing to file.
+    if (
+      formdata.other_purpose !== "Monetization of Leave Credits" &&
+      Number(formdata.days) < 1
+    ) {
+      setToast(
+        "error",
+        "All of the selected dates are holidays. Please choose other dates."
+      );
+      return;
+    }
 
     setSaving(true);
 
@@ -234,13 +285,16 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
           dateRange = eachDayOfInterval({
             start: new Date(formdata.leave_from),
             end: new Date(formdata.leave_to),
-          }).filter(
-            (date) =>
-              watchedWeeked || (date.getDay() !== 0 && date.getDay() !== 6)
-          ); // Exclude weekends if watchedWeeked is false
+          })
+            .filter(
+              (date) =>
+                watchedWeeked || (date.getDay() !== 0 && date.getDay() !== 6)
+            ) // Exclude weekends if watchedWeeked is false
+            .filter((date) => !isExcludedHoliday(format(date, "yyyy-MM-dd"))); // Exclude holidays unless weekends are counted
         } else {
           dateRange = formdata.leave_dates
             .filter((item) => item.date) // Ensure the date is valid (not blank)
+            .filter((item) => !isExcludedHoliday(item.date)) // Holidays are not leave days
             .map((item) => new Date(item.date))
             .sort((a, b) => a.getTime() - b.getTime());
         }
@@ -383,7 +437,10 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         while (currentDate <= endDate) {
           const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
 
-          if (watchedWeeked || (dayOfWeek !== 0 && dayOfWeek !== 6)) {
+          if (
+            (watchedWeeked || (dayOfWeek !== 0 && dayOfWeek !== 6)) &&
+            !isExcludedHoliday(format(currentDate, "yyyy-MM-dd"))
+          ) {
             totalDays++;
           }
 
@@ -395,7 +452,7 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         setValue("days", ""); // Reset totalDays if leave_to is before leave_from
       }
     }
-  }, [watchedLeaveFrom, watchedLeaveTo, watchedWeeked]);
+  }, [watchedLeaveFrom, watchedLeaveTo, watchedWeeked, holidays]);
 
   useEffect(() => {
     // reset date values
@@ -424,8 +481,18 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   }, [watchedType]);
 
   useEffect(() => {
-    setValue("days", watchedLeaveDates.length.toString());
-  }, [watchedLeaveDates]);
+    // Holidays picked by hand are kept in the list but not counted.
+    const countedDates = watchedLeaveDates.filter(
+      (item) => item.date && !isExcludedHoliday(item.date)
+    );
+    setValue("days", countedDates.length.toString());
+  }, [watchedLeaveDates, holidays, watchedWeeked]);
+
+  useEffect(() => {
+    void (async () => {
+      setHolidays(await fetchHolidayMap());
+    })();
+  }, []);
 
   const handleNotifyReceiver = async (
     trackerId: string,
@@ -911,6 +978,17 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                                   </button>
                                 )}
                               </div>
+                              {isExcludedHoliday(
+                                watchedLeaveDates[index]?.date
+                              ) && (
+                                <div className="text-xs text-red-600 mt-1">
+                                  {
+                                    holidays.get(watchedLeaveDates[index].date)
+                                      ?.name
+                                  }{" "}
+                                  &mdash; holiday, not counted
+                                </div>
+                              )}
                               {errors.leave_dates?.[index]?.date && (
                                 <div className="app__error_message">
                                   Date is required
@@ -962,6 +1040,24 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
                           {errors.leave_to && (
                             <div className="app__error_message">
                               Date (To) is required
+                            </div>
+                          )}
+                          {excludedHolidays.length > 0 && (
+                            <div className="mt-2 text-xs text-red-600">
+                              <div className="font-medium">
+                                Not counted as leave days:
+                              </div>
+                              <ul className="list-disc ml-4">
+                                {excludedHolidays.map((holiday) => (
+                                  <li key={holiday.id}>
+                                    {format(
+                                      new Date(holiday.date),
+                                      "MMM d, yyyy"
+                                    )}{" "}
+                                    &mdash; {holiday.name}
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
                           )}
                         </div>

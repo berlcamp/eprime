@@ -7,6 +7,7 @@ import { useFilter } from "@/context/FilterContext";
 import { useSupabase } from "@/context/SupabaseProvider";
 import type { CtoUserTypes, DocumentTypes, LeaveCreditTypes } from "@/types";
 import { logError } from "@/utils/fetchApi";
+import { countsCalendarDays, fetchHolidayMap } from "@/utils/holiday-helper";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
@@ -175,6 +176,7 @@ export default function CreditsCertification({
         formdata.wellness && Number(formdata.wellness) > 0
           ? formdata.wellness
           : null,
+      leave_days: documentData.leave_days,
       leave_days_with_pay: withPay,
       leave_days_without_pay: withoutPay,
       certification_as_of: format(new Date(), "MMMM d, yyyy"),
@@ -581,6 +583,32 @@ export default function CreditsCertification({
     void fetchBalances();
   }, []);
 
+  /**
+   * Drops dates that have since been declared holidays.
+   *
+   * A holiday can be proclaimed after a leave is filed, so the saved dates are
+   * re-checked here -- the last stage before credits are actually committed.
+   * Calendar-day leaves keep their holidays. Nothing is written until the
+   * certification is saved, which rewrites hrm_leave_dates anyway.
+   */
+  const dropHolidays = async (data: DocumentTypes) => {
+    const leaveDates = data.leave_dates ?? [];
+    if (leaveDates.length === 0) return data;
+
+    const dates = leaveDates.map((d) => d.date);
+    if (countsCalendarDays(data.leave_type, dates)) return data;
+
+    const holidays = await fetchHolidayMap();
+    const kept = leaveDates.filter((d) => !holidays.has(d.date));
+    if (kept.length === leaveDates.length) return data;
+
+    return {
+      ...data,
+      leave_dates: kept,
+      leave_days: String(kept.length),
+    };
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -598,7 +626,7 @@ export default function CreditsCertification({
           throw new Error(error.message);
         }
 
-        setDocumentData(data);
+        setDocumentData(await dropHolidays(data));
       } catch (error) {
         console.error("fetch error xx", error);
       } finally {

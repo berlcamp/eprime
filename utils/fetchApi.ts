@@ -774,6 +774,32 @@ export async function fetchSchoolYears(perPageCount: number, rangeFrom: number) 
   }
 }
 
+export async function fetchHolidays(
+  perPageCount: number,
+  rangeFrom: number,
+  year?: string,
+) {
+  try {
+    let query = supabase.from("hrm_holidays").select("*", { count: "exact" });
+
+    if (year && year !== "All") {
+      query = query.gte("date", `${year}-01-01`).lte("date", `${year}-12-31`);
+    }
+
+    const from = rangeFrom;
+    const to = from + (perPageCount - 1);
+    query = query.range(from, to);
+    query = query.order("date", { ascending: true });
+
+    const { data, error, count } = await query;
+    if (error) throw new Error(error.message);
+    return { data, count };
+  } catch (error) {
+    console.error("fetch holidays error", error);
+    return { data: [], count: 0 };
+  }
+}
+
 export async function fetchCoordinatorships(
   perPageCount: number,
   rangeFrom: number,
