@@ -180,7 +180,9 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     ) {
       setToast(
         "error",
-        "All of the selected dates are holidays. Please choose other dates."
+        excludedHolidays.length > 0
+          ? "All of the selected dates are holidays. Please choose other dates."
+          : "Please choose the dates of your leave."
       );
       return;
     }
@@ -421,7 +423,12 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedOtherPurpose, watchedDays, watchedType]);
 
+  // `days` is written by this effect and by the Custom Dates one below, so
+  // each guards on the active date type -- otherwise both fire on a shared
+  // dependency (weekend tick, holidays arriving) and the last one wins.
   useEffect(() => {
+    if (watchedDateType !== "Date Range") return;
+
     if (watchedLeaveFrom && watchedLeaveTo) {
       const startDate = new Date(watchedLeaveFrom);
       const endDate = new Date(watchedLeaveTo);
@@ -451,8 +458,16 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
       } else {
         setValue("days", ""); // Reset totalDays if leave_to is before leave_from
       }
+    } else {
+      setValue("days", ""); // No range picked yet (or just switched from Custom Dates)
     }
-  }, [watchedLeaveFrom, watchedLeaveTo, watchedWeeked, holidays]);
+  }, [
+    watchedDateType,
+    watchedLeaveFrom,
+    watchedLeaveTo,
+    watchedWeeked,
+    holidays,
+  ]);
 
   useEffect(() => {
     // reset date values
@@ -481,12 +496,31 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   }, [watchedType]);
 
   useEffect(() => {
+    if (watchedDateType === "Date Range") return;
+    // Monetization has no dates -- `days` is typed by hand there.
+    if (watchedOtherPurpose === "Monetization of Leave Credits") return;
+
+    const filledDates = watchedLeaveDates.filter((item) => item.date);
+
+    // Blank rows leave nothing to count -- keep `days` empty so the field's
+    // own "choose dates" validation speaks instead of a bogus 0.
+    if (filledDates.length === 0) {
+      setValue("days", "");
+      return;
+    }
+
     // Holidays picked by hand are kept in the list but not counted.
-    const countedDates = watchedLeaveDates.filter(
-      (item) => item.date && !isExcludedHoliday(item.date)
+    const countedDates = filledDates.filter(
+      (item) => !isExcludedHoliday(item.date)
     );
     setValue("days", countedDates.length.toString());
-  }, [watchedLeaveDates, holidays, watchedWeeked]);
+  }, [
+    watchedDateType,
+    watchedOtherPurpose,
+    watchedLeaveDates,
+    holidays,
+    watchedWeeked,
+  ]);
 
   useEffect(() => {
     void (async () => {
