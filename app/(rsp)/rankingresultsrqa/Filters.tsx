@@ -52,6 +52,9 @@ const Filters = ({ setFilterRankingIds }: FilterTypes) => {
           "*,position:position_id(name),committees:hrm_ranking_committees(*)",
         )
         .eq("status", "Closed")
+        // Latest closed first; rankings with no recorded closing date (the
+        // backfill could not reach every one) fall to the bottom by id.
+        .order("closed_at", { ascending: false, nullsFirst: false })
         .order("id", { ascending: false });
       if (data) {
         const filteredRankings = data.filter((ranking: RankingTypes) => {
