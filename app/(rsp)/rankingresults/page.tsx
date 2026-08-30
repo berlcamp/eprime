@@ -31,7 +31,8 @@ import { useSupabase } from "@/context/SupabaseProvider";
 import { CommitteeAccumulatedPoints } from "@/utils/data-helpers";
 import { logError } from "@/utils/fetchApi";
 import axios from "axios";
-import { CheckIcon } from "lucide-react";
+import { format } from "date-fns";
+import { CalendarIcon, CheckIcon } from "lucide-react";
 import Image from "next/image";
 
 interface ListTypes {
@@ -85,7 +86,7 @@ const Page: React.FC = () => {
       const query = supabase
         .from("hrm_ranking_applicants")
         .select(
-          "*, hrm_item:item_id(implementing_unit:implementing_unit_id(*),hrm_position:position_id(*)),ranking:ranking_id(type,year,passing_score,position:position_id(name,salary_grade),committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, signature_path, hrm_positions:position_id(name)), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))",
+          "*, hrm_item:item_id(implementing_unit:implementing_unit_id(*),hrm_position:position_id(*)),ranking:ranking_id(type,year,passing_score,closed_at,position:position_id(name,salary_grade),committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, signature_path, hrm_positions:position_id(name)), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))",
           {
             count: "exact",
           },
@@ -557,6 +558,18 @@ const Page: React.FC = () => {
                   Score: {rankingDetails?.passing_score}
                 </div>
               </div>
+              {rankingDetails?.closed_at && (
+                <div className="app__filter_container">
+                  <CalendarIcon className="w-4 h-4 mr-1" />
+                  <div className="text-xs">
+                    Closed:{" "}
+                    {format(
+                      new Date(rankingDetails.closed_at),
+                      "MMM d, yyyy h:mm a",
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
