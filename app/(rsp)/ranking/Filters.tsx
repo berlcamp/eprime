@@ -76,7 +76,7 @@ const Filters = ({ setFilterStatus, setFilterPosition }: FilterTypes) => {
             <div className="app__filter_container">
               <TagIcon className="w-4 h-4 mr-1" />
               <select
-                value={selectedPosition}
+                value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="app__filter_select"
               >
