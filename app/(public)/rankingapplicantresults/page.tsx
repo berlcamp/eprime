@@ -7,6 +7,15 @@ import { RankingTypes } from '@/types'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
+// hrm_rankings.type is stored as free text, so matching label branches against
+// exact spellings left the button empty whenever none matched: the stored type
+// is 'CAR (Non-teaching)' but this page tested for 'CAR (Non-Teaching)', and
+// 'Reclassification' had no branch at all. Match loosely, always return a label.
+const rqaButtonLabel = (type: string) =>
+  type?.toLowerCase().startsWith('car-rqa')
+    ? 'Registry of Qualified Applicants'
+    : 'Comparative Assessment Result'
+
 const Page: React.FC = () => {
   const [rankings, setRankings] = useState<RankingTypes[] | []>([])
   const [loading, setLoading] = useState(false)
@@ -60,13 +69,7 @@ const Page: React.FC = () => {
                         href={`/rankingapplicantresults/rqa?ref=${item.id}`}
                         className="app__btn_blue"
                       >
-                        {(item.type === 'CAR-RQA' ||
-                          item.type === 'CAR-RQA (Special Items)') &&
-                          'Registry of Quallified Applicants'}
-                        {(item.type === 'CAR (Teaching)' ||
-                          item.type === 'CAR (Non-Teaching)' ||
-                          item.type === 'CAR (Teaching-Related)') &&
-                          'Comparative Assessment Result'}
+                        {rqaButtonLabel(item.type)}
                       </Link>
                     )}
                     {item.display_nai && (
