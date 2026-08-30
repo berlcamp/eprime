@@ -992,6 +992,7 @@ export interface RankingTypes {
     required: boolean;
   }>;
   status: string;
+  closed_at: string | null;
   code_prefix: string;
   passing_score: string;
   display_on_open_ranking: boolean;

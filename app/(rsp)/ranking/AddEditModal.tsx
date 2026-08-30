@@ -71,6 +71,8 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
   const handleCreate = async (formdata: RankingTypes) => {
     const newData = {
       chairman_id: user ? user.id : null,
+      closed_at:
+        formdata.status === 'Closed' ? new Date().toISOString() : null,
       position_id: formdata.position_id,
       type: formdata.type,
       year: formdata.year,
@@ -173,8 +175,20 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
   const handleUpdate = async (formdata: RankingTypes) => {
     if (!editData) return
 
+    // Stamp the closing date on the way in to Closed and drop it when the
+    // ranking is reopened, so a reclose records the new date.
+    const isClosing =
+      editData.status !== 'Closed' && formdata.status === 'Closed'
+    const isReopening =
+      editData.status === 'Closed' && formdata.status !== 'Closed'
+
     const newData = {
       chairman_id: user ? user.id : null,
+      closed_at: isClosing
+        ? new Date().toISOString()
+        : isReopening
+          ? null
+          : (editData.closed_at ?? null),
       position_id: formdata.position_id,
       type: formdata.type,
       year: formdata.year,

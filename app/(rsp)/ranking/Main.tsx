@@ -399,6 +399,16 @@ const Page: React.FC = () => {
                                 Status:
                               </span>{' '}
                               {item.status}
+                              {item.status === 'Closed' && item.closed_at && (
+                                <span className="text-xs text-gray-500">
+                                  {' '}
+                                  since{' '}
+                                  {format(
+                                    new Date(item.closed_at),
+                                    'MMM d, yyyy h:mm a'
+                                  )}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -450,6 +460,15 @@ const Page: React.FC = () => {
 
                               return majorityConfirmed ? 'Closed' : 'Closing'
                             })()}
+                            {item.closed_at && (
+                              <div className="text-xs text-gray-500">
+                                since{' '}
+                                {format(
+                                  new Date(item.closed_at),
+                                  'MMM d, yyyy h:mm a'
+                                )}
+                              </div>
+                            )}
                           </>
                         )}
                       </td>
