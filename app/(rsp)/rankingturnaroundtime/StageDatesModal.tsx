@@ -132,10 +132,10 @@ const StageDatesModal = ({
           </div>
 
           <div className="app__modal_body">
-            <div className="text-xs text-gray-500 mb-4">
+            <p className="text-xs text-gray-500 mb-4">
               Recorded automatically from: {stage.source}. Dates entered here
               override that.
-            </div>
+            </p>
 
             <div className="app__form_field_container">
               <div className="w-full">
@@ -158,31 +158,34 @@ const StageDatesModal = ({
                   onChange={(e) => setDateTo(e.target.value)}
                   className="app__input_standard"
                 />
-                <div className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   Leave blank for a one-off milestone. The report then counts
                   the days up to the next stage.
-                </div>
+                </p>
               </div>
             </div>
-          </div>
 
-          <div className="app__modal_footer">
-            <CustomButton
-              containerStyles="app__btn_green_sm"
-              title={saving ? 'Saving..' : 'Save'}
-              isDisabled={saving}
-              btnType="button"
-              handleClick={handleSave}
-            />
-            {stage.isManual && (
-              <CustomButton
-                containerStyles="app__btn_gray_sm"
-                title="Reset to recorded dates"
-                isDisabled={saving}
-                btnType="button"
-                handleClick={handleReset}
-              />
-            )}
+            <hr className="my-6" />
+            <div className="app__modal_footer">
+              {stage.isManual && (
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={handleReset}
+                  className="app__btn_gray_sm"
+                >
+                  Reset to recorded dates
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={saving}
+                onClick={handleSave}
+                className="app__btn_green_sm"
+              >
+                {saving ? 'Saving..' : 'Save'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
