@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { RankingTypes } from '@/types'
+import { format } from 'date-fns'
 
 interface FilterTypes {
   setFilterRanking: (type: string) => void
@@ -91,6 +92,11 @@ const Filters = ({ setFilterRanking }: FilterTypes) => {
                   rankings.map((item, index) => (
                     <option key={index} value={item.id}>
                       {item.position?.name} - {item.type} - {item.year}
+                      {item.closed_at &&
+                        ` (Closed ${format(
+                          new Date(item.closed_at),
+                          'MMM d, yyyy'
+                        )})`}
                     </option>
                   ))}
               </select>
