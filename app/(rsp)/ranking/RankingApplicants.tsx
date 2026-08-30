@@ -100,7 +100,9 @@ const RankingApplicants = ({
         .from('hrm_ranking_applicants')
         .update({
           evaluation_status: selectedStatus,
-          reason_for_disqualification: reason
+          reason_for_disqualification: reason,
+          // Dates the HR screening stage of the turnaround report.
+          evaluated_at: new Date().toISOString()
         })
         .eq('id', selectedItem.id)
 

@@ -20,6 +20,12 @@ interface ModalProps {
   refetch: () => void
 }
 
+// The portal displays are booleans, so the turnaround report had no way to
+// date a posting. Stamp the moment one is switched on, keep it while it stays
+// on, and clear it when it is switched off.
+const postedAt = (isDisplayed: boolean, existing: string | null | undefined) =>
+  isDisplayed ? (existing ?? new Date().toISOString()) : null
+
 const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
   const { setToast } = useFilter()
   const { supabase } = useSupabase()
@@ -73,6 +79,9 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       chairman_id: user ? user.id : null,
       closed_at:
         formdata.status === 'Closed' ? new Date().toISOString() : null,
+      ier_posted_at: postedAt(Boolean(formdata.display_ier), null),
+      ranklist_posted_at: postedAt(Boolean(formdata.display_ranklist), null),
+      rqa_posted_at: postedAt(Boolean(formdata.display_rqa), null),
       position_id: formdata.position_id,
       type: formdata.type,
       year: formdata.year,
@@ -189,6 +198,18 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
         : isReopening
           ? null
           : (editData.closed_at ?? null),
+      ier_posted_at: postedAt(
+        Boolean(formdata.display_ier),
+        editData.ier_posted_at
+      ),
+      ranklist_posted_at: postedAt(
+        Boolean(formdata.display_ranklist),
+        editData.ranklist_posted_at
+      ),
+      rqa_posted_at: postedAt(
+        Boolean(formdata.display_rqa),
+        editData.rqa_posted_at
+      ),
       position_id: formdata.position_id,
       type: formdata.type,
       year: formdata.year,

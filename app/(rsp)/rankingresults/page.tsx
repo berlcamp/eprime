@@ -217,6 +217,8 @@ const Page: React.FC = () => {
         .from("hrm_ranking_applicants")
         .update({
           status: "Appointed",
+          // Dates the appointment stage of the turnaround report.
+          appointed_at: new Date().toISOString(),
         })
         .eq("id", selectedItem.id);
 

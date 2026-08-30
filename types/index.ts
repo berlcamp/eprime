@@ -993,6 +993,9 @@ export interface RankingTypes {
   }>;
   status: string;
   closed_at: string | null;
+  ier_posted_at: string | null;
+  ranklist_posted_at: string | null;
+  rqa_posted_at: string | null;
   code_prefix: string;
   passing_score: string;
   display_on_open_ranking: boolean;
@@ -1021,6 +1024,8 @@ export interface ApplicantTypes {
   id: string;
   type: string;
   created_at: string;
+  evaluated_at: string | null;
+  appointed_at: string | null;
   user_id: string;
   employee: Employee;
   approver: Employee;

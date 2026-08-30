@@ -56,7 +56,10 @@ const CastPoints = ({
       upsertData.push({
         committee_criteria_id: Number(c.commmittee_criteria_id),
         applicant_id: applicantData.id,
-        points: c.points
+        points: c.points,
+        // created_at defaults on the first cast; this moves on every re-cast,
+        // so the pair bounds the deliberation stage of the turnaround report.
+        updated_at: new Date().toISOString()
       })
     )
 
