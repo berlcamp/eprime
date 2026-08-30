@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 
 import { useSupabase } from "@/context/SupabaseProvider";
 import type { RankingTypes } from "@/types";
+import { format } from "date-fns";
 
 const RQA_ONLY_TYPES = new Set(["CAR-RQA", "CAR-RQA (Special Items)"]);
 
@@ -104,6 +105,13 @@ const Filters = ({ setFilterRankingIds }: FilterTypes) => {
                       />
                       <span>
                         {item.position?.name} — {item.type} — {item.year}
+                        {item.closed_at && (
+                          <span className="text-xs text-gray-500">
+                            {" "}
+                            (Closed{" "}
+                            {format(new Date(item.closed_at), "MMM d, yyyy")})
+                          </span>
+                        )}
                       </span>
                     </label>
                   ))}

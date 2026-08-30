@@ -31,7 +31,8 @@ import { useSupabase } from "@/context/SupabaseProvider";
 import { CommitteeAccumulatedPoints } from "@/utils/data-helpers";
 import { logError } from "@/utils/fetchApi";
 import axios from "axios";
-import { CheckIcon } from "lucide-react";
+import { format } from "date-fns";
+import { CalendarIcon, CheckIcon } from "lucide-react";
 import Image from "next/image";
 
 interface ListTypes {
@@ -606,6 +607,22 @@ const Page: React.FC = () => {
                     .map(
                       (r) =>
                         `${r.position?.name ?? "—"}: ${r.passing_score ?? "—"}`,
+                    )
+                    .join(" · ")}
+                </div>
+              </div>
+              <div className="app__filter_container max-w-md">
+                <CalendarIcon className="w-4 h-4 mr-1 shrink-0" />
+                <div className="text-xs">
+                  Closed:{" "}
+                  {rankingsMeta
+                    .map(
+                      (r) =>
+                        `${r.position?.name ?? "—"}: ${
+                          r.closed_at
+                            ? format(new Date(r.closed_at), "MMM d, yyyy")
+                            : "—"
+                        }`,
                     )
                     .join(" · ")}
                 </div>
