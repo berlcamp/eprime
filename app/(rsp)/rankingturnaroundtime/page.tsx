@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  CustomButton,
   Sidebar,
   TableRowLoading,
   Title,
@@ -23,6 +24,8 @@ import {
 } from '@/utils/turnaroundTime'
 import { format } from 'date-fns'
 import { PencilIcon } from 'lucide-react'
+import { useReactToPrint } from 'react-to-print'
+import { PrintTurnaroundTime } from './PrintTurnaroundTime'
 import StageDatesModal from './StageDatesModal'
 
 const formatDate = (date: Date | null) =>
@@ -39,6 +42,12 @@ const Page: React.FC = () => {
 
   const { hasAccess } = useFilter()
   const { supabase } = useSupabase()
+
+  const componentRef = React.useRef(null)
+  const printFn = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: 'Ranking Turnaround Time'
+  })
 
   const fetchData = async () => {
     if (filterRanking === '') {
@@ -163,6 +172,12 @@ const Page: React.FC = () => {
                   </span>
                 </div>
               </div>
+              <CustomButton
+                containerStyles="app__btn_blue"
+                title="Print"
+                btnType="button"
+                handleClick={() => printFn()}
+              />
             </div>
           )}
 
@@ -239,6 +254,16 @@ const Page: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Print Container */}
+      {ranking && (
+        <PrintTurnaroundTime
+          ranking={ranking}
+          stages={stages}
+          totalDays={totalDays}
+          ref={componentRef}
+        />
+      )}
 
       {/* Edit stage dates modal */}
       {selectedStage && (
