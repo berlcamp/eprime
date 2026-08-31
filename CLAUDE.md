@@ -10,6 +10,7 @@ Human Resource Management system for DepEd Division. Built with Next.js 14, Supa
 npm run dev             # Start dev server (localhost:3000)
 npm run build           # Production build
 npm run lint            # ESLint
+npm run typecheck       # tsc --noEmit (currently clean — keep it that way)
 npm run generate:types  # Regenerate Supabase types from remote schema
 ```
 
@@ -323,7 +324,9 @@ prime-hrm-next/
 - Common imports: `@/components`, `@/utils`, `@/constants`, `@/types`, `@/context`, `@/GlobalRedux`
 
 ### Data Access Patterns
-- Direct `supabase.from()` in components for real-time or simple CRUD
+- **New code:** wrap every query in `runQuery` / `runListQuery` from `utils/query-result.ts` and return a `QueryResult`. Never `catch { return { data: [], count: 0 } }` — that renders a failure as an empty table.
+- **List pages:** use the `useListQuery` hook rather than hand-rolling the `fetchData` / `handleShowMore` / `useEffect` trio, and render `<TableError>` when `error` is set.
+- Direct `supabase.from()` in components for real-time or simple CRUD (legacy; migrate to the wrapper when touching a file)
 - `fetchApi`, `pmsApi`, `landApi` for list pages with pagination and filters
 - API routes use `createClient(supabaseUrl, serviceRoleKey)` for server-side operations bypassing RLS
 
@@ -393,6 +396,8 @@ Data and side-effect logic live in `utils/`:
 | **utils/sideEffectFunctions.ts** | NOSI/NOSA side effects (salary step updates, notifications) |
 | **utils/data-helpers.ts** | `CheckIfSchoolHead`, school data helpers |
 | **utils/text-helper.ts** | `fullTextQuery`, `capitalizeWords`, `formatToPesos`, `generateReferenceCode` |
+| **utils/query-result.ts** | `QueryResult` discriminated union, `runQuery`, `runListQuery` — the single place a Supabase error becomes a user-facing message |
+| **utils/error-log.ts** | `logError` (writes `error_logs`; falls back to the console if that insert fails). Re-exported from `fetchApi` for existing call sites |
 
 ### Supabase clients
 - **Server:** `utils/supabase-server.ts` — `createServerClient()` with cookies
@@ -440,12 +445,13 @@ From `constants/index.ts`:
 
 ## Hooks
 
-No dedicated `hooks/` folder. Hooks come from context:
+`hooks/` holds shared data hooks; the rest come from context:
 
 | Hook | Source | Purpose |
 |------|--------|---------|
 | `useSupabase()` | `context/SupabaseProvider.tsx` | Supabase client, session, systemAccess, systemUsers, systemSchools, systemOffices |
 | `useFilter()` | `context/FilterContext.tsx` | filters, setFilters, perPage, hasAccess, setToast, isSchoolHead, etc. |
+| `useListQuery()` | `hooks/useListQuery.ts` | Paginated list state for list pages: `list`, `loading`, `error`, `isEmpty`, `hasMore`, `showing`, `results`, `refetch`, `showMore`. Guards against out-of-order responses and keeps the list in Redux so existing modals keep working |
 
 ---
 

@@ -7,6 +7,7 @@ import {
   RecordsSideBar,
   ShowMore,
   Sidebar,
+  TableError,
   TableRowLoading,
   Title,
   TopBar,
@@ -15,6 +16,7 @@ import {
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { useListQuery } from '@/hooks/useListQuery'
 import { fetchCtos } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
 import {
@@ -33,30 +35,19 @@ import Filters from './Filters'
 // Types
 import type { CtoTypes, CtoUserTypes } from '@/types'
 
-// Redux imports
-import { updateList } from '@/GlobalRedux/Features/listSlice'
-import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { useDispatch, useSelector } from 'react-redux'
 
 const Page: React.FC = () => {
-  const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEmployeesModal, setShowEmployeesModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const [selectedId, setSelectedId] = useState<string>('')
-  const [list, setList] = useState<CtoTypes[]>([])
   const [filterKeyword, setFilterKeyword] = useState<string>('')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [perPageCount, setPerPageCount] = useState<number>(10)
   const [editData, setEditData] = useState<CtoTypes | null>(null)
-
-  // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
-  const resultsCounter = useSelector((state: any) => state.results.value)
-  const dispatch = useDispatch()
 
   const { session, supabase } = useSupabase()
   const { hasAccess } = useFilter()
@@ -68,62 +59,27 @@ const Page: React.FC = () => {
   const searchParams = useSearchParams()
   const filterUrl = searchParams.get('ref')
 
-  const fetchData = async () => {
-    setLoading(true)
-
-    try {
-      const result = await fetchCtos(
+  const {
+    list,
+    loading,
+    error,
+    isEmpty,
+    hasMore,
+    showing,
+    results,
+    refetch,
+    showMore
+  } = useListQuery<CtoTypes>({
+    fetcher: async (perPage, rangeFrom) =>
+      await fetchCtos(
         { filterKeyword, filterStatus },
         filterUrl,
-        perPageCount,
-        0
-      )
-      // update the list in redux
-      dispatch(updateList(result.data))
-
-      // Updating showing text in redux
-      dispatch(
-        updateResultCounter({
-          showing: result.data.length,
-          results: result.count ? result.count : 0
-        })
-      )
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Append data to existing list whenever 'show more' button is clicked
-  const handleShowMore = async () => {
-    setLoading(true)
-
-    try {
-      const result = await fetchCtos(
-        { filterKeyword, filterStatus },
-        null,
-        perPageCount,
-        list.length
-      )
-
-      // update the list in redux
-      const newList = [...list, ...result.data]
-      dispatch(updateList(newList))
-
-      // Updating showing text in redux
-      dispatch(
-        updateResultCounter({
-          showing: newList.length,
-          results: result.count ? result.count : 0
-        })
-      )
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
+        perPage,
+        rangeFrom
+      ),
+    deps: [filterKeyword, filterStatus, filterUrl],
+    perPage: perPageCount
+  })
 
   const handleAdd = () => {
     setShowAddModal(true)
@@ -151,19 +107,6 @@ const Page: React.FC = () => {
     const filtered = users.filter((user) => !user.is_approved)
     return filtered.length
   }
-
-  // Update list whenever list in redux updates
-  useEffect(() => {
-    setList(globallist)
-  }, [globallist])
-
-  // Featch data
-  useEffect(() => {
-    setList([])
-    void fetchData()
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKeyword, filterUrl, perPageCount, filterStatus])
 
   // Fetch employees with COC > 15 in current year (only when viewing all CTOs)
   useEffect(() => {
@@ -235,7 +178,6 @@ const Page: React.FC = () => {
     })()
   }, [filterUrl, supabase])
 
-  const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
   // Check access from permission settings or Super Admins
   if (!hasAccess('records') && !superAdmins.includes(session?.user.email ?? ''))
@@ -293,8 +235,8 @@ const Page: React.FC = () => {
 
               {/* Per Page */}
               <PerPage
-                showingCount={resultsCounter.showing}
-                resultsCount={resultsCounter.results}
+                showingCount={showing}
+                resultsCount={results}
                 perPageCount={perPageCount}
                 setPerPageCount={setPerPageCount}
               />
@@ -319,8 +261,7 @@ const Page: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {!isDataEmpty &&
-                  list.map((item: CtoTypes, index) => (
+                {list.map((item: CtoTypes, index) => (
                     <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td">
                         <Menu as="div" className="app__menu_container">
@@ -451,15 +392,14 @@ const Page: React.FC = () => {
                 {loading && <TableRowLoading cols={6} rows={2} />}
               </tbody>
             </table>
-            {!loading && isDataEmpty && (
+            {error && <TableError error={error} onRetry={refetch} />}
+            {isEmpty && (
               <div className="app__norecordsfound">No records found.</div>
             )}
           </div>
 
           {/* Show More */}
-          {resultsCounter.results > resultsCounter.showing && !loading && (
-            <ShowMore handleShowMore={handleShowMore} />
-          )}
+          {hasMore && <ShowMore handleShowMore={showMore} />}
         </div>
       </div>
 

@@ -17,6 +17,7 @@ import RegisterModal from './RegisterModal'
 import SearchUserInput from './SearchUserInput'
 import ShowMore from './ShowMore'
 import Sidebar from './Sidebar'
+import TableError from './TableError'
 import EmployeesSideBar from './Sidebars/EmployeesSideBar'
 import MedicalSideBar from './Sidebars/MedicalSideBar'
 import RecordsSideBar from './Sidebars/RecordsSideBar'
@@ -51,6 +52,7 @@ export {
   ShowMore,
   Sidebar,
   StatusFlow,
+  TableError,
   TableRowLoading,
   ThreeColTableLoading,
   Title,

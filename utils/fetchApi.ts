@@ -1,3 +1,5 @@
+import { logError } from "@/utils/error-log";
+import { runListQuery, type QueryResult } from "@/utils/query-result";
 import { fullTextQuery } from "@/utils/text-helper";
 import { createBrowserClient } from "@supabase/ssr";
 import { format } from "date-fns";
@@ -1580,61 +1582,53 @@ export async function searchActiveEmployees(
   return data ?? [];
 }
 
+// Reference implementation for the Phase 0 query wrapper: returns a
+// QueryResult, so a failure can no longer be rendered as an empty table.
 export async function fetchCtos(
   filters: { filterKeyword?: string; filterStatus?: string },
   filterUrl: string | null,
   perPageCount: number,
   rangeFrom: number,
-) {
-  try {
-    let query = supabase
-      .from("hrm_ctos")
-      .select("*, hrm_cto_users(*)", { count: "exact" })
-      .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
+): Promise<QueryResult<CtoTypes[]>> {
+  let query = supabase
+    .from("hrm_ctos")
+    .select("*, hrm_cto_users(*)", { count: "exact" })
+    .eq("org_id", process.env.NEXT_PUBLIC_ORG_ID);
 
-    // Search match
-    if (filters.filterKeyword && filters.filterKeyword !== "") {
-      query = query.eq("reference_code", filters.filterKeyword);
-    }
-
-    // Filter by ID in url
-    if (filterUrl) {
-      query = query.eq("id", filterUrl);
-    }
-
-    // filter stats
-    if (filters.filterStatus && filters.filterStatus !== "") {
-      const today = format(new Date(), "yyyy-MM-dd");
-      if (filters.filterStatus === "Active") {
-        query = query.gt("expiration", today);
-      } else {
-        query = query.lte("expiration", today);
-      }
-    }
-
-    // Per Page from context
-    const from = rangeFrom;
-    const to = from + (perPageCount - 1);
-
-    // Per Page from context
-    query = query.range(from, to);
-
-    // Order By
-    query = query.order("id", { ascending: false });
-
-    const { data: ctoData, error, count } = await query;
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    const data: CtoTypes[] = ctoData;
-
-    return { data, count };
-  } catch (error) {
-    console.error("fetch ctos error", error);
-    return { data: [], count: 0 };
+  // Search match
+  if (filters.filterKeyword && filters.filterKeyword !== "") {
+    query = query.eq("reference_code", filters.filterKeyword);
   }
+
+  // Filter by ID in url
+  if (filterUrl) {
+    query = query.eq("id", filterUrl);
+  }
+
+  // filter stats
+  if (filters.filterStatus && filters.filterStatus !== "") {
+    const today = format(new Date(), "yyyy-MM-dd");
+    if (filters.filterStatus === "Active") {
+      query = query.gt("expiration", today);
+    } else {
+      query = query.lte("expiration", today);
+    }
+  }
+
+  // Per Page from context
+  const from = rangeFrom;
+  const to = from + (perPageCount - 1);
+
+  // Per Page from context
+  query = query.range(from, to);
+
+  // Order By
+  query = query.order("id", { ascending: false });
+
+  return await runListQuery<CtoTypes>(
+    { transaction: "Fetch CTOs", table: "hrm_ctos" },
+    query,
+  );
 }
 
 export async function fetchMyCtos(
@@ -2027,20 +2021,10 @@ export async function fetchMyLeaveRequests(
   }
 }
 
-export async function logError(
-  transaction: string,
-  table: string,
-  data: string,
-  error: string,
-) {
-  await supabase.from("error_logs").insert({
-    system: "hrm",
-    transaction,
-    table,
-    data,
-    error,
-  });
-}
+// logError now lives in utils/error-log.ts so that utils/query-result.ts can
+// use it without importing this module. Re-exported here because ~60 call sites
+// still import it from '@/utils/fetchApi'.
+export { logError };
 
 export async function fetchErrorLogs(perPageCount: number, rangeFrom: number) {
   try {
