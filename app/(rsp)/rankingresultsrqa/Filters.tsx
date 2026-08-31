@@ -1,9 +1,8 @@
 import { CustomButton } from "@/components/index";
 import { TagIcon } from "@heroicons/react/20/solid";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
-import { useSupabase } from "@/context/SupabaseProvider";
-import type { RankingTypes } from "@/types";
+import { useRankingOptions } from "@/hooks/useRankingOptions";
 import { format } from "date-fns";
 
 const RQA_ONLY_TYPES = new Set(["CAR-RQA", "CAR-RQA (Special Items)"]);
@@ -15,9 +14,13 @@ interface FilterTypes {
 const Filters = ({ setFilterRankingIds }: FilterTypes) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const [rankings, setRankings] = useState<RankingTypes[] | []>([]);
-
-  const { supabase } = useSupabase();
+  const { rankings, error } = useRankingOptions({
+    status: "Closed",
+    order: "closed_at",
+    withCommittees: true,
+    majorityConfirmedOnly: true,
+    types: RQA_ONLY_TYPES,
+  });
 
   const toggleRanking = (id: string) => {
     setSelectedIds((prev) => {
@@ -44,36 +47,6 @@ const Filters = ({ setFilterRankingIds }: FilterTypes) => {
     setFilterRankingIds([]);
   };
 
-  useEffect(() => {
-    const fetchRankings = async () => {
-      const { data } = await supabase
-        .from("hrm_rankings")
-        .select(
-          "*,position:position_id(name),committees:hrm_ranking_committees(*)",
-        )
-        .eq("status", "Closed")
-        // Latest closed first; rankings with no recorded closing date (the
-        // backfill could not reach every one) fall to the bottom by id.
-        .order("closed_at", { ascending: false, nullsFirst: false })
-        .order("id", { ascending: false });
-      if (data) {
-        const filteredRankings = data.filter((ranking: RankingTypes) => {
-          if (!RQA_ONLY_TYPES.has(ranking.type)) return false;
-          const totalMembers = ranking.committees.length;
-          const confirmedCount = ranking.committees.filter(
-            (c) => c.status === "Confirmed",
-          ).length;
-
-          return confirmedCount > totalMembers / 2;
-        });
-
-        setRankings(filteredRankings);
-      }
-    };
-
-    void fetchRankings();
-  }, [supabase]);
-
   return (
     <div className="">
       <div className="items-center space-x-2 space-y-1">
@@ -90,7 +63,10 @@ const Filters = ({ setFilterRankingIds }: FilterTypes) => {
                   more:
                 </span>
                 <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-md p-2 space-y-2 bg-white">
-                  {rankings.length === 0 && (
+                  {error && (
+                    <div className="text-sm text-red-600">{error.message}</div>
+                  )}
+                  {!error && rankings.length === 0 && (
                     <div className="text-sm text-gray-500">
                       No closed CAR-RQA rankings yet.
                     </div>

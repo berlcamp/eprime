@@ -1,9 +1,8 @@
 import { CustomButton } from '@/components/index'
 import { MagnifyingGlassIcon, TagIcon } from '@heroicons/react/20/solid'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
-import { useSupabase } from '@/context/SupabaseProvider'
-import type { RankingTypes } from '@/types'
+import { useRankingOptions } from '@/hooks/useRankingOptions'
 
 interface FilterTypes {
   setFilterKeyword: (keyword: string) => void
@@ -14,9 +13,8 @@ const Filters = ({ setFilterKeyword, setFilterRanking }: FilterTypes) => {
   const [selectedRanking, setSelectedRanking] = useState('')
   const [keyword, setKeyword] = useState('')
 
-  const [rankings, setRankings] = useState<RankingTypes[] | []>([])
 
-  const { supabase } = useSupabase()
+  const { rankings, error } = useRankingOptions({ status: 'Open' })
 
   const handleApply = () => {
     if (keyword.trim() === '' && selectedRanking === '') return
@@ -44,21 +42,6 @@ const Filters = ({ setFilterKeyword, setFilterRanking }: FilterTypes) => {
     setFilterRanking('')
   }
 
-  // Featch data
-  useEffect(() => {
-    const fetchRankings = async () => {
-      const { data } = await supabase
-        .from('hrm_rankings')
-        .select('*,position:position_id(name)')
-        .eq('status', 'Open')
-      if (data) {
-        setRankings(data)
-      }
-    }
-
-    void fetchRankings()
-  }, [])
-
   return (
     <div className="">
       <div className="items-center space-x-2 space-y-1">
@@ -84,6 +67,7 @@ const Filters = ({ setFilterKeyword, setFilterRanking }: FilterTypes) => {
                 className="app__filter_select"
               >
                 <option value="">All Rankings</option>
+                {error && <option value="">{error.message}</option>}
                 {rankings.length > 0 &&
                   rankings.map((item, index) => (
                     <option key={index} value={item.id}>

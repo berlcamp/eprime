@@ -9,6 +9,11 @@ import {
 } from '@/types'
 import { format } from 'date-fns'
 import Link from 'next/link'
+import {
+  runListQuery,
+  runQuery,
+  type QueryError
+} from '@/utils/query-result'
 import { useEffect, useState } from 'react'
 import IerData from './IerData'
 
@@ -59,6 +64,7 @@ const ApplicantDetails = ({
   const [previousQualification, setPreviousQualification] = useState<
     QualificationTypes[] | []
   >([])
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
   const [refresh, setRefresh] = useState(false)
   const [refreshIer, setRefreshIer] = useState(false)
   const [evaluators, setEvaluators] = useState<RankingEvaluatorTypes[] | []>([])
@@ -89,68 +95,133 @@ const ApplicantDetails = ({
   }
 
   useEffect(() => {
+    // Every one of these used to swallow its error and fall back to an empty
+    // list, so a failed lookup showed an applicant who had submitted nothing
+    // and a ranking with no qualification standards -- the exact screen an
+    // evaluator would read as grounds to disqualify.
     const fetchQualificationsData = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_applicant_documents')
-        .select()
-        .eq('applicant_id', applicantData.id)
+      const result = await runListQuery<any>(
+        {
+          transaction: "Fetch applicant qualification documents",
+          table: 'hrm_ranking_applicant_documents',
+          payload: { applicantId: applicantData.id }
+        },
+        supabase
+          .from('hrm_ranking_applicant_documents')
+          .select()
+          .eq('applicant_id', applicantData.id)
+      )
 
-      setApplicantQualifications(data ?? [])
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
+      }
+
+      setApplicantQualifications(result.data)
     }
 
     const fetchRankingQualificationsData = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_qualifications')
-        .select()
-        .eq('ranking_id', applicantData.ranking_id)
+      const result = await runListQuery<any>(
+        {
+          transaction: 'Fetch ranking qualification standards',
+          table: 'hrm_ranking_qualifications',
+          payload: { rankingId: applicantData.ranking_id }
+        },
+        supabase
+          .from('hrm_ranking_qualifications')
+          .select()
+          .eq('ranking_id', applicantData.ranking_id)
+      )
 
-      setRankingQualifications(data ?? [])
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
+      }
+
+      setRankingQualifications(result.data)
     }
 
     const fetchPreviousQualificationsData = async () => {
-      const { data: previousApplicantData } = await supabase
-        .from('hrm_ranking_applicants')
-        .select()
-        .eq('code', applicantData.previous_applicant_code)
-        .maybeSingle()
+      const previous = await runQuery<{ id: string }>(
+        {
+          transaction: 'Fetch previous applicant',
+          table: 'hrm_ranking_applicants',
+          payload: { code: applicantData.previous_applicant_code }
+        },
+        supabase
+          .from('hrm_ranking_applicants')
+          .select()
+          .eq('code', applicantData.previous_applicant_code)
+          .maybeSingle()
+      )
+
+      if (!previous.ok) {
+        setLoadError(previous.error)
+        return
+      }
+
+      if (!previous.data) return
 
       // Get the previous qualification documents
-      if (previousApplicantData) {
-        const { data } = await supabase
+      const result = await runListQuery<any>(
+        {
+          transaction: 'Fetch previous qualification documents',
+          table: 'hrm_ranking_applicant_documents',
+          payload: { applicantId: previous.data.id }
+        },
+        supabase
           .from('hrm_ranking_applicant_documents')
           .select('*, qualification:qualification_id(*)')
-          .eq('applicant_id', previousApplicantData.id)
+          .eq('applicant_id', previous.data.id)
+      )
 
-        if (data) {
-          const groupedDocuments = data.reduce((acc: any, document: any) => {
-            const { qualification_id, qualification } = document
-
-            if (!acc[qualification_id]) {
-              acc[qualification_id] = {
-                document_id: document.id,
-                document_status: document.status,
-                qualification_name: qualification.name,
-                qualification_description: qualification.description,
-                documents: []
-              }
-            }
-
-            acc[qualification_id].documents.push(document)
-            return acc
-          }, {})
-
-          setPreviousQualification(groupedDocuments)
-        }
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
       }
+
+      const groupedDocuments = result.data.reduce((acc: any, document: any) => {
+        const { qualification_id, qualification } = document
+
+        if (!acc[qualification_id]) {
+          acc[qualification_id] = {
+            document_id: document.id,
+            document_status: document.status,
+            qualification_name: qualification.name,
+            qualification_description: qualification.description,
+            documents: []
+          }
+        }
+
+        acc[qualification_id].documents.push(document)
+        return acc
+      }, {})
+
+      setPreviousQualification(groupedDocuments)
     }
 
     const fetchEvaluators = async () => {
-      const { data: evaluatorsData } = await supabase
-        .from('hrm_ranking_evaluators')
-        .select()
-        .eq('ranking_id', applicantData.ranking_id)
-      setEvaluators(evaluatorsData ?? [])
+      const result = await runListQuery<any>(
+        {
+          transaction: 'Fetch ranking evaluators',
+          table: 'hrm_ranking_evaluators',
+          payload: { rankingId: applicantData.ranking_id }
+        },
+        supabase
+          .from('hrm_ranking_evaluators')
+          .select()
+          .eq('ranking_id', applicantData.ranking_id)
+      )
+
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
+      }
+
+      setEvaluators(result.data)
     }
+
+    setLoadError(null)
 
     void fetchQualificationsData()
     void fetchRankingQualificationsData()
@@ -179,6 +250,17 @@ const ApplicantDetails = ({
               />
             </div>
             <div className="app__modal_body">
+              {loadError && (
+                <div className="mb-3 border border-red-300 bg-red-50 px-3 py-2">
+                  <div className="text-sm text-red-700">
+                    {loadError.message} What is shown below is incomplete, so do
+                    not judge this applicant on it.
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] text-gray-500">
+                    {loadError.cause}
+                  </div>
+                </div>
+              )}
               <div className="p-4 text-sm text-gray-700 bg-gray-50 border space-y-2">
                 <div className="grid gap-4">
                   <div>

@@ -1,9 +1,8 @@
 import { CustomButton } from '@/components/index'
 import { MagnifyingGlassIcon, TagIcon } from '@heroicons/react/20/solid'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
-import { useSupabase } from '@/context/SupabaseProvider'
-import type { RankingTypes } from '@/types'
+import { useRankingOptions } from '@/hooks/useRankingOptions'
 
 interface FilterTypes {
   setFilterKeyword: (keyword: string) => void
@@ -14,9 +13,8 @@ const Filters = ({ setFilterKeyword, setFilterRanking }: FilterTypes) => {
   const [selectedRanking, setSelectedRanking] = useState('')
   const [keyword, setKeyword] = useState('')
 
-  const [rankings, setRankings] = useState<RankingTypes[] | []>([])
 
-  const { supabase } = useSupabase()
+  const { rankings, error } = useRankingOptions({ status: 'Closed' })
 
   const handleApply = () => {
     if (keyword.trim() === '' && selectedRanking === '') return
@@ -44,22 +42,6 @@ const Filters = ({ setFilterKeyword, setFilterRanking }: FilterTypes) => {
     setFilterRanking('')
   }
 
-  // Featch data
-  useEffect(() => {
-    const fetchRankings = async () => {
-      const { data } = await supabase
-        .from('hrm_rankings')
-        .select('*,position:position_id(name)')
-        .eq('status', 'Closed')
-        .order('id', { ascending: false })
-      if (data) {
-        setRankings(data)
-      }
-    }
-
-    void fetchRankings()
-  }, [])
-
   return (
     <div className="">
       <div className="items-center space-x-2 space-y-1">
@@ -84,7 +66,8 @@ const Filters = ({ setFilterKeyword, setFilterRanking }: FilterTypes) => {
                 onChange={(e) => setSelectedRanking(e.target.value)}
                 className="app__filter_select"
               >
-                {rankings.length === 0 && (
+                {error && <option value="">{error.message}</option>}
+                {!error && rankings.length === 0 && (
                   <option value="">No Closed Rankings Yet</option>
                 )}
                 {rankings.length > 0 && (

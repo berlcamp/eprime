@@ -5,6 +5,7 @@ import {
   UserBlock
 } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
+import { runListQuery, type QueryError } from '@/utils/query-result'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { Employee, RankingCommitteeTypes, RankingCriteriaTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
@@ -21,6 +22,11 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
   const [saving, setSaving] = useState(false)
   const [clearMemberInput, setClearMemberInput] = useState(false)
   const [list, setList] = useState<RankingCommitteeTypes[] | []>([])
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
+  // Bumped after a committee is added or removed. The effect below used to
+  // depend on `list` while also assigning it a freshly fetched array, so it
+  // refetched both queries on every render for as long as the modal was open.
+  const [refresh, setRefresh] = useState(false)
   const [criterias, setCriterias] = useState<RankingCriteriaTypes[] | []>([])
 
   const [user, setUser] = useState<Employee | null>(null)
@@ -113,6 +119,7 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
         id: data[0].id
       }
       setList([updatedData, ...list])
+      setRefresh((prev) => !prev)
 
       setSaving(false)
 
@@ -176,6 +183,7 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
 
       const updatedList = list.filter((i) => i.id !== selectedId)
       setList(updatedList)
+      setRefresh((prev) => !prev)
 
       // pop up the success message
       setToast('success', 'Successfully Deleted!')
@@ -188,30 +196,55 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
 
   useEffect(() => {
     const fetchCriterias = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_criterias')
-        .select('*, committees:hrm_ranking_committee_criterias(*)')
-        .eq('ranking_id', rankingId)
-      if (data) {
-        setCriterias(data)
+      const result = await runListQuery<RankingCriteriaTypes>(
+        {
+          transaction: 'Fetch ranking criterias',
+          table: 'hrm_ranking_criterias',
+          payload: { rankingId }
+        },
+        supabase
+          .from('hrm_ranking_criterias')
+          .select('*, committees:hrm_ranking_committee_criterias(*)')
+          .eq('ranking_id', rankingId)
+      )
+
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
       }
+
+      setCriterias(result.data)
     }
 
     const fetchCommittees = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_committees')
-        .select(
-          '*, hrm_user:user_id(id,firstname,lastname,avatar_url),committee_criterias:hrm_ranking_committee_criterias(*,criteria:criteria_id(*))'
-        )
-        .eq('ranking_id', rankingId)
-      if (data) {
-        setList(data)
+      const result = await runListQuery<RankingCommitteeTypes>(
+        {
+          transaction: 'Fetch ranking committees',
+          table: 'hrm_ranking_committees',
+          payload: { rankingId }
+        },
+        supabase
+          .from('hrm_ranking_committees')
+          .select(
+            '*, hrm_user:user_id(id,firstname,lastname,avatar_url),committee_criterias:hrm_ranking_committee_criterias(*,criteria:criteria_id(*))'
+          )
+          .eq('ranking_id', rankingId)
+      )
+
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
       }
+
+      setList(result.data)
     }
+
+    setLoadError(null)
 
     void fetchCommittees()
     void fetchCriterias()
-  }, [list])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refresh, rankingId])
 
   return (
     <>
@@ -229,6 +262,17 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
             </div>
 
             <div className="app__modal_body">
+              {loadError && (
+                <div className="mb-3 border border-red-300 bg-red-50 px-3 py-2">
+                  <div className="text-sm text-red-700">
+                    {loadError.message} The committees and criterias below are
+                    incomplete.
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] text-gray-500">
+                    {loadError.cause}
+                  </div>
+                </div>
+              )}
               <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="app__form_field_container">
                   <div className="w-full md:w-1/2">

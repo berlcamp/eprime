@@ -5,6 +5,7 @@ import {
   UserBlock
 } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
+import { runListQuery, type QueryError } from '@/utils/query-result'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { Employee, RankingEvaluatorTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
@@ -21,6 +22,11 @@ const RankingEvaluators = ({ hideModal, rankingId }: ModalProps) => {
   const [saving, setSaving] = useState(false)
   const [clearMemberInput, setClearMemberInput] = useState(false)
   const [list, setList] = useState<RankingEvaluatorTypes[] | []>([])
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
+  // Bumped after an evaluator is added or removed. The effect below used to
+  // depend on `list` while also assigning it a freshly fetched array, so it
+  // refetched on every render for as long as the modal was open.
+  const [refresh, setRefresh] = useState(false)
 
   const [user, setUser] = useState<Employee | null>(null)
 
@@ -98,6 +104,7 @@ const RankingEvaluators = ({ hideModal, rankingId }: ModalProps) => {
         id: data[0].id
       }
       setList([updatedData, ...list])
+      setRefresh((prev) => !prev)
 
       setSaving(false)
 
@@ -161,6 +168,7 @@ const RankingEvaluators = ({ hideModal, rankingId }: ModalProps) => {
 
       const updatedList = list.filter((i) => i.id !== selectedId)
       setList(updatedList)
+      setRefresh((prev) => !prev)
 
       // pop up the success message
       setToast('success', 'Successfully Deleted!')
@@ -173,18 +181,32 @@ const RankingEvaluators = ({ hideModal, rankingId }: ModalProps) => {
 
   useEffect(() => {
     const fetchEvaluators = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_evaluators')
-        .select(
-          '*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url)'
-        )
-        .eq('ranking_id', rankingId)
+      const result = await runListQuery<RankingEvaluatorTypes>(
+        {
+          transaction: 'Fetch ranking evaluators',
+          table: 'hrm_ranking_evaluators',
+          payload: { rankingId }
+        },
+        supabase
+          .from('hrm_ranking_evaluators')
+          .select(
+            '*, hrm_user:user_id(id,firstname,middlename,lastname,avatar_url)'
+          )
+          .eq('ranking_id', rankingId)
+      )
 
-      setList(data ?? [])
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
+      }
+
+      setLoadError(null)
+      setList(result.data)
     }
 
     void fetchEvaluators()
-  }, [list])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refresh, rankingId])
 
   return (
     <>
@@ -202,6 +224,13 @@ const RankingEvaluators = ({ hideModal, rankingId }: ModalProps) => {
             </div>
 
             <div className="app__modal_body">
+              {loadError && (
+                <div className="mb-3 border border-red-300 bg-red-50 px-3 py-2">
+                  <div className="text-sm text-red-700">
+                    {loadError.message} The evaluators below are incomplete.
+                  </div>
+                </div>
+              )}
               <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="app__form_field_container">
                   <div className="w-full md:w-1/2">

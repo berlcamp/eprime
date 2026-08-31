@@ -1,5 +1,6 @@
 import { ConfirmModal, CustomButton } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
+import { runListQuery, type QueryError } from '@/utils/query-result'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { RankingCriteriaTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
@@ -15,6 +16,7 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [list, setList] = useState<RankingCriteriaTypes[] | []>([])
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
   const [totalPoints, setTotalPoints] = useState(0)
   const [selectedId, setSelectedId] = useState('')
 
@@ -144,11 +146,27 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_criterias')
-        .select()
-        .eq('ranking_id', rankingId)
-      setList(data ?? [])
+      const result = await runListQuery<RankingCriteriaTypes>(
+        {
+          transaction: 'Fetch ranking criterias',
+          table: 'hrm_ranking_criterias',
+          payload: { rankingId }
+        },
+        supabase
+          .from('hrm_ranking_criterias')
+          .select()
+          .eq('ranking_id', rankingId)
+      )
+
+      // An empty criteria list means the ranking cannot be scored at all, so
+      // it must not be indistinguishable from a failed lookup.
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
+      }
+
+      setLoadError(null)
+      setList(result.data)
     }
 
     void fetchData()
@@ -170,6 +188,13 @@ const RankingCriterias = ({ hideModal, rankingId }: ModalProps) => {
             </div>
 
             <div className="app__modal_body">
+              {loadError && (
+                <div className="mb-3 border border-red-300 bg-red-50 px-3 py-2">
+                  <div className="text-sm text-red-700">
+                    {loadError.message} The criterias below are incomplete.
+                  </div>
+                </div>
+              )}
               <div>
                 <form onSubmit={handleSubmit(onSubmit)}>
                   <div className="app__form_field_container">

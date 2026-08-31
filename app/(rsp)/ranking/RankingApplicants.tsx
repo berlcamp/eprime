@@ -3,6 +3,11 @@ import ApplicantDetails from '@/components/Rsp/ApplicantDetails'
 import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
+import {
+  runListQuery,
+  runQuery,
+  type QueryError
+} from '@/utils/query-result'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
   ApplicantDocuments,
@@ -70,6 +75,7 @@ const RankingApplicants = ({
   >([])
 
   const [canCastPoints, setCanCastPoints] = useState(false)
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
 
   const [list, setList] = useState<ListTypes[] | []>([])
   const [majors, setMajors] = useState<string[] | []>([])
@@ -285,18 +291,33 @@ const RankingApplicants = ({
 
   useEffect(() => {
     const fetchApplicantsData = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_applicants')
-        .select(
-          '*,applicant_documents:hrm_ranking_applicant_documents(qualification_id,status),ranking:ranking_id(type,year,status,position:position_id(name),chairman_id,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
-          {
-            count: 'exact'
-          }
-        )
-        .eq('ranking_id', rankingId)
-        .order('lastname', { ascending: true })
+      const result = await runListQuery<ApplicantTypes>(
+        {
+          transaction: 'Fetch ranking applicants',
+          table: 'hrm_ranking_applicants',
+          payload: { rankingId }
+        },
+        supabase
+          .from('hrm_ranking_applicants')
+          .select(
+            '*,applicant_documents:hrm_ranking_applicant_documents(qualification_id,status),ranking:ranking_id(type,year,status,position:position_id(name),chairman_id,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+            {
+              count: 'exact'
+            }
+          )
+          .eq('ranking_id', rankingId)
+          .order('lastname', { ascending: true })
+      )
 
-      if (data && data.length > 0) {
+      // Falling through left the ranking looking like it had no applicants.
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
+      }
+
+      const data = result.data
+
+      if (data.length > 0) {
         const structguredData: ListTypes[] = []
         data.forEach((d: ApplicantTypes) => {
           const accumulatedPoints: Record<string, number> | null =
@@ -335,16 +356,30 @@ const RankingApplicants = ({
 
     // find if logged in user belongs to any criteria
     const fetchCommitteeCriteriasData = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_committees')
-        .select(
-          '*,committee_criterias:hrm_ranking_committee_criterias(*,criteria:criteria_id(*),criteria_points:hrm_ranking_applicant_points(*))'
-        )
-        .eq('ranking_id', rankingId)
-        .eq('user_id', session?.user.id)
-        .maybeSingle()
+      const result = await runQuery<RankingCommitteeTypes>(
+        {
+          transaction: 'Fetch own committee criterias',
+          table: 'hrm_ranking_committees',
+          payload: { rankingId, userId: session?.user.id }
+        },
+        supabase
+          .from('hrm_ranking_committees')
+          .select(
+            '*,committee_criterias:hrm_ranking_committee_criterias(*,criteria:criteria_id(*),criteria_points:hrm_ranking_applicant_points(*))'
+          )
+          .eq('ranking_id', rankingId)
+          .eq('user_id', session?.user.id)
+          .maybeSingle()
+      )
 
-      const committeeData: RankingCommitteeTypes = data
+      // This decides whether the Cast Points button appears. A failure used to
+      // leave it hidden, which reads as "you are not on this committee".
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
+      }
+
+      const committeeData = result.data
 
       if (
         committeeData?.committee_criterias &&
@@ -357,12 +392,27 @@ const RankingApplicants = ({
     }
 
     const fetchEvaluators = async () => {
-      const { data: evaluatorsData } = await supabase
-        .from('hrm_ranking_evaluators')
-        .select()
-        .eq('ranking_id', rankingId)
-      setEvaluators(evaluatorsData ?? [])
+      const result = await runListQuery<RankingEvaluatorTypes>(
+        {
+          transaction: 'Fetch ranking evaluators',
+          table: 'hrm_ranking_evaluators',
+          payload: { rankingId }
+        },
+        supabase
+          .from('hrm_ranking_evaluators')
+          .select()
+          .eq('ranking_id', rankingId)
+      )
+
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
+      }
+
+      setEvaluators(result.data)
     }
+
+    setLoadError(null)
 
     void fetchEvaluators()
     void fetchApplicantsData()
@@ -385,6 +435,18 @@ const RankingApplicants = ({
             </div>
 
             <div className="app__modal_body">
+              {loadError && (
+                <div className="mb-3 border border-red-300 bg-red-50 px-3 py-2">
+                  <div className="text-sm text-red-700">
+                    {loadError.message} The list below is incomplete, and the
+                    Cast Points button may be missing even if you are on this
+                    committee.
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] text-gray-500">
+                    {loadError.cause}
+                  </div>
+                </div>
+              )}
               <div className="flex space-x-2">
                 <input
                   placeholder="Search applicant"

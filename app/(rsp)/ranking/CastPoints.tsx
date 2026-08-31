@@ -2,12 +2,12 @@ import { CustomButton } from '@/components/index'
 import IerData from '@/components/Rsp/IerData'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { runQuery } from '@/utils/query-result'
 import {
   ApplicantTypes,
   RankingCommitteeCriteriaTypes,
   RankingCriteriaPoints
 } from '@/types'
-import { logError } from '@/utils/fetchApi'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -64,32 +64,32 @@ const CastPoints = ({
     )
 
     try {
-      const { error } = await supabase
-        .from('hrm_ranking_applicant_points')
-        .upsert(upsertData, {
-          onConflict: 'committee_criteria_id, applicant_id'
-        })
+      const result = await runQuery(
+        {
+          transaction: 'Cast points',
+          table: 'hrm_ranking_applicant_points',
+          payload: upsertData
+        },
+        supabase
+          .from('hrm_ranking_applicant_points')
+          .upsert(upsertData, {
+            onConflict: 'committee_criteria_id, applicant_id'
+          })
+      )
 
-      if (error) {
-        await logError(
-          'Cast points',
-          'hrm_ranking_applicant_points',
-          JSON.stringify(upsertData),
-          error.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+      // The error branch used to toast and then throw into the catch, which
+      // toasted again, so a failure showed two different messages.
+      if (!result.ok) {
+        setToast('error', `Points were not saved. ${result.error.message}`)
+        return
       }
 
       setToast('success', 'Successfully saved.')
-      setSaving(false)
       refetch()
     } catch (e) {
       console.error('Upsert Error:', e)
       setToast('error', 'An unexpected error occurred.')
+    } finally {
       setSaving(false)
     }
   }

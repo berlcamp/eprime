@@ -1,9 +1,8 @@
 import { CustomButton } from '@/components/index'
 import { TagIcon } from '@heroicons/react/20/solid'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
-import { useSupabase } from '@/context/SupabaseProvider'
-import type { RankingTypes } from '@/types'
+import { useRankingOptions } from '@/hooks/useRankingOptions'
 import { format } from 'date-fns'
 
 interface FilterTypes {
@@ -13,9 +12,13 @@ interface FilterTypes {
 const Filters = ({ setFilterRanking }: FilterTypes) => {
   const [selectedRanking, setSelectedRanking] = useState('')
 
-  const [rankings, setRankings] = useState<RankingTypes[] | []>([])
 
-  const { supabase } = useSupabase()
+  const { rankings, error } = useRankingOptions({
+    status: 'Closed',
+    order: 'closed_at',
+    withCommittees: true,
+    majorityConfirmedOnly: true
+  })
 
   const handleApply = () => {
     if (selectedRanking === '') return
@@ -39,37 +42,6 @@ const Filters = ({ setFilterRanking }: FilterTypes) => {
     setFilterRanking('')
   }
 
-  // Featch data
-  useEffect(() => {
-    const fetchRankings = async () => {
-      const { data } = await supabase
-        .from('hrm_rankings')
-        .select(
-          '*,position:position_id(name),committees:hrm_ranking_committees(*)'
-        )
-        .eq('status', 'Closed')
-        // Latest closed first; rankings with no recorded closing date (the
-        // backfill could not reach every one) fall to the bottom by id.
-        .order('closed_at', { ascending: false, nullsFirst: false })
-        .order('id', { ascending: false })
-      if (data) {
-        // Filter rankings where majority of committee members have "Confirmed" status
-        const filteredRankings = data.filter((ranking: RankingTypes) => {
-          const totalMembers = ranking.committees.length
-          const confirmedCount = ranking.committees.filter(
-            (c) => c.status === 'Confirmed'
-          ).length
-
-          return confirmedCount > totalMembers / 2 // Majority check
-        })
-
-        setRankings(filteredRankings)
-      }
-    }
-
-    void fetchRankings()
-  }, [])
-
   return (
     <div className="">
       <div className="items-center space-x-2 space-y-1">
@@ -85,7 +57,8 @@ const Filters = ({ setFilterRanking }: FilterTypes) => {
                 onChange={(e) => setSelectedRanking(e.target.value)}
                 className="app__filter_select"
               >
-                {rankings.length === 0 && (
+                {error && <option value="">{error.message}</option>}
+                {!error && rankings.length === 0 && (
                   <option value="">No Closed Rankings Yet</option>
                 )}
                 {rankings.length > 0 && (
