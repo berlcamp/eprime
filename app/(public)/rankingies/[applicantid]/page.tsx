@@ -3,11 +3,15 @@
 import { useSupabase } from '@/context/SupabaseProvider'
 import { ApplicantTypes } from '@/types'
 import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { IesAttachment } from './IesAttachment'
 
-export default function Page({ params }: { params: { applicantid: string } }) {
-  const applicantId = params.applicantid
+export default function Page({
+  params
+}: {
+  params: Promise<{ applicantid: string }>
+}) {
+  const { applicantid: applicantId } = use(params)
   const [downloading, setDownloading] = useState(false)
   const [verifying, setVerifying] = useState(true)
   const [error, setError] = useState('')

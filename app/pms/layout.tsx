@@ -9,7 +9,7 @@ export default async function HRLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const {
     data: { session }

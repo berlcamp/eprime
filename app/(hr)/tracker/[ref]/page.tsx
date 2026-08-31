@@ -11,7 +11,7 @@ import DetailsModal from '@/components/Tracker/DetailsModal'
 import { fetchDocuments } from '@/utils/fetchApi'
 import { ArrowLeftIcon } from '@heroicons/react/20/solid'
 import { format } from 'date-fns'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 
 // Types
 import type { DocumentTypes } from '@/types'
@@ -22,7 +22,7 @@ import Link from 'next/link'
 import { useDispatch, useSelector } from 'react-redux'
 import StickiesModal from '../StickiesModal'
 
-export default function Page({ params }: { params: { ref: string } }) {
+export default function Page({ params }: { params: Promise<{ ref: string }> }) {
   const [loading, setLoading] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showStickiesModal, setShowStickiesModal] = useState(false)
@@ -33,7 +33,7 @@ export default function Page({ params }: { params: { ref: string } }) {
 
   const { session } = useSupabase()
 
-  const refCode = params.ref
+  const { ref: refCode } = use(params)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)

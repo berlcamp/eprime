@@ -60,7 +60,7 @@ export async function IesAttachment(item: ListTypes) {
   doc.setFont('times', 'normal')
   doc.text('Application Code: ', 15, y)
   doc.setFont('times', 'bold')
-  doc.text((item.applicant?.code).toUpperCase(), 70, y)
+  doc.text((item.applicant?.code ?? '').toUpperCase(), 70, y)
   y += 5
   doc.setFont('times', 'normal')
   doc.text('Position Applied for: ', 15, y)

@@ -1,9 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      'randomuser.me',
-      'nuhirhfevxoonendpfsm.supabase.co'
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'randomuser.me'
+      },
+      {
+        protocol: 'https',
+        hostname: 'nuhirhfevxoonendpfsm.supabase.co'
+      }
     ]
   }
 }

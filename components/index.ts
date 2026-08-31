@@ -23,6 +23,7 @@ import RecordsSideBar from './Sidebars/RecordsSideBar'
 import SettingsSideBar from './Sidebars/SettingsSideBar'
 import TrackerSideBar from './Sidebars/TrackerSideBar'
 import Title from './Title'
+import LocalDbBadge from './LocalDbBadge'
 import TopBar from './TopBar'
 import TopBarDark from './TopBarDark'
 import StatusFlow from './Tracker/StatusFlow'
@@ -53,6 +54,7 @@ export {
   TableRowLoading,
   ThreeColTableLoading,
   Title,
+  LocalDbBadge,
   TopBar,
   TopBarDark,
   TrackerSideBar,

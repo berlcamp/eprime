@@ -1,4 +1,3 @@
-import React from 'react'
 import ProfileList from './ProfileList'
 import Image from 'next/image'
 

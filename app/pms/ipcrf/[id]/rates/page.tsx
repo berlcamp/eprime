@@ -9,10 +9,11 @@ import { createServerClient } from '@/utils/supabase-server'
 export default async function IPCRFRatingPage({
   params
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  const supabase = createServerClient()
-  const ipcrfId = Number(params.id)
+  const supabase = await createServerClient()
+  const { id } = await params
+  const ipcrfId = Number(id)
 
   // Fetch IPCRF
   const { data: ipcrf } = await supabase
@@ -106,7 +107,7 @@ export default async function IPCRFRatingPage({
   }) => {
     'use server'
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
     const ipcrf_id = ipcrfData.id
     const rater_type = 'self'
     const period = ipcrfData.template?.status ?? ''

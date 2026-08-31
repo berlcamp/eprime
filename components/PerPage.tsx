@@ -1,5 +1,3 @@
-import React from 'react'
-
 interface PropTypes {
   perPageCount: number
   setPerPageCount: (keyword: number) => void

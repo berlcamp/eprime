@@ -1,4 +1,3 @@
-import React from 'react'
 import uuid from 'react-uuid'
 
 export default function OneColLayoutLoading ({ rows }: { rows: number }) {

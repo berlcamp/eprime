@@ -13,11 +13,11 @@ interface ModalProps {
 
 interface Attachment {
   name: string
-  id?: string
-  updated_at?: string
-  created_at?: string
-  last_accessed_at?: string
-  metadata?: Record<string, any>
+  id?: string | null
+  updated_at?: string | null
+  created_at?: string | null
+  last_accessed_at?: string | null
+  metadata?: Record<string, any> | null
 }
 
 export default function AttachmentsModal({ id, hideModal }: ModalProps) {

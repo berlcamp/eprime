@@ -2,10 +2,10 @@ import { ApplicantIerTypes, ApplicantTypes } from '@/types'
 import { format } from 'date-fns'
 import * as React from 'react'
 
-export const QualifiedApplicantTemplate: React.FC<Readonly<ApplicantTypes>> = (
-  applicant,
-  ier
-) => {
+export const QualifiedApplicantTemplate = (
+  applicant: Readonly<ApplicantTypes>,
+  ier: ApplicantIerTypes[] | null
+): React.ReactElement => {
   //
   const ierData: ApplicantIerTypes[] | null = ier
 

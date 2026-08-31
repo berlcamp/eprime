@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-throw-literal */
+/* eslint-disable @typescript-eslint/only-throw-error */
 'use client'
 
 import {

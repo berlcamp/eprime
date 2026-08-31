@@ -1,5 +1,4 @@
 'use client'
-import React from 'react'
 import CustomButton from '../CustomButton'
 import Pds from './Pds'
 
