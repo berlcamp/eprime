@@ -1,4 +1,5 @@
 'use client'
+import LocalDbBadge from '@/components/LocalDbBadge'
 import LoginDropDown from '@/components/TopBars/LoginDropDown'
 import Notifications from '@/components/TopBars/Notifications'
 import TopMenu from '@/components/TopBars/TopMenu'
@@ -46,7 +47,8 @@ export default function TopBarDark({ isGuest }: { isGuest?: boolean }) {
               </Link>
             </div>
           </div>
-          <div className="flex flex-1 justify-end space-x-2">
+          <div className="flex flex-1 justify-end items-center space-x-2">
+            <LocalDbBadge darkMode={true} />
             {!isGuest ? (
               <>
                 <TopMenu darkMode={true} />
