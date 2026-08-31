@@ -24,11 +24,14 @@ import type {
   AttachmentTypes,
   DocumentTypes,
   Employee,
-  LeaveCreditTypes,
   namesType,
 } from "@/types";
 import { logError } from "@/utils/fetchApi";
-import { runQuery } from "@/utils/query-result";
+import {
+  runListQuery,
+  runQuery,
+  type QueryResult,
+} from "@/utils/query-result";
 import {
   BellAlertIcon,
   BellSlashIcon,
@@ -50,11 +53,51 @@ interface ApproveLeaveResult {
   untracked_credit_types?: string[];
 }
 
+/** Shape returned by the preview_leave_revert RPC. */
+interface RevertPreview {
+  credits: Array<{
+    type: string;
+    restore: number;
+    currentBalance: number;
+    newBalance: number;
+  }>;
+  coc: { restore: number; currentCoc: number; newCoc: number } | null;
+  leaveDaysWithoutPay: number;
+}
+
 /** Shape returned by the revert_leave_approval RPC. */
 interface RevertLeaveResult {
   reverted: boolean;
   reason?: string;
   needs_manual_service_record_check?: boolean;
+}
+
+/** How a status change records itself in the tracker's audit trail. */
+type TransitionLog =
+  | { kind: "log"; message: string }
+  | {
+      kind: "flow";
+      status: string;
+      userId: string | undefined;
+      receiverId?: string;
+    };
+
+interface StatusTransition {
+  /** Used for the error log and the failure toast, e.g. "Cancel Request". */
+  label: string;
+  /** Columns written to hrm_request_trackers. */
+  newData: Record<string, unknown>;
+  /** current_status must be one of these for the change to apply ... */
+  from?: string[];
+  /** ... or must not be any of these. */
+  notFrom?: string[];
+  log: TransitionLog;
+  /** Notification type sent to the requester and followers; omit to skip. */
+  notify?: string;
+  /** Extra step once the status is committed, e.g. clearing leave dates. */
+  after?: () => Promise<QueryResult<unknown>>;
+  /** Defaults to true; only Cancel opts out. */
+  recount?: boolean;
 }
 
 interface ModalProps {
@@ -144,16 +187,9 @@ export default function DetailsModal({
 
   // Revert Approval preview (super admin only)
   const [loadingRevertPreview, setLoadingRevertPreview] = useState(false);
-  const [revertPreview, setRevertPreview] = useState<{
-    credits: Array<{
-      type: string;
-      restore: number;
-      currentBalance: number;
-      newBalance: number;
-    }>;
-    coc: { restore: number; currentCoc: number; newCoc: number } | null;
-    leaveDaysWithoutPay: number;
-  } | null>(null);
+  const [revertPreview, setRevertPreview] = useState<RevertPreview | null>(
+    null,
+  );
 
   // Forward to this user
   const [selectedUser, setSelectedUser] = useState<namesType | null>(null);
@@ -190,54 +226,80 @@ export default function DetailsModal({
   }, []);
 
   const handleFollow = async () => {
-    try {
-      const { error } = await supabase.from("hrm_tracker_followers").insert({
+    const result = await runQuery(
+      {
+        transaction: "Follow request",
+        table: "hrm_tracker_followers",
+        payload: { trackerId: documentData.id, userId: user.id },
+      },
+      supabase.from("hrm_tracker_followers").insert({
         tracker_id: documentData.id,
         user_id: user.id,
-      });
-      if (error) throw new Error(error.message);
+      }),
+    );
 
-      setToast("success", "Successfully Followed.");
-      setHideFollowButton(true);
-
-      dispatch(recount());
-    } catch (e) {
-      console.error(e);
+    // A failure used to leave the button unchanged with nothing on screen.
+    if (!result.ok) {
+      setToast("error", `Could not follow this request. ${result.error.message}`);
+      return;
     }
+
+    setToast("success", "Successfully Followed.");
+    setHideFollowButton(true);
+
+    dispatch(recount());
   };
 
   const handleUnfollow = async () => {
-    try {
-      const { error } = await supabase
+    const result = await runQuery(
+      {
+        transaction: "Unfollow request",
+        table: "hrm_tracker_followers",
+        payload: { trackerId: documentData.id, userId: user.id },
+      },
+      supabase
         .from("hrm_tracker_followers")
         .delete()
         .eq("tracker_id", documentData.id)
-        .eq("user_id", user.id);
+        .eq("user_id", user.id),
+    );
 
-      if (error) throw new Error(error.message);
-
-      setToast("success", "Successfully Unfollowed.");
-      setHideFollowButton(false);
-
-      dispatch(recount());
-    } catch (e) {
-      console.error(e);
+    if (!result.ok) {
+      setToast(
+        "error",
+        `Could not unfollow this request. ${result.error.message}`,
+      );
+      return;
     }
+
+    setToast("success", "Successfully Unfollowed.");
+    setHideFollowButton(false);
+
+    dispatch(recount());
   };
 
+  // Best-effort: callers fire this without awaiting, so a failure must not
+  // block the status change that triggered it. It is still recorded in
+  // error_logs rather than only reaching the console.
   const handleNotify = async (document: DocumentTypes, actionType: string) => {
-    //
     try {
       const userIds: string[] = [];
 
-      // Followers
-      const { data: followers } = await supabase
-        .from("hrm_tracker_followers")
-        .select("user_id")
-        .eq("tracker_id", document.id);
+      // Followers. If this lookup fails the requester is still notified below.
+      const followers = await runListQuery<{ user_id: string }>(
+        {
+          transaction: "Notify followers",
+          table: "hrm_tracker_followers",
+          payload: { trackerId: document.id },
+        },
+        supabase
+          .from("hrm_tracker_followers")
+          .select("user_id")
+          .eq("tracker_id", document.id),
+      );
 
-      if (followers) {
-        followers.forEach((user) => {
+      if (followers.ok) {
+        followers.data.forEach((user) => {
           userIds.push(user.user_id.toString());
         });
       }
@@ -280,14 +342,14 @@ export default function DetailsModal({
       });
 
       if (notificationData.length > 0) {
-        // insert to notifications
-        const { error: error3 } = await supabase
-          .from("hrm_notifications")
-          .insert(notificationData);
-
-        if (error3) {
-          throw new Error(error3.message);
-        }
+        await runQuery(
+          {
+            transaction: "Insert notifications",
+            table: "hrm_notifications",
+            payload: { trackerId: document.id, type: actionType },
+          },
+          supabase.from("hrm_notifications").insert(notificationData),
+        );
       }
     } catch (e) {
       console.error(e);
@@ -357,80 +419,184 @@ export default function DetailsModal({
     setConfirmMessage("");
   };
 
-  const handleConfirmedForward = async () => {
-    if (!selectedUser) return;
+  // Every status change on a request follows the same shape: narrow the update
+  // so a stale modal cannot re-apply it, write an audit entry, optionally run a
+  // follow-up step, then sync Redux and notify. Five handlers each carried
+  // their own ~90-line copy of that, and all five ended in a catch that only
+  // reached the console -- leaving the Save button disabled with no explanation
+  // on screen. One implementation, and every failure now says something.
+  const recordTransition = async (
+    log: TransitionLog,
+  ): Promise<QueryResult<unknown>> => {
+    if (log.kind === "flow") {
+      return await runQuery(
+        { transaction: `${log.status} flow`, table: "hrm_tracker_flow" },
+        supabase.from("hrm_tracker_flow").insert({
+          tracker_id: documentData.id,
+          user_id: log.userId,
+          status: log.status,
+          ...(log.receiverId ? { receiver_id: log.receiverId } : {}),
+        }),
+      );
+    }
 
+    // maybeSingle, not single: a request with no flow rows yet is normal and
+    // used to surface as a PGRST116 "no rows" error.
+    const latest = await runQuery<{ id: number }>(
+      {
+        transaction: "Fetch latest tracker flow",
+        table: "hrm_tracker_flow",
+      },
+      supabase
+        .from("hrm_tracker_flow")
+        .select("id")
+        .eq("tracker_id", documentData.id)
+        .order("id", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    );
+
+    if (!latest.ok) return latest;
+    if (!latest.data) return { ok: true, data: null, count: null };
+
+    return await runQuery(
+      { transaction: `${log.message} logs`, table: "hrm_tracker_logs" },
+      supabase.from("hrm_tracker_logs").insert({
+        message: log.message,
+        tracker_flow_id: latest.data.id,
+        user_id: session?.user.id,
+      }),
+    );
+  };
+
+  const deleteLeaveDays = async () =>
+    await runQuery(
+      {
+        transaction: "Delete leave dates",
+        table: "hrm_leave_dates",
+        payload: { trackerId: documentData.id },
+      },
+      supabase
+        .from("hrm_leave_dates")
+        .delete()
+        .eq("tracker_id", documentData.id),
+    );
+
+  const applyStatusTransition = async (t: StatusTransition) => {
     if (saving) return;
 
     setSaving(true);
 
-    const newData = {
-      current_tracker: "Forwarded",
-      receiver_id: selectedUser.id,
-    };
     try {
-      const { error } = await supabase
+      let query = supabase
         .from("hrm_request_trackers")
-        .update(newData)
+        .update(t.newData)
         .eq("id", documentData.id);
 
-      if (error) {
-        void logError(
-          "Forward Request",
-          "hrm_request_trackers",
-          JSON.stringify(newData),
-          error.message,
-        );
-        setToast(
-          "error",
-          "Saving failed, please reload the page and try again.",
-        );
-        throw new Error(error.message);
+      // Concurrency guard: the update matches no row if the request already
+      // moved on, so a stale modal cannot double-apply the transition.
+      if (t.from) query = query.in("current_status", t.from);
+      for (const status of t.notFrom ?? []) {
+        query = query.neq("current_status", status);
       }
 
-      const { error: error2 } = await supabase.from("hrm_tracker_flow").insert({
-        tracker_id: documentData.id,
-        user_id: user.id,
-        receiver_id: selectedUser.id,
-        status: "Forwarded",
-      });
+      const updated = await runListQuery<{ id: number }>(
+        {
+          transaction: t.label,
+          table: "hrm_request_trackers",
+          payload: t.newData,
+        },
+        query.select(),
+      );
 
-      if (error2) {
-        void logError(
-          "Forward Request Flow",
-          "hrm_tracker_flow",
-          "",
-          error2.message,
-        );
+      if (!updated.ok) {
         setToast(
           "error",
-          "Saving failed, please reload the page and try again.",
+          `${t.label} failed and nothing was changed. ${updated.error.message}`,
         );
-        throw new Error(error2.message);
+        return;
+      }
+
+      if (updated.data.length === 0) {
+        setToast(
+          "error",
+          "This request's status has changed. Please reload the page and try again.",
+        );
+        setUpdateStatusFlow(!updateStatusFlow);
+        return;
+      }
+
+      // The status change is committed by this point, so the steps below are
+      // reported as partial failures rather than as a failed action.
+      const logged = await recordTransition(t.log);
+      if (!logged.ok) {
+        setToast(
+          "error",
+          `Status saved, but the tracker log could not be written. ${logged.error.message}`,
+        );
+      }
+
+      if (t.after) {
+        const extra = await t.after();
+        if (!extra.ok) {
+          setToast(
+            "error",
+            `Status saved, but a follow-up step failed. ${extra.error.message}`,
+          );
+        }
       }
 
       // Update data in redux
       const items: DocumentTypes[] = [...globallist];
-      const updatedData = { ...newData, id: documentData.id };
+      const updatedData = { ...t.newData, id: documentData.id };
       const foundIndex = items.findIndex((x) => x.id === updatedData.id);
-      items[foundIndex] = { ...items[foundIndex], ...updatedData };
-      dispatch(updateList(items));
-      setDocumentData(items[foundIndex]); // update ui with new data
+      if (foundIndex >= 0) {
+        items[foundIndex] = { ...items[foundIndex], ...updatedData };
+        dispatch(updateList(items));
+        setDocumentData(items[foundIndex]); // update ui with new data
 
-      // Notify requester and receiver
-      void handleNotify(items[foundIndex], "Forwarded");
+        if (t.notify) {
+          void handleNotify(items[foundIndex], t.notify);
+        }
+      }
 
-      // pop up the success message
-      setToast("success", "Successfully saved.");
+      if (logged.ok) {
+        setToast("success", "Successfully saved.");
+      }
 
-      // Recount sidebar counter
-      dispatch(recount());
+      if (t.recount !== false) {
+        dispatch(recount());
+      }
 
       setUpdateStatusFlow(!updateStatusFlow);
-      setSaving(false);
     } catch (e) {
       console.error(e);
+      setToast(
+        "error",
+        `${t.label} failed, please reload the page and try again.`,
+      );
+    } finally {
+      setSaving(false);
     }
+  };
+
+  const handleConfirmedForward = async () => {
+    if (!selectedUser) return;
+
+    await applyStatusTransition({
+      label: "Forward Request",
+      newData: {
+        current_tracker: "Forwarded",
+        receiver_id: selectedUser.id,
+      },
+      log: {
+        kind: "flow",
+        status: "Forwarded",
+        userId: user.id,
+        receiverId: selectedUser.id,
+      },
+      notify: "Forwarded",
+    });
   };
 
   const handleConfirmedApprove = async () => {
@@ -542,109 +708,38 @@ export default function DetailsModal({
   };
 
   // Computes exactly what will be restored before showing the revert
-  // confirmation modal, so the super admin can see the real numbers.
+  // confirmation modal, so the super admin can see the real numbers. The
+  // arithmetic lives in the database next to revert_leave_approval itself, so
+  // the preview cannot drift from what a revert actually does; see
+  // supabase/migrations/0017_preview_leave_revert.sql
   const handleOpenRevertPreview = async () => {
     if (loadingRevertPreview) return;
 
     setLoadingRevertPreview(true);
 
     try {
-      const { data: freshTracker } = await supabase
-        .from("hrm_request_trackers")
-        .select(
-          "leave_credit_use_vl, leave_credit_use_sl, leave_credit_use_sc, leave_credit_use_adoption, leave_credit_use_vawc, leave_credit_use_emergency, leave_credit_use_study, leave_credit_use_soloparent, leave_credit_use_slbw, leave_credit_use_spl, leave_credit_use_rehab, leave_credit_use_paternity, leave_credit_use_maternity, leave_credit_use_wellness, leave_days_without_pay",
-        )
-        .eq("id", documentData.id)
-        .single();
+      const result = await runQuery<RevertPreview>(
+        {
+          transaction: "Revert preview",
+          table: "hrm_request_trackers",
+          payload: { trackerId: documentData.id },
+        },
+        supabase.rpc("preview_leave_revert", {
+          p_tracker_id: documentData.id,
+        }),
+      );
 
-      const leaveData = freshTracker
-        ? { ...documentData, ...freshTracker }
-        : documentData;
-
-      const { data: balancesData } = await supabase
-        .from("hrm_leave_credits")
-        .select()
-        .eq("user_id", documentData.creator.id);
-
-      const balances: Array<{ type: string; balance: string }> = [];
-      if (balancesData && balancesData.length > 0) {
-        const creditsData: LeaveCreditTypes[] = balancesData;
-        creditsData.forEach((credit) => {
-          balances.push({ type: credit.type, balance: credit.credits.toString() });
-        });
+      if (!result.ok || !result.data) {
+        setToast(
+          "error",
+          `Could not load the revert preview. ${
+            result.ok ? "This request no longer exists." : result.error.message
+          }`,
+        );
+        return;
       }
 
-      const creditsUsed = [
-        { type: "Vacation Leave", value: leaveData.leave_credit_use_vl },
-        { type: "Sick Leave", value: leaveData.leave_credit_use_sl },
-        { type: "Service Credit", value: leaveData.leave_credit_use_sc },
-        { type: "Adoption Leave", value: leaveData.leave_credit_use_adoption },
-        { type: "10-Day VAWC Leave", value: leaveData.leave_credit_use_vawc },
-        {
-          type: "Special Emergency (Calamity) Leave",
-          value: leaveData.leave_credit_use_emergency,
-        },
-        { type: "Study Leave", value: leaveData.leave_credit_use_study },
-        { type: "Solo Parent Leave", value: leaveData.leave_credit_use_soloparent },
-        {
-          type: "Special Leave Benefits For Women",
-          value: leaveData.leave_credit_use_slbw,
-        },
-        { type: "Special Privilege Leave", value: leaveData.leave_credit_use_spl },
-        { type: "Rehabilitation Leave", value: leaveData.leave_credit_use_rehab },
-        { type: "Paternity Leave", value: leaveData.leave_credit_use_paternity },
-        { type: "Maternity Leave", value: leaveData.leave_credit_use_maternity },
-        { type: "Wellness Break", value: leaveData.leave_credit_use_wellness },
-      ];
-
-      const credits = creditsUsed
-        .filter((c) => c.value && Number(c.value) > 0)
-        .map((c) => {
-          const bal = balances.find((b) => b.type === c.type);
-          const currentBalance = bal ? Number(bal.balance) : 0;
-          return {
-            type: c.type,
-            restore: Number(c.value),
-            currentBalance,
-            newBalance: currentBalance + Number(c.value),
-          };
-        });
-
-      const { data: leaveCocRecords } = await supabase
-        .from("hrm_leave_coc")
-        .select("use_coc, user_cto_id")
-        .eq("tracker_id", documentData.id);
-
-      let coc: {
-        restore: number;
-        currentCoc: number;
-        newCoc: number;
-      } | null = null;
-
-      if (leaveCocRecords && leaveCocRecords.length > 0) {
-        let totalRestore = 0;
-        let currentCoc = 0;
-        for (const record of leaveCocRecords) {
-          totalRestore += Number(record.use_coc);
-          const { data: userCto } = await supabase
-            .from("hrm_cto_users")
-            .select("coc")
-            .eq("id", record.user_cto_id)
-            .maybeSingle();
-          if (userCto) currentCoc += Number(userCto.coc);
-        }
-        coc = {
-          restore: totalRestore,
-          currentCoc,
-          newCoc: currentCoc + totalRestore,
-        };
-      }
-
-      setRevertPreview({
-        credits,
-        coc,
-        leaveDaysWithoutPay: Number(leaveData.leave_days_without_pay) || 0,
-      });
+      setRevertPreview(result.data);
     } catch (e) {
       console.error(e);
       setToast("error", "Failed to load revert preview, please try again.");
@@ -747,410 +842,65 @@ export default function DetailsModal({
   };
 
   const handleConfirmedReverification = async () => {
-    if (saving) return;
-
-    setSaving(true);
-
-    const newData = {
-      current_status: "For Verification",
-      current_approver_id: session?.user.id,
-    };
-    try {
-      // Atomic guard: only send back for reverification if the request is
-      // still "Approval Recommended".
-      const { data: updatedRows, error } = await supabase
-        .from("hrm_request_trackers")
-        .update(newData)
-        .eq("id", documentData.id)
-        .eq("current_status", "Approval Recommended")
-        .select();
-
-      if (error) {
-        void logError(
-          "For Reverification",
-          "hrm_request_trackers",
-          JSON.stringify(newData),
-          error.message,
-        );
-        setToast(
-          "error",
-          "Saving failed, please reload the page and try again.",
-        );
-        throw new Error(error.message);
-      }
-
-      if (!updatedRows || updatedRows.length === 0) {
-        setToast(
-          "error",
-          "This request's status has changed. Please reload the page and try again.",
-        );
-        setUpdateStatusFlow(!updateStatusFlow);
-        setSaving(false);
-        return;
-      }
-
-      // Added log to latest tracker flow
-      const { data } = await supabase
-        .from("hrm_tracker_flow")
-        .select()
-        .eq("tracker_id", documentData.id)
-        .order("id", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data) {
-        const newData = {
-          message: "For Reverification",
-          tracker_flow_id: data.id,
-          user_id: session?.user.id,
-        };
-
-        const { error: error2 } = await supabase
-          .from("hrm_tracker_logs")
-          .insert(newData)
-          .eq("id", documentData.id);
-
-        if (error2) {
-          void logError(
-            "Approval Flow Logs",
-            "hrm_tracker_flow",
-            "",
-            error2.message,
-          );
-        }
-      }
-
-      // Update data in redux
-      const items = [...globallist];
-      const updatedData = { ...newData, id: documentData.id };
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
-      items[foundIndex] = { ...items[foundIndex], ...updatedData };
-      dispatch(updateList(items));
-      setDocumentData(items[foundIndex]); // update ui with new data
-
-      // Notify requester and follower
-      void handleNotify(items[foundIndex], "For Reverification");
-
-      // pop up the success message
-      setToast("success", "Successfully saved.");
-
-      // Recount sidebar counter
-      dispatch(recount());
-
-      setUpdateStatusFlow(!updateStatusFlow);
-      setSaving(false);
-    } catch (e) {
-      console.error(e);
-    }
+    await applyStatusTransition({
+      label: "For Reverification",
+      newData: {
+        current_status: "For Verification",
+        current_approver_id: session?.user.id,
+      },
+      from: ["Approval Recommended"],
+      log: { kind: "log", message: "For Reverification" },
+      notify: "For Reverification",
+    });
   };
 
   const handleConfirmedRecommend = async () => {
-    if (saving) return;
-
-    setSaving(true);
-
-    const newData = {
-      current_status: "Approval Recommended",
-      current_approver_id: session?.user.id,
-      recommended_by: session?.user.id,
-      date_recommeded: format(new Date(), "yyyy-MM-dd"),
-    };
-    try {
-      // Atomic guard: only recommend if the request hasn't already been
-      // recommended/approved/disapproved/cancelled, so a stale modal can't
-      // insert a duplicate "Approval Recommended" log.
-      const { data: updatedRows, error } = await supabase
-        .from("hrm_request_trackers")
-        .update(newData)
-        .eq("id", documentData.id)
-        .neq("current_status", "Approval Recommended")
-        .neq("current_status", "Approved")
-        .neq("current_status", "Disapproved")
-        .neq("current_status", "Cancelled")
-        .select();
-
-      if (error) {
-        void logError(
-          "Approval Recommended",
-          "hrm_request_trackers",
-          JSON.stringify(newData),
-          error.message,
-        );
-        setToast(
-          "error",
-          "Saving failed, please reload the page and try again.",
-        );
-        throw new Error(error.message);
-      }
-
-      if (!updatedRows || updatedRows.length === 0) {
-        setToast(
-          "error",
-          "This request's status has changed. Please reload the page and try again.",
-        );
-        setUpdateStatusFlow(!updateStatusFlow);
-        setSaving(false);
-        return;
-      }
-
-      // Added log to latest tracker flow
-      const { data } = await supabase
-        .from("hrm_tracker_flow")
-        .select()
-        .eq("tracker_id", documentData.id)
-        .order("id", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data) {
-        const newData = {
-          message: "Approval Recommended",
-          tracker_flow_id: data.id,
-          user_id: session?.user.id,
-        };
-
-        const { error: error2 } = await supabase
-          .from("hrm_tracker_logs")
-          .insert(newData)
-          .eq("id", documentData.id);
-
-        if (error2) {
-          void logError(
-            "Approval Recommended Flow Logs",
-            "hrm_tracker_flow",
-            "",
-            error2.message,
-          );
-        }
-      }
-
-      // Update data in redux
-      const items = [...globallist];
-      const updatedData = { ...newData, id: documentData.id };
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
-      items[foundIndex] = { ...items[foundIndex], ...updatedData };
-      dispatch(updateList(items));
-      setDocumentData(items[foundIndex]); // update ui with new data
-
-      // Notify requester and follower
-      void handleNotify(items[foundIndex], "Approval Recommended");
-
-      // pop up the success message
-      setToast("success", "Successfully saved.");
-
-      // Recount sidebar counter
-      dispatch(recount());
-
-      setUpdateStatusFlow(!updateStatusFlow);
-      setSaving(false);
-    } catch (e) {
-      console.error(e);
-    }
+    await applyStatusTransition({
+      label: "Approval Recommended",
+      newData: {
+        current_status: "Approval Recommended",
+        current_approver_id: session?.user.id,
+        recommended_by: session?.user.id,
+        date_recommeded: format(new Date(), "yyyy-MM-dd"),
+      },
+      notFrom: [
+        "Approval Recommended",
+        "Approved",
+        "Disapproved",
+        "Cancelled",
+      ],
+      log: { kind: "log", message: "Approval Recommended" },
+      notify: "Approval Recommended",
+    });
   };
 
   const handleConfirmedCancel = async () => {
-    if (saving) return;
-
-    setSaving(true);
-
-    const newData = {
-      current_status: "Cancelled",
-      current_approver_id: session?.user.id,
-    };
-    try {
-      // Atomic guard: only cancel if the request hasn't already reached a
-      // terminal status, so a stale modal can't insert a duplicate log or
-      // re-delete leave dates.
-      const { data: updatedRows, error } = await supabase
-        .from("hrm_request_trackers")
-        .update(newData)
-        .eq("id", documentData.id)
-        .neq("current_status", "Approved")
-        .neq("current_status", "Disapproved")
-        .neq("current_status", "Cancelled")
-        .select();
-
-      if (error) {
-        void logError(
-          "Cancel Request",
-          "hrm_request_trackers",
-          JSON.stringify(newData),
-          error.message,
-        );
-        setToast(
-          "error",
-          "Saving failed, please reload the page and try again.",
-        );
-        throw new Error(error.message);
-      }
-
-      if (!updatedRows || updatedRows.length === 0) {
-        setToast(
-          "error",
-          "This request's status has changed. Please reload the page and try again.",
-        );
-        setUpdateStatusFlow(!updateStatusFlow);
-        setSaving(false);
-        return;
-      }
-
-      // Added log to latest tracker flow
-      const { data } = await supabase
-        .from("hrm_tracker_flow")
-        .select()
-        .eq("tracker_id", documentData.id)
-        .order("id", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data) {
-        const newData = {
-          message: "Cancelled",
-          tracker_flow_id: data.id,
-          user_id: session?.user.id,
-        };
-
-        const { error: error2 } = await supabase
-          .from("hrm_tracker_logs")
-          .insert(newData)
-          .eq("id", documentData.id);
-
-        if (error2) {
-          void logError(
-            "Cancel Request Flow Logs",
-            "hrm_tracker_flow",
-            "",
-            error2.message,
-          );
-        }
-      }
-
-      // from leave days
-      await deleteleaveDays();
-
-      // Update data in redux
-      const items = [...globallist];
-      const updatedData = { ...newData, id: documentData.id };
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
-      items[foundIndex] = { ...items[foundIndex], ...updatedData };
-      dispatch(updateList(items));
-      setDocumentData(items[foundIndex]); // update ui with new data
-
-      // pop up the success message
-      setToast("success", "Successfully saved.");
-
-      setUpdateStatusFlow(!updateStatusFlow);
-      setSaving(false);
-    } catch (e) {
-      console.error(e);
-    }
+    await applyStatusTransition({
+      label: "Cancel Request",
+      newData: {
+        current_status: "Cancelled",
+        current_approver_id: session?.user.id,
+      },
+      notFrom: ["Approved", "Disapproved", "Cancelled"],
+      log: { kind: "log", message: "Cancelled" },
+      after: deleteLeaveDays,
+      // Cancelling never refreshed the sidebar counters; kept as-is.
+      recount: false,
+    });
   };
 
   const handleConfirmedDisapprove = async () => {
-    if (saving) return;
-
-    setSaving(true);
-
-    const newData = {
-      current_status: "Disapproved",
-      current_approver_id: session?.user.id,
-    };
-    try {
-      // Atomic guard: only disapprove if the request hasn't already reached a
-      // terminal status, so a stale modal can't insert a duplicate flow entry
-      // or re-delete leave dates.
-      const { data: updatedRows, error } = await supabase
-        .from("hrm_request_trackers")
-        .update(newData)
-        .eq("id", documentData.id)
-        .neq("current_status", "Approved")
-        .neq("current_status", "Disapproved")
-        .neq("current_status", "Cancelled")
-        .select();
-
-      if (error) {
-        void logError(
-          "Disapproved",
-          "hrm_request_trackers",
-          JSON.stringify(newData),
-          error.message,
-        );
-        setToast(
-          "error",
-          "Saving failed, please reload the page and try again.",
-        );
-        throw new Error(error.message);
-      }
-
-      if (!updatedRows || updatedRows.length === 0) {
-        setToast(
-          "error",
-          "This request's status has changed. Please reload the page and try again.",
-        );
-        setUpdateStatusFlow(!updateStatusFlow);
-        setSaving(false);
-        return;
-      }
-
-      // add to tracker flow
-      const { error: error2 } = await supabase.from("hrm_tracker_flow").insert({
-        tracker_id: documentData.id,
-        user_id: session?.user.id,
-        status: "Disapproved",
-      });
-
-      if (error2) {
-        void logError("Disapproved", "hrm_tracker_flow", "", error2.message);
-        setToast(
-          "error",
-          "Saving failed, please reload the page and try again.",
-        );
-        throw new Error(error2.message);
-      }
-
-      // from leave days
-      await deleteleaveDays();
-
-      // Update data in redux
-      const items = [...globallist];
-      const updatedData = { ...newData, id: documentData.id };
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
-      items[foundIndex] = { ...items[foundIndex], ...updatedData };
-      dispatch(updateList(items));
-      setDocumentData(items[foundIndex]); // update ui with new data
-
-      // Notify requester and follower
-      void handleNotify(items[foundIndex], "Disapproved");
-
-      // pop up the success message
-      setToast("success", "Successfully saved.");
-
-      // Recount sidebar counter
-      dispatch(recount());
-
-      setUpdateStatusFlow(!updateStatusFlow);
-      setSaving(false);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const deleteleaveDays = async () => {
-    // from leave days
-    const { error: error3 } = await supabase
-      .from("hrm_leave_dates")
-      .delete()
-      .eq("tracker_id", documentData.id);
-
-    if (error3) {
-      void logError(
-        "Disapproved - delete leave dates",
-        "hrm_leave_days",
-        "",
-        error3.message,
-      );
-      setToast("error", "Saving failed, please reload the page and try again.");
-    }
+    await applyStatusTransition({
+      label: "Disapproved",
+      newData: {
+        current_status: "Disapproved",
+        current_approver_id: session?.user.id,
+      },
+      notFrom: ["Approved", "Disapproved", "Cancelled"],
+      log: { kind: "flow", status: "Disapproved", userId: session?.user.id },
+      after: deleteLeaveDays,
+      notify: "Disapproved",
+    });
   };
 
   const handleSaveLeaveDates = async () => {
@@ -1175,49 +925,31 @@ export default function DetailsModal({
         is_paid: index < paidCount,
       }));
 
-      const { error: deleteErr } = await supabase
-        .from("hrm_leave_dates")
-        .delete()
-        .eq("tracker_id", documentData.id);
+      // Clearing the old dates and inserting the new ones has to be one
+      // transaction: a failed insert after a committed delete used to leave the
+      // request with no leave dates at all, while the toast only said the
+      // update had failed. See
+      // supabase/migrations/0018_replace_leave_dates.sql
+      const saved = await runQuery(
+        {
+          transaction: "Edit Leave Dates",
+          table: "hrm_leave_dates",
+          payload: { trackerId: documentData.id, dates: insertArray.length },
+        },
+        supabase.rpc("replace_leave_dates", {
+          p_tracker_id: documentData.id,
+          p_dates: insertArray.map(({ date, is_paid }) => ({ date, is_paid })),
+          p_leave_from: leaveFrom,
+          p_leave_to: leaveTo,
+        }),
+      );
 
-      if (deleteErr) {
-        void logError(
-          "Edit Leave Dates - Delete",
-          "hrm_leave_dates",
-          "",
-          deleteErr.message,
+      if (!saved.ok) {
+        setToast(
+          "error",
+          `Failed to update leave dates, and the existing dates were left unchanged. ${saved.error.message}`,
         );
-        setToast("error", "Failed to update leave dates.");
         return;
-      }
-
-      const { error: insertErr } = await supabase
-        .from("hrm_leave_dates")
-        .insert(insertArray);
-
-      if (insertErr) {
-        void logError(
-          "Edit Leave Dates - Insert",
-          "hrm_leave_dates",
-          "",
-          insertErr.message,
-        );
-        setToast("error", "Failed to update leave dates.");
-        return;
-      }
-
-      const { error: updateErr } = await supabase
-        .from("hrm_request_trackers")
-        .update({ leave_from: leaveFrom, leave_to: leaveTo })
-        .eq("id", documentData.id);
-
-      if (updateErr) {
-        void logError(
-          "Edit Leave Dates - Update Tracker",
-          "hrm_request_trackers",
-          "",
-          updateErr.message,
-        );
       }
 
       const updatedLeaveDates = insertArray.map((d) => ({
