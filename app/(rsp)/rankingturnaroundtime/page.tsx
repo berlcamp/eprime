@@ -18,6 +18,11 @@ import type { RankingTypes } from '@/types'
 import RspSidebar from '@/components/Sidebars/RspSidebar'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
+  runListQuery,
+  runQuery,
+  type QueryError
+} from '@/utils/query-result'
+import {
   resolveTurnaroundStages,
   totalTurnaroundDays,
   type ResolvedStage
@@ -38,6 +43,7 @@ const Page: React.FC = () => {
   const [filterRanking, setFilterRanking] = useState<string>('')
   const [ranking, setRanking] = useState<RankingTypes | null>(null)
   const [stages, setStages] = useState<ResolvedStage[]>([])
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
   const [selectedStage, setSelectedStage] = useState<ResolvedStage | null>(null)
 
   const { hasAccess } = useFilter()
@@ -57,44 +63,96 @@ const Page: React.FC = () => {
     }
 
     setLoading(true)
+    setLoadError(null)
 
     try {
-      const { data: rankingData, error } = await supabase
-        .from('hrm_rankings')
-        .select('*, position:position_id(name)')
-        .eq('id', filterRanking)
-        .single()
+      // Every query below feeds a duration on a printed report. Falling back
+      // to an empty list on failure silently shortened or dropped a stage, and
+      // the report gave no sign that anything was missing.
+      const rankingResult = await runQuery<any>(
+        {
+          transaction: 'Fetch ranking for turnaround report',
+          table: 'hrm_rankings',
+          payload: { rankingId: filterRanking }
+        },
+        supabase
+          .from('hrm_rankings')
+          .select('*, position:position_id(name)')
+          .eq('id', filterRanking)
+          .single()
+      )
 
-      if (error) {
-        throw new Error(error.message)
+      if (!rankingResult.ok) {
+        setLoadError(rankingResult.error)
+        return
       }
+
+      const rankingData = rankingResult.data
 
       // The applicants carry three of the nine stages between them: when they
       // applied, when HR evaluated them, and when they were appointed.
-      const { data: applicants } = await supabase
-        .from('hrm_ranking_applicants')
-        .select('id, created_at, evaluated_at, appointed_at')
-        .eq('ranking_id', filterRanking)
+      const applicantsResult = await runListQuery<any>(
+        {
+          transaction: 'Fetch applicants for turnaround report',
+          table: 'hrm_ranking_applicants',
+          payload: { rankingId: filterRanking }
+        },
+        supabase
+          .from('hrm_ranking_applicants')
+          .select('id, created_at, evaluated_at, appointed_at')
+          .eq('ranking_id', filterRanking)
+      )
 
-      const applicantIds = (applicants ?? []).map((a: any) => a.id)
+      if (!applicantsResult.ok) {
+        setLoadError(applicantsResult.error)
+        return
+      }
+
+      const applicants = applicantsResult.data
+      const applicantIds = applicants.map((a: any) => a.id)
 
       // Deliberation is bounded by when the committees cast their points.
       let points: any[] = []
       if (applicantIds.length > 0) {
-        const { data: pointsData } = await supabase
-          .from('hrm_ranking_applicant_points')
-          .select('created_at, updated_at')
-          .in('applicant_id', applicantIds)
-        points = pointsData ?? []
+        const pointsResult = await runListQuery<any>(
+          {
+            transaction: 'Fetch cast points for turnaround report',
+            table: 'hrm_ranking_applicant_points',
+            payload: { applicants: applicantIds.length }
+          },
+          supabase
+            .from('hrm_ranking_applicant_points')
+            .select('created_at, updated_at')
+            .in('applicant_id', applicantIds)
+        )
+
+        if (!pointsResult.ok) {
+          setLoadError(pointsResult.error)
+          return
+        }
+
+        points = pointsResult.data
       }
 
-      const { data: overrideRows } = await supabase
-        .from('hrm_ranking_stage_dates')
-        .select('*')
-        .eq('ranking_id', filterRanking)
+      const overridesResult = await runListQuery<any>(
+        {
+          transaction: 'Fetch stage date overrides',
+          table: 'hrm_ranking_stage_dates',
+          payload: { rankingId: filterRanking }
+        },
+        supabase
+          .from('hrm_ranking_stage_dates')
+          .select('*')
+          .eq('ranking_id', filterRanking)
+      )
+
+      if (!overridesResult.ok) {
+        setLoadError(overridesResult.error)
+        return
+      }
 
       const overrides: Record<string, any> = {}
-      ;(overrideRows ?? []).forEach((row: any) => {
+      overridesResult.data.forEach((row: any) => {
         overrides[row.stage_key] = {
           date_from: row.date_from,
           date_to: row.date_to
@@ -110,9 +168,9 @@ const Page: React.FC = () => {
           ranklistPostedAt: rankingData.ranklist_posted_at,
           rqaPostedAt: rankingData.rqa_posted_at,
           closedAt: rankingData.closed_at,
-          applicationDates: (applicants ?? []).map((a: any) => a.created_at),
-          evaluationDates: (applicants ?? []).map((a: any) => a.evaluated_at),
-          appointmentDates: (applicants ?? []).map((a: any) => a.appointed_at),
+          applicationDates: applicants.map((a: any) => a.created_at),
+          evaluationDates: applicants.map((a: any) => a.evaluated_at),
+          appointmentDates: applicants.map((a: any) => a.appointed_at),
           deliberationStartDates: points.map((p: any) => p.created_at),
           deliberationEndDates: points.map((p: any) => p.updated_at),
           overrides
@@ -156,6 +214,18 @@ const Page: React.FC = () => {
           {filterRanking === '' && (
             <div className="mt-10 text-center text-xl font-light text-gray-600">
               Choose ranking from filters above.
+            </div>
+          )}
+
+          {loadError && (
+            <div className="mt-4 border border-red-300 bg-red-50 px-3 py-2">
+              <div className="text-sm text-red-700">
+                {loadError.message} No report is shown, rather than one with
+                stages silently missing.
+              </div>
+              <div className="mt-1 font-mono text-[10px] text-gray-500">
+                {loadError.cause}
+              </div>
             </div>
           )}
 

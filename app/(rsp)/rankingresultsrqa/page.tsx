@@ -28,6 +28,7 @@ import { PrintableActionsMenu } from "@/components/Rsp/PrintableActionsMenu";
 import RspSidebar from "@/components/Sidebars/RspSidebar";
 import { superAdmins } from "@/constants";
 import { useSupabase } from "@/context/SupabaseProvider";
+import { runListQuery, type QueryError } from "@/utils/query-result";
 import { CommitteeAccumulatedPoints } from "@/utils/data-helpers";
 import { logError } from "@/utils/fetchApi";
 import axios from "axios";
@@ -62,6 +63,7 @@ const Page: React.FC = () => {
   const [filterDisplay, setFilterDisplay] = useState<string>("");
 
   const [rankingsMeta, setRankingsMeta] = useState<RankingTypes[]>([]);
+  const [loadError, setLoadError] = useState<QueryError | null>(null);
 
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchMajor, setSearchMajor] = useState("");
@@ -81,14 +83,30 @@ const Page: React.FC = () => {
     setLoading(true);
 
     try {
-      const { data: metaRows } = await supabase
-        .from("hrm_rankings")
-        .select(
-          "*, position:position_id(name), committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, signature_path, hrm_positions:position_id(name)))",
-        )
-        .in("id", filterRankingIds);
+      // These rows carry the committee signatories printed on the RQA result
+      // sheet, so an empty fallback silently produced an unsigned document.
+      const metaResult = await runListQuery<any>(
+        {
+          transaction: "Fetch ranking metadata for RQA results",
+          table: "hrm_rankings",
+          payload: { rankingIds: filterRankingIds },
+        },
+        supabase
+          .from("hrm_rankings")
+          .select(
+            "*, position:position_id(name), committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, middlename, lastname, avatar_url, signature_path, hrm_positions:position_id(name)))",
+          )
+          .in("id", filterRankingIds),
+      );
 
-      setRankingsMeta(metaRows ?? []);
+      if (!metaResult.ok) {
+        setLoadError(metaResult.error);
+        setLoading(false);
+        return;
+      }
+
+      setLoadError(null);
+      setRankingsMeta(metaResult.data);
 
       const query = supabase
         .from("hrm_ranking_applicants")
@@ -854,7 +872,15 @@ const Page: React.FC = () => {
                   {loading && <TableRowLoading cols={5} rows={2} />}
                 </tbody>
               </table>
-              {!loading && isDataEmpty && (
+              {loadError && (
+                <div className="m-4 border border-red-300 bg-red-50 px-3 py-2">
+                  <div className="text-sm text-red-700">
+                    {loadError.message} No results are shown, rather than a
+                    sheet missing its committee signatories.
+                  </div>
+                </div>
+              )}
+              {!loading && !loadError && isDataEmpty && (
                 <div className="app__norecordsfound">No results.</div>
               )}
               {!isDataEmpty && (

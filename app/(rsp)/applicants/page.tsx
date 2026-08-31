@@ -26,7 +26,7 @@ import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
 import { ArrowUpRight, EyeIcon } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
-import MoveRanking from './MoveRanking'
+import MoveRanking from '@/components/Rsp/MoveRanking'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)

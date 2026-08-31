@@ -3,6 +3,7 @@
 import {
   CustomButton,
   Sidebar,
+  TableError,
   TableRowLoading,
   Title,
   TopBar,
@@ -11,6 +12,7 @@ import {
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { runListQuery, type QueryError } from '@/utils/query-result'
 import Excel from 'exceljs'
 import { saveAs } from 'file-saver'
 import React, { useEffect, useState } from 'react'
@@ -25,6 +27,7 @@ import RspSidebar from '@/components/Sidebars/RspSidebar'
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [list, setList] = useState<ApplicantTypes[]>([])
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
   const [filterRanking, setFilterRanking] = useState<string>('')
   const [downloading, setDownloading] = useState(false)
 
@@ -37,18 +40,32 @@ const Page: React.FC = () => {
     setLoading(true)
 
     try {
-      const { data } = await supabase
-        .from('hrm_ranking_applicants')
-        .select(
-          '*,ier:hrm_ranking_applicant_ier(*),ranking:ranking_id(code_prefix)',
-          {
-            count: 'exact'
-          }
-        )
-        .eq('ranking_id', filterRanking)
-        .order('ranking_id', { ascending: true })
+      const result = await runListQuery<any>(
+        {
+          transaction: 'Fetch IER applicants',
+          table: 'hrm_ranking_applicants',
+          payload: { rankingId: filterRanking }
+        },
+        supabase
+          .from('hrm_ranking_applicants')
+          .select(
+            '*,ier:hrm_ranking_applicant_ier(*),ranking:ranking_id(code_prefix)',
+            {
+              count: 'exact'
+            }
+          )
+          .eq('ranking_id', filterRanking)
+          .order('ranking_id', { ascending: true })
+      )
 
-      setList(data ?? [])
+      // Falling back to an empty list read as "no applicants in this ranking".
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
+      }
+
+      setLoadError(null)
+      setList(result.data)
     } catch (e) {
       console.error(e)
     } finally {
@@ -236,7 +253,12 @@ const Page: React.FC = () => {
                 {loading && <TableRowLoading cols={10} rows={2} />}
               </tbody>
             </table>
-            {!loading && isDataEmpty && (
+            {loadError && (
+              <TableError error={loadError} onRetry={() => {
+                  void fetchData()
+                }} />
+            )}
+            {!loading && !loadError && isDataEmpty && (
               <div className="app__norecordsfound">No records found.</div>
             )}
           </div>

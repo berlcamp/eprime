@@ -3,6 +3,11 @@ import { SearchUserInput, TopBarDark, UserBlock } from '@/components/index'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import {
+  runListQuery,
+  runQuery,
+  type QueryError
+} from '@/utils/query-result'
 import { ApplicantTypes, Employee } from '@/types'
 import { logError } from '@/utils/fetchApi'
 import { generateRandomAlphaNumber } from '@/utils/text-helper'
@@ -15,6 +20,7 @@ const Page: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false)
   const [applicantExist, setApplicantExist] = useState(false)
   const [searching, setSearching] = useState(false)
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
   const [refCode, setRefCode] = useState('')
   const [doneSearch, setDoneSearch] = useState(false)
 
@@ -260,33 +266,63 @@ const Page: React.FC = () => {
   useEffect(() => {
     const handleSearch = async () => {
       setSearching(true)
+      setLoadError(null)
       setDoneSearch(false)
       setApplicantExist(false)
       setApplicantDetails(null)
 
       // search if user has existing active application
-      const { data: existingApplicant } = await supabase
-        .from('hrm_ranking_applicants')
-        .select()
-        .eq('email', session?.user.email)
-        .eq('type', 'Reclassification')
-        .eq('status', 'Active')
+      const existing = await runListQuery<any>(
+        {
+          transaction: 'Check for an existing reclassification application',
+          table: 'hrm_ranking_applicants',
+          payload: { email: session?.user.email }
+        },
+        supabase
+          .from('hrm_ranking_applicants')
+          .select()
+          .eq('email', session?.user.email)
+          .eq('type', 'Reclassification')
+          .eq('status', 'Active')
+      )
 
-      if (existingApplicant && existingApplicant.length > 0) {
+      // This is the only guard against filing a second application. Falling
+      // through on failure let the form open and a duplicate be submitted, so
+      // a failed check now stops here instead.
+      if (!existing.ok) {
+        setLoadError(existing.error)
+        setSearching(false)
+        return
+      }
+
+      if (existing.data.length > 0) {
         setSearching(false)
         setDoneSearch(true)
         setApplicantExist(true)
         return
       }
 
-      const { data } = await supabase
-        .from('hrm_users')
-        .select('*,hrm_item:item_id(*),hrm_positions:position_id(name)')
-        .eq('id', session?.user.id)
-        .maybeSingle()
+      const details = await runQuery<any>(
+        {
+          transaction: 'Fetch own details for reclassification',
+          table: 'hrm_users',
+          payload: { userId: session?.user.id }
+        },
+        supabase
+          .from('hrm_users')
+          .select('*,hrm_item:item_id(*),hrm_positions:position_id(name)')
+          .eq('id', session?.user.id)
+          .maybeSingle()
+      )
 
-      if (data) {
-        setApplicantDetails(data)
+      if (!details.ok) {
+        setLoadError(details.error)
+        setSearching(false)
+        return
+      }
+
+      if (details.data) {
+        setApplicantDetails(details.data)
       }
 
       setSearching(false)
@@ -343,6 +379,18 @@ const Page: React.FC = () => {
                   )}
                 </div>
 
+                {loadError && (
+                  <div className="my-3 border border-red-300 bg-red-50 px-3 py-2">
+                    <div className="text-sm text-red-700">
+                      {loadError.message} The form is not shown, because we
+                      could not confirm whether you already have an active
+                      application.
+                    </div>
+                    <div className="mt-1 font-mono text-[10px] text-gray-500">
+                      {loadError.cause}
+                    </div>
+                  </div>
+                )}
                 {searching && <TwoColTableLoading />}
                 {!searching && applicantDetails && (
                   <div className="grid gap-4">

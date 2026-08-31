@@ -1,12 +1,13 @@
 import { CustomButton } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { useRankingOptions } from '@/hooks/useRankingOptions'
 import { logError } from '@/utils/fetchApi'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 // Types
-import type { RankingExpensesSummaryTypes, RankingTypes } from '@/types'
+import type { RankingExpensesSummaryTypes } from '@/types'
 
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
@@ -23,7 +24,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
   const { supabase } = useSupabase()
   const [saving, setSaving] = useState(false)
 
-  const [rankings, setRankings] = useState<RankingTypes[] | []>([])
+  const { rankings, error: rankingsError } = useRankingOptions({
+    status: 'Closed'
+  })
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)
@@ -177,21 +180,6 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
     }
   }
 
-  // Fetch data
-  useEffect(() => {
-    const fetchRankings = async () => {
-      const { data } = await supabase
-        .from('hrm_rankings')
-        .select('*,position:position_id(name)')
-        .eq('status', 'Closed')
-      if (data) {
-        setRankings(data)
-      }
-    }
-
-    void fetchRankings()
-  }, [])
-
   // manually set the defaultValues of use-form-hook whenever the component receives new props.
   useEffect(() => {
     reset({
@@ -234,6 +222,9 @@ const AddEditModal = ({ hideModal, editData }: ModalProps) => {
                     >
                       {rankings.length === 0 && (
                         <option value="">No Closed Rankings Yet</option>
+                      )}
+                      {rankingsError && (
+                        <option value="">{rankingsError.message}</option>
                       )}
                       {rankings.length > 0 && (
                         <option value="">Choose Ranking</option>

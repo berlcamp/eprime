@@ -2,7 +2,11 @@ import { CustomButton } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { ApplicantTypes, RankingTypes } from '@/types'
-import { logError } from '@/utils/fetchApi'
+import {
+  runListQuery,
+  runQuery,
+  type QueryError
+} from '@/utils/query-result'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -22,6 +26,7 @@ interface MoveFormTypes {
 
 const MoveRanking = ({ hideModal, applicantData }: ModalProps) => {
   const [saving, setSaving] = useState(false)
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
 
   const [rankings, setRankings] = useState<RankingTypes[] | []>([])
   const { supabase } = useSupabase()
@@ -47,25 +52,29 @@ const MoveRanking = ({ hideModal, applicantData }: ModalProps) => {
     setSaving(true)
 
     try {
-      const { error } = await supabase
-        .from('hrm_ranking_applicants')
-        .update({
-          ranking_id: formdata.ranking_id
-        })
-        .eq('id', applicantData.id)
+      const result = await runQuery(
+        {
+          transaction: 'Move Ranking',
+          table: 'hrm_ranking_applicants',
+          payload: {
+            applicantId: applicantData.id,
+            rankingId: formdata.ranking_id
+          }
+        },
+        supabase
+          .from('hrm_ranking_applicants')
+          .update({
+            ranking_id: formdata.ranking_id
+          })
+          .eq('id', applicantData.id)
+      )
 
-      if (error) {
-        void logError(
-          'Move Ranking',
-          'hrm_ranking_applicants',
-          '',
-          error.message
-        )
+      if (!result.ok) {
         setToast(
           'error',
-          'Saving failed, please reload the page and try again.'
+          `The applicant was not moved. ${result.error.message}`
         )
-        throw new Error(error.message)
+        return
       }
 
       // Update data in redux
@@ -78,10 +87,10 @@ const MoveRanking = ({ hideModal, applicantData }: ModalProps) => {
         id: applicantData.id
       }
       const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
-
-      setSaving(false)
+      if (foundIndex >= 0) {
+        items[foundIndex] = { ...items[foundIndex], ...updatedData }
+        dispatch(updateList(items))
+      }
 
       setToast('success', 'Successfully moved.')
 
@@ -104,13 +113,30 @@ const MoveRanking = ({ hideModal, applicantData }: ModalProps) => {
       if (applicantData.ranking_id) {
         query = query.neq('id', applicantData.ranking_id)
       }
-      const { data } = await query
-      if (data) {
-        setRankings(data)
+
+      const result = await runListQuery<RankingTypes>(
+        {
+          transaction: 'Fetch rankings to move into',
+          table: 'hrm_rankings',
+          payload: { excluding: applicantData.ranking_id },
+          userMessage: 'Could not load the list of rankings to move into.'
+        },
+        query
+      )
+
+      // An empty dropdown and a failed lookup used to look the same, leaving
+      // no way to tell "no open rankings" from "the query broke".
+      if (!result.ok) {
+        setLoadError(result.error)
+        return
       }
+
+      setLoadError(null)
+      setRankings(result.data)
     }
 
     void fetchRankings()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -142,6 +168,9 @@ const MoveRanking = ({ hideModal, applicantData }: ModalProps) => {
                       className="app__select_standard"
                     >
                       <option value="">Choose</option>
+                      {loadError && (
+                        <option value="">{loadError.message}</option>
+                      )}
                       {rankings.length > 0 &&
                         rankings.map((ranking) => (
                           <option key={ranking.id} value={ranking.id}>

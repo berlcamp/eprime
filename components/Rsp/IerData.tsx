@@ -1,5 +1,6 @@
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { runListQuery, type QueryError } from '@/utils/query-result'
 import { ApplicantIerTypes } from '@/types'
 import { TrashIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -15,6 +16,7 @@ export default function IerData({
   refreshIer: boolean
 }) {
   const [list, setList] = useState<ApplicantIerTypes[] | []>([])
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedId, setSelectedId] = useState('')
 
@@ -38,11 +40,26 @@ export default function IerData({
     setShowDeleteModal(true)
   }
   const fetchData = async () => {
-    const { data } = await supabase
-      .from('hrm_ranking_applicant_ier')
-      .select()
-      .eq('applicant_id', applicantId)
-    setList(data ?? [])
+    const result = await runListQuery<any>(
+      {
+        transaction: 'Fetch applicant IER',
+        table: 'hrm_ranking_applicant_ier',
+        payload: { applicantId }
+      },
+      supabase
+        .from('hrm_ranking_applicant_ier')
+        .select()
+        .eq('applicant_id', applicantId)
+    )
+
+    // An applicant with no IER entries and a failed lookup looked the same.
+    if (!result.ok) {
+      setLoadError(result.error)
+      return
+    }
+
+    setLoadError(null)
+    setList(result.data)
   }
   useEffect(() => {
     void fetchData()
@@ -50,6 +67,11 @@ export default function IerData({
 
   return (
     <div>
+      {loadError && (
+        <div className="mb-2 text-xs text-red-600">
+          {loadError.message} The entries below are incomplete.
+        </div>
+      )}
       <table className="app__table">
         <thead className="app__thead">
           <tr>

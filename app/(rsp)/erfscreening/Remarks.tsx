@@ -1,5 +1,7 @@
 import { updateRemarksList } from '@/GlobalRedux/Features/remarksSlice'
+import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { runListQuery } from '@/utils/query-result'
 import type { ApplicantTypes, RemarksTypes } from '@/types'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -15,6 +17,7 @@ export default function Remarks({ document }: ModalProps) {
   const [remarksData, setRemarksData] = useState<RemarksTypes[] | []>([])
 
   const { supabase, session } = useSupabase()
+  const { setToast } = useFilter()
 
   // Redux staff
   const globalremarks = useSelector((state: any) => state.remarks.value)
@@ -22,13 +25,32 @@ export default function Remarks({ document }: ModalProps) {
 
   const fetchRemarks = async () => {
     // Fetch Document Replies
-    const { data: remarksData } = await supabase
-      .from('hrm_remarks')
-      .select(
-        '*,hrm_users:sender_id(firstname,middlename,lastname,avatar_url),hrm_remarks_comments(*, hrm_users:sender_id(firstname,middlename,lastname,avatar_url))'
+    const result = await runListQuery<RemarksTypes>(
+      {
+        transaction: 'Fetch applicant remarks',
+        table: 'hrm_remarks',
+        payload: { applicantId: document.id }
+      },
+      supabase
+        .from('hrm_remarks')
+        .select(
+          '*,hrm_users:sender_id(firstname,middlename,lastname,avatar_url),hrm_remarks_comments(*, hrm_users:sender_id(firstname,middlename,lastname,avatar_url))'
+        )
+        .eq('applicant_id', document.id)
+        .order('id', { ascending: false })
+    )
+
+    // A failed fetch used to dispatch null into redux, which renders exactly
+    // like an applicant with no remarks.
+    if (!result.ok) {
+      setToast(
+        'error',
+        `Could not load the remarks on this applicant. ${result.error.message}`
       )
-      .eq('applicant_id', document.id)
-      .order('id', { ascending: false })
+      return
+    }
+
+    const remarksData = result.data
 
     // Update remarks in redux
     dispatch(updateRemarksList(remarksData))

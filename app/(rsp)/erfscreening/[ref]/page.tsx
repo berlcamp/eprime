@@ -16,7 +16,7 @@ import { ArrowUpRight, ChevronDownIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useDispatch, useSelector } from 'react-redux'
 import DetailsModal from '../DetailsModal'
-import MoveRanking from '../MoveRanking'
+import MoveRanking from '@/components/Rsp/MoveRanking'
 
 export default function Page({ params }: { params: Promise<{ ref: string }> }) {
   const [loading, setLoading] = useState(false)

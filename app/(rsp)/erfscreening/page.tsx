@@ -28,7 +28,7 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import { ArrowUpRight } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import DetailsModal from './DetailsModal'
-import MoveRanking from './MoveRanking'
+import MoveRanking from '@/components/Rsp/MoveRanking'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)

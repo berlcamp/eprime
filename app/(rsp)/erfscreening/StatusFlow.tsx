@@ -1,6 +1,7 @@
 'use client'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { FlowListTypes } from '@/types'
+import { runListQuery, type QueryError } from '@/utils/query-result'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
 
@@ -12,23 +13,47 @@ function StatusFlow({
   updateStatusFlow: boolean
 }) {
   const [flowList, setFlowList] = useState<FlowListTypes[] | []>([])
+  const [error, setError] = useState<QueryError | null>(null)
   const { supabase } = useSupabase()
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_applicant_flow')
-        .select(
-          '*, hrm_user:user_id(firstname,middlename,lastname),receiver:receiver_id(firstname,middlename,lastname)',
-          { count: 'exact' }
-        )
-        .eq('applicant_id', documentId)
+      const result = await runListQuery<FlowListTypes>(
+        {
+          transaction: 'Fetch applicant status flow',
+          table: 'hrm_ranking_applicant_flow',
+          payload: { applicantId: documentId },
+          userMessage: 'Could not load this applicant history.'
+        },
+        supabase
+          .from('hrm_ranking_applicant_flow')
+          .select(
+            '*, hrm_user:user_id(firstname,middlename,lastname),receiver:receiver_id(firstname,middlename,lastname)',
+            { count: 'exact' }
+          )
+          .eq('applicant_id', documentId)
+      )
 
-      setFlowList(data ?? [])
+      // An empty flow list and a failed query both rendered as "no history".
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+
+      setError(null)
+      setFlowList(result.data)
     }
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateStatusFlow])
+
+  if (error) {
+    return (
+      <div className="w-full text-xs">
+        <div className="text-red-600">{error.message}</div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full text-xs">

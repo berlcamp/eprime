@@ -1,4 +1,5 @@
 import { useSupabase } from '@/context/SupabaseProvider'
+import { runListQuery, type QueryError } from '@/utils/query-result'
 import { ApplicantTypes, RankingCommitteeTypes } from '@/types'
 import { useEffect, useState } from 'react'
 import TwoColTableLoading from '../Loading/TwoColTableLoading'
@@ -10,31 +11,49 @@ interface PropTypes {
 const ApplicantCommitteePoints = ({ applicantData }: PropTypes) => {
   const [loading, setLoading] = useState(false)
   const [list, setList] = useState<RankingCommitteeTypes[] | []>([])
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
   const { supabase } = useSupabase()
 
   useEffect(() => {
     setLoading(true)
     const fetchData = async () => {
-      const { data } = await supabase
-        .from('hrm_ranking_committees')
-        .select(
-          '*, hrm_user:user_id(id,firstname,lastname,avatar_url),committee_criterias:hrm_ranking_committee_criterias(*,criteria:criteria_id(*),criteria_points:hrm_ranking_applicant_points(*))'
-        )
-        .eq('ranking_id', applicantData.ranking_id)
-        .eq(
-          'committee_criterias.hrm_ranking_applicant_points.applicant_id',
-          applicantData.id
-        )
+      const result = await runListQuery<RankingCommitteeTypes>(
+        {
+          transaction: 'Fetch applicant committee points',
+          table: 'hrm_ranking_committees',
+          payload: {
+            rankingId: applicantData.ranking_id,
+            applicantId: applicantData.id
+          }
+        },
+        supabase
+          .from('hrm_ranking_committees')
+          .select(
+            '*, hrm_user:user_id(id,firstname,lastname,avatar_url),committee_criterias:hrm_ranking_committee_criterias(*,criteria:criteria_id(*),criteria_points:hrm_ranking_applicant_points(*))'
+          )
+          .eq('ranking_id', applicantData.ranking_id)
+          .eq(
+            'committee_criterias.hrm_ranking_applicant_points.applicant_id',
+            applicantData.id
+          )
+      )
 
-      if (data) {
-        // only pull committees that has criteria assigned
-        const filterData = data.filter(
+      // Falling through read as "no committee has scored this applicant".
+      if (!result.ok) {
+        setLoadError(result.error)
+        setLoading(false)
+        return
+      }
+
+      setLoadError(null)
+
+      // only pull committees that has criteria assigned
+      setList(
+        result.data.filter(
           (c: RankingCommitteeTypes) =>
             c.committee_criterias && c.committee_criterias.length > 0
         )
-
-        setList(filterData)
-      }
+      )
       setLoading(false)
     }
 
@@ -43,6 +62,11 @@ const ApplicantCommitteePoints = ({ applicantData }: PropTypes) => {
 
   return (
     <div>
+      {loadError && (
+        <div className="mb-2 text-xs text-red-600">
+          {loadError.message} No committee scores are shown for this applicant.
+        </div>
+      )}
       {loading && <TwoColTableLoading />}
       {!loading && list.length > 0 && (
         <table className="app__table">

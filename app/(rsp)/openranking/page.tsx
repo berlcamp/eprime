@@ -3,11 +3,13 @@
 import {
   CustomButton,
   Sidebar,
+  TableError,
   TableRowLoading,
   Title,
   TopBar
 } from '@/components/index'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { runListQuery, type QueryError } from '@/utils/query-result'
 import Excel from 'exceljs'
 import { saveAs } from 'file-saver'
 import React, { useEffect, useState } from 'react'
@@ -31,6 +33,7 @@ interface ListTypes {
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [list, setList] = useState<ListTypes[] | []>([])
+  const [loadError, setLoadError] = useState<QueryError | null>(null)
   const [originalList, setOriginalList] = useState<ListTypes[] | []>([])
   const [filterRanking, setFilterRanking] = useState<string>('')
   const [downloading, setDownloading] = useState(false)
@@ -132,19 +135,36 @@ const Page: React.FC = () => {
 
     setLoading(true)
 
-    const { data } = await supabase
-      .from('hrm_ranking_applicants')
-      .select(
-        '*,applicant_documents:hrm_ranking_applicant_documents(qualification_id,status),ranking:ranking_id(type,year,status,position:position_id(name),chairman_id,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
-        {
-          count: 'exact'
-        }
-      )
-      .eq('evaluation_status', 'Qualified')
-      .eq('ranking_id', filterRanking)
-      .order('lastname', { ascending: true })
+    const result = await runListQuery<ApplicantTypes>(
+      {
+        transaction: 'Fetch qualified applicants',
+        table: 'hrm_ranking_applicants',
+        payload: { rankingId: filterRanking }
+      },
+      supabase
+        .from('hrm_ranking_applicants')
+        .select(
+          '*,applicant_documents:hrm_ranking_applicant_documents(qualification_id,status),ranking:ranking_id(type,year,status,position:position_id(name),chairman_id,committees:hrm_ranking_committees(*, hrm_user:user_id(id, firstname, lastname, avatar_url), committee_criterias:hrm_ranking_committee_criterias( *, criteria:criteria_id(*), criteria_points:hrm_ranking_applicant_points(*))))',
+          {
+            count: 'exact'
+          }
+        )
+        .eq('evaluation_status', 'Qualified')
+        .eq('ranking_id', filterRanking)
+        .order('lastname', { ascending: true })
+    )
 
-    if (data && data.length > 0) {
+    // A failed fetch used to leave the ranking looking like nobody qualified.
+    if (!result.ok) {
+      setLoadError(result.error)
+      setLoading(false)
+      return
+    }
+
+    setLoadError(null)
+    const data = result.data
+
+    if (data.length > 0) {
       const structguredData: ListTypes[] = []
       data.forEach((d: ApplicantTypes) => {
         const accumulatedPoints: Record<string, number> | null =
@@ -289,7 +309,12 @@ const Page: React.FC = () => {
                 {loading && <TableRowLoading cols={3} rows={2} />}
               </tbody>
             </table>
-            {!loading && isDataEmpty && (
+            {loadError && (
+              <TableError error={loadError} onRetry={() => {
+                  void fetchApplicantsData()
+                }} />
+            )}
+            {!loading && !loadError && isDataEmpty && (
               <div className="app__norecordsfound">No records found.</div>
             )}
           </div>
