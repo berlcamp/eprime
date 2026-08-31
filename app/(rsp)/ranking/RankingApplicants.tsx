@@ -1,6 +1,7 @@
 import { ConfirmModal, CustomButton } from '@/components/index'
 import ApplicantDetails from '@/components/Rsp/ApplicantDetails'
 import CommitteePointsModal from '@/components/Rsp/CommitteePointsModal'
+import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import {
@@ -75,6 +76,8 @@ const RankingApplicants = ({
   const [originalList, setOriginalList] = useState<ListTypes[] | []>([])
   const { supabase, session } = useSupabase()
   const { setToast } = useFilter()
+
+  const isSuperAdmin = superAdmins.includes(session?.user.email ?? '')
 
   const handleViewQualifications = (item: ApplicantTypes) => {
     setShowQualificationsModal(true)
@@ -438,8 +441,9 @@ const RankingApplicants = ({
                             >
                               <Menu.Items className="app__dropdown_items">
                                 <div className="py-1">
-                                  {item.ranking.chairman_id ===
-                                    session?.user.id && (
+                                  {(item.ranking.chairman_id ===
+                                    session?.user.id ||
+                                    isSuperAdmin) && (
                                     <Menu.Item>
                                       <div
                                         onClick={() =>
