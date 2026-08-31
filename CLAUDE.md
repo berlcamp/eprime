@@ -422,6 +422,21 @@ Data and side-effect logic live in `utils/`:
 
 Scheduled daily via **pg_cron** inside Supabase (see `supabase/migrations/0008_schedule_pg_cron_jobs.sql`). `/api/cronann` remains only as a manual trigger from Settings → Cron Jobs.
 
+### RPC functions (tracker transactions)
+
+Anything that writes several tracker tables at once lives in Postgres, so a
+failure part-way rolls back instead of leaving a request half-processed. Do not
+re-implement these sequences in the browser.
+
+| Function | Migration | Purpose |
+|----------|-----------|---------|
+| `approve_leave_request` | 0015 | Approve a request: status, leave credits, COC, leave card, LWOP service record + step increment |
+| `revert_leave_approval` | 0016 | The exact inverse, guarded so a second revert restores nothing |
+| `preview_leave_revert` | 0017 | Read-only; what a revert would restore, computed beside the revert itself |
+| `replace_leave_dates` | 0018 | Swap a request's leave dates plus `leave_from`/`leave_to` |
+| `create_request_tracker` | 0019 | Create a request with its opening flow rows and (for leave) its dates |
+| `hrm_text_to_numeric` | 0015 | Leave amounts are stored as text; non-numeric reads as 0 rather than aborting |
+
 ---
 
 ## Constants Summary
