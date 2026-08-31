@@ -1,10 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 'use client'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
-import { ConfirmModal, CustomButton, UserBlock } from '@/components/index'
+import {
+  ConfirmModal,
+  CustomButton,
+  TableError,
+  UserBlock
+} from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { StickiesTypes } from '@/types'
+import {
+  runListQuery,
+  runQuery,
+  type QueryError
+} from '@/utils/query-result'
 import { XMarkIcon } from '@heroicons/react/24/solid'
 import { useEffect, useRef, useState } from 'react'
 
@@ -16,6 +26,7 @@ export default function StickiesModal({ hideModal }: ModalProps) {
   const [selectedId, setSelectedId] = useState('')
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [list, setList] = useState<StickiesTypes[] | []>([])
+  const [error, setError] = useState<QueryError | null>(null)
 
   const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -54,34 +65,54 @@ export default function StickiesModal({ hideModal }: ModalProps) {
     setShowConfirmation(false)
   }
   const handleDeleteReply = async () => {
-    try {
-      const { error } = await supabase
+    const result = await runQuery(
+      {
+        transaction: 'Delete sticky',
+        table: 'hrm_request_tracker_stickies',
+        payload: { id: selectedId }
+      },
+      supabase
         .from('hrm_request_tracker_stickies')
         .delete()
         .eq('id', selectedId)
+    )
 
-      if (error) throw new Error(error.message)
-
-      setList((prevList) => prevList.filter((item) => item.id !== selectedId))
-
-      // pop up the success message
-      setToast('success', 'Successfully Deleted!')
-    } catch (e) {
-      console.error(e)
+    // The row used to disappear from the list whether or not the delete
+    // actually happened, and a failure said nothing.
+    if (!result.ok) {
+      setToast('error', `Could not delete this sticky. ${result.error.message}`)
+      return
     }
+
+    setList((prevList) => prevList.filter((item) => item.id !== selectedId))
+
+    setToast('success', 'Successfully Deleted!')
   }
 
   const fetchData = async () => {
-    const { data } = await supabase
-      .from('hrm_request_tracker_stickies')
-      .select(
-        '*, tracker:tracker_id(id, reference_code, type, creator:created_by(firstname,middlename,lastname,avatar_url))'
-      )
-      .eq('user_id', session?.user.id)
-      .order('id', { ascending: true })
+    const result = await runListQuery<StickiesTypes>(
+      {
+        transaction: 'Fetch stickies',
+        table: 'hrm_request_tracker_stickies',
+        payload: { userId: session?.user.id }
+      },
+      supabase
+        .from('hrm_request_tracker_stickies')
+        .select(
+          '*, tracker:tracker_id(id, reference_code, type, creator:created_by(firstname,middlename,lastname,avatar_url))'
+        )
+        .eq('user_id', session?.user.id)
+        .order('id', { ascending: true })
+    )
 
-    // Store list to redux
-    setList(data ?? [])
+    // An empty list and a failed fetch both used to render as "no stickies".
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+
+    setError(null)
+    setList(result.data)
   }
 
   useEffect(() => {
@@ -123,7 +154,8 @@ export default function StickiesModal({ hideModal }: ModalProps) {
             <div className="modal-body relative p-4 overflow-x-scroll">
               <div className="items-center mx-4">
                 {!list && <TwoColTableLoading />}
-                {list?.length === 0 && (
+                {error && <TableError error={error} onRetry={fetchData} />}
+                {!error && list?.length === 0 && (
                   <div>
                     <h3 className="text-sm text-gray-700">
                       No items added to stickies yet.

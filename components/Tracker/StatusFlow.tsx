@@ -1,6 +1,7 @@
 'use client'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { FlowListTypes } from '@/types'
+import { runListQuery, type QueryError } from '@/utils/query-result'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
 
@@ -12,23 +13,51 @@ function StatusFlow({
   updateStatusFlow: boolean
 }) {
   const [flowList, setFlowList] = useState<FlowListTypes[] | []>([])
+  const [error, setError] = useState<QueryError | null>(null)
   const { supabase } = useSupabase()
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data } = await supabase
-        .from('hrm_tracker_flow')
-        .select(
-          '*, hrm_user:user_id(firstname,middlename,lastname),receiver:receiver_id(firstname,middlename,lastname), hrm_tracker_logs(*, hrm_user:user_id(firstname,middlename,lastname))',
-          { count: 'exact' }
-        )
-        .eq('tracker_id', documentId)
+      const result = await runListQuery<FlowListTypes>(
+        {
+          transaction: 'Fetch tracker status flow',
+          table: 'hrm_tracker_flow',
+          payload: { trackerId: documentId },
+          userMessage: 'Could not load this request history.'
+        },
+        supabase
+          .from('hrm_tracker_flow')
+          .select(
+            '*, hrm_user:user_id(firstname,middlename,lastname),receiver:receiver_id(firstname,middlename,lastname), hrm_tracker_logs(*, hrm_user:user_id(firstname,middlename,lastname))',
+            { count: 'exact' }
+          )
+          .eq('tracker_id', documentId)
+      )
 
-      setFlowList(data ?? [])
+      // An empty flow list and a failed query looked identical: both rendered
+      // as "no history at all".
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+
+      setError(null)
+      setFlowList(result.data)
     }
     void fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateStatusFlow])
+
+  if (error) {
+    return (
+      <div className="w-full text-xs">
+        <div className="text-red-600">{error.message}</div>
+        <div className="mt-1 font-mono text-[10px] text-gray-500">
+          {error.cause}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full text-xs">

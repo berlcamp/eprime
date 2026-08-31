@@ -7,6 +7,7 @@ import { useFilter } from "@/context/FilterContext";
 import { useSupabase } from "@/context/SupabaseProvider";
 import type { CtoUserTypes, DocumentTypes, LeaveCreditTypes } from "@/types";
 import { logError } from "@/utils/fetchApi";
+import { runListQuery, runQuery } from "@/utils/query-result";
 import { countsCalendarDays, fetchHolidayMap } from "@/utils/holiday-helper";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
@@ -239,14 +240,24 @@ export default function CreditsCertification({
         throw new Error(insertCtoError.message);
       }
 
-      // Added log to latest tracker flow
-      const { data } = await supabase
-        .from("hrm_tracker_flow")
-        .select()
-        .eq("tracker_id", documentData.id)
-        .order("id", { ascending: false })
-        .limit(1)
-        .single();
+      // Added log to latest tracker flow. maybeSingle, not single: a request
+      // with no flow rows yet is normal and used to surface as a PGRST116.
+      const latestFlow = await runQuery<{ id: number }>(
+        {
+          transaction: "Fetch latest tracker flow",
+          table: "hrm_tracker_flow",
+          payload: { trackerId: documentData.id },
+        },
+        supabase
+          .from("hrm_tracker_flow")
+          .select("id")
+          .eq("tracker_id", documentData.id)
+          .order("id", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      );
+
+      const data = latestFlow.ok ? latestFlow.data : null;
 
       if (data) {
         const newData = {
@@ -574,11 +585,29 @@ export default function CreditsCertification({
 
   useEffect(() => {
     const fetchBalances = async () => {
-      const { data } = await supabase
-        .from("hrm_leave_credits")
-        .select()
-        .eq("user_id", documentData.creator?.id);
-      setLeaveCreditBalances(data ?? []);
+      const result = await runListQuery<LeaveCreditTypes>(
+        {
+          transaction: "Fetch leave credit balances for certification",
+          table: "hrm_leave_credits",
+          payload: { userId: documentData.creator?.id },
+        },
+        supabase
+          .from("hrm_leave_credits")
+          .select()
+          .eq("user_id", documentData.creator?.id),
+      );
+
+      // Falling back to an empty list showed every balance as 0, which an HR
+      // officer could then certify against.
+      if (!result.ok) {
+        setToast(
+          "error",
+          `Could not load this employee's leave balances, so the figures below are incomplete. ${result.error.message}`,
+        );
+        return;
+      }
+
+      setLeaveCreditBalances(result.data);
     };
     void fetchBalances();
   }, []);
@@ -638,17 +667,30 @@ export default function CreditsCertification({
 
   useEffect(() => {
     void (async () => {
-      const { data } = await supabase
-        .from("hrm_cto_users")
-        .select("*")
-        .eq("hrm_user_id", documentData.creator?.id)
-        .eq("is_approved", true)
-        .gte("expiration", new Date().toISOString())
-        .gt("coc", 0);
+      const result = await runListQuery<CtoUserTypes>(
+        {
+          transaction: "Fetch COC balances for certification",
+          table: "hrm_cto_users",
+          payload: { userId: documentData.creator?.id },
+        },
+        supabase
+          .from("hrm_cto_users")
+          .select("*")
+          .eq("hrm_user_id", documentData.creator?.id)
+          .eq("is_approved", true)
+          .gte("expiration", new Date().toISOString())
+          .gt("coc", 0),
+      );
+
       const bal: CtosTypes[] = [];
 
-      if (data) {
-        const ctos: CtoUserTypes[] = data;
+      if (!result.ok) {
+        setToast(
+          "error",
+          `Could not load this employee's COC balances, so none are shown below. ${result.error.message}`,
+        );
+      } else {
+        const ctos: CtoUserTypes[] = result.data;
         ctos.forEach((cto) => {
           bal.push({
             id: cto.id,

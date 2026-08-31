@@ -8,6 +8,7 @@ import { updateRemarksList } from '@/GlobalRedux/Features/remarksSlice'
 import { CustomButton } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { runListQuery } from '@/utils/query-result'
 import type { DocumentTypes, Employee } from '@/types'
 import { sanitizeFileName } from '@/utils/text-helper'
 import { PaperClipIcon, XMarkIcon } from '@heroicons/react/20/solid'
@@ -149,15 +150,24 @@ export default function RemarkBox({ document }: ModalProps) {
     try {
       const userIds: string[] = []
 
-      // Followers
-      const { data: followers } = await supabase
-        .from('hrm_tracker_followers')
-        .select('user_id')
-        .eq('tracker_id', document.id)
+      // Followers. If this lookup fails the requester is still notified below.
+      const followers = await runListQuery<{ user_id: string }>(
+        {
+          transaction: 'Notify followers of remark',
+          table: 'hrm_tracker_followers',
+          payload: { trackerId: document.id }
+        },
+        supabase
+          .from('hrm_tracker_followers')
+          .select('user_id')
+          .eq('tracker_id', document.id)
+      )
 
-      followers?.forEach((user) => {
-        userIds.push(user.user_id.toString())
-      })
+      if (followers.ok) {
+        followers.data.forEach((user) => {
+          userIds.push(user.user_id.toString())
+        })
+      }
 
       // Notify the origin
       userIds.push(document.created_by)

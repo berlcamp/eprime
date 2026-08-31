@@ -4,7 +4,12 @@ import {
   SearchUserInput,
 } from "@/components/index";
 import { useFilter } from "@/context/FilterContext";
+import { runListQuery } from "@/utils/query-result";
 import { useSupabase } from "@/context/SupabaseProvider";
+import {
+  createRequestTracker,
+  type LeaveDateInput,
+} from "@/utils/trackerApi";
 import { generateReferenceCode } from "@/utils/text-helper";
 import { useCallback, useEffect, useState } from "react";
 import "react-calendar/dist/Calendar.css";
@@ -23,7 +28,7 @@ import type {
 import { updateList } from "@/GlobalRedux/Features/listSlice";
 import { updateResultCounter } from "@/GlobalRedux/Features/resultsCounterSlice";
 import { leaveTypes } from "@/constants";
-import { fetchSalaryGrades, logError } from "@/utils/fetchApi";
+import { fetchSalaryGrades } from "@/utils/fetchApi";
 import { fetchHolidayMap } from "@/utils/holiday-helper";
 import { XMarkIcon } from "@heroicons/react/20/solid";
 import { eachDayOfInterval, format } from "date-fns";
@@ -257,33 +262,16 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
         current_tracker: "Forwarded",
       };
 
-      const { data, error }: { data: any; error: any } = await supabase
-        .from("hrm_request_trackers")
-        .insert(newData)
-        .select();
+      // The leave dates are computed before the request is created so that the
+      // request row, its dates and its opening workflow rows all go in as one
+      // transaction. Previously they were three statements, and a failure on
+      // the second or third left a request behind that the user was told had
+      // not saved.
+      const leaveDates: LeaveDateInput[] = [];
 
-      if (error) {
-        void logError(
-          "Create Leave Request",
-          "hrm_request_trackers",
-          JSON.stringify(newData),
-          error.message
-        );
-        setToast(
-          "error",
-          "Saving failed, please reload the page and try again."
-        );
-        throw new Error(error.message);
-      }
-
-      // Generate an array of all dates in the range zzz
       if (watchedOtherPurpose !== "Monetization of Leave Credits") {
         let dateRange = [];
         if (formdata.leave_from !== "" && formdata.leave_to !== "") {
-          // dateRange = eachDayOfInterval({
-          //   start: new Date(formdata.leave_from),
-          //   end: new Date(formdata.leave_to)
-          // })
           dateRange = eachDayOfInterval({
             start: new Date(formdata.leave_from),
             end: new Date(formdata.leave_to),
@@ -301,64 +289,33 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
             .sort((a, b) => a.getTime() - b.getTime());
         }
 
-        // Map the dates to the required format
-        const insertArray = dateRange.map((date, index) => ({
-          tracker_id: data[0].id,
-          date: format(date, "yyyy-MM-dd"),
-          is_paid: index < Math.floor(withPay), // Mark as paid if within the withPay limit
-        }));
-
-        // Store each leave dates
-        const { error: datesError } = await supabase
-          .from("hrm_leave_dates")
-          .insert(insertArray);
-
-        if (datesError) {
-          void logError(
-            "Leave Days",
-            "hrm_leave_dates",
-            "",
-            datesError.message
-          );
-          setToast(
-            "error",
-            "Saving failed, please reload the page and try again."
-          );
-          throw new Error(datesError.message);
-        }
+        dateRange.forEach((date, index) => {
+          leaveDates.push({
+            date: format(date, "yyyy-MM-dd"),
+            is_paid: index < Math.floor(withPay), // Mark as paid if within the withPay limit
+          });
+        });
       }
 
-      const { error: error2 } = await supabase.from("hrm_tracker_flow").insert([
-        {
-          tracker_id: data[0].id,
-          user_id: currentUser.id,
-          status: "For Verification",
-        },
-        {
-          tracker_id: data[0].id,
-          user_id: currentUser.id,
-          receiver_id: user.id,
-          status: "Forwarded",
-        },
-      ]);
+      const created = await createRequestTracker(
+        "Leave",
+        newData,
+        currentUser.id,
+        user.id,
+        leaveDates
+      );
 
-      if (error2) {
-        void logError(
-          "Create Leave Request Tracker Flow",
-          "hrm_tracker_flow",
-          JSON.stringify({
-            tracker_id: data[0].id,
-            user_id: currentUser.id,
-            status: "For Verification",
-          }),
-          error2.message
-        );
+      if (!created.ok || !created.data) {
         setToast(
           "error",
-          "Saving failed, please reload the page and try again."
+          created.ok
+            ? "Saving failed, please reload the page and try again."
+            : created.error.message
         );
-        throw new Error(error2.message);
+        return;
       }
+
+      const data = [created.data];
 
       // Upload files
       await handleUploadFiles(data[0].id);
@@ -396,9 +353,15 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
       hideModal();
     } catch (error) {
       console.error("error", error);
+      setToast(
+        "error",
+        "Saving failed, please reload the page and try again."
+      );
+    } finally {
+      // finally, not a trailing statement: the early returns above must still
+      // release the Save button.
+      setSaving(false);
     }
-
-    setSaving(false);
   };
 
   useEffect(() => {
@@ -667,11 +630,29 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
       setSalaryGrades(result.data.length > 0 ? result.data : []);
     };
     const fetchBalances = async () => {
-      const { data } = await supabase
-        .from("hrm_leave_credits")
-        .select()
-        .eq("user_id", session?.user.id);
-      setLeaveCreditBalances(data ?? []);
+      const result = await runListQuery<LeaveCreditTypes>(
+        {
+          transaction: "Fetch own leave balances",
+          table: "hrm_leave_credits",
+          payload: { userId: session?.user.id },
+        },
+        supabase
+          .from("hrm_leave_credits")
+          .select()
+          .eq("user_id", session?.user.id),
+      );
+
+      // Showing 0 for every type when the query failed invited people to file
+      // leaves against credits they could not see.
+      if (!result.ok) {
+        setToast(
+          "error",
+          `Could not load your leave balances, so the figures shown may be incomplete. ${result.error.message}`,
+        );
+        return;
+      }
+
+      setLeaveCreditBalances(result.data);
     };
 
     void fetchBalances();

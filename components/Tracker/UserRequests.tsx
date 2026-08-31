@@ -24,7 +24,9 @@ import type { DocumentTypes } from '@/types'
 // Redux imports
 import AddDocumentModal from '@/app/(hr)/tracker/AddDocumentModal'
 import { requestTypes } from '@/constants'
+import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { runListQuery, runQuery } from '@/utils/query-result'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { useDispatch, useSelector } from 'react-redux'
 import { useReactToPrint } from 'react-to-print'
@@ -57,6 +59,7 @@ export default function UserRequests({
   const [showAddModal, setShowAddModal] = useState(false)
 
   const { supabase, session } = useSupabase()
+  const { setToast } = useFilter()
 
   const componentRef = React.useRef(null)
   const printFn = useReactToPrint({
@@ -191,22 +194,54 @@ export default function UserRequests({
     let serviceRecordsData: any[] = []
 
     if (item.type === 'Service Record Print Request') {
-      // place of birth from PDS
-      const { data: pds } = await supabase
-        .from('hrm_pds')
-        .select()
-        .eq('user_id', item.created_by)
-        .maybeSingle()
+      // Both feed an official printed document, so a failure has to stop the
+      // print rather than quietly produce a form with blank fields.
+      const [pdsResult, recordsResult] = await Promise.all([
+        runQuery<{ place_of_birth: string }>(
+          {
+            transaction: 'Fetch PDS for service record print',
+            table: 'hrm_pds',
+            payload: { userId: item.created_by }
+          },
+          supabase
+            .from('hrm_pds')
+            .select()
+            .eq('user_id', item.created_by)
+            .maybeSingle()
+        ),
+        // Service records, sorted chronologically by the "from" column
+        runListQuery<any>(
+          {
+            transaction: 'Fetch service records for print',
+            table: 'hrm_service_records',
+            payload: { userId: item.created_by }
+          },
+          supabase
+            .from('hrm_service_records')
+            .select()
+            .eq('user_id', item.created_by)
+            .order('from', { ascending: true })
+        )
+      ])
 
-      // Service records, sorted chronologically by the "from" column
-      const { data: sr } = await supabase
-        .from('hrm_service_records')
-        .select()
-        .eq('user_id', item.created_by)
-        .order('from', { ascending: true })
+      if (!pdsResult.ok) {
+        setToast(
+          'error',
+          `Could not prepare the printout. ${pdsResult.error.message}`
+        )
+        return
+      }
 
-      placeOfBirth = pds ? pds.place_of_birth : ''
-      serviceRecordsData = sr ?? []
+      if (!recordsResult.ok) {
+        setToast(
+          'error',
+          `Could not prepare the printout. ${recordsResult.error.message}`
+        )
+        return
+      }
+
+      placeOfBirth = pdsResult.data ? pdsResult.data.place_of_birth : ''
+      serviceRecordsData = recordsResult.data
     }
 
     setTimeout(() => {

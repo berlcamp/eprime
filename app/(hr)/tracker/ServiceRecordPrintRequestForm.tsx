@@ -1,6 +1,7 @@
 import { CustomButton, SearchUserInput } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { createRequestTracker } from '@/utils/trackerApi'
 import { generateReferenceCode } from '@/utils/text-helper'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -11,7 +12,6 @@ import type { Employee, ServiceRecordPrintRequestTypes } from '@/types'
 // Redux imports
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { updateResultCounter } from '@/GlobalRedux/Features/resultsCounterSlice'
-import { logError } from '@/utils/fetchApi'
 import { useDispatch, useSelector } from 'react-redux'
 
 interface ModalProps {
@@ -72,56 +72,26 @@ const ServiceRecordPrintRequestForm = ({ hideModal }: ModalProps) => {
         current_tracker: 'Forwarded'
       }
 
-      const { data, error }: { data: any; error: any } = await supabase
-        .from('hrm_request_trackers')
-        .insert(newData)
-        .select()
+      // Tracker row, opening workflow rows: one transaction, so a
+      // failure cannot leave a request with no workflow behind it.
+      const created = await createRequestTracker(
+        'Service Record Print',
+        newData,
+        currentUser.id,
+        user.id
+      )
 
-      if (error) {
-        void logError(
-          'Create Service Record Print Request',
-          'hrm_request_trackers',
-          JSON.stringify(newData),
-          error.message
-        )
+      if (!created.ok || !created.data) {
         setToast(
           'error',
-          'Saving failed, please reload the page and try again.'
+          created.ok
+            ? 'Saving failed, please reload the page and try again.'
+            : created.error.message
         )
-        throw new Error(error.message)
+        return
       }
 
-      const { error: error2 } = await supabase.from('hrm_tracker_flow').insert([
-        {
-          tracker_id: data[0].id,
-          user_id: currentUser.id,
-          status: 'For Verification'
-        },
-        {
-          tracker_id: data[0].id,
-          user_id: currentUser.id,
-          receiver_id: user.id,
-          status: 'Forwarded'
-        }
-      ])
-
-      if (error2) {
-        void logError(
-          'Create Service Record Print Request Tracker Flow',
-          'hrm_tracker_flow',
-          JSON.stringify({
-            tracker_id: data[0].id,
-            user_id: currentUser.id,
-            status: 'For Verification'
-          }),
-          error2.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error2.message)
-      }
+      const data = [created.data]
 
       // Notify receiver
       void handleNotifyReceiver(data[0].id, user.id, refCode)
@@ -156,9 +126,15 @@ const ServiceRecordPrintRequestForm = ({ hideModal }: ModalProps) => {
       hideModal()
     } catch (error) {
       console.error('error', error)
+      setToast(
+        'error',
+        'Saving failed, please reload the page and try again.'
+      )
+    } finally {
+      // finally, not a trailing statement: the early returns above must still
+      // release the Save button.
+      setSaving(false)
     }
-
-    setSaving(false)
   }
 
   const handleNotifyReceiver = async (
