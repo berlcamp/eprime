@@ -5,7 +5,11 @@ import {
   UserBlock
 } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
-import { runListQuery, type QueryError } from '@/utils/query-result'
+import {
+  runListQuery,
+  runQuery,
+  type QueryError
+} from '@/utils/query-result'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { Employee, RankingCommitteeTypes, RankingCriteriaTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
@@ -72,46 +76,52 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('hrm_ranking_committees')
-        .insert(newData)
-        .select()
+      // Committee row and its criteria assignments go in together. The
+      // assignments used to be a second insert whose result was discarded, so
+      // a failure produced a member assigned no criteria -- someone who cannot
+      // cast points, with no sign of why. See
+      // supabase/migrations/0022_create_ranking_committee.sql
+      const created = await runQuery<{ id: string }>(
+        {
+          transaction: 'Create New Ranking Committee',
+          table: 'hrm_ranking_committees',
+          payload: newData
+        },
+        supabase.rpc('create_ranking_committee', {
+          p_committee: newData,
+          p_criteria_ids: (formdata.criteria_ids ?? []).map((id) => Number(id))
+        })
+      )
 
-      if (error) {
-        void logError(
-          'Create New Ranking Committee',
-          'hrm_ranking_committees',
-          JSON.stringify(newData),
-          error.message
-        )
+      if (!created.ok || !created.data) {
         setToast(
           'error',
-          'Saving failed, please reload the page and try again.'
+          created.ok
+            ? 'Saving failed, please reload the page and try again.'
+            : `The committee member was not added. ${created.error.message}`
         )
-        throw new Error(error.message)
+        return
       }
 
-      if (formdata.criteria_ids && formdata.criteria_ids.length > 0) {
-        const insertData = formdata.criteria_ids?.map((id) => ({
-          committee_id: data[0].id,
-          criteria_id: id
-        }))
+      const data = [created.data]
 
-        // Insert the checked criterias into the Supabase table
-        await supabase
-          .from('hrm_ranking_committee_criterias')
-          .insert(insertData)
-      }
-
-      // insert to notifications
-      await supabase.from('hrm_notifications').insert({
-        message: 'You are added as Committee Member in a ranking.',
-        url: '/ranking',
-        type: 'ranking',
-        user_id: user.id,
-        ranking_committee_id: data[0].id,
-        reference_table: 'hrm_ranking_committees'
-      })
+      // Best-effort: the member is already on the committee, so a failed
+      // notification must not undo that.
+      await runQuery(
+        {
+          transaction: 'Notify new committee member',
+          table: 'hrm_notifications',
+          payload: { committeeId: data[0].id }
+        },
+        supabase.from('hrm_notifications').insert({
+          message: 'You are added as Committee Member in a ranking.',
+          url: '/ranking',
+          type: 'ranking',
+          user_id: user.id,
+          ranking_committee_id: data[0].id,
+          reference_table: 'hrm_ranking_committees'
+        })
+      )
 
       const updatedData = {
         ...newData,
@@ -121,14 +131,13 @@ const RankingCommittees = ({ hideModal, rankingId }: ModalProps) => {
       setList([updatedData, ...list])
       setRefresh((prev) => !prev)
 
-      setSaving(false)
-
       // reset all form fields
       reset()
       setUser(null)
       setClearMemberInput(false)
     } catch (e) {
       console.error(e)
+      setToast('error', 'Saving failed, please reload the page and try again.')
     } finally {
       setSaving(false)
     }

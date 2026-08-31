@@ -422,7 +422,7 @@ Data and side-effect logic live in `utils/`:
 
 Scheduled daily via **pg_cron** inside Supabase (see `supabase/migrations/0008_schedule_pg_cron_jobs.sql`). `/api/cronann` remains only as a manual trigger from Settings → Cron Jobs.
 
-### RPC functions (tracker transactions)
+### RPC functions (tracker & ranking transactions)
 
 Anything that writes several tracker tables at once lives in Postgres, so a
 failure part-way rolls back instead of leaving a request half-processed. Do not
@@ -435,6 +435,9 @@ re-implement these sequences in the browser.
 | `preview_leave_revert` | 0017 | Read-only; what a revert would restore, computed beside the revert itself |
 | `replace_leave_dates` | 0018 | Swap a request's leave dates plus `leave_from`/`leave_to` |
 | `create_request_tracker` | 0019 | Create a request with its opening flow rows and (for leave) its dates |
+| `create_ranking` / `update_ranking` / `sync_ranking_qualifications` | 0020 | Save a ranking with its qualification standards (update kept, insert new, delete removed) |
+| `create_ranking_applicant` | 0021 | Create an applicant with its opening flow row |
+| `create_ranking_committee` | 0022 | Add a committee member with the criteria they may score |
 | `hrm_text_to_numeric` | 0015 | Leave amounts are stored as text; non-numeric reads as 0 rather than aborting |
 
 ---

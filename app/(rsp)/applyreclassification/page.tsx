@@ -9,7 +9,6 @@ import {
   type QueryError
 } from '@/utils/query-result'
 import { ApplicantTypes, Employee } from '@/types'
-import { logError } from '@/utils/fetchApi'
 import { generateRandomAlphaNumber } from '@/utils/text-helper'
 import { PaperClipIcon } from '@heroicons/react/20/solid'
 import { useEffect, useState } from 'react'
@@ -192,74 +191,62 @@ const Page: React.FC = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('hrm_ranking_applicants')
-        .insert(newData)
-        .select()
-
-      if (error) {
-        void logError(
-          'Reclassification application',
-          'hrm_ranking_applicants',
-          JSON.stringify(newData),
-          error.message
-        )
-
-        throw new Error(error.message)
-      }
-
-      // Notify AO
-      const notificationData: any[] = []
-
-      const message = `The Reclassication Application #${randomCode} has been forwarded to you for verification/approval.`
-
-      notificationData.push({
-        message,
-        url: `/erfscreening/${randomCode}`,
-        type: 'Forwarded',
-        user_id: user?.id,
-        reference_table: 'hrm_ranking_applicants'
-      })
-
-      if (notificationData.length > 0) {
-        // insert to notifications
-        const { error: error3 } = await supabase
-          .from('hrm_notifications')
-          .insert(notificationData)
-
-        if (error3) {
-          throw new Error(error3.message)
-        }
-      }
-
-      const { error: error2 } = await supabase
-        .from('hrm_ranking_applicant_flow')
-        .insert({
-          applicant_id: data[0].id,
-          user_id: session?.user.id,
-          receiver_id: user?.id,
-          status: 'Forwarded'
+      // Applicant row and its opening flow row go in together: a failure
+      // part-way used to leave an application with no flow, invisible to the
+      // ERF screening queues, while the applicant saw nothing at all. See
+      // supabase/migrations/0021_create_ranking_applicant.sql
+      const created = await runQuery<{ id: string }>(
+        {
+          transaction: 'Reclassification application',
+          table: 'hrm_ranking_applicants',
+          payload: newData
+        },
+        supabase.rpc('create_ranking_applicant', {
+          p_applicant: newData,
+          p_user_id: session?.user.id,
+          p_receiver_id: user?.id
         })
+      )
 
-      if (error2) {
-        void logError(
-          'Forward Request Flow',
-          'hrm_ranking_applicant_flow',
-          '',
-          error2.message
-        )
+      if (!created.ok || !created.data) {
         setToast(
           'error',
-          'Saving failed, please reload the page and try again.'
+          created.ok
+            ? 'Your application was not submitted. Please try again.'
+            : `Your application was not submitted. ${created.error.message}`
         )
-        throw new Error(error2.message)
+        return
       }
 
-      setIsSuccess(true)
+      // Best-effort: this is how the approving officer is told, but the
+      // application already stands and is already in their queue, so a failed
+      // notification must not fail the submission.
+      await runQuery(
+        {
+          transaction: 'Notify AO of reclassification application',
+          table: 'hrm_notifications',
+          payload: { applicantId: created.data.id }
+        },
+        supabase.from('hrm_notifications').insert({
+          message: `The Reclassication Application #${randomCode} has been forwarded to you for verification/approval.`,
+          url: `/erfscreening/${randomCode}`,
+          type: 'Forwarded',
+          user_id: user?.id,
+          reference_table: 'hrm_ranking_applicants'
+        })
+      )
 
-      setSaving(false)
+      setIsSuccess(true)
     } catch (e) {
       console.error(e)
+      setToast(
+        'error',
+        'Your application was not submitted. Please reload the page and try again.'
+      )
+    } finally {
+      // finally, not the success path: the early returns above must still
+      // release the Submit button.
+      setSaving(false)
     }
   }
 

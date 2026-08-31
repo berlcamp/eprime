@@ -14,7 +14,7 @@ import {
 } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import type { ApplicantTypes, Employee, namesType } from '@/types'
-import { logError } from '@/utils/fetchApi'
+import { runListQuery, runQuery } from '@/utils/query-result'
 import Link from 'next/link'
 import { useDispatch, useSelector } from 'react-redux'
 import EquivalentUnits from './EquivalentUnits'
@@ -70,14 +70,16 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
       })
 
       if (notificationData.length > 0) {
-        // insert to notifications
-        const { error: error3 } = await supabase
-          .from('hrm_notifications')
-          .insert(notificationData)
-
-        if (error3) {
-          throw new Error(error3.message)
-        }
+        // Best-effort: callers fire this without awaiting, so a failure is
+        // recorded in error_logs rather than only reaching the console.
+        await runQuery(
+          {
+            transaction: 'Insert screening notifications',
+            table: 'hrm_notifications',
+            payload: { applicantId: document.id, type: actionType }
+          },
+          supabase.from('hrm_notifications').insert(notificationData)
+        )
       }
     } catch (e) {
       console.error(e)
@@ -131,309 +133,154 @@ export default function DetailsModal({ hideModal, documentData }: ModalProps) {
     setConfirmMessage('')
   }
 
-  const handleNotQualified = async () => {
+  // The four screening actions below are the same sequence: move the applicant
+  // to a new status, record it in the applicant flow, then sync Redux and
+  // notify. Each carried its own ~70-line copy, and all four ended in a catch
+  // that only reached the console while `setSaving(false)` sat on the success
+  // path -- so a failure left the button disabled with nothing on screen.
+  const applyApplicantTransition = async (t: {
+    label: string
+    newData: Record<string, unknown>
+    flowStatus: string
+    receiverId: string
+    notify: string
+  }) => {
     if (saving) return
 
     setSaving(true)
 
-    const newData = {
-      status: 'Not Qualified'
-    }
     try {
-      const { error } = await supabase
+      let query = supabase
         .from('hrm_ranking_applicants')
-        .update(newData)
+        .update(t.newData)
         .eq('id', documentData.id)
 
-      if (error) {
-        void logError(
-          'Not Qualified',
-          'hrm_ranking_applicants',
-          JSON.stringify(newData),
-          error.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
+      // Applying the same status twice used to add a second, identical row to
+      // the applicant flow. The guard makes a repeat click a no-op.
+      if (typeof t.newData.status === 'string') {
+        query = query.neq('status', t.newData.status)
       }
 
-      // Status flow
-      const { error: error2 } = await supabase
-        .from('hrm_ranking_applicant_flow')
-        .insert({
-          applicant_id: documentData.id,
-          user_id: user.id,
-          receiver_id: user.id,
-          status: 'Not Qualified'
-        })
+      const updated = await runListQuery<{ id: string }>(
+        {
+          transaction: t.label,
+          table: 'hrm_ranking_applicants',
+          payload: t.newData
+        },
+        query.select()
+      )
 
-      if (error2) {
-        void logError(
-          'Not Qualified',
-          'hrm_ranking_applicant_flow',
-          '',
-          error2.message
-        )
+      if (!updated.ok) {
         setToast(
           'error',
-          'Saving failed, please reload the page and try again.'
+          `${t.label} failed and nothing was changed. ${updated.error.message}`
         )
-        throw new Error(error2.message)
+        return
+      }
+
+      if (updated.data.length === 0) {
+        setToast(
+          'error',
+          "This applicant's status has already changed. Please reload the page."
+        )
+        setUpdateStatusFlow(!updateStatusFlow)
+        return
+      }
+
+      // Status flow. The status change is committed by now, so a failure here
+      // is reported as a gap in the trail rather than as a failed action.
+      const flow = await runQuery(
+        {
+          transaction: `${t.label} flow`,
+          table: 'hrm_ranking_applicant_flow',
+          payload: { applicantId: documentData.id }
+        },
+        supabase.from('hrm_ranking_applicant_flow').insert({
+          applicant_id: documentData.id,
+          user_id: user.id,
+          receiver_id: t.receiverId,
+          status: t.flowStatus
+        })
+      )
+
+      if (!flow.ok) {
+        setToast(
+          'error',
+          `Status saved, but the screening history could not be written. ${flow.error.message}`
+        )
       }
 
       // Update data in redux
       const items = [...globallist]
       const updatedData = {
-        ...newData,
+        ...t.newData,
         id: documentData.id
       }
       const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
+      if (foundIndex >= 0) {
+        items[foundIndex] = { ...items[foundIndex], ...updatedData }
+        dispatch(updateList(items))
 
-      // pop up the success message
-      setToast('success', 'Successfully saved.')
+        // Notify requester and follower
+        void handleNotify(items[foundIndex], t.notify)
+      }
+
+      if (flow.ok) {
+        setToast('success', 'Successfully saved.')
+      }
 
       setUpdateStatusFlow(!updateStatusFlow)
-
-      // Notify requester and follower
-      void handleNotify(items[foundIndex], 'Not Qualified')
-
-      setSaving(false)
     } catch (e) {
       console.error(e)
+      setToast(
+        'error',
+        `${t.label} failed, please reload the page and try again.`
+      )
+    } finally {
+      setSaving(false)
     }
+  }
+
+  const handleNotQualified = async () => {
+    await applyApplicantTransition({
+      label: 'Not Qualified',
+      newData: { status: 'Not Qualified' },
+      flowStatus: 'Not Qualified',
+      receiverId: user.id,
+      notify: 'Not Qualified'
+    })
   }
 
   const handleVerifiedHR = async () => {
-    if (saving) return
-
-    setSaving(true)
-
-    const newData = {
-      status: 'Verified By HR'
-    }
-    try {
-      const { error } = await supabase
-        .from('hrm_ranking_applicants')
-        .update(newData)
-        .eq('id', documentData.id)
-
-      if (error) {
-        void logError(
-          'Verified By HR',
-          'hrm_ranking_applicants',
-          JSON.stringify(newData),
-          error.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
-      }
-
-      // Status flow
-      const { error: error2 } = await supabase
-        .from('hrm_ranking_applicant_flow')
-        .insert({
-          applicant_id: documentData.id,
-          user_id: user.id,
-          receiver_id: user.id,
-          status: 'Verified By HR'
-        })
-
-      if (error2) {
-        void logError(
-          'Forward Request Flow',
-          'hrm_ranking_applicant_flow',
-          '',
-          error2.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error2.message)
-      }
-
-      // Update data in redux
-      const items = [...globallist]
-      const updatedData = {
-        ...newData,
-        id: documentData.id
-      }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
-
-      // pop up the success message
-      setToast('success', 'Successfully saved.')
-
-      setUpdateStatusFlow(!updateStatusFlow)
-
-      // Notify requester and follower
-      void handleNotify(items[foundIndex], 'Verified By HR')
-
-      setSaving(false)
-    } catch (e) {
-      console.error(e)
-    }
+    await applyApplicantTransition({
+      label: 'Verified By HR',
+      newData: { status: 'Verified By HR' },
+      flowStatus: 'Verified By HR',
+      receiverId: user.id,
+      notify: 'Verified By HR'
+    })
   }
 
   const handleVerifiedAO = async () => {
-    if (saving) return
-
-    setSaving(true)
-
-    const newData = {
-      status: 'Verified By AO'
-    }
-    try {
-      const { error } = await supabase
-        .from('hrm_ranking_applicants')
-        .update(newData)
-        .eq('id', documentData.id)
-
-      if (error) {
-        void logError(
-          'Verified By AO',
-          'hrm_ranking_applicants',
-          JSON.stringify(newData),
-          error.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
-      }
-
-      // Status flow
-      const { error: error2 } = await supabase
-        .from('hrm_ranking_applicant_flow')
-        .insert({
-          applicant_id: documentData.id,
-          user_id: user.id,
-          receiver_id: user.id,
-          status: 'Verified By AO'
-        })
-
-      if (error2) {
-        void logError(
-          'Forwarded Request Flow',
-          'hrm_ranking_applicant_flow',
-          '',
-          error2.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error2.message)
-      }
-
-      // Update data in redux
-      const items = [...globallist]
-      const updatedData = {
-        ...newData,
-        id: documentData.id
-      }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
-
-      // pop up the success message
-      setToast('success', 'Successfully saved.')
-
-      setUpdateStatusFlow(!updateStatusFlow)
-
-      // Notify requester and follower
-      void handleNotify(items[foundIndex], 'Verified By AO')
-
-      setSaving(false)
-    } catch (e) {
-      console.error(e)
-    }
+    await applyApplicantTransition({
+      label: 'Verified By AO',
+      newData: { status: 'Verified By AO' },
+      flowStatus: 'Verified By AO',
+      receiverId: user.id,
+      notify: 'Verified By AO'
+    })
   }
 
   const handleConfirmedForward = async () => {
     if (!selectedUser) return
 
-    if (saving) return
-
-    setSaving(true)
-
-    const newData = {
-      current_approver_id: selectedUser.id
-    }
-    try {
-      const { error } = await supabase
-        .from('hrm_ranking_applicants')
-        .update(newData)
-        .eq('id', documentData.id)
-
-      if (error) {
-        void logError(
-          'Forward',
-          'hrm_ranking_applicants',
-          JSON.stringify(newData),
-          error.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
-      }
-
-      // Status flow
-      const { error: error2 } = await supabase
-        .from('hrm_ranking_applicant_flow')
-        .insert({
-          applicant_id: documentData.id,
-          user_id: user.id,
-          receiver_id: selectedUser.id,
-          status: 'Forwarded'
-        })
-
-      if (error2) {
-        void logError(
-          'Forward Request Flow',
-          'hrm_tracker_flow',
-          '',
-          error2.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error2.message)
-      }
-
-      // Update data in redux
-      const items = [...globallist]
-      const updatedData = {
-        ...newData,
-        id: documentData.id
-      }
-      const foundIndex = items.findIndex((x) => x.id === updatedData.id)
-      items[foundIndex] = { ...items[foundIndex], ...updatedData }
-      dispatch(updateList(items))
-
-      // Notify requester and receiver
-      void handleNotify(items[foundIndex], 'Forwarded')
-
-      // pop up the success message
-      setToast('success', 'Successfully saved.')
-
-      setUpdateStatusFlow(!updateStatusFlow)
-      setSaving(false)
-    } catch (e) {
-      console.error(e)
-    }
+    await applyApplicantTransition({
+      label: 'Forward',
+      newData: { current_approver_id: selectedUser.id },
+      flowStatus: 'Forwarded',
+      receiverId: selectedUser.id,
+      notify: 'Forwarded'
+    })
   }
 
   const handleSelectedUsers = (selectedUsers: Employee[]) => {

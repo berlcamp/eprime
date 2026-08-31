@@ -1,7 +1,8 @@
 import { CustomButton, SearchUserInput } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { fetchPositions, logError } from '@/utils/fetchApi'
+import { fetchPositions } from '@/utils/fetchApi'
+import { runQuery } from '@/utils/query-result'
 import { useEffect, useState } from 'react'
 
 // Types
@@ -25,6 +26,21 @@ interface ModalProps {
 // on, and clear it when it is switched off.
 const postedAt = (isDisplayed: boolean, existing: string | null | undefined) =>
   isDisplayed ? (existing ?? new Date().toISOString()) : null
+
+/**
+ * The form's qualification rows as the RPC expects them: a row carrying an id
+ * is an existing standard to update, one without is new, and any standard of
+ * this ranking missing from the array is removed.
+ */
+const toQualificationPayload = (
+  qualifications: RankingTypes['qualifications']
+) =>
+  (qualifications ?? []).map((q) => ({
+    ...(q.id ? { id: q.id } : {}),
+    name: q.name,
+    description: q.description,
+    required: q.required ? true : false
+  }))
 
 const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
   const { setToast } = useFilter()
@@ -68,9 +84,9 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
     setSaving(true)
 
     if (editData) {
-      void handleUpdate(formdata)
+      await handleUpdate(formdata)
     } else {
-      void handleCreate(formdata)
+      await handleCreate(formdata)
     }
   }
 
@@ -110,38 +126,34 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('hrm_rankings')
-        .insert(newData)
-        .select()
-
-      if (error) {
-        void logError(
-          'Create New Ranking',
-          'hrm_rankings',
-          JSON.stringify(newData),
-          error.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
-      }
-
-      // Insert qualifications to db
-      const insertPromises = formdata.qualifications.map(
-        async (qualification) => {
-          return await supabase.from('hrm_ranking_qualifications').insert({
-            ranking_id: data[0].id,
-            name: qualification.name,
-            description: qualification.description,
-            required: qualification.required ? true : false
-          })
-        }
+      // The ranking and its qualification standards go in together. The
+      // per-qualification inserts used to run through Promise.all with their
+      // results thrown away, so a ranking could end up missing standards its
+      // applicants would then be screened against, with nothing to show for
+      // it. See supabase/migrations/0020_save_ranking_with_qualifications.sql
+      const created = await runQuery<RankingTypes>(
+        {
+          transaction: 'Create New Ranking',
+          table: 'hrm_rankings',
+          payload: newData
+        },
+        supabase.rpc('create_ranking', {
+          p_ranking: newData,
+          p_qualifications: toQualificationPayload(formdata.qualifications)
+        })
       )
 
-      await Promise.all(insertPromises)
+      if (!created.ok || !created.data) {
+        setToast(
+          'error',
+          created.ok
+            ? 'Saving failed, please reload the page and try again.'
+            : `The ranking was not created. ${created.error.message}`
+        )
+        return
+      }
+
+      const data = [created.data]
 
       // Append new data in redux
       const hrmPosition = positions.find(
@@ -166,8 +178,6 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
         })
       )
 
-      setSaving(false)
-
       // hide the modal
       hideModal()
 
@@ -178,6 +188,11 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       reset()
     } catch (e) {
       console.error(e)
+      setToast('error', 'Saving failed, please reload the page and try again.')
+    } finally {
+      // finally, not the success path: the early returns above must still
+      // release the Save button.
+      setSaving(false)
     }
   }
 
@@ -239,96 +254,29 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
     }
 
     try {
-      const { error } = await supabase
-        .from('hrm_rankings')
-        .update(newData)
-        .eq('id', editData.id)
-
-      if (error) {
-        void logError(
-          'Update Ranking',
-          'hrm_rankings',
-          JSON.stringify(newData),
-          error.message
-        )
-        setToast(
-          'error',
-          'Saving failed, please reload the page and try again.'
-        )
-        throw new Error(error.message)
-      }
-
-      // Fetch existing qualifications from the database for this position
-      const { data: existingQualifications, error: fetchError } = await supabase
-        .from('hrm_ranking_qualifications')
-        .select('id')
-        .eq('ranking_id', editData.id)
-
-      if (fetchError) {
-        throw new Error(fetchError.message)
-      }
-
-      const existingQualificationIds = existingQualifications.map(
-        (q: { id: any }) => q.id
+      // Ranking plus the full qualification sync (update kept, insert new,
+      // delete removed) in one transaction. This was a chain of statements
+      // that threw into a catch reaching only the console, leaving the ranking
+      // updated and its standards half-synced.
+      const updated = await runQuery<RankingTypes>(
+        {
+          transaction: 'Update Ranking',
+          table: 'hrm_rankings',
+          payload: { rankingId: editData.id, ...newData }
+        },
+        supabase.rpc('update_ranking', {
+          p_ranking_id: editData.id,
+          p_ranking: newData,
+          p_qualifications: toQualificationPayload(formdata.qualifications)
+        })
       )
 
-      // Separate qualifications into ones that need to be updated or inserted
-      const qualificationsToUpdate = formdata.qualifications.filter((q) => q.id) // Has an ID, update existing
-      const qualificationsToInsert = formdata.qualifications.filter(
-        (q) => !q.id
-      ) // No ID, new entry
-
-      // Update existing qualifications
-      for (const qual of qualificationsToUpdate) {
-        const { error: updateQualError } = await supabase
-          .from('hrm_ranking_qualifications')
-          .update({
-            name: qual.name,
-            description: qual.description,
-            required: qual.required ? true : false
-          })
-          .eq('id', qual.id)
-
-        if (updateQualError) {
-          throw new Error(updateQualError.message)
-        }
-      }
-
-      // Insert new qualifications
-      if (qualificationsToInsert.length > 0) {
-        const newQualifications = qualificationsToInsert.map((qual) => ({
-          ranking_id: editData.id,
-          name: qual.name,
-          description: qual.description,
-          required: qual.required ? true : false
-        }))
-
-        const { error: insertError } = await supabase
-          .from('hrm_ranking_qualifications')
-          .insert(newQualifications)
-
-        if (insertError) {
-          throw new Error(insertError.message)
-        }
-      }
-
-      // Remove qualifications that are no longer in the form
-      const formQualificationIds = formdata.qualifications
-        .map((q) => q.id)
-        .filter((id) => id) // Get ids from form
-      const qualificationsToDelete = existingQualificationIds.filter(
-        (id: string | undefined) => !formQualificationIds.includes(id)
-      ) // IDs not present in the form
-
-      if (qualificationsToDelete.length > 0) {
-        const { error: deleteError } = await supabase
-          .from('hrm_ranking_qualifications')
-          .delete()
-          .in('id', qualificationsToDelete) // Remove them from the database
-
-        if (deleteError) {
-          throw new Error(deleteError.message)
-        }
+      if (!updated.ok) {
+        setToast(
+          'error',
+          `Nothing was changed. ${updated.error.message}`
+        )
+        return
       }
 
       // Notifiy original commmittee members if status is changed to close
@@ -367,8 +315,6 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       // pop up the success message
       setToast('success', 'Successfully saved.')
 
-      setSaving(false)
-
       // hide the modal
       hideModal()
 
@@ -379,6 +325,9 @@ const AddEditModal = ({ hideModal, refetch, editData }: ModalProps) => {
       reset()
     } catch (e) {
       console.error(e)
+      setToast('error', 'Saving failed, please reload the page and try again.')
+    } finally {
+      setSaving(false)
     }
   }
 
