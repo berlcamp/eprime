@@ -5,6 +5,7 @@ import {
   PerPage,
   ShowMore,
   Sidebar,
+  TableError,
   TableRowLoading,
   Title,
   TopBar,
@@ -12,7 +13,9 @@ import {
   UserBlock
 } from '@/components/index'
 import DetailsModal from '@/components/Tracker/DetailsModal'
+import { useListQuery } from '@/hooks/useListQuery'
 import { fetchDocuments } from '@/utils/fetchApi'
+import { runListQuery, runQuery } from '@/utils/query-result'
 import { Menu, Transition } from '@headlessui/react'
 import {
   ChevronDownIcon,
@@ -44,15 +47,12 @@ import { PrintTravelForm } from '@/components/Printables/PrintTravelForm'
 import { PrintUndertimeForm } from '@/components/Printables/PrintUndertimeForm'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
-import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { useSearchParams } from 'next/navigation'
-import { useDispatch, useSelector } from 'react-redux'
 import { useReactToPrint } from 'react-to-print'
 import Search from './Search'
 import StickiesModal from './StickiesModal'
 
 const Page: React.FC = () => {
-  const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [refresh, setRefresh] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
@@ -68,17 +68,14 @@ const Page: React.FC = () => {
   const [filterSchool, setFilterSchool] = useState('')
   const [filterRequester, setFilterRequester] = useState('')
 
-  const [list, setList] = useState<DocumentTypes[]>([])
   const [perPageCount, setPerPageCount] = useState<number>(10)
-  const [showingCount, setShowingCount] = useState<number>(0)
-  const [resultsCount, setResultsCount] = useState<number>(0)
 
   const searchParams = useSearchParams()
   const filterUrl = searchParams.get('filter')
   const isSearchView = filterUrl && filterUrl === 'search'
 
   const { session, supabase, systemSchools, systemOffices } = useSupabase()
-  const { hasAccess } = useFilter()
+  const { hasAccess, setToast } = useFilter()
 
   const componentRef = React.useRef(null)
   const printFn = useReactToPrint({
@@ -86,15 +83,19 @@ const Page: React.FC = () => {
     documentTitle: 'request-form'
   })
 
-  // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
-  const dispatch = useDispatch()
-
-  const fetchData = async () => {
-    setLoading(true)
-
-    try {
-      const result = await fetchDocuments(
+  const {
+    list,
+    loading,
+    error,
+    isEmpty,
+    hasMore,
+    showing: showingCount,
+    results: resultsCount,
+    refetch,
+    showMore
+  } = useListQuery<DocumentTypes>({
+    fetcher: async (perPage, rangeFrom) =>
+      await fetchDocuments(
         {
           filterKeyword,
           filterDate,
@@ -106,54 +107,24 @@ const Page: React.FC = () => {
         },
         filterUrl,
         session?.user.id,
-        perPageCount,
-        0
-      )
-
-      // update the list in redux
-      dispatch(updateList(result.data))
-
-      setResultsCount(result.count ? result.count : 0)
-      setShowingCount(result.data.length)
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Append data to existing list whenever 'show more' button is clicked
-  const handleShowMore = async () => {
-    setLoading(true)
-
-    try {
-      const result = await fetchDocuments(
-        {
-          filterKeyword,
-          filterType,
-          filterStatus,
-          filterSchool,
-          filterOffice,
-          filterRequester
-        },
-        filterUrl,
-        session?.user.id,
-        perPageCount,
-        list.length
-      )
-
-      // update the list in redux
-      const newList = [...list, ...result.data]
-      dispatch(updateList(newList))
-
-      setResultsCount(result.count ? result.count : 0)
-      setShowingCount(newList.length)
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
+        perPage,
+        rangeFrom
+      ),
+    // `refresh` is toggled by Search/Filters on Apply and Clear; the filter
+    // values are here too so nothing can change without a refetch.
+    deps: [
+      refresh,
+      filterKeyword,
+      filterDate,
+      filterType,
+      filterStatus,
+      filterSchool,
+      filterOffice,
+      filterRequester,
+      filterUrl
+    ],
+    perPage: perPageCount
+  })
 
   const handleAdd = () => {
     setShowAddModal(true)
@@ -165,22 +136,54 @@ const Page: React.FC = () => {
     let serviceRecordsData: ServiceRecordTypes[] | [] = []
 
     if (item.type === 'Service Record Print Request') {
-      // place of birthday data
-      const { data: pds } = await supabase
-        .from('hrm_pds')
-        .select()
-        .eq('user_id', item.created_by)
-        .maybeSingle()
+      // Both lookups feed an official printed document, so a failure has to
+      // stop the print rather than quietly produce a form with blank fields.
+      const [pdsResult, recordsResult] = await Promise.all([
+        runQuery<PdsPersonalInfomationTypes>(
+          {
+            transaction: 'Fetch PDS for service record print',
+            table: 'hrm_pds',
+            payload: { userId: item.created_by }
+          },
+          supabase
+            .from('hrm_pds')
+            .select()
+            .eq('user_id', item.created_by)
+            .maybeSingle()
+        ),
+        // Service records, sorted chronologically by the "from" column
+        runListQuery<ServiceRecordTypes>(
+          {
+            transaction: 'Fetch service records for print',
+            table: 'hrm_service_records',
+            payload: { userId: item.created_by }
+          },
+          supabase
+            .from('hrm_service_records')
+            .select()
+            .eq('user_id', item.created_by)
+            .order('from', { ascending: true })
+        )
+      ])
 
-      // Service records, sorted chronologically by the "from" column
-      const { data: sr } = await supabase
-        .from('hrm_service_records')
-        .select()
-        .eq('user_id', item.created_by)
-        .order('from', { ascending: true })
+      if (!pdsResult.ok) {
+        setToast(
+          'error',
+          `Could not prepare the printout. ${pdsResult.error.message}`
+        )
+        return
+      }
 
-      pdsData = pds
-      serviceRecordsData = sr ?? []
+      if (!recordsResult.ok) {
+        setToast(
+          'error',
+          `Could not prepare the printout. ${recordsResult.error.message}`
+        )
+        return
+      }
+
+      pdsData = pdsResult.data
+      serviceRecordsData = recordsResult.data
     }
 
     setTimeout(() => {
@@ -200,28 +203,14 @@ const Page: React.FC = () => {
     setSelectedItem(item)
   }
 
-  // Update list whenever list in redux updates
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setList(globallist)
-  }, [globallist])
-
-  useEffect(() => {
-    void fetchData()
-  }, [refresh])
-
   // Reset filters when URL changes (e.g., tab switched)
   useEffect(() => {
-    console.log('Filter URL changed:', filterUrl)
     setFilterKeyword('')
     setFilterType('')
     setFilterDate('')
     setFilterStatus('')
     setFilterRequester('')
-    setRefresh((prev) => !prev) // 👈 ensure data is re-fetched
   }, [filterUrl])
-
-  const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
   const isSchoolHead = systemSchools.find(
     (school: SchoolTypes) => school.head_user_id === session?.user.id
@@ -313,7 +302,7 @@ const Page: React.FC = () => {
           )}
 
           {/* Per Page */}
-          {!loading && !isDataEmpty && (
+          {!loading && list.length > 0 && (
             <PerPage
               showingCount={showingCount}
               resultsCount={resultsCount}
@@ -326,7 +315,7 @@ const Page: React.FC = () => {
 
           {/* Main Content */}
           <div>
-            {!loading && !isDataEmpty && (
+            {!loading && list.length > 0 && (
               <table className="app__table">
                 <thead className="app__thead">
                   <tr>
@@ -342,8 +331,7 @@ const Page: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {!isDataEmpty &&
-                    list.map((item: DocumentTypes, index: number) => (
+                  {list.map((item: DocumentTypes, index: number) => (
                       <tr key={index} className="app__tr">
                         <td className="w-6 pl-4 app__td">
                           <Menu as="div" className="app__menu_container">
@@ -474,13 +462,12 @@ const Page: React.FC = () => {
                 </tbody>
               </table>
             )}
-            {!loading && isDataEmpty && (
+            {error && <TableError error={error} onRetry={refetch} />}
+            {isEmpty && (
               <div className="app__norecordsfound">No records found.</div>
             )}
             {/* Show More */}
-            {resultsCount > showingCount && !loading && (
-              <ShowMore handleShowMore={handleShowMore} />
-            )}
+            {hasMore && <ShowMore handleShowMore={showMore} />}
 
             {/* Add Document Modal */}
             {showAddModal && (

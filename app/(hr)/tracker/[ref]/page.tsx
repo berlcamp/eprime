@@ -2,31 +2,29 @@
 
 import {
   Sidebar,
+  TableError,
   TableRowLoading,
   TopBar,
   TrackerSideBar,
   UserBlock
 } from '@/components/index'
 import DetailsModal from '@/components/Tracker/DetailsModal'
+import { useListQuery } from '@/hooks/useListQuery'
 import { fetchDocuments } from '@/utils/fetchApi'
 import { ArrowLeftIcon } from '@heroicons/react/20/solid'
 import { format } from 'date-fns'
-import { use, useEffect, useState } from 'react'
+import { use, useState } from 'react'
 
 // Types
 import type { DocumentTypes } from '@/types'
 
 import { useSupabase } from '@/context/SupabaseProvider'
-import { updateList } from '@/GlobalRedux/Features/listSlice'
 import Link from 'next/link'
-import { useDispatch, useSelector } from 'react-redux'
 import StickiesModal from '../StickiesModal'
 
 export default function Page({ params }: { params: Promise<{ ref: string }> }) {
-  const [loading, setLoading] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showStickiesModal, setShowStickiesModal] = useState(false)
-  const [list, setList] = useState<DocumentTypes[]>([])
   const [selectedItem, setSelectedItem] = useState<DocumentTypes | null>(null)
 
   const [refresh, setRefresh] = useState(false)
@@ -35,49 +33,24 @@ export default function Page({ params }: { params: Promise<{ ref: string }> }) {
 
   const { ref: refCode } = use(params)
 
-  // Redux staff
-  const globallist = useSelector((state: any) => state.list.value)
-  const dispatch = useDispatch()
-
-  const fetchData = async () => {
-    setLoading(true)
-
-    try {
-      const result = await fetchDocuments(
-        { filterKeyword: refCode },
-        null,
-        session?.user.id,
-        10,
-        0
-      )
-
-      // update the list in redux
-      dispatch(updateList(result.data))
-
-      setList(result.data)
-      setLoading(false)
-    } catch (e) {
-      console.error(e)
-    }
-  }
+  const { list, loading, error, isEmpty, refetch } =
+    useListQuery<DocumentTypes>({
+      fetcher: async (perPage, rangeFrom) =>
+        await fetchDocuments(
+          { filterKeyword: refCode },
+          null,
+          session?.user.id,
+          perPage,
+          rangeFrom
+        ),
+      deps: [refCode, refresh],
+      perPage: 10
+    })
 
   const handleShowDetailsModal = (item: DocumentTypes) => {
     setShowDetailsModal(true)
     setSelectedItem(item)
   }
-
-  // Update list whenever list in redux updates
-  useEffect(() => {
-    setList(globallist)
-  }, [globallist])
-
-  // Featch data
-  useEffect(() => {
-    setList([])
-    void fetchData()
-  }, [refresh])
-
-  const isDataEmpty = !Array.isArray(list) || list.length < 1 || !list
 
   return (
     <>
@@ -112,8 +85,7 @@ export default function Page({ params }: { params: Promise<{ ref: string }> }) {
                 </tr>
               </thead>
               <tbody>
-                {!isDataEmpty &&
-                  list.map((item: DocumentTypes, index: number) => (
+                {list.map((item: DocumentTypes, index: number) => (
                     <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td"></td>
                       <td className="pl-4 app__td">
@@ -190,7 +162,8 @@ export default function Page({ params }: { params: Promise<{ ref: string }> }) {
                 {loading && <TableRowLoading cols={7} rows={2} />}
               </tbody>
             </table>
-            {!loading && isDataEmpty && (
+            {error && <TableError error={error} onRetry={refetch} />}
+            {isEmpty && (
               <div className="app__norecordsfound">No records found.</div>
             )}
           </div>

@@ -28,6 +28,7 @@ import type {
   namesType,
 } from "@/types";
 import { logError } from "@/utils/fetchApi";
+import { runQuery } from "@/utils/query-result";
 import {
   BellAlertIcon,
   BellSlashIcon,
@@ -39,6 +40,22 @@ import { Tooltip } from "react-tooltip";
 import { LWOP_SERVICE_RECORD_MIN_DAYS, superAdmins } from "@/constants";
 import AddStickyModal from "./AddStickyModal";
 import CreditsCertification from "./CreditsCertification";
+
+/** Shape returned by the approve_leave_request RPC. */
+interface ApproveLeaveResult {
+  approved: boolean;
+  reason?: string;
+  total_credits?: number;
+  used_credits?: string[];
+  untracked_credit_types?: string[];
+}
+
+/** Shape returned by the revert_leave_approval RPC. */
+interface RevertLeaveResult {
+  reverted: boolean;
+  reason?: string;
+  needs_manual_service_record_check?: boolean;
+}
 
 interface ModalProps {
   hideModal: () => void;
@@ -427,34 +444,39 @@ export default function DetailsModal({
       approved_by: session?.user.id,
       date_approved: format(new Date(), "yyyy-MM-dd"),
     };
-    try {
-      // Atomic guard: only approve if the request is still "Approval Recommended".
-      // Prevents a double-approval (and double credit/COC deduction) when the
-      // modal is opened from a stale list where the status hasn't refreshed.
-      const { data: updatedRows, error } = await supabase
-        .from("hrm_request_trackers")
-        .update(newData)
-        .eq("id", documentData.id)
-        .eq("current_status", "Approval Recommended")
-        .select();
 
-      if (error) {
-        void logError(
-          "Approval",
-          "hrm_request_trackers",
-          JSON.stringify(newData),
-          error.message,
-        );
+    try {
+      // Approving a leave request touches hrm_request_trackers, leave credits,
+      // COC balances, the leave card and (for LWOP) the service record. This
+      // used to be ~10 separate statements from the browser, so a failure
+      // part-way left the request Approved with credits half-deducted. The RPC
+      // does the whole thing in one transaction; see
+      // supabase/migrations/0015_atomic_leave_request_approval.sql
+      const result = await runQuery<ApproveLeaveResult>(
+        {
+          transaction: "Approval",
+          table: "hrm_request_trackers",
+          payload: { trackerId: documentData.id },
+        },
+        supabase.rpc("approve_leave_request", {
+          p_tracker_id: documentData.id,
+          p_approver_id: session?.user.id,
+          p_org_id: Number(process.env.NEXT_PUBLIC_ORG_ID),
+          p_lwop_min_days: LWOP_SERVICE_RECORD_MIN_DAYS,
+        }),
+      );
+
+      if (!result.ok) {
         setToast(
           "error",
-          "Saving failed, please reload the page and try again.",
+          `Approval failed and nothing was changed. ${result.error.message}`,
         );
-        throw new Error(error.message);
+        return;
       }
 
-      // No row matched → it was already approved (or no longer approvable).
-      // Bail out before deducting credits or inserting a duplicate log.
-      if (!updatedRows || updatedRows.length === 0) {
+      // The RPC only approves a request still marked "Approval Recommended",
+      // so this is a double-approval from a stale list rather than an error.
+      if (!result.data?.approved) {
         setToast(
           "error",
           "This request has already been approved or is no longer awaiting approval. Please reload the page.",
@@ -470,316 +492,38 @@ export default function DetailsModal({
         }
 
         setUpdateStatusFlow(!updateStatusFlow);
-        setSaving(false);
         return;
       }
 
-      // Added log to latest tracker flow
-      const { data } = await supabase
-        .from("hrm_tracker_flow")
-        .select()
-        .eq("tracker_id", documentData.id)
-        .order("id", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data) {
-        const newData = {
-          message: "Approved",
-          tracker_flow_id: data.id,
-          user_id: session?.user.id,
-        };
-
-        const { error: error2 } = await supabase
-          .from("hrm_tracker_logs")
-          .insert(newData)
-          .eq("id", documentData.id);
-
-        if (error2) {
-          void logError(
-            "Approval Flow Logs",
-            "hrm_tracker_flow",
-            "",
-            error2.message,
-          );
-        }
+      // Credit types with no balance row are recorded on the leave card but
+      // never deducted. That was invisible before; say so plainly.
+      const untracked = result.data.untracked_credit_types ?? [];
+      if (untracked.length > 0) {
+        setToast(
+          "error",
+          `Approved, but no leave balance exists for: ${untracked.join(
+            ", ",
+          )}. Those credits were recorded on the leave card but not deducted.`,
+        );
       }
-
-      // Add entry to employees leave card if type of request is Leave
-      if (documentData.type === "Leave") {
-        // Refetch tracker from DB to get latest certified values (handles modal
-        // reopened after certification or stale list data)
-        const { data: freshTracker } = await supabase
-          .from("hrm_request_trackers")
-          .select(
-            "leave_credit_use_vl, leave_credit_use_sl, leave_credit_use_sc, leave_credit_use_adoption, leave_credit_use_vawc, leave_credit_use_emergency, leave_credit_use_study, leave_credit_use_soloparent, leave_credit_use_slbw, leave_credit_use_spl, leave_credit_use_rehab, leave_credit_use_paternity, leave_credit_use_maternity, leave_credit_use_wellness, leave_days_with_pay, leave_days_without_pay"
-          )
-          .eq("id", documentData.id)
-          .single();
-
-        const leaveData = freshTracker
-          ? { ...documentData, ...freshTracker }
-          : documentData;
-
-        // Current Balances
-        const { data: balancesData } = await supabase
-          .from("hrm_leave_credits")
-          .select()
-          .eq("user_id", documentData.creator.id);
-
-        const balances: Array<{
-          type: string;
-          balance: string;
-        }> = [];
-
-        if (balancesData && balancesData.length > 0) {
-          const creditsData: LeaveCreditTypes[] = balancesData;
-          creditsData.forEach((credit) => {
-            balances.push({
-              type: credit.type,
-              balance: credit.credits.toString(),
-            });
-          });
-        }
-
-        const creditsUsed = [
-          {
-            type: "Vacation Leave",
-            value: leaveData.leave_credit_use_vl,
-          },
-          {
-            type: "Sick Leave",
-            value: leaveData.leave_credit_use_sl,
-          },
-          {
-            type: "Service Credit",
-            value: leaveData.leave_credit_use_sc,
-          },
-          {
-            type: "Adoption Leave",
-            value: leaveData.leave_credit_use_adoption,
-          },
-          {
-            type: "10-Day VAWC Leave",
-            value: leaveData.leave_credit_use_vawc,
-          },
-          {
-            type: "Special Emergency (Calamity) Leave",
-            value: leaveData.leave_credit_use_emergency,
-          },
-          {
-            type: "Study Leave",
-            value: leaveData.leave_credit_use_study,
-          },
-          {
-            type: "Solo Parent Leave",
-            value: leaveData.leave_credit_use_soloparent,
-          },
-          {
-            type: "Special Leave Benefits For Women",
-            value: leaveData.leave_credit_use_slbw,
-          },
-          {
-            type: "Special Privilege Leave",
-            value: leaveData.leave_credit_use_spl,
-          },
-          {
-            type: "Rehabilitation Leave",
-            value: leaveData.leave_credit_use_rehab,
-          },
-          {
-            type: "Paternity Leave",
-            value: leaveData.leave_credit_use_paternity,
-          },
-          {
-            type: "Maternity Leave",
-            value: leaveData.leave_credit_use_maternity,
-          },
-          {
-            type: "Wellness Break",
-            value: leaveData.leave_credit_use_wellness,
-          },
-        ];
-
-        // Foreach credits used
-        let totalCredits = 0;
-        const usedCredits: string[] = [];
-        creditsUsed.forEach((cu) => {
-          if (cu.value && Number(cu.value) > 0) {
-            totalCredits += Number(cu.value);
-            usedCredits.push(`${cu.type} (${cu.value})`);
-          }
-        });
-
-        // Update leave credits balances to db
-        const updateLeaveCreditsPromises = creditsUsed.map(async (c) => {
-          if (c.value && Number(c.value) > 0) {
-            const bal = balances.find((b) => b.type === c.type);
-
-            if (bal) {
-              return await supabase
-                .from("hrm_leave_credits")
-                .update({
-                  credits: Number(bal.balance) - Number(c.value),
-                })
-                .eq("type", c.type)
-                .eq("user_id", documentData.creator.id);
-            }
-          }
-        });
-        await Promise.all(updateLeaveCreditsPromises);
-
-        // Update Cto balances to db
-        // Update CTO balances in the database
-        const { data: leaveCocRecords, error: leaveError } = await supabase
-          .from("hrm_leave_coc")
-          .select("use_coc, user_cto_id")
-          .eq("tracker_id", documentData.id);
-
-        if (leaveError) {
-          void logError(
-            "Leave request - fetch leave coc records",
-            "hrm_leave_coc",
-            "",
-            leaveError.message,
-          );
-          throw new Error(leaveError.message);
-        }
-
-        if (!leaveCocRecords || leaveCocRecords.length === 0) {
-          console.warn("No COC records found for this tracker ID.");
-        }
-
-        // Process and update each CTO balance
-        for (const record of leaveCocRecords) {
-          const { use_coc, user_cto_id } = record;
-
-          const { data: userCto, error: fetchCtoError } = await supabase
-            .from("hrm_cto_users")
-            .select("coc, used_coc")
-            .eq("id", user_cto_id)
-            .maybeSingle();
-
-          if (fetchCtoError || !userCto) {
-            void logError(
-              "Leave request - fetch current CTO user",
-              "hrm_cto_users",
-              user_cto_id,
-              fetchCtoError?.message || "CTO user not found",
-            );
-            throw new Error(fetchCtoError?.message || "CTO user not found");
-          }
-
-          const newCocValue = userCto.coc - use_coc;
-          const newUsedCocValue =
-            (Number(userCto.used_coc) || 0) + Number(use_coc);
-
-          totalCredits += Number(use_coc);
-          usedCredits.push(`COC (${use_coc})`);
-
-          const { error: updateError } = await supabase
-            .from("hrm_cto_users")
-            .update({ coc: newCocValue, used_coc: newUsedCocValue })
-            .eq("id", user_cto_id);
-
-          if (updateError) {
-            void logError(
-              "Leave request - update CTO user balance",
-              "hrm_cto_users",
-              user_cto_id,
-              updateError.message,
-            );
-            throw new Error(updateError.message);
-          }
-        }
-
-        // Insert to leave cards
-        const { error } = await supabase.from("hrm_leave_cards").insert({
-          adjustment_date: new Date(),
-          particulars: "Leave Request",
-          remarks: `Credit used:  ${usedCredits.join(", ")}`,
-          credits_used: totalCredits,
-          balance: "",
-          absence_with_pay: Math.max(0, Number(leaveData.leave_days_with_pay)),
-          absence_without_pay: leaveData.leave_days_without_pay,
-          type: leaveData.leave_type,
-          tracker_id: leaveData.id,
-          user_id: leaveData.created_by,
-        });
-
-        if (error) {
-          void logError(
-            "Leave request - add to leave card",
-            "hrm_leave_cards",
-            "",
-            error.message,
-          );
-          throw new Error(error.message);
-        }
-
-        // If leave days without pay reaches the threshold, add to Service Record and Update hrm_user 'step_increment_leave_days'
-        if (
-          Number(leaveData.leave_days_without_pay) >=
-          LWOP_SERVICE_RECORD_MIN_DAYS
-        ) {
-          const newData = {
-            user_id: leaveData.created_by,
-            org_id: process.env.NEXT_PUBLIC_ORG_ID,
-            from: leaveData.leave_dates[0]?.date ?? "",
-            designation: leaveData.creator.hrm_positions?.name,
-            days_without_pay: leaveData.leave_days_without_pay,
-            remarks: leaveData.leave_type,
-            created_by: session?.user.id,
-          };
-
-          const { error: insertSRError } = await supabase
-            .from("hrm_service_records")
-            .insert(newData)
-            .select();
-
-          if (insertSRError) {
-            void logError(
-              "Create service record from Leave",
-              "hrm_service_records",
-              JSON.stringify(newData),
-              insertSRError.message,
-            );
-          }
-
-          const { error: updateUserError } = await supabase
-            .from("hrm_users")
-            .update({
-              step_increment_leave_days:
-                Number(leaveData.creator.step_increment_leave_days) +
-                Number(leaveData.leave_days_without_pay),
-            })
-            .eq("id", leaveData.created_by);
-
-          if (updateUserError) {
-            void logError(
-              "Update step_increment_leave_days during leave",
-              "hrm_users",
-              "",
-              updateUserError.message,
-            );
-          }
-        }
-      }
-      // End: Add entry to employees leave card if type of request is Leave
 
       // Update data in redux
       const items = [...globallist];
       const updatedData = { ...newData, id: documentData.id };
       const foundIndex = items.findIndex((x) => x.id === updatedData.id);
-      items[foundIndex] = { ...items[foundIndex], ...updatedData };
-      dispatch(updateList(items));
-      setDocumentData(items[foundIndex]); // update ui with new data
+      if (foundIndex >= 0) {
+        items[foundIndex] = { ...items[foundIndex], ...updatedData };
+        dispatch(updateList(items));
+        setDocumentData(items[foundIndex]); // update ui with new data
 
-      // Notify requester and follower
-      void handleNotify(items[foundIndex], "Approved");
+        // Notify requester and follower
+        void handleNotify(items[foundIndex], "Approved");
+      }
 
       // pop up the success message
-      setToast("success", "Successfully saved.");
+      if (untracked.length === 0) {
+        setToast("success", "Successfully saved.");
+      }
 
       // Recount sidebar counter
       dispatch(recount());
@@ -787,9 +531,13 @@ export default function DetailsModal({
       refresh?.();
 
       setUpdateStatusFlow(!updateStatusFlow);
-      setSaving(false);
     } catch (e) {
+      // runQuery already logged anything the database returned; this only
+      // catches bugs in the code above, which must still release the button.
       console.error(e);
+      setToast("error", "Approval failed, please reload the page and try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -914,240 +662,68 @@ export default function DetailsModal({
 
     setSaving(true);
 
+    const newData = {
+      current_status: "Approval Recommended",
+      current_approver_id: session?.user.id,
+      approved_by: null,
+      date_approved: null,
+    };
+
     try {
-      // Refetch tracker to get the exact certified values used at approval time
-      const { data: freshTracker } = await supabase
-        .from("hrm_request_trackers")
-        .select(
-          "leave_credit_use_vl, leave_credit_use_sl, leave_credit_use_sc, leave_credit_use_adoption, leave_credit_use_vawc, leave_credit_use_emergency, leave_credit_use_study, leave_credit_use_soloparent, leave_credit_use_slbw, leave_credit_use_spl, leave_credit_use_rehab, leave_credit_use_paternity, leave_credit_use_maternity, leave_credit_use_wellness, leave_days_without_pay",
-        )
-        .eq("id", documentData.id)
-        .single();
-
-      const leaveData = freshTracker
-        ? { ...documentData, ...freshTracker }
-        : documentData;
-
-      // Restore leave credit balances
-      const { data: balancesData } = await supabase
-        .from("hrm_leave_credits")
-        .select()
-        .eq("user_id", documentData.creator.id);
-
-      const balances: Array<{ type: string; balance: string }> = [];
-      if (balancesData && balancesData.length > 0) {
-        const creditsData: LeaveCreditTypes[] = balancesData;
-        creditsData.forEach((credit) => {
-          balances.push({ type: credit.type, balance: credit.credits.toString() });
-        });
-      }
-
-      const creditsUsed = [
-        { type: "Vacation Leave", value: leaveData.leave_credit_use_vl },
-        { type: "Sick Leave", value: leaveData.leave_credit_use_sl },
-        { type: "Service Credit", value: leaveData.leave_credit_use_sc },
-        { type: "Adoption Leave", value: leaveData.leave_credit_use_adoption },
-        { type: "10-Day VAWC Leave", value: leaveData.leave_credit_use_vawc },
+      // The mirror of handleConfirmedApprove: restoring credits, COC, the
+      // leave card and the step increment has to happen in one transaction, or
+      // a half-finished revert leaves the balances wrong. The RPC also refuses
+      // to revert a request that is no longer Approved, which stops a second
+      // click from restoring the same credits twice. See
+      // supabase/migrations/0016_atomic_leave_approval_revert.sql
+      const result = await runQuery<RevertLeaveResult>(
         {
-          type: "Special Emergency (Calamity) Leave",
-          value: leaveData.leave_credit_use_emergency,
+          transaction: "Revert Approval",
+          table: "hrm_request_trackers",
+          payload: { trackerId: documentData.id },
         },
-        { type: "Study Leave", value: leaveData.leave_credit_use_study },
-        { type: "Solo Parent Leave", value: leaveData.leave_credit_use_soloparent },
-        {
-          type: "Special Leave Benefits For Women",
-          value: leaveData.leave_credit_use_slbw,
-        },
-        { type: "Special Privilege Leave", value: leaveData.leave_credit_use_spl },
-        { type: "Rehabilitation Leave", value: leaveData.leave_credit_use_rehab },
-        { type: "Paternity Leave", value: leaveData.leave_credit_use_paternity },
-        { type: "Maternity Leave", value: leaveData.leave_credit_use_maternity },
-        { type: "Wellness Break", value: leaveData.leave_credit_use_wellness },
-      ];
+        supabase.rpc("revert_leave_approval", {
+          p_tracker_id: documentData.id,
+          p_reverter_id: session?.user.id,
+          p_lwop_min_days: LWOP_SERVICE_RECORD_MIN_DAYS,
+        }),
+      );
 
-      const restoreCreditsPromises = creditsUsed.map(async (c) => {
-        if (c.value && Number(c.value) > 0) {
-          const bal = balances.find((b) => b.type === c.type);
-          if (bal) {
-            return await supabase
-              .from("hrm_leave_credits")
-              .update({ credits: Number(bal.balance) + Number(c.value) })
-              .eq("type", c.type)
-              .eq("user_id", documentData.creator.id);
-          }
-        }
-      });
-      await Promise.all(restoreCreditsPromises);
-
-      // Restore CTO/COC balances
-      const { data: leaveCocRecords, error: leaveError } = await supabase
-        .from("hrm_leave_coc")
-        .select("use_coc, user_cto_id")
-        .eq("tracker_id", documentData.id);
-
-      if (leaveError) {
-        void logError(
-          "Revert Approval - fetch leave coc records",
-          "hrm_leave_coc",
-          "",
-          leaveError.message,
-        );
-      }
-
-      for (const record of leaveCocRecords ?? []) {
-        const { use_coc, user_cto_id } = record;
-
-        const { data: userCto, error: fetchCtoError } = await supabase
-          .from("hrm_cto_users")
-          .select("coc, used_coc")
-          .eq("id", user_cto_id)
-          .maybeSingle();
-
-        if (fetchCtoError || !userCto) {
-          void logError(
-            "Revert Approval - fetch current CTO user",
-            "hrm_cto_users",
-            user_cto_id,
-            fetchCtoError?.message || "CTO user not found",
-          );
-          continue;
-        }
-
-        const { error: updateError } = await supabase
-          .from("hrm_cto_users")
-          .update({
-            coc: Number(userCto.coc) + Number(use_coc),
-            used_coc: Math.max(0, (Number(userCto.used_coc) || 0) - Number(use_coc)),
-          })
-          .eq("id", user_cto_id);
-
-        if (updateError) {
-          void logError(
-            "Revert Approval - update CTO user balance",
-            "hrm_cto_users",
-            user_cto_id,
-            updateError.message,
-          );
-        }
-      }
-
-      // Remove the leave card entry created during approval
-      const { error: leaveCardError } = await supabase
-        .from("hrm_leave_cards")
-        .delete()
-        .eq("tracker_id", documentData.id);
-
-      if (leaveCardError) {
-        void logError(
-          "Revert Approval - delete leave card entry",
-          "hrm_leave_cards",
-          "",
-          leaveCardError.message,
-        );
-      }
-
-      // Restore step_increment_leave_days if it was bumped (threshold days without pay).
-      // Must use the same threshold as the approval path above, or a revert
-      // leaves the bump in place.
-      let needsManualServiceRecordCheck = false;
-      if (
-        Number(leaveData.leave_days_without_pay) >= LWOP_SERVICE_RECORD_MIN_DAYS
-      ) {
-        needsManualServiceRecordCheck = true;
-
-        const { error: updateUserError } = await supabase
-          .from("hrm_users")
-          .update({
-            step_increment_leave_days: Math.max(
-              0,
-              Number(documentData.creator.step_increment_leave_days) -
-                Number(leaveData.leave_days_without_pay),
-            ),
-          })
-          .eq("id", documentData.created_by);
-
-        if (updateUserError) {
-          void logError(
-            "Revert Approval - revert step_increment_leave_days",
-            "hrm_users",
-            "",
-            updateUserError.message,
-          );
-        }
-      }
-
-      // Revert the request status
-      const newData = {
-        current_status: "Approval Recommended",
-        current_approver_id: session?.user.id,
-        approved_by: null,
-        date_approved: null,
-      };
-
-      const { error } = await supabase
-        .from("hrm_request_trackers")
-        .update(newData)
-        .eq("id", documentData.id);
-
-      if (error) {
-        void logError(
-          "Revert Approval",
-          "hrm_request_trackers",
-          JSON.stringify(newData),
-          error.message,
-        );
+      if (!result.ok) {
         setToast(
           "error",
-          "Saving failed, please reload the page and try again.",
+          `Revert failed and nothing was changed. ${result.error.message}`,
         );
-        throw new Error(error.message);
+        return;
       }
 
-      // Added log to latest tracker flow
-      const { data } = await supabase
-        .from("hrm_tracker_flow")
-        .select()
-        .eq("tracker_id", documentData.id)
-        .order("id", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data) {
-        const logMessage = needsManualServiceRecordCheck
-          ? `Reverted to Approval Recommended (please manually review the Service Record entry for the >=${LWOP_SERVICE_RECORD_MIN_DAYS} days without pay adjustment)`
-          : "Reverted to Approval Recommended";
-
-        const newLogData = {
-          message: logMessage,
-          tracker_flow_id: data.id,
-          user_id: session?.user.id,
-        };
-
-        const { error: error2 } = await supabase
-          .from("hrm_tracker_logs")
-          .insert(newLogData)
-          .eq("id", documentData.id);
-
-        if (error2) {
-          void logError(
-            "Approval Flow Logs",
-            "hrm_tracker_flow",
-            "",
-            error2.message,
-          );
-        }
+      if (!result.data?.reverted) {
+        setToast(
+          "error",
+          "This request is no longer approved, so there is nothing to revert. Please reload the page.",
+        );
+        setUpdateStatusFlow(!updateStatusFlow);
+        return;
       }
+
+      const needsManualServiceRecordCheck =
+        result.data.needs_manual_service_record_check === true;
 
       // Update data in redux
       const items = [...globallist];
       const updatedData = { ...newData, id: documentData.id };
       const foundIndex = items.findIndex((x) => x.id === updatedData.id);
-      items[foundIndex] = { ...items[foundIndex], ...updatedData };
-      dispatch(updateList(items));
-      setDocumentData(items[foundIndex]); // update ui with new data
+      if (foundIndex >= 0) {
+        items[foundIndex] = { ...items[foundIndex], ...updatedData };
+        dispatch(updateList(items));
+        setDocumentData(items[foundIndex]); // update ui with new data
 
-      // Notify requester and follower
-      void handleNotify(items[foundIndex], "Reverted to Approval Recommended");
+        // Notify requester and follower
+        void handleNotify(
+          items[foundIndex],
+          "Reverted to Approval Recommended",
+        );
+      }
 
       setToast(
         "success",
@@ -1162,9 +738,10 @@ export default function DetailsModal({
       refresh?.();
 
       setUpdateStatusFlow(!updateStatusFlow);
-      setSaving(false);
     } catch (e) {
       console.error(e);
+      setToast("error", "Revert failed, please reload the page and try again.");
+    } finally {
       setSaving(false);
     }
   };

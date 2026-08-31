@@ -9,6 +9,7 @@ import type {
   AssignmentTypes,
   CtoTypes,
   DesignationTypes,
+  DocumentTypes,
   Employee,
   excludedItemsTypes,
   FollowersTypes,
@@ -2069,7 +2070,7 @@ export async function fetchDocuments(
   userId: string | undefined,
   perPageCount: number,
   rangeFrom: number,
-) {
+): Promise<QueryResult<DocumentTypes[]>> {
   if (filterUrl && filterUrl === "search") {
     if (
       (typeof filters.filterKeyword === "undefined" ||
@@ -2087,7 +2088,7 @@ export async function fetchDocuments(
       (typeof filters.filterOffice === "undefined" ||
         filters.filterOffice === "")
     ) {
-      return { data: [], count: 0 };
+      return { ok: true, data: [], count: 0 };
     }
   }
 
@@ -2118,122 +2119,126 @@ export async function fetchDocuments(
       query = query.eq("office_id", officeId);
     }
 
-    const { data: usersData, error } = await query;
-
-    if (error) {
-      console.error("Error fetching users:", error);
-    } else {
-      userIds = usersData?.map((u: any) => u.id) || [];
-    }
-  }
-
-  try {
-    let query = supabase
-      .from("hrm_request_trackers")
-      .select(
-        "*,leave_cocs:hrm_leave_coc(*), leave_dates:hrm_leave_dates(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,birthday,step_increment_leave_days,avatar_url,signature_path,hrm_offices:office_id(*),hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url,signature_path,hrm_positions:position_id(name)),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url,signature_path),certifier:certified_by(id,firstname,lastname,middlename,avatar_url,signature_path),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url,signature_path),hrm_remarks(*)",
-        { count: "exact" },
-      );
-
-    if (
-      typeof filters.filterKeyword !== "undefined" &&
-      filters.filterKeyword.trim() !== ""
-    ) {
-      query = query.eq("reference_code", filters.filterKeyword.trim());
-    }
-
-    // Filter School/Office thru user ids
-    if (userIds.length > 0) {
-      query = query.in("created_by", userIds);
-    }
-
-    // Filter type
-    if (
-      typeof filters.filterType !== "undefined" &&
-      filters.filterType !== ""
-    ) {
-      query = query.eq("type", filters.filterType);
-    }
-
-    // Filter Status
-    if (
-      typeof filters.filterStatus !== "undefined" &&
-      filters.filterStatus !== ""
-    ) {
-      query = query.eq("current_status", filters.filterStatus);
-    }
-
-    // Filter Date
-    if (
-      typeof filters.filterDate !== "undefined" &&
-      filters.filterDate !== ""
-    ) {
-      query = query.eq("date_created", filters.filterDate);
-    }
-
-    // Filter Requester
-    if (
-      typeof filters.filterRequester !== "undefined" &&
-      filters.filterRequester !== ""
-    ) {
-      query = query.eq("created_by", filters.filterRequester);
-    }
-
-    // Following
-    if (filterUrl && filterUrl === "following") {
-      const docIds: string[] = [];
-      const { data }: { data: FollowersTypes[] | null } = await supabase
-        .from("hrm_tracker_followers")
-        .select()
-        .eq("user_id", userId);
-
-      if (data) {
-        data.forEach((d) => {
-          docIds.push(d.tracker_id);
-        });
-
-        query = query.in("id", docIds);
-      }
-    }
-
-    // Forwarded to me
-    if (filterUrl && filterUrl === "forwarded") {
-      query = query.eq("receiver_id", userId);
-      query = query.eq("current_tracker", "Forwarded");
-      query = query.neq("current_status", "Cancelled");
-      query = query.neq("current_status", "Disapproved");
-      query = query.neq("current_status", "Approved");
-    }
-
-    const isDefaultView = !["search", "forwarded", "following"].includes(
-      filterUrl ?? "",
+    const usersResult = await runListQuery<{ id: string }>(
+      {
+        transaction: "Fetch users for school/office filter",
+        table: "hrm_users",
+        payload: { schoolId, officeId },
+        userMessage:
+          "Could not apply the school/office filter. Please try again.",
+      },
+      query,
     );
-    if (isDefaultView) {
-      query = query.eq("created_by", userId);
+
+    // Falling through with an empty userIds used to drop the school/office
+    // filter silently, showing every request instead of the filtered subset.
+    if (!usersResult.ok) return usersResult;
+
+    userIds = usersResult.data.map((u) => u.id);
+
+    // No users in that school/office means no requests, not "no filter".
+    if (userIds.length === 0) {
+      return { ok: true, data: [], count: 0 };
     }
-
-    // Perform count before paginations
-    // const { count } = await query
-
-    // Per Page from context
-    const from = rangeFrom;
-    const to = from + (perPageCount - 1);
-    // Per Page from context
-    query = query.range(from, to);
-
-    // Order By
-    query = query.order("id", { ascending: false });
-    const { data, count, error } = await query;
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return { data, count };
-  } catch (error) {
-    console.error("fetch error xx", error);
-    return { data: [], count: 0 };
   }
+
+  let query = supabase.from("hrm_request_trackers").select(
+    "*,leave_cocs:hrm_leave_coc(*), leave_dates:hrm_leave_dates(*), hrm_request_tracker_stickies(*), hrm_tracker_followers(*),creator:created_by(id,firstname,lastname,middlename,gender,birthday,step_increment_leave_days,avatar_url,signature_path,hrm_offices:office_id(*),hrm_positions:position_id(name),position_type,hrm_item:item_id(actual_annual_salary,hrm_position:position_id(name))),receiver:receiver_id(id,firstname,lastname,middlename,avatar_url),approver:current_approver_id(id,firstname,lastname,middlename,avatar_url,signature_path,hrm_positions:position_id(name)),recommender:recommended_by(id,firstname,lastname,middlename,avatar_url,signature_path),certifier:certified_by(id,firstname,lastname,middlename,avatar_url,signature_path),finalapprover:approved_by(id,firstname,lastname,middlename,avatar_url,signature_path),hrm_remarks(*)",
+    { count: "exact" },
+  );
+
+  if (
+    typeof filters.filterKeyword !== "undefined" &&
+    filters.filterKeyword.trim() !== ""
+  ) {
+    query = query.eq("reference_code", filters.filterKeyword.trim());
+  }
+
+  // Filter School/Office thru user ids
+  if (userIds.length > 0) {
+    query = query.in("created_by", userIds);
+  }
+
+  // Filter type
+  if (typeof filters.filterType !== "undefined" && filters.filterType !== "") {
+    query = query.eq("type", filters.filterType);
+  }
+
+  // Filter Status
+  if (
+    typeof filters.filterStatus !== "undefined" &&
+    filters.filterStatus !== ""
+  ) {
+    query = query.eq("current_status", filters.filterStatus);
+  }
+
+  // Filter Date
+  if (typeof filters.filterDate !== "undefined" && filters.filterDate !== "") {
+    query = query.eq("date_created", filters.filterDate);
+  }
+
+  // Filter Requester
+  if (
+    typeof filters.filterRequester !== "undefined" &&
+    filters.filterRequester !== ""
+  ) {
+    query = query.eq("created_by", filters.filterRequester);
+  }
+
+  // Following
+  if (filterUrl && filterUrl === "following") {
+    const followersResult = await runListQuery<FollowersTypes>(
+      {
+        transaction: "Fetch followed requests",
+        table: "hrm_tracker_followers",
+        payload: { userId },
+        userMessage:
+          "Could not load the requests you are following. Please try again.",
+      },
+      supabase.from("hrm_tracker_followers").select().eq("user_id", userId),
+    );
+
+    // This view applies no created_by filter, so skipping the id filter on a
+    // failed lookup used to return every request in the organization.
+    if (!followersResult.ok) return followersResult;
+
+    const docIds = followersResult.data.map((d) => d.tracker_id);
+
+    if (docIds.length === 0) {
+      return { ok: true, data: [], count: 0 };
+    }
+
+    query = query.in("id", docIds);
+  }
+
+  // Forwarded to me
+  if (filterUrl && filterUrl === "forwarded") {
+    query = query.eq("receiver_id", userId);
+    query = query.eq("current_tracker", "Forwarded");
+    query = query.neq("current_status", "Cancelled");
+    query = query.neq("current_status", "Disapproved");
+    query = query.neq("current_status", "Approved");
+  }
+
+  const isDefaultView = !["search", "forwarded", "following"].includes(
+    filterUrl ?? "",
+  );
+  if (isDefaultView) {
+    query = query.eq("created_by", userId);
+  }
+
+  // Per Page from context
+  const from = rangeFrom;
+  const to = from + (perPageCount - 1);
+  query = query.range(from, to);
+
+  // Order By
+  query = query.order("id", { ascending: false });
+
+  return await runListQuery<DocumentTypes>(
+    { transaction: "Fetch requests", table: "hrm_request_trackers" },
+    query,
+  );
 }
 
 export async function fetchLeaveCards(
