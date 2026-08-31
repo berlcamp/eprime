@@ -5,7 +5,11 @@ import {
   UserBlock
 } from '@/components/index'
 import { useFilter } from '@/context/FilterContext'
-import { runListQuery, type QueryError } from '@/utils/query-result'
+import {
+  runListQuery,
+  runQuery,
+  type QueryError
+} from '@/utils/query-result'
 import { useSupabase } from '@/context/SupabaseProvider'
 import { Employee, RankingEvaluatorTypes } from '@/types'
 import { logError } from '@/utils/fetchApi'
@@ -88,15 +92,23 @@ const RankingEvaluators = ({ hideModal, rankingId }: ModalProps) => {
         throw new Error(error.message)
       }
 
-      // insert to notifications
-      await supabase.from('hrm_notifications').insert({
-        message: 'You are added as Evaluator in a ranking.',
-        url: '/ranking',
-        type: 'ranking',
-        user_id: user.id,
-        ranking_evaluator_id: data[0].id,
-        reference_table: 'hrm_ranking_evaluators'
-      })
+      // Best-effort: the evaluator is already added, so a failed notification
+      // must not undo that. It is recorded in error_logs rather than dropped.
+      await runQuery(
+        {
+          transaction: 'Notify new evaluator',
+          table: 'hrm_notifications',
+          payload: { evaluatorId: data[0].id }
+        },
+        supabase.from('hrm_notifications').insert({
+          message: 'You are added as Evaluator in a ranking.',
+          url: '/ranking',
+          type: 'ranking',
+          user_id: user.id,
+          ranking_evaluator_id: data[0].id,
+          reference_table: 'hrm_ranking_evaluators'
+        })
+      )
 
       const updatedData = {
         ...newData,
