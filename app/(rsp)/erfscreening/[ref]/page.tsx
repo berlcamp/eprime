@@ -4,7 +4,7 @@ import { Sidebar, TableRowLoading, TopBar, UserBlock } from '@/components/index'
 import { fetchRankingApplicants } from '@/utils/fetchApi'
 import { ArrowLeftIcon } from '@heroicons/react/20/solid'
 import { format } from 'date-fns'
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, use, useEffect, useState } from 'react'
 
 // Types
 import type { ApplicantTypes } from '@/types'
@@ -18,14 +18,14 @@ import { useDispatch, useSelector } from 'react-redux'
 import DetailsModal from '../DetailsModal'
 import MoveRanking from '../MoveRanking'
 
-export default function Page({ params }: { params: { ref: string } }) {
+export default function Page({ params }: { params: Promise<{ ref: string }> }) {
   const [loading, setLoading] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showMoveModal, setShowMoveModal] = useState(false)
   const [list, setList] = useState<ApplicantTypes[]>([])
   const [selectedItem, setSelectedItem] = useState<ApplicantTypes | null>(null)
 
-  const refCode = params.ref
+  const { ref: refCode } = use(params)
 
   // Redux staff
   const globallist = useSelector((state: any) => state.list.value)

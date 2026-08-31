@@ -5,7 +5,6 @@ import { QualifiedApplicantTemplate } from '@/components/Emails/QualifiedApplica
 import { ApplicantTypes } from '@/types'
 import { createClient } from '@supabase/supabase-js'
 import { getResend } from '@/lib/resend'
-import type * as React from 'react'
 
 interface RequestParamTypes {
   applicant: ApplicantTypes
@@ -45,10 +44,7 @@ export async function POST(req: NextRequest) {
         from: 'DepEd Bayugan (No-reply) <noreply@sortbrite.com>',
         to: [params.email],
         subject: 'Initial Evaluation Result',
-        react: QualifiedApplicantTemplate(
-          params.applicant,
-          ierData
-        ) as React.ReactElement
+        react: QualifiedApplicantTemplate(params.applicant, ierData)
       })
 
       if (error) {
@@ -62,10 +58,7 @@ export async function POST(req: NextRequest) {
         from: 'DepEd Bayugan (No-reply) <noreply@sortbrite.com>',
         to: [params.email],
         subject: 'Initial Evaluation Result',
-        react: DisqualifiedApplicantTemplate(
-          params.applicant,
-          ierData
-        ) as React.ReactElement
+        react: DisqualifiedApplicantTemplate(params.applicant, ierData)
       })
 
       if (error) {

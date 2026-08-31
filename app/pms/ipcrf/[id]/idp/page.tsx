@@ -5,7 +5,7 @@ import { useSupabase } from '@/context/SupabaseProvider'
 import { updateList as updateList2 } from '@/GlobalRedux/Features/list2Slice'
 import { updateList } from '@/GlobalRedux/Features/listSlice'
 import { IpcrfCompetencyRating, IpcrfObjectiveRating } from '@/types/pmsTypes'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { List } from './List'
 import { ListComp } from './ListComp'
@@ -16,9 +16,9 @@ type entriesType = {
   score: any
 }
 
-export default function IDPPage({ params }: { params: { id: string } }) {
+export default function IDPPage({ params }: { params: Promise<{ id: string }> }) {
   const { supabase } = useSupabase()
-  const ipcrfId = Number(params.id)
+  const ipcrfId = Number(use(params).id)
 
   // Redux staff
   const dispatch = useDispatch()

@@ -1,5 +1,3 @@
-import React from 'react'
-
 export default function TwoColTableLoading () {
   return (
     <div className="animate-pulse mx-4 my-4">

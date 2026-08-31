@@ -3,7 +3,7 @@ import {
   CalendarIcon,
   ClipboardDocumentCheckIcon,
 } from "@heroicons/react/20/solid";
-import React, { useState } from "react";
+import { useState } from "react";
 
 interface FilterTypes {
   setFilterYear: (year: string) => void;

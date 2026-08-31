@@ -9,7 +9,7 @@ export default async function Layout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const {
     data: { session }

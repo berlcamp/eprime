@@ -1,5 +1,3 @@
-import React from 'react'
-
 import type { CustomButtonTypes } from '@/types'
 
 function CustomButton ({ isDisabled, btnType, containerStyles, textStyles, title, rightIcon, handleClick }: CustomButtonTypes) {

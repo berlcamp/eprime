@@ -20,9 +20,9 @@ interface ModalProps {
 
 type Attachment = {
   name: string
-  id?: string
-  updated_at?: string
-  created_at?: string
+  id?: string | null
+  updated_at?: string | null
+  created_at?: string | null
   // ... other properties depending on your storage listing response
 }
 

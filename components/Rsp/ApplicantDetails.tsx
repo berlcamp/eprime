@@ -540,7 +540,6 @@ const IerInput = ({
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
-              placeholder="IER Type"
               className="app__select_standard"
               required
             >
@@ -584,7 +583,6 @@ const IerInput = ({
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              placeholder="Status"
               className="app__select_standard"
               required
             >

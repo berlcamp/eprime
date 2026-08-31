@@ -1,5 +1,4 @@
 'use client'
-import React from 'react'
 import uuid from 'react-uuid'
 
 export default function TableRowLoading ({ cols, rows }: { cols: number, rows: number }) {

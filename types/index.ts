@@ -707,7 +707,7 @@ export interface DocTypes {
 }
 
 export interface AttachmentTypes {
-  id: string;
+  id: string | null;
   name: string;
 }
 

@@ -26,16 +26,16 @@ import { format } from 'date-fns'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound, useRouter, useSearchParams } from 'next/navigation'
-import { type ChangeEvent, useEffect, useState } from 'react'
+import { type ChangeEvent, use, useEffect, useState } from 'react'
 import Avatar from 'react-avatar'
 import { BsCamera } from 'react-icons/bs'
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const [loading, setLoading] = useState(false)
   const [isFound, setIsFound] = useState(true)
   const [userData, setUserData] = useState<Employee | null>(null)
 
-  const userId = params.id
+  const { id: userId } = use(params)
   const searchParams = useSearchParams()
   const page = searchParams.get('page')
 
