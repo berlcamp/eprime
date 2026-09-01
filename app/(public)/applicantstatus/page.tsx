@@ -1,6 +1,6 @@
 'use client'
 import Footer from '@/components/Footer'
-import { TopBarDark } from '@/components/index'
+import { CustomButton, TopBarDark } from '@/components/index'
 import TwoColTableLoading from '@/components/Loading/TwoColTableLoading'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
@@ -10,11 +10,14 @@ import { format, isFuture } from 'date-fns'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import EditDetailsForm from './EditDetailsForm'
 
 const Page: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [isCodeFound, setIsCodeFound] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
+  const [isEditingDetails, setIsEditingDetails] = useState(false)
+  const [detailsSaved, setDetailsSaved] = useState(false)
 
   const [applicantDetails, setApplicantDetails] =
     useState<ApplicantTypes | null>(null)
@@ -131,10 +134,11 @@ const Page: React.FC = () => {
   // Function to be called when the user types or pastes the 5th character
   const handleSearch = async () => {
     setLoading(true)
+    setIsEditingDetails(false)
     const { data } = await supabase
       .from('hrm_ranking_applicants')
       .select(
-        '*, ranking:ranking_id(status,days_to_comply,display_ier,type,year,position:position_id(name),committees:hrm_ranking_committees(*),qualifications:hrm_ranking_qualifications(*)),applicant_documents:hrm_ranking_applicant_documents(*, qualification:qualification_id(*))'
+        '*, ranking:ranking_id(status,days_to_comply,display_ier,type,year,department,position:position_id(name),committees:hrm_ranking_committees(*),qualifications:hrm_ranking_qualifications(*)),applicant_documents:hrm_ranking_applicant_documents(*, qualification:qualification_id(*))'
       )
       .eq('code', inputValue)
       .maybeSingle()
@@ -183,8 +187,17 @@ const Page: React.FC = () => {
     )
   }
 
+  // Editing is allowed in the same window as document uploads: the ranking is
+  // still open and the compliance deadline has not passed.
+  const canEditDetails =
+    applicantDetails !== null &&
+    applicantDetails.ranking.status === 'Open' &&
+    isDateInPast(applicantDetails.ranking.days_to_comply)
+
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
+    // The confirmation belongs to the code that was just saved, not the next one.
+    setDetailsSaved(false)
     setInputValue(value)
   }
 
@@ -292,6 +305,24 @@ const Page: React.FC = () => {
                   )}
                 </>
               </div>
+              {detailsSaved && !isEditingDetails && (
+                <div className="mt-4 text-green-700 bg-green-100 border border-green-500 text-xs p-2">
+                  Your details have been updated.
+                </div>
+              )}
+              {canEditDetails && !isEditingDetails && (
+                <div className="mt-4">
+                  <CustomButton
+                    btnType="button"
+                    title="Edit My Details"
+                    handleClick={() => {
+                      setDetailsSaved(false)
+                      setIsEditingDetails(true)
+                    }}
+                    containerStyles="app__btn_blue"
+                  />
+                </div>
+              )}
               {applicantDetails.ranking.status === 'Closed' && (
                 <div className="mt-4">
                   <div className="text-gray-600">
@@ -334,6 +365,25 @@ const Page: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {canEditDetails && isEditingDetails && applicantDetails && (
+            <div className="mb-8">
+              <div className="text-gray-600 text-sm mb-2">
+                Update your personal details below:
+              </div>
+              <EditDetailsForm
+                applicant={applicantDetails}
+                code={inputValue}
+                onCancel={() => {
+                  setIsEditingDetails(false)
+                }}
+                onSaved={() => {
+                  setDetailsSaved(true)
+                  void handleSearch()
+                }}
+              />
             </div>
           )}
 
