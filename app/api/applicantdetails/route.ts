@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     const { data: applicant, error: lookupError } = await supabase
       .from('hrm_ranking_applicants')
-      .select('id, ranking_id, ranking:ranking_id(status,days_to_comply)')
+      .select('id, ranking_id, email, ranking:ranking_id(status,days_to_comply)')
       .eq('code', code)
       .maybeSingle()
 
@@ -126,13 +126,16 @@ export async function POST(req: NextRequest) {
     }
 
     // The apply form treats email as unique per ranking; keep that true on edit.
-    if (typeof updates.email === 'string') {
+    // Only when the address actually changes: some existing rows already share
+    // one, and those applicants must still be able to save their other fields.
+    if (typeof updates.email === 'string' && updates.email !== applicant.email) {
       const { data: duplicate, error: duplicateError } = await supabase
         .from('hrm_ranking_applicants')
         .select('id')
         .eq('ranking_id', applicant.ranking_id)
         .eq('email', updates.email)
         .neq('id', applicant.id)
+        .limit(1)
         .maybeSingle()
 
       if (duplicateError) {
