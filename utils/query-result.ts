@@ -134,7 +134,32 @@ function toUserMessage(cause: string, code?: string): string {
     return 'This record is still linked to other records and cannot be saved or removed.'
   }
 
-  if (cause.includes('Failed to fetch') || cause.includes('NetworkError')) {
+  // The app is asking for a function, table or column the database does not
+  // have — a deploy whose migrations were never applied. Users retried these
+  // for a full day reading only "please try again", so say what it really is.
+  // PGRST202 = missing function, PGRST203 = ambiguous overload,
+  // PGRST204/205 = missing column/table.
+  if (
+    code === 'PGRST202' ||
+    code === 'PGRST203' ||
+    code === 'PGRST204' ||
+    code === 'PGRST205' ||
+    cause.includes('in the schema cache')
+  ) {
+    return 'This part of the system is missing a database update on the server. Retrying will not help — please report this to the system administrator.'
+  }
+
+  // PostgREST is reloading its schema cache, e.g. just after a migration.
+  if (cause.includes('schema cache. Retrying')) {
+    return 'The server is finishing an update. Please wait a moment and try again.'
+  }
+
+  if (
+    cause.includes('Failed to fetch') ||
+    cause.includes('NetworkError') ||
+    // Safari's wording for the same thing.
+    cause.includes('Load failed')
+  ) {
     return 'Could not reach the server. Please check your internet connection and try again.'
   }
 
