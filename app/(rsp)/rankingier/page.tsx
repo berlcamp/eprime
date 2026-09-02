@@ -93,6 +93,13 @@ const documentRemarks = (
 ): ApplicantDocuments[] =>
   (documents ?? []).filter((doc) => doc.remarks?.trim() !== '')
 
+/**
+ * The reason an evaluator typed when disqualifying the applicant. Stored as
+ * text with a '' default, so a missing one is an empty string rather than null.
+ */
+const disqualificationReason = (item: ApplicantTypes): string =>
+  item.reason_for_disqualification?.trim() ?? ''
+
 const formatDocumentRemarks = (
   documents: ApplicantDocuments[] | undefined
 ): string =>
@@ -213,7 +220,13 @@ const Page: React.FC = () => {
         // shows the first line only and the rest read as missing.
         style: { alignment: { wrapText: true, vertical: 'top' as const } }
       })),
-      { header: 'Evaluation Result', key: 'remarks', width: 20 }
+      { header: 'Evaluation Status', key: 'evaluation_status', width: 20 },
+      {
+        header: 'Reason for Disqualification',
+        key: 'reason_for_disqualification',
+        width: 40,
+        style: { alignment: { wrapText: true, vertical: 'top' as const } }
+      }
       // Add more columns based on your data structure
     ]
 
@@ -242,9 +255,8 @@ const Page: React.FC = () => {
         eligibility: formatIerCell(ier.Eligibility),
         other: formatIerCell(ier.Other),
         document_remarks: formatDocumentRemarks(item.applicant_documents),
-        remarks: `${item.evaluation_status} / ${
-          item.reason_for_disqualification ?? ''
-        }`
+        evaluation_status: item.evaluation_status ?? '',
+        reason_for_disqualification: disqualificationReason(item)
       })
     })
 
@@ -274,10 +286,11 @@ const Page: React.FC = () => {
   const rows = list.map((item) => ({
     item,
     ier: groupIer(item.ier),
-    documents: documentRemarks(item.applicant_documents)
+    documents: documentRemarks(item.applicant_documents),
+    reason: disqualificationReason(item)
   }))
   const hasOtherIer = rows.some((row) => row.ier.Other.length > 0)
-  const columnCount = hasOtherIer ? 16 : 15
+  const columnCount = hasOtherIer ? 17 : 16
 
   // Check access from permission settings or Super Admins
   if (
@@ -337,12 +350,15 @@ const Page: React.FC = () => {
                     <th className="app__th min-w-[12rem]">Other IER Entries</th>
                   )}
                   <th className="app__th min-w-[12rem]">Document Remarks</th>
-                  <th className="app__th">Evaluation Result</th>
+                  <th className="app__th">Evaluation Status</th>
+                  <th className="app__th min-w-[12rem]">
+                    Reason for Disqualification
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {!isDataEmpty &&
-                  rows.map(({ item, ier, documents }, index) => (
+                  rows.map(({ item, ier, documents, reason }, index) => (
                     <tr key={index} className="app__tr">
                       <td className="w-6 pl-4 app__td">{index + 1}.</td>
                       <th className="app__th_firstcol">
@@ -385,9 +401,13 @@ const Page: React.FC = () => {
                           ))}
                         </div>
                       </td>
+                      <td className="app__td">{item.evaluation_status}</td>
                       <td className="app__td">
-                        {item.evaluation_status} /{' '}
-                        {item.reason_for_disqualification ?? ''}
+                        {reason === '' ? (
+                          <span className="text-gray-400">&mdash;</span>
+                        ) : (
+                          <span className="whitespace-pre-line">{reason}</span>
+                        )}
                       </td>
                     </tr>
                   ))}
