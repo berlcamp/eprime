@@ -72,6 +72,15 @@ interface RevertLeaveResult {
   needs_manual_service_record_check?: boolean;
 }
 
+/** Shape returned by the reset_request_tracker RPC. */
+interface ResetRequestResult {
+  reset: boolean;
+  reason?: string;
+  previous_status?: string;
+  restored_credits?: string[];
+  needs_manual_service_record_check?: boolean;
+}
+
 /** How a status change records itself in the tracker's audit trail. */
 type TransitionLog =
   | { kind: "log"; message: string }
@@ -379,6 +388,11 @@ export default function DetailsModal({
     if (action === "Cancel") {
       setConfirmMessage("Are you sure you want to Cancel this request?");
     }
+    if (action === "Reset") {
+      setConfirmMessage(
+        "Reset this request back to its first stage? Any leave credits, CTO/COC and step increment taken at approval are given back, the leave card entry is removed, and the credits certification is cleared so it has to be done again. The request history is kept.",
+      );
+    }
     if (action === "Forward") {
       if (!selectedUser) {
         return;
@@ -407,6 +421,9 @@ export default function DetailsModal({
     }
     if (showConfirmModal === "Cancel") {
       void handleConfirmedCancel();
+    }
+    if (showConfirmModal === "Reset") {
+      void handleConfirmedReset();
     }
     setShowConfirmModal("");
     setConfirmMessage("");
@@ -836,6 +853,108 @@ export default function DetailsModal({
     } catch (e) {
       console.error(e);
       setToast("error", "Revert failed, please reload the page and try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Sends a request all the way back to where it started: For Verification,
+  // forwarded to its original receiver, with no certification attached. Any
+  // leave credits, COC and step increment taken at approval are given back,
+  // and the leave card entry removed. Super admin only — like the revert
+  // above, this mutates financial data. See
+  // supabase/migrations/0023_reset_request_tracker.sql
+  const handleConfirmedReset = async () => {
+    if (saving) return;
+
+    setSaving(true);
+
+    try {
+      const result = await runQuery<ResetRequestResult>(
+        {
+          transaction: "Reset Request",
+          table: "hrm_request_trackers",
+          payload: { trackerId: documentData.id },
+        },
+        supabase.rpc("reset_request_tracker", {
+          p_tracker_id: documentData.id,
+          p_resetter_id: session?.user.id,
+          p_lwop_min_days: LWOP_SERVICE_RECORD_MIN_DAYS,
+        }),
+      );
+
+      if (!result.ok) {
+        setToast(
+          "error",
+          `Reset failed and nothing was changed. ${result.error.message}`,
+        );
+        return;
+      }
+
+      // The RPC refuses a request already sitting at its opening stage, so
+      // this is a double click or a stale modal rather than a failure.
+      if (!result.data?.reset) {
+        setToast(
+          "error",
+          "This request is already at its first stage, so there is nothing to reset. Please reload the page.",
+        );
+        setUpdateStatusFlow(!updateStatusFlow);
+        return;
+      }
+
+      const restored = result.data.restored_credits ?? [];
+      const needsManualServiceRecordCheck =
+        result.data.needs_manual_service_record_check === true;
+
+      // Mirror what the RPC wrote, so the modal and the list stop offering
+      // actions that no longer apply to a request back at the start.
+      const newData = {
+        current_status: "For Verification",
+        current_tracker: "Forwarded",
+        current_approver_id: documentData.created_by,
+        approved_by: null,
+        date_approved: null,
+        recommended_by: null,
+        date_recommeded: null,
+        certified_by: null,
+        certification_as_of: null,
+        credits_used: null,
+      };
+
+      const items = [...globallist];
+      const updatedData = { ...newData, id: documentData.id };
+      const foundIndex = items.findIndex((x) => x.id === updatedData.id);
+      if (foundIndex >= 0) {
+        items[foundIndex] = { ...items[foundIndex], ...updatedData };
+        dispatch(updateList(items));
+        setDocumentData(items[foundIndex]); // update ui with new data
+
+        // Notify requester and follower
+        void handleNotify(items[foundIndex], "Reset");
+      }
+
+      setToast(
+        "success",
+        [
+          "Reset to For Verification.",
+          restored.length > 0 ? `Restored: ${restored.join(", ")}.` : "",
+          needsManualServiceRecordCheck
+            ? "Please manually review the Service Record entry."
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
+      );
+
+      // Recount sidebar counter
+      dispatch(recount());
+
+      refresh?.();
+
+      setUpdateStatusFlow(!updateStatusFlow);
+    } catch (e) {
+      console.error(e);
+      setToast("error", "Reset failed, please reload the page and try again.");
     } finally {
       setSaving(false);
     }
@@ -1392,6 +1511,34 @@ export default function DetailsModal({
                       deducted leave credit/CTO balances and removes the
                       leave card entry, then sends it back to &apos;Approval
                       Recommended&apos; so it can be certified and re-approved.
+                    </div>
+                  </div>
+                )}
+              {/* Reset to first stage (super admin only) - for a request that
+                  has to start over rather than step back one stage */}
+              {isSuperAdmin &&
+                documentData.type === "Leave" &&
+                !(
+                  documentData.current_status === "For Verification" &&
+                  !documentData.certified_by
+                ) && (
+                  <div className="mb-6">
+                    <div className="space-x-2">
+                      <CustomButton
+                        containerStyles="app__btn_red"
+                        title={saving ? "Resetting..." : "Reset Request"}
+                        btnType="button"
+                        handleClick={() => HandleConfirm("Reset")}
+                      />
+                    </div>
+                    <div className="text-[10px] mt-1 text-gray-600">
+                      Sends this request all the way back to &apos;For
+                      Verification&apos; with its original receiver, and
+                      clears the credits certification so it has to be done
+                      again. If the request was approved, the deducted leave
+                      credit/CTO balances and the step increment are given
+                      back and the leave card entry is removed. The request
+                      history is kept.
                     </div>
                   </div>
                 )}

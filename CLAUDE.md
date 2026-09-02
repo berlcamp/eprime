@@ -438,6 +438,7 @@ re-implement these sequences in the browser.
 | `create_ranking` / `update_ranking` / `sync_ranking_qualifications` | 0020 | Save a ranking with its qualification standards (update kept, insert new, delete removed) |
 | `create_ranking_applicant` | 0021 | Create an applicant with its opening flow row |
 | `create_ranking_committee` | 0022 | Add a committee member with the criteria they may score |
+| `reset_request_tracker` | 0023 | Send a request back to its opening stage: restore credits/COC/step increment if it was approved, clear the certification, keep the history |
 | `hrm_text_to_numeric` | 0015 | Leave amounts are stored as text; non-numeric reads as 0 rather than aborting |
 
 ---
