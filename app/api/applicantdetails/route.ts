@@ -11,6 +11,10 @@ import { logError } from '@/utils/fetchApi'
  * also keeps the applicant from touching the fields the committee owns
  * (evaluation_status, code, ranking_id, points, ...): only the columns listed in
  * EDITABLE_FIELDS are ever written, and only for the row whose code was sent.
+ *
+ * Deliberately not gated on the ranking status or the compliance deadline:
+ * those bound the document uploads, while a personal detail stays correctable
+ * for as long as the application exists.
  */
 const EDITABLE_FIELDS = [
   'lastname',
@@ -33,19 +37,6 @@ const EDITABLE_FIELDS = [
   'contact_number',
   'specific_major'
 ] as const
-
-/** Same rule the status page uses to gate uploads: today or later is still open. */
-const isWithinComplianceDate = (dateString: string | null) => {
-  if (!dateString) return false
-
-  const deadline = new Date(dateString)
-  if (isNaN(deadline.getTime())) return false
-
-  const startOfDay = (d: Date) =>
-    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
-
-  return startOfDay(deadline) >= startOfDay(new Date())
-}
 
 export async function POST(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
@@ -73,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     const { data: applicant, error: lookupError } = await supabase
       .from('hrm_ranking_applicants')
-      .select('id, ranking_id, email, ranking:ranking_id(status,days_to_comply)')
+      .select('id, ranking_id, email')
       .eq('code', code)
       .maybeSingle()
 
@@ -91,25 +82,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'No matching application for this code.' },
         { status: 404 }
-      )
-    }
-
-    const ranking = applicant.ranking as unknown as {
-      status: string
-      days_to_comply: string | null
-    } | null
-
-    if (ranking?.status !== 'Open') {
-      return NextResponse.json(
-        { error: 'This ranking is already closed. Details can no longer be edited.' },
-        { status: 409 }
-      )
-    }
-
-    if (!isWithinComplianceDate(ranking.days_to_comply)) {
-      return NextResponse.json(
-        { error: 'The compliance due date has passed. Details can no longer be edited.' },
-        { status: 409 }
       )
     }
 

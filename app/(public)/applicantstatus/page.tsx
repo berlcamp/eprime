@@ -187,12 +187,11 @@ const Page: React.FC = () => {
     )
   }
 
-  // Editing is allowed in the same window as document uploads: the ranking is
-  // still open and the compliance deadline has not passed.
-  const canEditDetails =
-    applicantDetails !== null &&
-    applicantDetails.ranking.status === 'Open' &&
-    isDateInPast(applicantDetails.ranking.days_to_comply)
+  // Personal details can be corrected at any time. The ranking status and the
+  // compliance deadline gate the document uploads below, not this form: a
+  // misspelled name or a stale contact number is still worth fixing after a
+  // ranking has closed, since the IES and appointment documents print from it.
+  const canEditDetails = applicantDetails !== null
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
