@@ -14,7 +14,8 @@ import {
   runQuery,
   type QueryError
 } from '@/utils/query-result'
-import { useEffect, useState } from 'react'
+import { logError } from '@/utils/error-log'
+import { useEffect, useRef, useState } from 'react'
 import IerData from './IerData'
 
 interface ModalProps {
@@ -687,6 +688,14 @@ const IerInput = ({
   )
 }
 
+/**
+ * Evaluator remarks on a submitted document.
+ *
+ * This used to save on the Enter key alone, so an evaluator who typed a remark
+ * and then clicked elsewhere -- or closed the modal -- lost it with nothing to
+ * say so. It now saves on blur and on unmount as well, and only when the text
+ * actually differs from what the database already holds.
+ */
 const RemarksInput = ({
   docId,
   remarks
@@ -699,24 +708,53 @@ const RemarksInput = ({
   const { setToast } = useFilter()
   const { supabase } = useSupabase()
 
-  const handleAddRemarks = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault() // Prevent default form submission behavior
+  // Read by the unmount handler, which runs after the last render and so
+  // cannot see the current state through the closure it was created with.
+  const latest = useRef({ value: remarks, saved: remarks })
+  latest.current.value = inputValue
 
-      const { error } = await supabase
-        .from('hrm_ranking_applicant_documents')
-        .update({
-          remarks: inputValue
-        })
-        .eq('id', docId)
+  const saveRemarks = async () => {
+    const { value, saved } = latest.current
+    if (value === saved) return
 
-      if (error) {
-        setToast('error', 'Something went wrong, please reload the page.')
-      } else {
-        setToast('success', 'Remarks successfully saved.')
-      }
+    // Claimed before the await so a blur landing on top of the Enter key does
+    // not send the same update twice.
+    latest.current.saved = value
+
+    const { error } = await supabase
+      .from('hrm_ranking_applicant_documents')
+      .update({
+        remarks: value
+      })
+      .eq('id', docId)
+
+    if (error) {
+      latest.current.saved = saved
+      void logError(
+        'Save applicant document remarks',
+        'hrm_ranking_applicant_documents',
+        JSON.stringify({ docId, remarks: value }),
+        error.message
+      )
+      setToast('error', 'Something went wrong, please reload the page.')
+    } else {
+      setToast('success', 'Remarks successfully saved.')
     }
   }
+
+  const handleAddRemarks = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault() // Prevent default form submission behavior
+      void saveRemarks()
+    }
+  }
+
+  useEffect(() => {
+    // Closing the modal with Escape unmounts the input without blurring it.
+    return () => {
+      void saveRemarks()
+    }
+  }, [])
 
   return (
     <input
@@ -725,6 +763,9 @@ const RemarksInput = ({
       value={inputValue}
       onChange={(e) => setInputValue(e.target.value)}
       onKeyDown={handleAddRemarks}
+      onBlur={() => {
+        void saveRemarks()
+      }}
       className="app__input_standard"
     />
   )
