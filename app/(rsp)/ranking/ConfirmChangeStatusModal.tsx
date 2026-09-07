@@ -22,26 +22,42 @@ export default function ConfirmChangeStatusModal({
 }: ModalProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const [reason, setReason] = useState('')
-  //
+
+  // The keydown listener is registered once, so it cannot reach the current
+  // reason through the closure it was created with. It used to confirm with
+  // the empty string the first render captured, so any Enter key filed the
+  // disqualification with no reason at all.
+  const latest = useRef({ reason, onConfirm, onCancel })
+  useEffect(() => {
+    latest.current = { reason, onConfirm, onCancel }
+  })
+
   const handleConfirm = () => {
     onConfirm(reason)
   }
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      onCancel()
-    }
-    if (event.key === 'Enter') {
-      onConfirm(reason)
-    }
-  }
-
   useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const { reason, onConfirm, onCancel } = latest.current
+
+      if (event.key === 'Escape') {
+        onCancel()
+        return
+      }
+
+      if (event.key === 'Enter') {
+        // Enter inside the reason box starts a new line. Confirming on it cut
+        // a multi-line reason off at the first break.
+        if (event.target instanceof HTMLTextAreaElement) return
+        onConfirm(reason)
+      }
+    }
+
     document.addEventListener('keydown', handleKeyDown)
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [wrapperRef])
+  }, [])
 
   return (
     <div ref={wrapperRef} className="app__modal_wrapper">
