@@ -15,6 +15,7 @@ import {
   type QueryError
 } from '@/utils/query-result'
 import { logError } from '@/utils/error-log'
+import { DisqualificationReason } from '@/utils/data-helpers'
 import { useEffect, useRef, useState } from 'react'
 import IerData from './IerData'
 
@@ -528,6 +529,20 @@ const ApplicantDetails = ({
                   </div>
                 )}
               <div className="mt-8 text-center">IER Data</div>
+              {/* The modal listed the IER entries a disqualification rests on
+                  but never the disqualification itself, so the reason typed on
+                  Ranking Applicants was invisible here. */}
+              {applicantData.evaluation_status === 'Disqualified' &&
+                DisqualificationReason(applicantData) !== '' && (
+                  <div className="m-4 border border-red-300 bg-red-50 p-3">
+                    <div className="app__label_standard">
+                      Reason for Disqualification:
+                    </div>
+                    <div className="whitespace-pre-line text-sm text-red-700">
+                      {DisqualificationReason(applicantData)}
+                    </div>
+                  </div>
+                )}
               {evaluators.some(
                 (evaluator) => evaluator.user_id === session?.user.id
               ) && (

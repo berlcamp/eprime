@@ -17,7 +17,10 @@ import {
   RankingEvaluatorTypes,
   RankingTypes
 } from '@/types'
-import { CommitteeAccumulatedPoints } from '@/utils/data-helpers'
+import {
+  CommitteeAccumulatedPoints,
+  DisqualificationReason
+} from '@/utils/data-helpers'
 import { logError } from '@/utils/fetchApi'
 import { Menu, Transition } from '@headlessui/react'
 import {
@@ -745,6 +748,18 @@ const RankingApplicants = ({
                               </span>
                             )}
                           </div>
+                          {/* The reason typed into the disqualification modal.
+                              Without it the list showed the verdict with no
+                              trace of why, so it had to be looked up one
+                              applicant at a time. */}
+                          {item.applicant.evaluation_status ===
+                            'Disqualified' &&
+                            DisqualificationReason(item.applicant) !== '' && (
+                              <div className="mt-1 max-w-xs whitespace-pre-line text-xs text-gray-600">
+                                <span className="font-medium">Reason:</span>{' '}
+                                {DisqualificationReason(item.applicant)}
+                              </div>
+                            )}
                         </td>
                         <td className="app__td">
                           {item.accumulated_points && (

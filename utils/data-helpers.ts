@@ -1,4 +1,4 @@
-import { RankingCommitteeTypes } from '@/types'
+import { ApplicantTypes, RankingCommitteeTypes } from '@/types'
 import { createBrowserClient } from './supabase-browser'
 
 export function CommitteeAccumulatedPoints(
@@ -53,6 +53,18 @@ export function CommitteeAccumulatedPoints(
   } else {
     return null
   }
+}
+
+/**
+ * The reason an evaluator typed into the disqualification modal on Ranking
+ * Applicants. Stored as text with a '' default, so a missing one reads as an
+ * empty string rather than null, and a reason of nothing but whitespace reads
+ * the same as none at all.
+ */
+export function DisqualificationReason(
+  applicant: Pick<ApplicantTypes, 'reason_for_disqualification'>
+): string {
+  return applicant.reason_for_disqualification?.trim() ?? ''
 }
 
 export async function CheckIfSchoolHead(id: string) {

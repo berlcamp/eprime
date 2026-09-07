@@ -12,6 +12,7 @@ import {
 import { superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
+import { DisqualificationReason } from '@/utils/data-helpers'
 import { runListQuery, type QueryError } from '@/utils/query-result'
 import Excel from 'exceljs'
 import { saveAs } from 'file-saver'
@@ -92,13 +93,6 @@ const documentRemarks = (
   documents: ApplicantDocuments[] | undefined
 ): ApplicantDocuments[] =>
   (documents ?? []).filter((doc) => doc.remarks?.trim() !== '')
-
-/**
- * The reason an evaluator typed when disqualifying the applicant. Stored as
- * text with a '' default, so a missing one is an empty string rather than null.
- */
-const disqualificationReason = (item: ApplicantTypes): string =>
-  item.reason_for_disqualification?.trim() ?? ''
 
 const formatDocumentRemarks = (
   documents: ApplicantDocuments[] | undefined
@@ -256,7 +250,7 @@ const Page: React.FC = () => {
         other: formatIerCell(ier.Other),
         document_remarks: formatDocumentRemarks(item.applicant_documents),
         evaluation_status: item.evaluation_status ?? '',
-        reason_for_disqualification: disqualificationReason(item)
+        reason_for_disqualification: DisqualificationReason(item)
       })
     })
 
@@ -287,7 +281,7 @@ const Page: React.FC = () => {
     item,
     ier: groupIer(item.ier),
     documents: documentRemarks(item.applicant_documents),
-    reason: disqualificationReason(item)
+    reason: DisqualificationReason(item)
   }))
   const hasOtherIer = rows.some((row) => row.ier.Other.length > 0)
   const columnCount = hasOtherIer ? 17 : 16
