@@ -67,6 +67,9 @@ const RankingApplicants = ({
   const [selectedStatus, setSelectedStatus] = useState('')
   const [refetch, setRefetch] = useState(false)
   const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
+  // Set when the modal is correcting the reason on an applicant who is
+  // already disqualified, rather than moving them to a new status.
+  const [editingReasonOnly, setEditingReasonOnly] = useState(false)
 
   const [evaluators, setEvaluators] = useState<RankingEvaluatorTypes[] | []>([])
   const [searchKeyword, setSearchKeyword] = useState('')
@@ -107,15 +110,30 @@ const RankingApplicants = ({
 
   const handleChangeEvaluationStatus = async (reason: string) => {
     if (!selectedItem) return
+
+    // Correcting a reason must not blank it out -- that is the state we are
+    // fixing. The status flow keeps its old behaviour of allowing none.
+    if (editingReasonOnly && reason.trim() === '') {
+      setToast('error', 'Please enter a reason for disqualification.')
+      return
+    }
+
     try {
       const { error } = await supabase
         .from('hrm_ranking_applicants')
-        .update({
-          evaluation_status: selectedStatus,
-          reason_for_disqualification: reason,
-          // Dates the HR screening stage of the turnaround report.
-          evaluated_at: new Date().toISOString()
-        })
+        .update(
+          editingReasonOnly
+            ? // The applicant stays disqualified and keeps the date they were
+              // screened on, so the turnaround report is not reset by a
+              // correction made weeks later.
+              { reason_for_disqualification: reason }
+            : {
+                evaluation_status: selectedStatus,
+                reason_for_disqualification: reason,
+                // Dates the HR screening stage of the turnaround report.
+                evaluated_at: new Date().toISOString()
+              }
+        )
         .eq('id', selectedItem.id)
 
       if (error) {
@@ -141,12 +159,20 @@ const RankingApplicants = ({
     }
   }
 
+  const triggerEditDisqualificationReason = (applicant: ApplicantTypes) => {
+    setSelectedItem(applicant)
+    setSelectedStatus('Disqualified')
+    setEditingReasonOnly(true)
+    setShowChangeStatusModal(true)
+  }
+
   const triggerChangeEvaluationStatus = async (
     applicant: ApplicantTypes,
     status: string
   ) => {
     setSelectedItem(applicant)
     setSelectedStatus(status)
+    setEditingReasonOnly(false)
     setShowChangeStatusModal(true)
   }
 
@@ -589,6 +615,28 @@ const RankingApplicants = ({
                                           </div>
                                         </Menu.Item>
                                       )}
+                                      {/* Once an applicant is disqualified the
+                                          item above disappears, so there was no
+                                          way back into the reason box to fix a
+                                          reason that saved blank. */}
+                                      {item.applicant.evaluation_status ===
+                                        'Disqualified' && (
+                                        <Menu.Item>
+                                          <div
+                                            onClick={() =>
+                                              triggerEditDisqualificationReason(
+                                                item.applicant
+                                              )
+                                            }
+                                            className="app__dropdown_item"
+                                          >
+                                            <UserIcon className="w-4 h-4" />
+                                            <span>
+                                              Edit Reason for Disqualification
+                                            </span>
+                                          </div>
+                                        </Menu.Item>
+                                      )}
                                       {item.applicant.evaluation_status !==
                                         'For Evaluation' && (
                                         <Menu.Item>
@@ -828,10 +876,23 @@ const RankingApplicants = ({
       {/* Confirm Change Status Modal */}
       {showChangeStatusModal && (
         <ConfirmChangeStatusModal
-          header="Confirm Change"
-          btnText="Confirm"
+          header={
+            editingReasonOnly
+              ? 'Edit Reason for Disqualification'
+              : 'Confirm Change'
+          }
+          btnText={editingReasonOnly ? 'Save Reason' : 'Confirm'}
           status={selectedStatus}
-          message="Please confirm this action"
+          message={
+            editingReasonOnly
+              ? 'This updates the reason only. The applicant stays disqualified.'
+              : 'Please confirm this action'
+          }
+          initialReason={
+            editingReasonOnly
+              ? selectedItem?.reason_for_disqualification ?? ''
+              : ''
+          }
           onConfirm={handleChangeEvaluationStatus}
           onCancel={() => setShowChangeStatusModal(false)}
         />

@@ -10,6 +10,9 @@ interface ModalProps {
   status: string
   header: string
   btnText: string
+  /** Prefills the reason box, so an existing reason can be corrected rather
+   *  than retyped from nothing. */
+  initialReason?: string
 }
 
 export default function ConfirmChangeStatusModal({
@@ -18,10 +21,11 @@ export default function ConfirmChangeStatusModal({
   status,
   btnText,
   message,
-  onCancel
+  onCancel,
+  initialReason = ''
 }: ModalProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const [reason, setReason] = useState('')
+  const [reason, setReason] = useState(initialReason)
 
   // The keydown listener is registered once, so it cannot reach the current
   // reason through the closure it was created with. It used to confirm with
