@@ -13,7 +13,7 @@ import {
 import { generateReferenceCode } from "@/utils/text-helper";
 import { useCallback, useEffect, useState } from "react";
 import "react-calendar/dist/Calendar.css";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 
 // Types
 import type {
@@ -135,7 +135,12 @@ const LeaveForm = ({ hideModal }: ModalProps) => {
   const watchedDays = watch("days") || "";
   const watchedLeaveFrom = watch("leave_from");
   const watchedLeaveTo = watch("leave_to");
-  const watchedLeaveDates = watch("leave_dates") || [];
+  // `watch` on a field array name only re-renders when the array itself
+  // changes (append/remove) -- editing a row's date left the day count on the
+  // previous render's value, so a two-date request saved as one day.
+  // `useWatch` subscribes to the rows themselves.
+  const watchedLeaveDates =
+    useWatch({ control, name: "leave_dates" }) || [];
 
   // Weekends and holidays are excluded together: if the request counts
   // weekends (Maternity, Adoption, SLBW, Rehabilitation, Study, or a manual
