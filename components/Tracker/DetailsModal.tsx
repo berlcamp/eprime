@@ -24,9 +24,15 @@ import type {
   AttachmentTypes,
   DocumentTypes,
   Employee,
+  HolidayTypes,
   namesType,
 } from "@/types";
 import { logError } from "@/utils/fetchApi";
+import {
+  countsCalendarDays,
+  fetchHolidayMap,
+  isWeekendDate,
+} from "@/utils/holiday-helper";
 import {
   runListQuery,
   runQuery,
@@ -210,9 +216,17 @@ export default function DetailsModal({
 
   // superAdmin: edit date range (leave and other request types)
   const [showEditLeaveDates, setShowEditLeaveDates] = useState(false);
+  const [leaveDatesMode, setLeaveDatesMode] = useState<
+    "Date Range" | "Specific Dates"
+  >("Date Range");
   const [leaveFrom, setLeaveFrom] = useState("");
   const [leaveTo, setLeaveTo] = useState("");
+  const [customLeaveDates, setCustomLeaveDates] = useState<string[]>([]);
   const [includeWeekend, setIncludeWeekend] = useState(false);
+  const [leaveHolidays, setLeaveHolidays] = useState<Map<string, HolidayTypes>>(
+    new Map(),
+  );
+  const holidaysLoaded = useRef(false);
   const [savingLeaveDates, setSavingLeaveDates] = useState(false);
   const [showEditDates, setShowEditDates] = useState(false);
   const [editDateFrom, setEditDateFrom] = useState("");
@@ -1022,33 +1036,112 @@ export default function DetailsModal({
     });
   };
 
+  // The editor follows the same counting rules as LeaveForm: weekends are
+  // dropped from a range unless they are counted, and holidays are dropped
+  // whenever weekends are -- a leave counted in calendar days counts holidays
+  // too.
+  const skipLeaveHolidays = !includeWeekend;
+
+  const editedLeaveDates: string[] = (() => {
+    if (leaveDatesMode === "Date Range") {
+      if (!leaveFrom || !leaveTo) return [];
+      const start = new Date(leaveFrom);
+      const end = new Date(leaveTo);
+      if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start)
+        return [];
+
+      return eachDayOfInterval({ start, end })
+        .map((date) => format(date, "yyyy-MM-dd"))
+        .filter((date) => includeWeekend || !isWeekendDate(date));
+    }
+
+    // Hand-picked dates are kept as chosen; the same day twice is a slip, not
+    // two days of leave.
+    return Array.from(
+      new Set(customLeaveDates.filter((date) => date !== "")),
+    ).sort();
+  })();
+
+  const excludedLeaveHolidays: HolidayTypes[] = skipLeaveHolidays
+    ? editedLeaveDates
+        .map((date) => leaveHolidays.get(date))
+        .filter((holiday): holiday is HolidayTypes => Boolean(holiday))
+    : [];
+
+  const countedLeaveDates = editedLeaveDates.filter(
+    (date) => !(skipLeaveHolidays && leaveHolidays.has(date)),
+  );
+
+  const handleOpenEditLeaveDates = () => {
+    const saved = [...(documentData.leave_dates ?? [])]
+      .map((d) => d.date?.slice(0, 10))
+      .filter(Boolean)
+      .sort();
+
+    setLeaveFrom(saved[0] ?? "");
+    setLeaveTo(saved[saved.length - 1] ?? "");
+    setCustomLeaveDates(saved.length > 0 ? saved : [""]);
+    // A request filed from a date range kept its from/to; one filed from
+    // hand-picked dates did not, so reopen it in the mode it was filed in.
+    setLeaveDatesMode(
+      documentData.leave_from && documentData.leave_to
+        ? "Date Range"
+        : "Specific Dates",
+    );
+    // "Include weekend" is not stored, so it is derived the same way the
+    // credits certification derives it.
+    setIncludeWeekend(countsCalendarDays(documentData.leave_type, saved));
+    setShowEditLeaveDates(true);
+  };
+
   const handleSaveLeaveDates = async () => {
-    if (!leaveFrom || !leaveTo || savingLeaveDates) return;
-    const start = new Date(leaveFrom);
-    const end = new Date(leaveTo);
-    if (start > end) {
-      setToast("error", "Leave From must be before Leave To.");
+    if (savingLeaveDates) return;
+
+    if (leaveDatesMode === "Date Range") {
+      if (!leaveFrom || !leaveTo) {
+        setToast("error", "Both Leave From and Leave To are required.");
+        return;
+      }
+      if (new Date(leaveFrom) > new Date(leaveTo)) {
+        setToast("error", "Leave From must be before Leave To.");
+        return;
+      }
+    }
+
+    if (countedLeaveDates.length === 0) {
+      setToast(
+        "error",
+        excludedLeaveHolidays.length > 0
+          ? "All of the selected dates are holidays. Please choose other dates."
+          : "Please choose the dates of this leave.",
+      );
       return;
     }
 
     setSavingLeaveDates(true);
     try {
-      const dateRange = eachDayOfInterval({ start, end }).filter(
-        (date) => includeWeekend || (date.getDay() !== 0 && date.getDay() !== 6),
-      );
-
       const paidCount = Number(documentData.leave_days_with_pay) || 0;
-      const insertArray = dateRange.map((date, index) => ({
+      const insertArray = countedLeaveDates.map((date, index) => ({
         tracker_id: documentData.id,
-        date: format(date, "yyyy-MM-dd"),
+        date,
         is_paid: index < paidCount,
       }));
+
+      // Hand-picked dates have no range, and the tracker is stored that way at
+      // creation, so the range is cleared rather than left pointing at dates
+      // that no longer bound the request.
+      const newLeaveFrom = leaveDatesMode === "Date Range" ? leaveFrom : "";
+      const newLeaveTo = leaveDatesMode === "Date Range" ? leaveTo : "";
+      const newLeaveDays = countedLeaveDates.length.toString();
 
       // Clearing the old dates and inserting the new ones has to be one
       // transaction: a failed insert after a committed delete used to leave the
       // request with no leave dates at all, while the toast only said the
-      // update had failed. See
-      // supabase/migrations/0018_replace_leave_dates.sql
+      // update had failed. The day count goes in the same transaction -- it
+      // used to be left behind, so the modal showed a count that disagreed with
+      // the dates beside it. See
+      // supabase/migrations/0018_replace_leave_dates.sql and
+      // supabase/migrations/0024_replace_leave_dates_with_day_count.sql
       const saved = await runQuery(
         {
           transaction: "Edit Leave Dates",
@@ -1058,8 +1151,9 @@ export default function DetailsModal({
         supabase.rpc("replace_leave_dates", {
           p_tracker_id: documentData.id,
           p_dates: insertArray.map(({ date, is_paid }) => ({ date, is_paid })),
-          p_leave_from: leaveFrom,
-          p_leave_to: leaveTo,
+          p_leave_from: newLeaveFrom,
+          p_leave_to: newLeaveTo,
+          p_leave_days: newLeaveDays,
         }),
       );
 
@@ -1075,11 +1169,15 @@ export default function DetailsModal({
         ...d,
         id: undefined,
       }));
+      const updatedFields = {
+        leave_from: newLeaveFrom,
+        leave_to: newLeaveTo,
+        leave_days: newLeaveDays,
+        leave_dates: updatedLeaveDates,
+      };
       setDocumentData((prev) => ({
         ...prev,
-        leave_from: leaveFrom,
-        leave_to: leaveTo,
-        leave_dates: updatedLeaveDates,
+        ...updatedFields,
       }));
 
       const items = [...globallist];
@@ -1087,9 +1185,7 @@ export default function DetailsModal({
       if (foundIndex >= 0) {
         items[foundIndex] = {
           ...items[foundIndex],
-          leave_from: leaveFrom,
-          leave_to: leaveTo,
-          leave_dates: updatedLeaveDates,
+          ...updatedFields,
         };
         dispatch(updateList(items));
       }
@@ -1302,6 +1398,16 @@ export default function DetailsModal({
   useEffect(() => {
     void fetchAttachments();
   }, []);
+
+  // Holidays are only needed once the date editor is opened, and only by a
+  // super admin, so the list is pulled then rather than with every request.
+  useEffect(() => {
+    if (!showEditLeaveDates || holidaysLoaded.current) return;
+    holidaysLoaded.current = true;
+    void (async () => {
+      setLeaveHolidays(await fetchHolidayMap());
+    })();
+  }, [showEditLeaveDates]);
 
   useEffect(() => {
     const checkedFollowStatus = async () => {
@@ -1713,7 +1819,9 @@ export default function DetailsModal({
                                   documentData.leave_dates?.map((day) => (
                                     <span
                                       className="inline-flex border border-blue-500 px-1 py-px font-semibold bg-blue-200 text-gray-900 mr-2"
-                                      key={day.id}
+                                      // Rows saved from the editor have no id
+                                      // until the request is refetched.
+                                      key={day.id ?? day.date}
                                     >
                                       {format(
                                         new Date(day.date),
@@ -1734,59 +1842,160 @@ export default function DetailsModal({
                                 {!showEditLeaveDates ? (
                                   <CustomButton
                                     containerStyles="app__btn_blue_xs"
-                                    title="Edit Date Range"
+                                    title="Edit Dates"
                                     btnType="button"
-                                    handleClick={() => {
-                                      const sorted = [
-                                        ...(documentData.leave_dates ?? []),
-                                      ].sort(
-                                        (a, b) =>
-                                          new Date(a.date).getTime() -
-                                          new Date(b.date).getTime(),
-                                      );
-                                      setLeaveFrom(
-                                        sorted[0]?.date?.slice(0, 10) ?? "",
-                                      );
-                                      setLeaveTo(
-                                        sorted[sorted.length - 1]?.date?.slice(
-                                          0,
-                                          10,
-                                        ) ?? "",
-                                      );
-                                      setShowEditLeaveDates(true);
-                                    }}
+                                    handleClick={handleOpenEditLeaveDates}
                                   />
                                 ) : (
                                   <div className="space-y-2">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <input
-                                        type="date"
-                                        value={leaveFrom}
-                                        onChange={(e) =>
-                                          setLeaveFrom(e.target.value)
-                                        }
-                                        className="app__input_standard max-w-[140px]"
-                                      />
-                                      <span className="text-gray-500">to</span>
-                                      <input
-                                        type="date"
-                                        value={leaveTo}
-                                        onChange={(e) =>
-                                          setLeaveTo(e.target.value)
-                                        }
-                                        className="app__input_standard max-w-[140px]"
-                                      />
+                                    <div className="flex items-center gap-4 text-xs">
+                                      {(
+                                        [
+                                          "Date Range",
+                                          "Specific Dates",
+                                        ] as const
+                                      ).map((mode) => (
+                                        <label
+                                          key={mode}
+                                          className="flex items-center gap-1"
+                                        >
+                                          <input
+                                            type="radio"
+                                            name="leave_dates_mode"
+                                            checked={leaveDatesMode === mode}
+                                            onChange={() =>
+                                              setLeaveDatesMode(mode)
+                                            }
+                                          />
+                                          {mode}
+                                        </label>
+                                      ))}
                                     </div>
-                                    <label className="flex items-center gap-1 text-xs">
-                                      <input
-                                        type="checkbox"
-                                        checked={includeWeekend}
-                                        onChange={(e) =>
-                                          setIncludeWeekend(e.target.checked)
-                                        }
-                                      />
-                                      Include weekend
-                                    </label>
+                                    {leaveDatesMode === "Date Range" ? (
+                                      <>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          <input
+                                            type="date"
+                                            value={leaveFrom}
+                                            onChange={(e) =>
+                                              setLeaveFrom(e.target.value)
+                                            }
+                                            className="app__input_standard max-w-[140px]"
+                                          />
+                                          <span className="text-gray-500">
+                                            to
+                                          </span>
+                                          <input
+                                            type="date"
+                                            value={leaveTo}
+                                            onChange={(e) =>
+                                              setLeaveTo(e.target.value)
+                                            }
+                                            className="app__input_standard max-w-[140px]"
+                                          />
+                                        </div>
+                                        <label className="flex items-center gap-1 text-xs">
+                                          <input
+                                            type="checkbox"
+                                            checked={includeWeekend}
+                                            onChange={(e) =>
+                                              setIncludeWeekend(
+                                                e.target.checked,
+                                              )
+                                            }
+                                          />
+                                          Include weekend
+                                        </label>
+                                      </>
+                                    ) : (
+                                      <div className="space-y-1">
+                                        {customLeaveDates.map((date, index) => (
+                                          <div
+                                            key={index}
+                                            className="flex items-center gap-2"
+                                          >
+                                            <input
+                                              type="date"
+                                              value={date}
+                                              onChange={(e) =>
+                                                setCustomLeaveDates((prev) =>
+                                                  prev.map((d, i) =>
+                                                    i === index
+                                                      ? e.target.value
+                                                      : d,
+                                                  ),
+                                                )
+                                              }
+                                              className="app__input_standard max-w-[140px]"
+                                            />
+                                            {customLeaveDates.length > 1 && (
+                                              <button
+                                                type="button"
+                                                className="app__btn_red_xs"
+                                                onClick={() =>
+                                                  setCustomLeaveDates((prev) =>
+                                                    prev.filter(
+                                                      (_d, i) => i !== index,
+                                                    ),
+                                                  )
+                                                }
+                                              >
+                                                Remove
+                                              </button>
+                                            )}
+                                          </div>
+                                        ))}
+                                        <button
+                                          type="button"
+                                          className="app__btn_blue_xs"
+                                          onClick={() =>
+                                            setCustomLeaveDates((prev) => [
+                                              ...prev,
+                                              "",
+                                            ])
+                                          }
+                                        >
+                                          Add Date
+                                        </button>
+                                      </div>
+                                    )}
+                                    <div className="text-xs">
+                                      Total days:{" "}
+                                      <span className="font-bold">
+                                        {countedLeaveDates.length}
+                                      </span>
+                                    </div>
+                                    {excludedLeaveHolidays.length > 0 && (
+                                      <div className="text-xs text-red-600">
+                                        <div className="font-medium">
+                                          Not counted as leave days:
+                                        </div>
+                                        <ul className="list-disc ml-4">
+                                          {excludedLeaveHolidays.map(
+                                            (holiday) => (
+                                              <li key={holiday.id}>
+                                                {format(
+                                                  new Date(holiday.date),
+                                                  "MMM d, yyyy",
+                                                )}{" "}
+                                                &mdash; {holiday.name}
+                                              </li>
+                                            ),
+                                          )}
+                                        </ul>
+                                      </div>
+                                    )}
+                                    {countedLeaveDates.length !==
+                                      Number(documentData.leave_days) && (
+                                      <div className="text-xs text-orange-600">
+                                        This changes the day count from{" "}
+                                        {documentData.leave_days} to{" "}
+                                        {countedLeaveDates.length}. Leave
+                                        credits already deducted are not
+                                        recomputed &mdash; revert the approval
+                                        first if the credits have to follow.
+                                      </div>
+                                    )}
                                     <div className="flex gap-2">
                                       <CustomButton
                                         containerStyles="app__btn_green"
