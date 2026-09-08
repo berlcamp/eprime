@@ -372,6 +372,14 @@ export default function CreditsCertification({
     );
   };
 
+  // The request can change while this is open -- a super admin editing the
+  // leave dates changes the day count the credits are certified against, and
+  // the dates this rewrites on certification. Without this the local copy kept
+  // the count and the dates the modal was opened with.
+  useEffect(() => {
+    setDocumentData(requestData);
+  }, [requestData]);
+
   useEffect(() => {
     if (
       [

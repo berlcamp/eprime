@@ -1169,11 +1169,50 @@ export default function DetailsModal({
         ...d,
         id: undefined,
       }));
+      // The credit figures follow the day count: added days land on the
+      // without-pay side, and a certification made for a different count is
+      // dropped. Mirror what the RPC decided, or the modal keeps showing
+      // figures the request no longer carries.
+      const rpcResult = saved.data as {
+        certification_cleared?: boolean;
+        leave_days_with_pay?: string | null;
+        leave_days_without_pay?: string | null;
+      } | null;
+      const certificationCleared = rpcResult?.certification_cleared === true;
+      // DocumentTypes types these as plain strings; the columns are nullable
+      // and the RPC has just nulled them.
+      const updatedCredits: Partial<DocumentTypes> = certificationCleared
+        ? ({
+            certified_by: null,
+            certification_as_of: null,
+            credits_used: null,
+            leave_credit_use_vl: null,
+            leave_credit_use_sl: null,
+            leave_credit_use_sc: null,
+            leave_credit_use_adoption: null,
+            leave_credit_use_vawc: null,
+            leave_credit_use_emergency: null,
+            leave_credit_use_study: null,
+            leave_credit_use_soloparent: null,
+            leave_credit_use_slbw: null,
+            leave_credit_use_spl: null,
+            leave_credit_use_rehab: null,
+            leave_credit_use_paternity: null,
+            leave_credit_use_maternity: null,
+            leave_credit_use_wellness: null,
+            leave_days_with_pay: null,
+            leave_days_without_pay: null,
+          } as unknown as Partial<DocumentTypes>)
+        : ({
+            leave_days_with_pay: rpcResult?.leave_days_with_pay,
+            leave_days_without_pay: rpcResult?.leave_days_without_pay,
+          } as unknown as Partial<DocumentTypes>);
       const updatedFields = {
         leave_from: newLeaveFrom,
         leave_to: newLeaveTo,
         leave_days: newLeaveDays,
         leave_dates: updatedLeaveDates,
+        ...updatedCredits,
       };
       setDocumentData((prev) => ({
         ...prev,
@@ -1190,7 +1229,12 @@ export default function DetailsModal({
         dispatch(updateList(items));
       }
 
-      setToast("success", "Leave dates updated successfully.");
+      setToast(
+        "success",
+        certificationCleared
+          ? "Leave dates updated. The leave credits have to be certified again for the new number of days."
+          : "Leave dates updated successfully.",
+      );
       setShowEditLeaveDates(false);
     } catch (e) {
       console.error(e);
@@ -1990,10 +2034,17 @@ export default function DetailsModal({
                                       <div className="text-xs text-orange-600">
                                         This changes the day count from{" "}
                                         {documentData.leave_days} to{" "}
-                                        {countedLeaveDates.length}. Leave
-                                        credits already deducted are not
-                                        recomputed &mdash; revert the approval
-                                        first if the credits have to follow.
+                                        {countedLeaveDates.length}.{" "}
+                                        {documentData.current_status ===
+                                        "Approved"
+                                          ? "The leave credits already deducted are not recomputed — revert the approval first if they have to follow the new count."
+                                          : documentData.certified_by ||
+                                            countedLeaveDates.length <
+                                              Number(
+                                                documentData.leave_days_with_pay,
+                                              )
+                                          ? "The credits certification no longer matches, so it is cleared and has to be done again."
+                                          : "The days on top of the credits already claimed count as absence without pay until the credits are certified."}
                                       </div>
                                     )}
                                     <div className="flex gap-2">
