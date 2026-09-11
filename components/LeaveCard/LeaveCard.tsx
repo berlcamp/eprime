@@ -1,6 +1,6 @@
 'use client'
 
-import { leaveCreditTypes } from '@/constants'
+import { leaveCreditTypes, superAdmins } from '@/constants'
 import { useFilter } from '@/context/FilterContext'
 import { useSupabase } from '@/context/SupabaseProvider'
 import type { Employee, LeaveCardTypes } from '@/types'
@@ -35,9 +35,13 @@ export default function LeaveCard({ userId, userData }: PageProps) {
   const [saving, setSaving] = useState(false)
 
   const [showAdjustmentForm, setShowAdjustmentForm] = useState(false)
+  const [deleteItem, setDeleteItem] = useState<LeaveCardTypes | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const { supabase, session } = useSupabase()
   const { setToast, hasAccess } = useFilter()
+
+  const isSuperAdmin = superAdmins.includes(session?.user.email ?? '')
 
   const userPositionType =
     userData.position_type === 'Teaching' ? 'Teaching' : 'Non-teaching'
@@ -198,6 +202,44 @@ export default function LeaveCard({ userId, userData }: PageProps) {
       setSaving(false)
     } catch (error) {
       console.error('error', error)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (deleting || !deleteItem) return
+
+    setDeleting(true)
+
+    try {
+      const { error } = await supabase
+        .from('hrm_leave_cards')
+        .delete()
+        .eq('id', deleteItem.id)
+
+      if (error) {
+        void logError(
+          'Delete Leave Card',
+          'hrm_leave_cards',
+          JSON.stringify({ id: deleteItem.id }),
+          error.message
+        )
+        setToast(
+          'error',
+          'Delete failed, please reload the page and try again.'
+        )
+        throw new Error(error.message)
+      }
+
+      // remove the row from the list
+      setList(list.filter((item) => item.id !== deleteItem.id))
+      setCountResults(countResults > 0 ? countResults - 1 : 0)
+
+      setToast('success', 'Successfully deleted.')
+      setDeleteItem(null)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -389,6 +431,7 @@ export default function LeaveCard({ userId, userData }: PageProps) {
               <th className="app__th">Absence w/out Pay</th>
               <th className="app__th">Absence w/ Pay</th>
               <th className="app__th">Remarks</th>
+              {isSuperAdmin && <th className="app__th">Action</th>}
             </tr>
           </thead>
           <tbody>
@@ -421,9 +464,21 @@ export default function LeaveCard({ userId, userData }: PageProps) {
                       </div>
                     )}
                   </td>
+                  {isSuperAdmin && (
+                    <td className="app__td">
+                      {item.id && (
+                        <CustomButton
+                          containerStyles="app__btn_red_xs"
+                          title="Delete"
+                          btnType="button"
+                          handleClick={() => setDeleteItem(item)}
+                        />
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
-            {loading && <TableRowLoading cols={8} rows={2} />}
+            {loading && <TableRowLoading cols={isSuperAdmin ? 9 : 8} rows={2} />}
           </tbody>
         </table>
         {!loading && isDataEmpty && (
@@ -434,6 +489,55 @@ export default function LeaveCard({ userId, userData }: PageProps) {
       {/* Show More */}
       {list.length < countResults && (
         <ShowMore handleShowMore={handleShowMore} />
+      )}
+
+      {/* Confirm Delete */}
+      {deleteItem && (
+        <div className="app__modal_wrapper">
+          <div className="app__modal_wrapper2">
+            <div className="app__modal_wrapper3">
+              <div className="app__modal_header">
+                <h5 className="app__modal_header_text">Confirm Delete</h5>
+                <button
+                  disabled={deleting}
+                  onClick={() => setDeleteItem(null)}
+                  type="button"
+                  className="app__modal_header_btn"
+                >
+                  &times;
+                </button>
+              </div>
+              <div className="app__modal_body">
+                <div className="text-gray-700 text-sm py-4">
+                  Are you sure you want to delete this leave card entry?
+                  <div className="mt-2 font-medium">
+                    {deleteItem.particulars}
+                  </div>
+                  <div className="mt-2 text-xs text-red-600">
+                    This only removes the leave card row. It does not restore or
+                    recompute the leave credit balance.
+                  </div>
+                </div>
+                <div className="app__modal_footer">
+                  <CustomButton
+                    handleClick={handleDelete}
+                    btnType="button"
+                    isDisabled={deleting}
+                    title={deleting ? 'Deleting...' : 'Delete'}
+                    containerStyles="app__btn_green_sm"
+                  />
+                  <CustomButton
+                    handleClick={() => setDeleteItem(null)}
+                    btnType="button"
+                    isDisabled={deleting}
+                    title="Cancel"
+                    containerStyles="app__btn_gray_sm"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
